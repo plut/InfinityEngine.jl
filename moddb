@@ -272,7 +272,7 @@ description = "Region of Terror"
 archive = ""
 
 [ruad]
-lastupdate = 2020-04-23
+lastupdate = 2022-06-17
 class = "Items"
 download = "github:SpellholdStudios/RuadRofhessaItemUpgrade"
 description = "Ruad Ro'fhessa Item Upgrade"
@@ -464,7 +464,7 @@ description = "Yoshimo Friendship"
 archive = ""
 
 [spell_rev]
-lastupdate = 2019-11-25
+lastupdate = 2022-06-17
 class = "Early"
 download = "github:Gibberlings3/SpellRevisions"
 description = "Spell Revisions v4 b18"
@@ -472,6 +472,9 @@ archive = ""
 
     [spell_rev.components.10]
     exclusive = ["plangood.cre", "planevil.cre", "devagood.cre", "devaevil.cre"]
+
+    [spell_rev.components.0]
+    exclusive = ["elemtype.itm", "mstone.itm", "shille.itm", "shille2.itm", "shille3.itm", "spcl213.spl", "spcl721.spl", "spcl722.spl", "spdr101.spl", "spdr201.spl", "spdr301.spl", "spdr401.spl", "spdr501.spl", "spdr601.spl", "spentaai.bam", "spentaci.bam", "spin101.spl", "spin102.spl", "spin103.spl", "spin104.spl", "spin105.spl", "spin106.spl", "spin113.spl", "spin683.spl", "spin701.spl", "spin788.spl", "spin789.spl", "spmagglo.bam", "spmagglo.vvc", "sppr101.spl", "sppr102.spl", "sppr103.spl", "sppr104.spl", "sppr105.spl", "sppr106.spl", "sppr107.spl", "sppr108.spl", "sppr109.spl", "sppr110.spl", "sppr111.spl", "sppr113.spl", "sppr116.spl", "spra301.spl", "spra302.spl", "spra303.spl", "spra304.spl", "spra305.spl", "spra306.spl", "spwi977.spl", "spwi978.spl", "undtype.itm", "vermtype.itm"]
 
     [spell_rev.components.""]
     after = ["ub"]
@@ -662,68 +665,35 @@ description = "Upgradable Dak'kon's Blade"
 archive = "dakkon.7z"
 
 [atweaks]
-lastupdate = 2018-05-19
+lastupdate = 2022-06-17
 class = "Tweaks"
 download = "https://www.dropbox.com/s/hs3besqzichlru0/atweaks-v453.zip?dl=1"
 description = "aTweaks"
 archive = "atweaks-v453.zip"
 
-    [atweaks.components.105]
-    exclusive = ["spdimndr.bam"]
-
-    [atweaks.components.153]
-    exclusive = ["smarter_demons"]
-
-    [atweaks.components.205]
-    exclusive = ["simulacrum_items"]
-
-    [atweaks.components.212]
-    exclusive = ["sppr209.spl"]
-
-    [atweaks.components.502]
-    exclusive = ["container_capacity"]
-
-    [atweaks.components.261]
-    exclusive = ["xpbonus.2da"]
-
-    [atweaks.components.150]
-    exclusive = ["smarter_demons"]
-
-    [atweaks.components.211]
-    exclusive = ["sppr409.spl"]
-
     [atweaks.components.104]
-    exclusive = ["spwi105.spl"]
+    exclusive = ["spwi105.spl", "spin937.spl"]
 
-    [atweaks.components.125]
-    exclusive = ["spcl311.spl"]
+    [atweaks.components.300]
+    exclusive = ["spdimndr.bam", "eff_m09.wav"]
 
-    [atweaks.components.186]
-    exclusive = ["sppr410.spl"]
+    [atweaks.components.323]
+    exclusive = ["spwi402.spl"]
 
-    [atweaks.components.152]
-    exclusive = ["smarter_demons"]
+    [atweaks.components.324]
+    exclusive = ["spdimndr.bam", "eff_m09.wav"]
 
-    [atweaks.components.110]
-    exclusive = ["arrow_damage"]
-
-    [atweaks.components.301]
-    exclusive = ["npchan.itm"]
-
-    [atweaks.components.302]
-    exclusive = ["wa2robe.itm"]
-
-    [atweaks.components.500]
-    exclusive = ["container_capacity"]
+    [atweaks.components.202]
+    exclusive = ["spin101.spl", "spin104.spl", "spin102.spl", "spin105.spl", "spin106.spl"]
 
     [atweaks.components.""]
     after = ["rr", "stratagems"]
 
-    [atweaks.components.102]
-    exclusive = ["shammr.itm"]
+    [atweaks.components.105]
+    exclusive = ["spwi402.spl"]
 
-    [atweaks.components.103]
-    exclusive = ["spwi406.spl", "spwi602.spl"]
+    [atweaks.components.322]
+    exclusive = ["spdimndr.bam", "eff_m09.wav"]
 
 [asharnpc]
 lastupdate = 1970-01-01
@@ -851,8 +821,8 @@ download = "github:Gibberlings3/SwordCoastStratagems"
 description = "Sword Coast Stratagems"
 archive = ""
 
-    [stratagems.components.7220]
-    exclusive = ["battho.cre"]
+    [stratagems.components.8090]
+    exclusive = ["ar1515.are", "ar1512.are"]
 
     [stratagems.components.5030]
     exclusive = ["cloak_of_mirroring"]
@@ -959,7 +929,7 @@ archive = ""
     exclusive = ["hldemi.cre", "demilich.cre"]
 
     [stratagems.components.7020]
-    exclusive = ["lamalh.cre", "molkar.cre", "maneir.cre", "telka.cre", "zeela.cre", "drakar.cre", "halaca.cre", "morvin.cre", "drakar.bcs", "halaca.bcs", "morvin.bcs", "molkar.bcs", "morvin.bcs", "maneir.bcs", "lamalh.bcs"]
+    exclusive = ["lamalh.cre", "molkar.cre", "maneir.cre", "telka.cre", "zeela.cre", "drakar.cre", "halaca.cre", "morvin.cre", "drakar.bcs", "halaca.bcs", "morvin.bcs", "molkar.bcs", "maneir.bcs", "lamalh.bcs"]
 
     [stratagems.components.6810]
     exclusive = ["jumjum.bcs", "fingrom.bcs"]
@@ -1062,8 +1032,8 @@ archive = ""
     [stratagems.components.5020]
     exclusive = ["cloak_of_displacement"]
 
-    [stratagems.components.8090]
-    exclusive = ["ar1515.are", "ar1512.are"]
+    [stratagems.components.7220]
+    exclusive = ["battho.cre"]
 
     [stratagems.components.8160]
     exclusive = ["gorsku01.bcs", "golbur01.bcs", "elemimix.bcs", "hgwar01.cre", "ysfire01.cre", "giafir01.cre", "ysguar01.cre"]
@@ -1535,18 +1505,18 @@ download = "https://www.dropbox.com/s/mogovd9x99niham/RestoreSound_V1.zip?dl=1"
 description = "Restore Original Casting Sounds"
 archive = "OldSound.zip"
 
-[solaufein]
-lastupdate = 1970-01-01
-class = "NPCs"
-download = "github:RoxanneSHS/Solaufein"
-description = "Solaufein NPC"
-archive = ""
-
 [keldorn_rom]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 download = "github:Gibberlings3/Keldorn_Romance"
 description = "Keldorn Romance"
+archive = ""
+
+[solaufein]
+lastupdate = 1970-01-01
+class = "NPCs"
+download = "github:RoxanneSHS/Solaufein"
+description = "Solaufein NPC"
 archive = ""
 
 [dh_tweaks]
@@ -1725,7 +1695,7 @@ description = "Slithering Menace"
 archive = ""
 
 [refinements]
-lastupdate = 2022-06-14
+lastupdate = 2022-06-17
 class = "Tweaks"
 download = "github:UnearthedArcana/refinements"
 description = "Refinements"
@@ -1906,6 +1876,9 @@ download = "github:Gibberlings3/WheelsOfProphecy"
 description = "Wheels of Prophecy"
 archive = "wheels.tar.gz"
 
+    [wheels.components.""]
+    before = ["stratagems"]
+
 [faiths_and_powers]
 lastupdate = 2022-06-15
 class = "Tweaks"
@@ -1963,14 +1936,17 @@ description = "Skie, the Cost of One Girl's Soul"
 archive = "skiecost.zip"
 
 [item_rev]
-lastupdate = 2017-06-21
+lastupdate = 2022-06-17
 class = "Early"
 download = "github:Gibberlings3/ItemRevisions"
 description = "Item Revisions"
 archive = ""
 
+    [item_rev.components.0]
+    exclusive = ["hlolth.itm", "clolth.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "blun01.itm", "bolt01.itm", "sahbolt.itm", "kuobolt.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bull01.itm", "chan01.itm", "clck01.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "amsoul01.itm", "leat01.itm", "aegis.itm", "bruenaxe.itm", "bruenpla.itm", "cattibow.itm", "catliowp.cre", "figlion.itm", "spidfgsu.cre", "figspid.itm", "bsw1h01.itm", "bersersu.cre", "bleat01.itm", "miscbc.itm", "nebdag.itm", "quiver01.itm", "reaver.itm", "korax01.itm", "nparm.itm", "npbow.itm", "npbelt.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npstaf.itm", "npplat.itm", "keldorn.spl", "npring01.itm", "npshld.itm", "npsw01.itm", "clolth.itm", "hlolth.itm", "finsarev.itm", "plat01.itm", "rods01.itm", "rods01.spl", "shld01.itm", "slng01.itm", "sper01.itm", "staf01.itm", "smoundsu.cre", "smoundsu.itm", "sw1h01.itm", "xbow01.itm", "waflail.itm", "wawak.itm"]
+
     [item_rev.components.1030]
-    exclusive = ["store_prices"]
+    exclusive = ["chrmodst.2da", "repmodst.2da"]
 
 [garrick-tt]
 lastupdate = 1970-01-01
@@ -2336,6 +2312,9 @@ archive = "d5_random_tweaks.tar.gz"
     [d5_random_tweaks.components.1202]
     exclusive = ["sppr202.spl"]
 
+    [d5_random_tweaks.components.2915]
+    exclusive = ["spwi806.spl"]
+
     [d5_random_tweaks.components.1323]
     exclusive = ["sppr350.spl"]
 
@@ -2352,7 +2331,7 @@ archive = "d5_random_tweaks.tar.gz"
     exclusive = ["clck15.itm"]
 
     [d5_random_tweaks.components.2914]
-    exclusive = ["spwi914.spl"]
+    exclusive = ["spwi914.spl", "spwi806.spl"]
 
     [d5_random_tweaks.components.3010]
     exclusive = ["ring36.itm"]
@@ -2365,6 +2344,9 @@ archive = "d5_random_tweaks.tar.gz"
 
     [d5_random_tweaks.components.1710]
     exclusive = ["sppr710.spl"]
+
+    [d5_random_tweaks.components.2201]
+    exclusive = ["7eyes.2da"]
 
     [d5_random_tweaks.components.1251]
     exclusive = ["sppr251.spl"]
@@ -2379,7 +2361,7 @@ archive = "d5_random_tweaks.tar.gz"
     exclusive = ["spwi518.spl"]
 
     [d5_random_tweaks.components.2916]
-    exclusive = ["spwi916.spl"]
+    exclusive = ["spwi916.spl", "spwi806.spl"]
 
     [d5_random_tweaks.components.2224]
     exclusive = ["spwi224.spl"]
@@ -2415,13 +2397,13 @@ archive = "d5_random_tweaks.tar.gz"
     exclusive = ["spwi108.spl"]
 
     [d5_random_tweaks.components.3020]
-    exclusive = ["brac18.itm"]
-
-    [d5_random_tweaks.components.2112]
-    exclusive = ["spwi112.spl"]
+    exclusive = ["brac18.itm", "7eyes.2da"]
 
     [d5_random_tweaks.components.1404]
     exclusive = ["sppr404.spl"]
+
+    [d5_random_tweaks.components.2112]
+    exclusive = ["spwi112.spl"]
 
     [d5_random_tweaks.components.1603]
     exclusive = ["sppr603.spl"]
@@ -2445,7 +2427,7 @@ archive = "d5_random_tweaks.tar.gz"
     exclusive = ["spwi418.spl", "spwi403.spl"]
 
     [d5_random_tweaks.components.3040]
-    exclusive = ["leat14.itm"]
+    exclusive = ["leat14.itm", "eff_e02.wav"]
 
     [d5_random_tweaks.components.1614]
     exclusive = ["sorb.itm"]
@@ -3472,8 +3454,8 @@ download = "github:subtledoctor/TomeAndBlood"
 description = "Tome and Blood"
 archive = "tomeandblood.tar.gz"
 
-    [tomeandblood.components.16]
-    exclusive = ["spwi110.spl"]
+    [tomeandblood.components.14]
+    exclusive = ["spwi203.spl", "spwi224.spl", "sppr309.spl", "spwi322.spl", "scrl6k.itm", "spwi224.spl", "spwi515.spl", "spwi609.spl"]
 
     [tomeandblood.components.66]
     exclusive = ["scrl77.itm"]
@@ -3484,9 +3466,6 @@ archive = "tomeandblood.tar.gz"
     [tomeandblood.components.71]
     exclusive = ["spell_switching"]
 
-    [tomeandblood.components.48]
-    exclusive = ["armored_spellcasting"]
-
     [tomeandblood.components.""]
     after = ["spell_rev"]
 
@@ -3496,8 +3475,11 @@ archive = "tomeandblood.tar.gz"
     [tomeandblood.components.11]
     exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
 
-    [tomeandblood.components.14]
-    exclusive = ["spwi203.spl", "spwi224.spl", "sppr309.spl", "spwi322.spl", "scrl6k.itm", "spwi224.spl", "spwi515.spl", "spwi609.spl"]
+    [tomeandblood.components.16]
+    exclusive = ["spwi110.spl"]
+
+    [tomeandblood.components.48]
+    exclusive = ["armored_spellcasting"]
 
 [foundling]
 lastupdate = 1970-01-01

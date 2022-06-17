@@ -808,7 +808,32 @@ function mkmod(id, url, desc, class, archive = "")#««
 # 		:soa, :karatur, :verrsza, :white) && (class = :PreEET)
 	return Mod(id, url, desc, class, archive)
 end#»»
-@inline function complete_db!(moddb) #««
+function mod_exclusives(mod::Mod; except = String[])
+	g = modgame(mod); gamedir = GAMEDIR[g]
+	data = modtp2data(mod)
+	ret = Pair{Int, Vector{String}}[]
+	cd(MODS) do
+		for c in data.components
+			printlog("Computing exclusivity for $(mod.id):$(c.id) '$(c.name)'")
+			excl = String[]
+			for line in eachline(ignorestatus(`weidu --game $gamedir --skip-at-view --no-exit-pause --noautoupdate --list-actions --language $(data.sel_lang) $(data.tp2) --force-install $(c.id)`))
+				m = match(r"SIMULATE\s+(\S.*\S)\s+(\S.*)$", line); 
+				isnothing(m) && continue
+				if m.captures[1] == "COPY false"
+					s = replace(lowercase(m.captures[2]), "override/" => "")
+					any(occursin(p, s) for p in except) || push!(excl, s)
+				end
+			end
+			!isempty(excl) && push!(ret, parse(Int, c.id) => excl)
+		end
+	end
+	return [ id => (exclusive = excl,) for (id, excl) in ret ]
+end
+# function exclusive!(id;moddb = global_moddb, exclude_prefix=String[])
+# 	mod = findmod(id;moddb)
+# 	setcomp!(mod.components, mod_exclusives(mod; exclude_prefix)...)
+# end
+function complete_db!(moddb) #««
 	push!(moddb,
 	# Argent77 ««3
 	mkmod("a7-convenienteenpcs", "github:Argent77/A7-NoEENPCs",
@@ -872,24 +897,32 @@ end#»»
 	end
 	setmod!("atweaks",#««
 		"" => (after = ["rr", "stratagems"],),
-		102 => (exclusive = "shammr.itm",), # spiritual hammer
-		103 => (exclusive = ["spwi406.spl", "spwi602.spl"],), # globes of invul.?
-		104 => (exclusive = "spwi105.spl",), # colored spray
-		105 => (exclusive = "spdimndr.bam",), # dim. door animation
-		110 => (exclusive = "arrow_damage",),
-		125 => (exclusive = "spcl311.spl",), # animal empathy
-		150 => (exclusive = "smarter_demons",),
-		152 => (exclusive = "smarter_demons",),
-		153 => (exclusive = "smarter_demons",),
-		186 => (exclusive = "sppr410.spl",), # call woodland beings
-		205 => (exclusive = "simulacrum_items",),
-		211 => (exclusive = "sppr409.spl",), # death ward
-		212 => (exclusive = "sppr209.spl",), # know alignment
-		261 => (exclusive = "xpbonus.2da",), # trap XP
-		301 => (exclusive = "npchan.itm",), # Corthala armor
-		302 => (exclusive = "wa2robe.itm",), # Vecna robe
-		500 => (exclusive = "container_capacity",),
-		502 => (exclusive = "container_capacity",),
+# 		102 => (exclusive = "shammr.itm",), # spiritual hammer
+# 		103 => (exclusive = ["spwi406.spl", "spwi602.spl"],), # globes of invul.?
+# 		104 => (exclusive = "spwi105.spl",), # colored spray
+# 		105 => (exclusive = "spdimndr.bam",), # dim. door animation
+# 		110 => (exclusive = "arrow_damage",),
+# 		125 => (exclusive = "spcl311.spl",), # animal empathy
+# 		150 => (exclusive = "smarter_demons",),
+# 		152 => (exclusive = "smarter_demons",),
+# 		153 => (exclusive = "smarter_demons",),
+# 		186 => (exclusive = "sppr410.spl",), # call woodland beings
+# 		205 => (exclusive = "simulacrum_items",),
+# 		211 => (exclusive = "sppr409.spl",), # death ward
+# 		212 => (exclusive = "sppr209.spl",), # know alignment
+# 		261 => (exclusive = "xpbonus.2da",), # trap XP
+# 		301 => (exclusive = "npchan.itm",), # Corthala armor
+# 		302 => (exclusive = "wa2robe.itm",), # Vecna robe
+# 		500 => (exclusive = "container_capacity",),
+# 		502 => (exclusive = "container_capacity",),
+# 		 101 => (exclusive = ["fl#idim3.eff"],)
+ 104 => (exclusive = ["spwi105.spl", "spin937.spl"],),
+ 105 => (exclusive = ["spwi402.spl"],),
+ 202 => (exclusive = ["spin101.spl", "spin104.spl", "spin102.spl", "spin105.spl", "spin106.spl"],),
+ 300 => (exclusive = ["spdimndr.bam", "eff_m09.wav"],),
+ 322 => (exclusive = ["spdimndr.bam", "eff_m09.wav"],),
+ 323 => (exclusive = ["spwi402.spl"],),
+ 324 => (exclusive = ["spdimndr.bam", "eff_m09.wav"],),
 	)#»»
 	setmod!("cdtweaks",#««
 		"" => (after = ["tomeandblood", "bg1npc", "thecalling", "item_rev", "divine_remix"],),
@@ -1005,43 +1038,52 @@ end#»»
 	setmod!("d5_random_tweaks", #««
 		"" => (after = ["spell_rev", "item_rev"],),
 # 		2105 => (exclusive = "spwi105.spl",), # Color Spray (not exclusive)
+		 1202 => (exclusive = "sppr202.spl",), # barkskin
+		 1207 => (exclusive = ["sppr207.spl"],),
+		 1212 => (exclusive = "sppr212.spl",), # slow poison
+		 1251 => (exclusive = "sppr251.spl",), # alicorn lance
+		 1323 => (exclusive = ["sppr350.spl"],), # clarity/exaltation
+		 1351 => (exclusive = ["moonbla.itm"],), # moonblade
+		 1404 => (exclusive = "sppr404.spl",), # neutralize poison
+		 1603 => (exclusive = "sppr603.spl",), # blade barrier
+		 1611 => (exclusive = "sppr611.spl",), # wondrous recall
+		 1614 => (exclusive = "sorb.itm",), # sol's searing orb
+		 1710 => (exclusive = "sppr710.spl",), # holy word
 		 2108 => (exclusive = "spwi108.spl",), # Prot. Petrification
 		 2112 => (exclusive = "spwi112.spl",), # magic missile
+		 2201 => (exclusive = ["7eyes.2da"],),
 		 2209 => (exclusive = "spwi209.spl",), # luck
 		 2212 => (exclusive = "spwi212.spl",), # mirror image
+# 		 2212 => (exclusive = ["spwi323.spl"],),
 		 2213 => (exclusive = "spwi213.spl",), # stinking cloud
 		 2215 => (exclusive = "spwi215.spl",), # web
 		 2217 => (exclusive = "spwi217.spl",), # aganazzar's missiles
 		 2224 => (exclusive = "spwi224.spl",), # glitterdust
 		 2251 => (exclusive = "cdideca.itm",), # decastave
-		 1202 => (exclusive = "sppr202.spl",), # barkskin
-		 1207 => (exclusive = "sppr207.spl",), # goodberry
-		 1212 => (exclusive = "sppr212.spl",), # slow poison
-		 1251 => (exclusive = "sppr251.spl",), # alicorn lance
 		 2305 => (exclusive = ["msectype.2da", "spwi312.spl", "potn14.spl", "spwi305.spl"],), # haste/slow
 		 2324 => (exclusive = ["spwi324.spl", "spwi234d.spl", "spwi720.spl"],), # hold/control undead
-		 1323 => (exclusive = ["sppr350.spl"],), # clarity/exaltation
-		 1351 => (exclusive = ["moonbla.itm"],), # moonblade
 		 2413 => (exclusive = ["spwi413a.spl","spwi413d.spl"],), # otiluke
 		 2418 => (exclusive = ["spwi418.spl", "spwi403.spl"],), # fire shields
 		 2451 => (exclusive = ["shades.2da"],), # shades/shadow monsters
-		 1404 => (exclusive = "sppr404.spl",), # neutralize poison
 		 2518 => (exclusive = "spwi518.spl",), # phantom blade
 		 2523 => (exclusive = "spwi523.spl",), # sunfire
-		 1603 => (exclusive = "sppr603.spl",), # blade barrier
-		 1611 => (exclusive = "sppr611.spl",), # wondrous recall
-		 1614 => (exclusive = "sorb.itm",), # sol's searing orb
 		 2708 => (exclusive = "spwi708.spl",), # mantle
-		 1710 => (exclusive = "sppr710.spl",), # holy word
 		 2808 => (exclusive = "sppr603.spl",), # moment of prescience
 		 2811 => (exclusive = ["spwi811.spl", "scrl9f.itm"],), # symbol:fear
+#  2811 => (exclusive = ["spwi706.spl"],),
+# 		 2914 => (exclusive = "spwi914.spl",), # black blade of disaster
+ 2914 => (exclusive = ["spwi914.spl", "spwi806.spl"],),
+ 2915 => (exclusive = ["spwi806.spl"],),
 		 2916 => (exclusive = "spwi916.spl",), # shapechange
-		 2914 => (exclusive = "spwi914.spl",), # black blade of disaster
+ 2916 => (exclusive = ["spwi806.spl"],),
 		 2923 => (exclusive = "plangood.cre",), # planetar
 		 3010 => (exclusive = "ring36.itm",), # ring of danger sense
 		 3020 => (exclusive = "brac18.itm",), # gloves of missile snaring
+ 3020 => (exclusive = ["7eyes.2da"],),
 		 3030 => (exclusive = ["pfirea.bam", "pfirex.bam"],), # exploding weapons
+#  3030 => (exclusive = ["b_pfire.pro", "pfirea.bam", "pfirex.bam", "#prfire.vvc", "#eff_p45.wav", "#are_p03.wav"],),
 		 3040 => (exclusive = "leat14.itm",), # skin of the forest armor
+ 3040 => (exclusive = ["eff_e02.wav"],),
 		 3060 => (exclusive = "boot12.spl",), # cloak of the gargoyle
 		 3070 => (exclusive = ["hamm06.itm", "hamm06a.itm", "hamm06b.itm"],),
 		 3080 => (exclusive = ["misc3n.itm", "misc3o.itm"],), # instruments
@@ -1094,7 +1136,8 @@ end#»»
 		420 => (exclusive = ["dempit01.cre", "telpit1.cre"],), # improved demons
 	)#»»
 	setmod!("item_rev",#««
-		1030 => (exclusive = "store_prices",),
+	0 => (exclusive = ["hlolth.itm", "clolth.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "blun01.itm", "bolt01.itm", "sahbolt.itm", "kuobolt.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bull01.itm", "chan01.itm", "clck01.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "amsoul01.itm", "leat01.itm", "aegis.itm", "bruenaxe.itm", "bruenpla.itm", "cattibow.itm", "catliowp.cre", "figlion.itm", "spidfgsu.cre", "figspid.itm", "bsw1h01.itm", "bersersu.cre", "bleat01.itm", "miscbc.itm", "nebdag.itm", "quiver01.itm", "reaver.itm", "korax01.itm", "nparm.itm", "npbow.itm", "npbelt.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npstaf.itm", "npplat.itm", "keldorn.spl", "npring01.itm", "npshld.itm", "npsw01.itm", "clolth.itm", "hlolth.itm", "finsarev.itm", "plat01.itm", "rods01.itm", "rods01.spl", "shld01.itm", "slng01.itm", "sper01.itm", "staf01.itm", "smoundsu.cre", "smoundsu.itm", "sw1h01.itm", "xbow01.itm", "waflail.itm", "wawak.itm"],),
+ 1030 => (exclusive = ["chrmodst.2da", "repmodst.2da"],),
 	)#»»
 	setmod!("metweaks",#««
 		1000 => (exclusive = "7eyes.2da",), # monk deflect missile
@@ -1139,6 +1182,7 @@ end#»»
 	)#»»
 	setmod!("spell_rev",#««
 		"" => (after = ["ub",],),
+		0 => (exclusive = ["elemtype.itm","mstone.itm", "shille.itm", "shille2.itm", "shille3.itm", "spcl213.spl", "spcl721.spl", "spcl722.spl", "spdr101.spl", "spdr201.spl", "spdr301.spl", "spdr401.spl", "spdr501.spl", "spdr601.spl", "spentaai.bam", "spentaci.bam", "spin101.spl", "spin102.spl", "spin103.spl", "spin104.spl", "spin105.spl", "spin106.spl", "spin113.spl", "spin683.spl", "spin701.spl", "spin788.spl", "spin789.spl", "spmagglo.bam", "spmagglo.vvc", "sppr101.spl", "sppr102.spl", "sppr103.spl", "sppr104.spl", "sppr105.spl", "sppr106.spl", "sppr107.spl", "sppr108.spl", "sppr109.spl", "sppr110.spl", "sppr111.spl", "sppr113.spl", "sppr116.spl", "spra301.spl", "spra302.spl", "spra303.spl", "spra304.spl", "spra305.spl", "spra306.spl", "spwi977.spl", "spwi978.spl", "undtype.itm", "vermtype.itm"],),
 		10 => (exclusive = ["plangood.cre", "planevil.cre", "devagood.cre", "devaevil.cre"],),
 		65 => (exclusive = ["spcl900.spl","spcl901.spl","spcl907.spl","spwish12.spl"],),
 	)#»»
@@ -1179,7 +1223,7 @@ end#»»
 		6850 => (depends = "ascension", exclusive = ["finbalor.bcs", "finaluf.bcs", "finmaril.bcs", "finnabas.bcs"],),
 		7000 => (exclusive = ["noblpa.bcs", "doppss.bcs", "zorl.bcs", "sardopp.bcs"],),
 		7010 => (exclusive = ["ronelit.cre", "ronguar.cre", "irongu.cre"],),
-		7020 => (exclusive = ["lamalh.cre", "molkar.cre", "maneir.cre", "telka.cre", "zeela.cre", "drakar.cre", "halaca.cre", "morvin.cre", "drakar.bcs", "halaca.bcs", "morvin.bcs", "molkar.bcs", "morvin.bcs", "maneir.bcs", "lamalh.bcs"],),
+		7020 => (exclusive = ["lamalh.cre", "molkar.cre", "maneir.cre", "telka.cre", "zeela.cre", "drakar.cre", "halaca.cre", "morvin.cre", "drakar.bcs", "halaca.bcs", "morvin.bcs", "molkar.bcs", "maneir.bcs", "lamalh.bcs"],),
 		7030 => (exclusive = ["kobolda.cre", "kobold.cre",],),
 		7040 => (exclusive = ["grema_d.cre", "ogrema.cre",],),
 		7050 => (exclusive = ["ichary.cre",],),
@@ -1241,6 +1285,9 @@ end#»»
 		69 => (exclusive = "familiar_penalty",),
 		71 => (exclusive = "spell_switching",),
 	)#»»
+	setmod!("wheels",#««
+		"" => (before = "stratagems",),
+	),#»»
 	# Modify a few mod classes ««
 	for (i, c) in (
 		"dlcmerger" => "DlcMerger",

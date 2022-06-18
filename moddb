@@ -821,8 +821,8 @@ download = "github:Gibberlings3/SwordCoastStratagems"
 description = "Sword Coast Stratagems"
 archive = ""
 
-    [stratagems.components.7220]
-    exclusive = ["battho.cre"]
+    [stratagems.components.8090]
+    exclusive = ["ar1515.are", "ar1512.are"]
 
     [stratagems.components.5030]
     exclusive = ["cloak_of_mirroring"]
@@ -1032,8 +1032,8 @@ archive = ""
     [stratagems.components.5020]
     exclusive = ["cloak_of_displacement"]
 
-    [stratagems.components.8090]
-    exclusive = ["ar1515.are", "ar1512.are"]
+    [stratagems.components.7220]
+    exclusive = ["battho.cre"]
 
     [stratagems.components.8160]
     exclusive = ["gorsku01.bcs", "golbur01.bcs", "elemimix.bcs", "hgwar01.cre", "ysfire01.cre", "giafir01.cre", "ysguar01.cre"]
@@ -1505,18 +1505,18 @@ download = "https://www.dropbox.com/s/mogovd9x99niham/RestoreSound_V1.zip?dl=1"
 description = "Restore Original Casting Sounds"
 archive = "OldSound.zip"
 
-[solaufein]
-lastupdate = 1970-01-01
-class = "NPCs"
-download = "github:RoxanneSHS/Solaufein"
-description = "Solaufein NPC"
-archive = ""
-
 [keldorn_rom]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 download = "github:Gibberlings3/Keldorn_Romance"
 description = "Keldorn Romance"
+archive = ""
+
+[solaufein]
+lastupdate = 1970-01-01
+class = "NPCs"
+download = "github:RoxanneSHS/Solaufein"
+description = "Solaufein NPC"
 archive = ""
 
 [dh_tweaks]
@@ -1639,11 +1639,11 @@ description = "Sirene NPC for BG1:EE"
 archive = ""
 
 [celestials]
-lastupdate = 2022-06-16
+lastupdate = 2022-06-18
 class = "Tweaks"
-download = "github:Gibberlings3/PnP_Celestials"
+download = "https://github.com/Gibberlings3/PnP_Celestials/releases/download/v7/lin-celestials-v7.tar.gz"
 description = "P&P Celestials"
-archive = ""
+archive = "lin-celestials-v7.tar.gz"
 
 [tashia]
 lastupdate = 1970-01-01
@@ -2599,11 +2599,11 @@ description = "Wizard Slayer Rebalancing"
 archive = "wsr_v114.zip"
 
 [metweaks]
-lastupdate = 2022-06-16
+lastupdate = 2022-06-18
 class = "Tweaks"
 download = "github:OlvynChuru/METweaks"
 description = "Olvyn Tweaks"
-archive = ""
+archive = "metweaks.tar.gz"
 
     [metweaks.components.1000]
     exclusive = ["7eyes.2da"]
@@ -2807,7 +2807,7 @@ description = "lefreut's enhanced UI (requires game version 2.6)"
 archive = ""
 
 [rr]
-lastupdate = 2021-07-31
+lastupdate = 2022-06-18
 class = "Tweaks"
 download = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 description = "Rogue Rebalancing"
@@ -2921,7 +2921,7 @@ description = "Corwin NPC for BG1"
 archive = ""
 
 [d0questpack]
-lastupdate = 2019-08-27
+lastupdate = 2022-06-18
 class = "Tweaks"
 download = "http://mods.pocketplane.net/win-questpack-v34.zip"
 description = "Ding0's Quest Pack"
@@ -3454,8 +3454,8 @@ download = "github:subtledoctor/TomeAndBlood"
 description = "Tome and Blood"
 archive = "tomeandblood.tar.gz"
 
-    [tomeandblood.components.16]
-    exclusive = ["spwi110.spl"]
+    [tomeandblood.components.14]
+    exclusive = ["spwi203.spl", "spwi224.spl", "sppr309.spl", "spwi322.spl", "scrl6k.itm", "spwi224.spl", "spwi515.spl", "spwi609.spl"]
 
     [tomeandblood.components.66]
     exclusive = ["scrl77.itm"]
@@ -3469,17 +3469,17 @@ archive = "tomeandblood.tar.gz"
     [tomeandblood.components.48]
     exclusive = ["armored_spellcasting"]
 
+    [tomeandblood.components.11]
+    exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
+
+    [tomeandblood.components.16]
+    exclusive = ["spwi110.spl"]
+
     [tomeandblood.components.""]
     after = ["spell_rev"]
 
     [tomeandblood.components.69]
     exclusive = ["familiar_penalty"]
-
-    [tomeandblood.components.11]
-    exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
-
-    [tomeandblood.components.14]
-    exclusive = ["spwi203.spl", "spwi224.spl", "sppr309.spl", "spwi322.spl", "scrl6k.itm", "spwi224.spl", "spwi515.spl", "spwi609.spl"]
 
 [foundling]
 lastupdate = 1970-01-01

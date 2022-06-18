@@ -355,7 +355,7 @@ function tp2data(tp2file, id)#««
 	# readme««
 	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-readme $tp2file $sel_lang`)
 		m = match(r"^R (.*)", line); isnothing(m) && continue
-		isfile(m.captures[1]) && (readme = m.captures[1]; break)
+		isfile(m.captures[1]) && (readme = joinpath(MODS, m.captures[1]); break)
 	end
 	if isempty(readme) # try and guess...
 		readmes = [ f for f in readdir(joinpath(MODS, id))
@@ -469,19 +469,32 @@ function update_selection(selection=global_selection, filename=SELECTION)#««
 	run(ignorestatus(`diff --color=always $(filename*'~') $filename`))
 end#»»
 # Mod components ««1
-function weidu_status(weidu_log)#««
-	status = Dict{String, Vector{String}}()
-	ispath(weidu_log) && for line in eachline(weidu_log)
+# function weidu_status(weidu_log)#««
+# 	status = Dict{String, Vector{String}}()
+# 	ispath(weidu_log) && for line in eachline(weidu_log)
+# 		line = replace(line, r"\s*//.*" => "")
+# 		isempty(line) && continue
+# 		(tp2, lang, comp, rest...) = split(line, ' ')
+# 		tp2 = lowercase(tp2[2:prevind(tp2, length(tp2))])
+# 		push!(get!(status, tp2, String[]), comp[2:end])
+# 	end
+# 	status
+# end#»»
+function modstatus(tp2file, dir)#««
+	weidu_log = joinpath(dir, "weidu.log")
+	status = String[]
+	ispath(weidu_log) || return status
+	for line in eachline(weidu_log)
 		line = replace(line, r"\s*//.*" => "")
 		isempty(line) && continue
 		(tp2, lang, comp, rest...) = split(line, ' ')
 		tp2 = lowercase(tp2[2:prevind(tp2, length(tp2))])
-		push!(get!(status, tp2, String[]), comp[2:end])
+		tp2 == tp2dir && push!(status, comp[2:end])
 	end
-	status
+	return status
 end#»»
-@inline modstatus(db, tp2file) = get(db, tp2file, Int[])
-@inline componentstatus(db, tp2file, c) = (c ∈ modstatus(db, tp2file))
+# @inline modstatus(db, tp2file) = get(db, tp2file, Int[])
+# @inline componentstatus(db, tp2file, c) = (c ∈ modstatus(db, tp2file))
 function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 		less=true)
 	data = modtp2data(mod)
@@ -497,7 +510,7 @@ function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 	end
 end#»»
 function components!(mod::Mod; selection=global_selection,#««
-		status=global_weidu_log, cols=80)
+		gamedir = GAMEDIR[modgame(mod)], cols=80)
 	data = modtp2data(mod)
 	ins = NamedTuple{GAME_LIST}(Set(modstatus(v, data.tp2))
 		for (k,v) ∈ pairs(status))
@@ -712,7 +725,7 @@ function import_bws_selection((source, dest) = BWS_SELECTION => SELECTION)#««
 	write_selection(global_selection, dest)
 end#»»
 
-# Fixing imported mods; rewriting url etc. ««1
+# Generating mod DB ««1
 function mkmod(id, url, desc, class, archive = "")#««
 	m = match(r"github.com/(([^/])*/([^/]*))", url)
 	id == "klatu" && (id = "tnt")
@@ -1023,18 +1036,20 @@ function complete_db!(moddb) #««
 		"" => (after = ["kelsey", "keto", "ub" ],),
 		0 => (exclusive = "AI",),
 		5 => (exclusive = ["c6kach.cre", "ar0300.bcs", "ar0300.are", "aran.cre", "maevar.cre", "mvguard1.cre", "mvpries.cre", "aran02.cre", "arnfgt03.cre", "arnfgt04.cre", "renal.cre", "thief1.cre", "tassa.cre", "c6tanov.bcs", "vvtanov.cre",],),
+   6 => (exclusive = ["sw1h50.itm"],),
 		8 => (exclusive = ["ar0812.are", "ar1515.bcs", "thumb.cre", ],),
 		9 => (exclusive = ["potn33.itm", "potn38.itm", "spwi106.spl", "spwi815.spl",],),
-		10 => (exclusive = ["hdragsil.cre", "ar2905.bcs",],),
-		11 => (exclusive = ["Oasis", "amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"],),
+  10 => (exclusive = ["hellself.eff", "spin755.spl", "spin751.spl", "sphl004.spl", "spin753.spl", "hellself.cre", "sphl003.spl", "sphl005.spl", "hellgen2.cre", "sphl001.spl", "sphl002.spl", "cutc7g.bcs", "spin749.spl", "spin747.spl"],),
+  11 => (exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"],),
 		12 => (exclusive = ["Oasis", "ar6300.are", ],),
 		13 => (exclusive = ["ppsanik.cre", "pirmur02.cre", "pirmur05.cre",],),
-		15 => (exclusive = ["suinvis.cre", "sumound.cre", "sudryad.cre", "sufake.itm", "sutear.itm",],),
-		16 => (exclusive = ["besamen.cre", "baisera.cre", "ar0811.bcs"],),
+  15 => (exclusive = ["suinvis.cre", "sumound.cre", "sudryad.cre", "sufake.itm", "sutear.itm", "sutear.bam", "sufake.bam"],),
+  16 => (exclusive = ["besamen.cre", "baisera.cre"],),
 		17 => (exclusive = ["kamir.cre",],),
 		19 => (exclusive = ["ar2402.are",],),
-		20 => (exclusive = ["ar2100.bcs", "spin671.spl",],),
+  20 => (exclusive = ["spin671.spl"],),
 		21 => (exclusive = ["ar0530.are", "ar0530.bcs",],),
+ 401 => (exclusive = ["sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre", "reddeath.bcs",],),
 	)#»»
 	setmod!("d5_random_tweaks", #««
 		"" => (after = ["spell_rev", "item_rev"],),

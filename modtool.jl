@@ -291,7 +291,8 @@ function extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 		mod.id == "stratagems" &&
 			run(`sed -e 's,(3\*ability_true_level)/2,(ability_true_level+5),' stratagems/spell/inquisitor.tpa`)
 		#  - d0questpack has a badly named directory
-		mod.id == "d0questpack" && mv("questpack", mod.id)
+		mod.id == "d0questpack" &&
+			(mv("questpack", mod.id); symlink(mod.id, "questpack"))
 		# move extracted files to mods directory
 		for file in readdir(); mv(file,  joinpath(mods, file); force=true); end
 	end end
@@ -808,7 +809,7 @@ function mkmod(id, url, desc, class, archive = "")#««
 # 		:soa, :karatur, :verrsza, :white) && (class = :PreEET)
 	return Mod(id, url, desc, class, archive)
 end#»»
-function mod_exclusives(mod::Mod; except = String[])
+function mod_exclusives(mod::Mod; except = String[])#««
 	g = modgame(mod); gamedir = GAMEDIR[g]
 	data = modtp2data(mod)
 	ret = Pair{Int, Vector{String}}[]
@@ -828,7 +829,7 @@ function mod_exclusives(mod::Mod; except = String[])
 		end
 	end
 	return [ id => (exclusive = excl,) for (id, excl) in ret ]
-end
+end#»»
 # function exclusive!(id;moddb = global_moddb, exclude_prefix=String[])
 # 	mod = findmod(id;moddb)
 # 	setcomp!(mod.components, mod_exclusives(mod; exclude_prefix)...)
@@ -1110,17 +1111,17 @@ function complete_db!(moddb) #««
 		4000 => (exclusive = "Tempus",),
 	)#»»
 	setmod!("eetact2",#««
-		100 => (exclusive = ["ar0602.are", "ar0603.are"],),
+		100 => (exclusive = ["ar0601.are", "ily1.cre", "ilyhamm.itm", ],),
 		120 => (exclusive = ["torgal.cre"],),
 		130 => (exclusive = ["sahamb01.bcs", "sahcpt01.cre", "sahgrd01.cre"],),
 		140 => (exclusive = ["bodhi2.cre", "bodtan.cre",],),
-		150 => (exclusive = ["ar2900.bcs",],),
+		150 => (exclusive = ["ar2900.bcs", "helljon.dlg"],),
 		160 => (exclusive = ["ar0907.bcs", "hlkoshi.cre", "hlolaf.cre", "hlmafer.cre", "hlstal.cre", "hlketta.cre", "hlsion.cre", "hlketta.bcs",],),
 		170 => (exclusive = ["ar1008.bcs", "hlshang.cre", "hlrevan.cre", "hllayen.cre"],),
 		200 => (exclusive = ["ar9391.bcs", "tsmaepet.cre", "mvguard1.cre", "mvpries.cre", "maevar.cre"],),
 		210 => (exclusive = ["ar0318.are", "ar0318.bcs"],),
-		230 => (exclusive = ["hldemi.cre", "ar0331.bcs", "ar0330.bcs"],),
-		231 => (exclusive = ["hldemi.cre", "ar0331.bcs", "ar0330.bcs"],),
+		230 => (exclusive = ["hldemi.cre", "ar0331.bcs", "ar0330.bcs", "archlich.cre"],),
+		231 => (exclusive = ["hldemi.cre", "ar0331.bcs", "ar0330.bcs", "archlich.cre"],),
 		232 => (exclusive = ["hldemi.cre", "ar0331.bcs", "ar0330.bcs"],),
 		240 => (exclusive = ["ar0326.bcs"],),
 		260 => (exclusive = ["spwnbeh.bcs", "spwndead.bcs", "spwndrow.bcs", "spwngol.bcs", "spwnmind.bcs", "spwnmon.bcs", "spwnorc.bcs", "spwnrak.bcs", "spwntoa.bcs", "spwntrol.bcs", "spwnvamp.bcs", "spwnwolf.bcs"],),
@@ -1128,12 +1129,22 @@ function complete_db!(moddb) #««
 		280 => (exclusive = ["ar0042.bcs", "ar0043.bcs", "ar0044.bcs",],),
 		290 => (exclusive = "undead",),
 		300 => (exclusive = ["flayer01.bcs", "gormind.bcs", "mindal01.bcs"],),
+		310 => (exclusive = ["udsilver.itm", "spin691.spl", "spin693.spl", "dragred.bcs", "dragblac.bcs", "dhadra01.bcs"],),
+		320 => (exclusive = ["behold.itm", "behdir01.bcs", "behhiv01.bcs", "behold01.bcs", "gauth01.bcs", "elderorb.bcs"],),
+		330 => (exclusive = ["vampir01.bcs", "vamemi01.bcs"],),
+		340 => (exclusive = ["lich01.cre", "mage10a.bcs", "bodtan.cre", "lavok01.cre",],),
+		350 => (exclusive = ["goliro.itm", "golsto.itm", "goliro01.cre", "golsto01.cre", "golada01.cre",],),
+		360 => (exclusive = ["nymph.bcs",],),
 		370 => (exclusive = ["ar0406.bcs",],), # improved coronet
-		380 => (exclusive = ["Oasis"],),
+		380 => (exclusive = ["Oasis", "amtarc01.cre", "amtmag01.cre", "amtcle01.cre", "amtcap01.cre", "amtpik01.cre"],),
 		390 => (exclusive = ["ar1700.are",],), # small teeth
 		400 => (exclusive = ["ar1800.are", "ar18arch.cre", "ar18dwaf.cre", "ar18fig.cre", "ar18mage.cre", "ar18prie.cre", "ar18skel.cre", "ar18thif.cre"],), # north forest
 		410 => (exclusive = ["ar5200.are",],), # marching mountains
-		420 => (exclusive = ["dempit01.cre", "telpit1.cre"],), # improved demons
+		420 => (exclusive = ["dempit01.cre", "telpit1.cre", "tanari.bcs", "demglab.bcs", "dempit.bcs", "mage20c.bcs",],), # improved demons
+		430 => (exclusive = ["ar1900.bcs", "impshad.bcs"],),
+		431 => (exclusive = ["ar1900.bcs", "impshad.bcs"],),
+		432 => (exclusive = ["ar1900.bcs", "impshad.bcs"],),
+		440 => (exclusive = ["giafir.itm", "ysg2.cre", "ysfire01.cre", "ysguar01.cre"],),
 	)#»»
 	setmod!("item_rev",#««
 	0 => (exclusive = ["hlolth.itm", "clolth.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "blun01.itm", "bolt01.itm", "sahbolt.itm", "kuobolt.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bull01.itm", "chan01.itm", "clck01.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "amsoul01.itm", "leat01.itm", "aegis.itm", "bruenaxe.itm", "bruenpla.itm", "cattibow.itm", "catliowp.cre", "figlion.itm", "spidfgsu.cre", "figspid.itm", "bsw1h01.itm", "bersersu.cre", "bleat01.itm", "miscbc.itm", "nebdag.itm", "quiver01.itm", "reaver.itm", "korax01.itm", "nparm.itm", "npbow.itm", "npbelt.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npstaf.itm", "npplat.itm", "keldorn.spl", "npring01.itm", "npshld.itm", "npsw01.itm", "clolth.itm", "hlolth.itm", "finsarev.itm", "plat01.itm", "rods01.itm", "rods01.spl", "shld01.itm", "slng01.itm", "sper01.itm", "staf01.itm", "smoundsu.cre", "smoundsu.itm", "sw1h01.itm", "xbow01.itm", "waflail.itm", "wawak.itm"],),
@@ -1312,7 +1323,6 @@ function complete_db!(moddb) #««
 			end
 		end#»»
 end#»»
-
 # ««1
 end
 

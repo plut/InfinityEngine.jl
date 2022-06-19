@@ -42,6 +42,7 @@ module ModTool
 using Printf
 using Dates
 using TOML
+using JSON
 using DataStructures
 using HTTP
 using LibGit2
@@ -122,11 +123,17 @@ end#»»
 		for i in 1:fieldcount(ComponentProperties)
 		if !isempty(getfield(prop, i)))
 
-mutable struct ModComponent#««
+struct ModComponent
 	id::String
 	name::String
-	@inline ModComponent(id, n) = new(string(id), n)
-end#»»
+	group::String
+	subgroup::String
+	@inline ModComponent(i, t, g="", s="") = new(string(i), t, g, s)
+end
+@inline Base.iterate(c::ModComponent, args...) =
+	Base.iterate((c.id, c.name, c.group, c.subgroup), args...)
+@inline description(c::ModComponent) =
+	isempty(c.subgroup) ? c.name : c.subgroup*'/'*c.name
 
 mutable struct Mod#««
 	# data stored in moddb file:
@@ -146,19 +153,15 @@ mutable struct Mod#««
 	# components["1"] = Dict(
 	# 	"depends" => [ dependencies...],
 	# 	"exclusive" => [ list of symbols... ],
+	# each symbol (e.g. tac0 table) is owned at most once
 	#	)
-# 	owns::Dict{Int,Vector{String}}
 
 	@inline Mod(;id, url, description, class, archive="", lastupdate=1970,
 		properties = Dict(), tp2 = "", languages = String[]) = begin
 		new(lowercase(id), url, description, archive, class, Date(lastupdate),
 			Dict(k=>ComponentProperties(v) for (k,v) in pairs(properties)), tp2,
-			languages, 0, "", ModComponent[])
+			languages, 0, "", [])
 		end
-		
-# 	@inline Mod(id, url, desc, class, archive, date=1970, comp = Dict()) =
-# 		new(lowercase(id), url, desc, archive, modclass(class), Date(date), comp)
-	# each symbol (e.g. tac0 table) is owned at most once
 end#»»
 @inline sortkey(a::Mod) = (modclass(a.class), a.lastupdate)
 @inline Base.isless(a::Mod, b::Mod) = sortkey(a) < sortkey(b)
@@ -183,9 +186,9 @@ end#»»
 function write_moddb(io::IO; moddb=global_moddb)#««
 	TOML.print(io, Dict(m.id => m for m in moddb)) do m
 		d = Dict("url" => m.url, "lastupdate" => m.lastupdate,
-		"description" => m.description, "class" => MOD_CLASSES[m.class])
-		!isempty(m.archive) && (d["archive"] = m.archive)
-		!isempty(m.properties) &&
+		"description" => m.description, "class" => m.class)
+		isempty(m.archive) || (d["archive"] = m.archive)
+		isempty(m.properties) ||
 			(d["properties"] = Dict(k=>Dict(v) for (k,v) in m.properties))
 		d
 	end
@@ -353,7 +356,6 @@ function lang_score(langname, pref_lang=PREF_LANG)#««
 	end
 	return typemax(Int)
 end#»»
-@inline description(c::ModComponent) = c.name
 function tp2data!(m)#««
 	extract(m) || return nothing
 	id = m.id; m.tp2 = ""
@@ -374,11 +376,12 @@ function tp2data!(m)#««
 		(m.sel_lang = argmin([lang_score(l, PREF_LANG) for l in m.languages]) - 1)
 #»»
 	# components««
-	m.components = ModComponent[]
-	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-components $(m.tp2) $(m.sel_lang)`)
-		x = match(r"^~([^~]*)~\s+#(\d+)\s+#(\d+)\s*//\s*(\S.*)$", line)
-		isnothing(x) && continue
-		push!(m.components, ModComponent(parse(Int, x.captures[3]), x.captures[4]))
+	empty!(m.components)
+	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-components-json $(m.tp2) $(m.sel_lang)`)
+		startswith(line, "[{") || continue
+		v = JSON.parse(line)
+		m.components = [ ModComponent(x["number"], x["name"], 
+			get(x["group"], 1, ""), get(x, "subgroup", "")) for x in v ]
 	end#»»
 	# readme««
 	m.readme = ""
@@ -393,14 +396,7 @@ function tp2data!(m)#««
 			(m.readme = joinpath(MODS, id, 
 				readmes[argmin([ lang_score(f, PREF_LANG) for f in readmes ])]))
 	end#»»
-# 	for (i, m) in pairs(groups)
-# 		groups[i] = translate(m, translation)
-# 	end
-# 	# write table of (component -> translated component name)
 	end # cd(mods)
-# 	return (tp2 = tp2file, sel_lang = sel_lang,
-# 		language = isempty(languages) ? "" : languages[sel_lang+1],
-# 		readme = readme, components = components)
 end#»»
 function readme(mod::Mod)#««
 	extract(mod) || return false
@@ -852,7 +848,7 @@ function mod_exclusives(mod::Mod; except = String[])#««
 	ret = Pair{Int, Vector{String}}[]
 	cd(MODS) do
 		for c in mod.components
-			printlog("Computing exclusivity for $(mod.id):$(c.id) '$(c.name)'")
+			printlog("Computing exclusivity for $(mod.id):$(c.id)=$(description(c))")
 			excl = String[]
 			for line in eachline(ignorestatus(`weidu --game $gamedir --skip-at-view --no-exit-pause --noautoupdate --list-actions --language $(mod.sel_lang) $(mod.tp2) --force-install $(c.id)`))
 				m = match(r"SIMULATE\s+(\S.*\S)\s+(\S.*)$", line); 
@@ -1367,6 +1363,7 @@ function complete_db!(moddb) #««
 		"turnabout" => "Quests",
 		"d0questpack" => "Quests",
 		"eet_end" => "Final",
+# 		"might_and_guile" => "Tweaks",
 	);
 		isnothing(findmod(i;moddb)) && error("cannot find mod '$i'")
 		findmod(i;moddb).class = modclass(c); end#»»

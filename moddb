@@ -3,7 +3,6 @@ lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:Skitia/Kale-BG1"
 description = "Kale"
-archive = ""
 
 ["7c#sartweak"]
 lastupdate = 1970-01-01
@@ -17,21 +16,18 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:Eltamin/etamin-soundsets"
 description = "Etamin's Extra Soundsets"
-archive = ""
 
 [turnabout]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Pocket-Plane-Group/Turnabout"
 description = "Turnabout"
-archive = ""
 
 [a7-chaossorcerer]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Argent77/A7-ChaosSorcerer"
 description = "Chaos Sorcerer Kit"
-archive = ""
 
 [kittomes]
 lastupdate = 1970-01-01
@@ -45,7 +41,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:SpellholdStudios/Silver_Star_NPC"
 description = "Silver Star"
-archive = ""
 
 [hammers]
 lastupdate = 1970-01-01
@@ -66,7 +61,6 @@ lastupdate = 1970-01-01
 class = "Kits"
 url = "github:thisisulb/DreamWalkerShamanKit"
 description = "Dreamwalker Shaman Kit"
-archive = ""
 
 [eseries]
 lastupdate = 1970-01-01
@@ -80,7 +74,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gibberlings3/Haldamir"
 description = "Haldamir NPC"
-archive = ""
 
 [might_and_guile]
 lastupdate = 1970-01-01
@@ -97,14 +90,12 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/TyrisEE"
 description = "Tyris Flare NPC"
-archive = ""
 
 [tod]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/TowerOfDeception"
 description = "Tower of Deception"
-archive = ""
 
 [area_patcher]
 lastupdate = 1970-01-01
@@ -118,7 +109,6 @@ lastupdate = 1970-01-01
 class = "Spells"
 url = "github:SpellholdStudios/Saradas_Magic_for_BG2"
 description = "Saradas BG2"
-archive = ""
 
 [jkits]
 lastupdate = 1970-01-01
@@ -132,7 +122,6 @@ lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:Pocket-Plane-Group/bg1ub"
 description = "BG1 Unfinished Business"
-archive = ""
 
 [arestorationp]
 lastupdate = 1970-01-01
@@ -153,35 +142,30 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Pocket-Plane-Group/Kelsey"
 description = "Kelsey NPC"
-archive = ""
 
 [framed]
 lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:Gibberlings3/framed"
 description = "Framed"
-archive = ""
 
 [fade]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:SpellholdStudios/Fade_NPC"
 description = "Fade NPC"
-archive = ""
 
 [toa]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/ToA"
 description = "Tales of Anegh"
-archive = ""
 
 [vampiretales]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/Miriam"
 description = "Vampire Tales"
-archive = ""
 
 ["neh'taniel"]
 lastupdate = 1970-01-01
@@ -202,7 +186,6 @@ lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/MasterVampire"
 description = "Check the Bodies Master Vampire"
-archive = ""
 
 [verrbg2]
 lastupdate = 1970-01-01
@@ -216,7 +199,6 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:anongit/DragonspearUI"
 description = "DragonspearUI"
-archive = ""
 
 [vampire_world]
 lastupdate = 1970-01-01
@@ -230,14 +212,12 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:Gibberlings3/Continuous_NPC_Portraits"
 description = "Continuous NPC Portraits"
-archive = ""
 
 [cernd]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/CerndFriendship"
 description = "Cernd Friendship"
-archive = ""
 
 [karatur]
 lastupdate = 1970-01-01
@@ -258,28 +238,24 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Gibberlings3/Ajantis_BG1_Expansion"
 description = "Ajantis BG1 Expansion"
-archive = ""
 
 [relievewizardslayer]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Raduziel/Relieve-Wizard-Slayer"
 description = "Relieve Wizard Slayer (Kit Revision)"
-archive = ""
 
 [roterror]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/RoT"
 description = "Region of Terror"
-archive = ""
 
 [ruad]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:SpellholdStudios/RuadRofhessaItemUpgrade"
 description = "Ruad Ro'fhessa Item Upgrade"
-archive = ""
 
 [sword_and_fist]
 lastupdate = 1970-01-01
@@ -307,14 +283,12 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/ArienaEE"
 description = "Ariena NPC"
-archive = ""
 
 [tenyathermidor]
 lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:RoxanneSHS/Tenya"
 description = "Tenya Thermidor NPC"
-archive = ""
 
 [w_packmule]
 lastupdate = 1970-01-01
@@ -328,21 +302,18 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:r-e-d/LeUI-BG1EE"
 description = "lefreut's enhanced UI BG1 skin (requires game version 2.6)"
-archive = ""
 
 [sarevokfriendship]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/SarevokFriendship"
 description = "Sarevok Friendship"
-archive = ""
 
 [viconia]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/ViconiaFriendship"
 description = "Viconia Friendship"
-archive = ""
 
 [eet-are_fix]
 lastupdate = 1970-01-01
@@ -356,7 +327,6 @@ lastupdate = 1970-01-01
 class = "Fixes"
 url = "github:Gibberlings3/transitions"
 description = "Transitions"
-archive = ""
 
 [unofficialitempack]
 lastupdate = 1970-01-01
@@ -377,7 +347,6 @@ lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Holic75/Baldurs-gate-dnd-3.5"
 description = "Baldur`s Gate DnD 3.5 (New)"
-archive = ""
 
 [worldmap_iwd_eet]
 lastupdate = 1970-01-01
@@ -405,7 +374,6 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:Pocket-Plane-Group/Under-Respresented_Items"
 description = "Underrepresented Items (from Icewind Dale 2)"
-archive = ""
 
 [rjali]
 lastupdate = 1970-01-01
@@ -419,21 +387,18 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:SpellholdStudios/BP-BGT-Worldmap"
 description = "Worldmap"
-archive = ""
 
 [minscfriendship]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/MinscFriendship"
 description = "Minsc Friendship"
-archive = ""
 
 [eeuitweaks]
 lastupdate = 1970-01-01
 class = "GUI"
 url = "github:r-e-d/EEUITweaks"
 description = "EEUITweaks"
-archive = ""
 
 [therune]
 lastupdate = 1970-01-01
@@ -450,28 +415,24 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:Argent77/HQ-SoundClips-BG2EE"
 description = "High Quality soundclips for BG2EE extended content"
-archive = ""
 
 [artisanskitpack]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:ArtemiusI/The-Artisan-s-Kitpack"
 description = "Artisans Kitpack"
-archive = ""
 
 [yoshimo]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/YoshimoFriendship"
 description = "Yoshimo Friendship"
-archive = ""
 
 [spell_rev]
 lastupdate = 1970-01-01
 class = "Early"
 url = "github:Gibberlings3/SpellRevisions"
 description = "Spell Revisions v4 b18"
-archive = ""
 
     [spell_rev.properties.10]
     exclusive = ["devaevil.cre", "devagood.cre", "planevil.cre", "plangood.cre"]
@@ -504,21 +465,18 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:ArtemiusI/Sirene-NPC-for-BG2-EE"
 description = "Sirene NPC for BG2:EE"
-archive = ""
 
 [rttitempack]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack"
 description = "Return to Trademeet item pack"
-archive = ""
 
 [enhanced-powergaming-scripts]
 lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Gibberlings3/Enhanced-Powergaming-Scripts"
 description = "Enhanced Powergaming Scripts"
-archive = ""
 
 [skills-and-abilities]
 lastupdate = 1970-01-01
@@ -532,42 +490,36 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:SpellholdStudios/Iylos"
 description = "Iylos (ToB monk)"
-archive = ""
 
 [valhorn]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:Gibberlings3/Improved_Horns_of_Valhalla"
 description = "Improved Horn of Valhalla"
-archive = ""
 
 [ihateundead]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Raduziel/I-Hate-Undead-Kitpack"
 description = "I Hate Undead Kitpack"
-archive = ""
 
 [seatower]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/Balduran-s-Sea-Tower"
 description = "Balduran's Sea Tower"
-archive = ""
 
 [butchery]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:GwendolyneFreddy/butchery"
 description = "BuTcHeRy"
-archive = ""
 
 [emily]
 lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:Skitia/Emily-BG1"
 description = "Emily"
-archive = ""
 
 [alora]
 lastupdate = 1970-01-01
@@ -581,7 +533,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:SpellholdStudios/Isra_NPC_BG2"
 description = "Isra BG2 NPC"
-archive = ""
 
 [animalcompanions]
 lastupdate = 1970-01-01
@@ -595,21 +546,18 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/ArathEET"
 description = "Arath (Rewired)"
-archive = ""
 
 [tgc1e]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:K4thos/TGC1e"
 description = "The Grey Clan Episode I: In Candlelight"
-archive = ""
 
 ["c#brandock"]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gitjas/Brandock_the_Mage"
 description = "Brandock the Mage"
-archive = ""
 
 [allthingsmazzy]
 lastupdate = 1970-01-01
@@ -623,14 +571,12 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:MarkVadasz/Rupert"
 description = "Rupert the Dye Merchant"
-archive = ""
 
 [alchemy]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:SpellholdStudios/JansAlchemy"
 description = "Jan's Alchemy"
-archive = ""
 
 [touched]
 lastupdate = 1970-01-01
@@ -710,35 +656,30 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:PaulaMigrate/NaliaEE"
 description = "de'Arnise Romance"
-archive = ""
 
 [branwen]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Pocket-Plane-Group/Branwen_for_BGII"
 description = "Branwen BG2 NPC"
-archive = ""
 
 [npcflirt]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Pocket-Plane-Group/NPC_Flirt_Packs"
 description = "NPC Flirt Packs"
-archive = ""
 
 [disobedience]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/CivilDisobedience"
 description = "Check the Bodies Civil Disobedience"
-archive = ""
 
 [valen]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/ValenEE"
 description = "Valen NPC"
-archive = ""
 
 [kindrek]
 lastupdate = 1970-01-01
@@ -752,7 +693,6 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:SpellholdStudios/TheSwordofNoober"
 description = "Sword of Noober"
-archive = ""
 
 [wilsonchronicles]
 lastupdate = 1970-01-01
@@ -801,14 +741,12 @@ lastupdate = 1970-01-01
 class = "SmallNPCs"
 url = "github:flamewing/WTPFamiliars"
 description = "WTP Familiars"
-archive = ""
 
 [safana]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:RoxanneSHS/SafanaBG2"
 description = "Safana in Amn"
-archive = ""
 
 [sentrizeal_aa_pack]
 lastupdate = 1970-01-01
@@ -822,10 +760,9 @@ lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Gibberlings3/SwordCoastStratagems"
 description = "Sword Coast Stratagems"
-archive = ""
 
-    [stratagems.properties.7220]
-    exclusive = ["battho.cre"]
+    [stratagems.properties.8090]
+    exclusive = ["ar1512.are", "ar1515.are"]
 
     [stratagems.properties.5030]
     exclusive = ["cloak_of_mirroring"]
@@ -1035,8 +972,8 @@ archive = ""
     [stratagems.properties.5020]
     exclusive = ["cloak_of_displacement"]
 
-    [stratagems.properties.8090]
-    exclusive = ["ar1512.are", "ar1515.are"]
+    [stratagems.properties.7220]
+    exclusive = ["battho.cre"]
 
     [stratagems.properties.8160]
     exclusive = ["elemimix.bcs", "giafir01.cre", "golbur01.bcs", "gorsku01.bcs", "hgwar01.cre", "ysfire01.cre", "ysguar01.cre"]
@@ -1046,21 +983,18 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/Murneth"
 description = "Mur'Neth NPC"
-archive = ""
 
 [rosere]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
 url = "github:RoxanneSHS/RoseRE"
 description = "Rose NPC Resurrected for EET"
-archive = ""
 
 [valygarfriendship]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/ValygarFriendship"
 description = "Valygar Friendship"
-archive = ""
 
 [rgenie]
 lastupdate = 1970-01-01
@@ -1074,7 +1008,6 @@ lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:Gibberlings3/Shards_of_Ice"
 description = "Shards of Ice"
-archive = ""
 
 [verrsza]
 lastupdate = 1970-01-01
@@ -1095,7 +1028,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:PaulaMigrate/Kitanya-Resurrected"
 description = "Kitanya"
-archive = ""
 
 [faren]
 lastupdate = 1970-01-01
@@ -1109,7 +1041,6 @@ lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:Gibberlings3/BG_Quests_And_Encounters"
 description = "BG1 Mini Quests and Encounters"
-archive = ""
 
 [eet_send_inn_simple]
 lastupdate = 1970-01-01
@@ -1137,14 +1068,13 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/FishingForTrouble"
 description = "Fishing for Trouble"
-archive = ""
 
 [cdtweaks]
-lastupdate = 1970-01-01
+lastupdate = 2022-06-19
 class = "Tweaks"
-url = "github:Gibberlings3/Tweaks-Anthology"
+url = "https://github.com/Gibberlings3/Tweaks-Anthology/releases/download/v15/lin-cdtweaks-v15.tar.gz"
 description = "Tweaks Anthology"
-archive = ""
+archive = "lin-cdtweaks-v15.tar.gz"
 
     [cdtweaks.properties.1040]
     exclusive = ["amncen1.cre", "amng1.cre"]
@@ -1415,21 +1345,18 @@ lastupdate = 1970-01-01
 class = "Kits"
 url = "github:ArtemiusI/Shadow-Magic"
 description = "Shadow Magic (Pauses installation for manual input)"
-archive = ""
 
 [valerie]
 lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:SpellholdStudios/Valerie_NPC"
 description = "Valerie NPC"
-archive = ""
 
 [adrian]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:SpellholdStudios/Adrian_NPC"
 description = "Adrian NPC"
-archive = ""
 
 [calin]
 lastupdate = 1970-01-01
@@ -1443,14 +1370,12 @@ lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Gibberlings3/iwdification"
 description = "IWDification"
-archive = ""
 
 [isra]
 lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:SpellholdStudios/Isra_NPC"
 description = "Isra NPC"
-archive = ""
 
 [bgeetextpack]
 lastupdate = 1970-01-01
@@ -1485,14 +1410,12 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/Edwin_Romance"
 description = "Edwin Romance"
-archive = ""
 
 [herthimoney]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Austin-BG/HTaM"
 description = "Heroes, Thieves and Moneylenders"
-archive = ""
 
 [swordsaint]
 lastupdate = 1970-01-01
@@ -1508,47 +1431,41 @@ url = "https://www.dropbox.com/s/mogovd9x99niham/RestoreSound_V1.zip?dl=1"
 description = "Restore Original Casting Sounds"
 archive = "OldSound.zip"
 
-[solaufein]
-lastupdate = 1970-01-01
-class = "NPCs"
-url = "github:RoxanneSHS/Solaufein"
-description = "Solaufein NPC"
-archive = ""
-
 [keldorn_rom]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Gibberlings3/Keldorn_Romance"
 description = "Keldorn Romance"
-archive = ""
+
+[solaufein]
+lastupdate = 1970-01-01
+class = "NPCs"
+url = "github:RoxanneSHS/Solaufein"
+description = "Solaufein NPC"
 
 [dh_tweaks]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/DarkHorizonsTweaks"
 description = "Dark Horizons Tweaks"
-archive = ""
 
 [deepgnomes]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/DeepgnomesEET"
 description = "Deepgnomes on the Sword Coast"
-archive = ""
 
 [impasylum]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/Asylum"
 description = "Improved Asylum"
-archive = ""
 
 [indinpc]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/Indira"
 description = "Indira NPC"
-archive = ""
 
 [ofheirloomsandclasses]
 lastupdate = 1970-01-01
@@ -1562,14 +1479,12 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:MattyGroove/Amber"
 description = "Amber"
-archive = ""
 
 [stuffofthemagi]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:SpellholdStudios/StuffofTheMagi"
 description = "Stuff of the Magi"
-archive = ""
 
 [scales_of_balance]
 lastupdate = 1970-01-01
@@ -1618,7 +1533,6 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:SpellholdStudios/HaerDalis_Swords"
 description = "Haer'Dalis' Swords"
-archive = ""
 
 [7c-yoshi]
 lastupdate = 1970-01-01
@@ -1632,21 +1546,18 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Pocket-Plane-Group/Dungeon_Crawl"
 description = "Dungeon Crawl"
-archive = ""
 
 [sirene]
 lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:ArtemiusI/Sirene-NPC"
 description = "Sirene NPC for BG1:EE"
-archive = ""
 
 [celestials]
 lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Gibberlings3/PnP_Celestials"
 description = "P&P Celestials"
-archive = ""
 
 [tashia]
 lastupdate = 1970-01-01
@@ -1674,28 +1585,24 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:trinit2/Bg2Dorn"
 description = "Dorn Romance Expansion"
-archive = ""
 
 [dace_eet]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/DaceEET"
 description = "Dace Linton"
-archive = ""
 
 [lena]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:gungorenu/bg2-npcmod-lena"
 description = "Lena"
-archive = ""
 
 [snakes]
 lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:SpellholdStudios/TheSlitheringMenace"
 description = "Slithering Menace"
-archive = ""
 
 [refinements]
 lastupdate = 1970-01-01
@@ -1709,42 +1616,36 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:Gibberlings3/SoD-to-BG2EE-Item-Upgrade"
 description = "SoD to SoA Item Upgrade (New)"
-archive = ""
 
 [backbrynnlaw]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Pocket-Plane-Group/Back_to_Brynnlaw"
 description = "Back to Brynnlaw"
-archive = ""
 
 [ctbice]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/HaveIce"
 description = "Check the Bodies Have Ice"
-archive = ""
 
 [melynda]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/MelyndaMute"
 description = "Check the Bodies Melynda the Mute"
-archive = ""
 
 [shineoncaelar]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:RoxanneSHS/Caelar"
 description = "Shine On Caelar"
-archive = ""
 
 [xanbg1friend]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Pocket-Plane-Group/Xan_BG1_Friendship"
 description = "Xan's Friendship Path for BG1"
-archive = ""
 
 [innershade]
 lastupdate = 1970-01-01
@@ -1772,7 +1673,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Pocket-Plane-Group/Coran_for_BGII"
 description = "Coran NPC for BG2"
-archive = ""
 
 [dlcmerger]
 lastupdate = 1970-01-01
@@ -1786,21 +1686,18 @@ lastupdate = 1970-01-01
 class = "Fixes"
 url = "github:EE-Mod-Setup/EET_Fixpack"
 description = "EET Fixpack"
-archive = ""
 
 [imnesvale]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/ImnesvaleEE"
 description = "Imnesvale Invasion"
-archive = ""
 
 [hiddengameplayoptions]
 lastupdate = 1970-01-01
 class = "GUI"
 url = "github:Argent77/A7-HiddenGameplayOptions"
 description = "Reveal Hidden Gameplay Options"
-archive = ""
 
 [the_horde]
 lastupdate = 1970-01-01
@@ -1821,21 +1718,18 @@ lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Banananaut/Jimfix"
 description = "Jim's Fixes and Tweaks"
-archive = ""
 
 [bg1re]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Gibberlings3/BG1_Romantic_Encounters"
 description = "Baldur's Gate Romantic Encounters"
-archive = ""
 
 [orelios]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:PaulaMigrate/Orelios"
 description = "Orelios NPC"
-archive = ""
 
 [sarevokromance]
 lastupdate = 1970-01-01
@@ -1849,21 +1743,18 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:MattyGroove/ThePictureStandard"
 description = "The Picture Standard"
-archive = ""
 
 [nephele]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:SpellholdStudios/Nephele_NPC"
 description = "Nephele NPC"
-archive = ""
 
 [charlatan]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Raduziel/Charlatan-Kit"
 description = "Charlatan (Bard Kit)"
-archive = ""
 
 [warslingsniperkit]
 lastupdate = 1970-01-01
@@ -1898,14 +1789,12 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:GwendolyneFreddy/IWD_Item_Pack"
 description = "IWD item pack"
-archive = ""
 
 [aura_bg1]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:ArtemiusI/Aura_BG1"
 description = "Aura"
-archive = ""
 
 [tangledisle]
 lastupdate = 1970-01-01
@@ -1926,7 +1815,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gitjas/Ascalons_Breagar"
 description = "Ascalons Breagar"
-archive = ""
 
 [k9sharteelnpc]
 lastupdate = 1970-01-01
@@ -1947,7 +1835,6 @@ lastupdate = 1970-01-01
 class = "Early"
 url = "github:Gibberlings3/ItemRevisions"
 description = "Item Revisions"
-archive = ""
 
     [item_rev.properties.0]
     exclusive = ["aegis.itm", "amsoul01.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "bersersu.cre", "bleat01.itm", "blun01.itm", "bolt01.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bruenaxe.itm", "bruenpla.itm", "bsw1h01.itm", "bull01.itm", "catliowp.cre", "cattibow.itm", "chan01.itm", "clck01.itm", "clolth.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "figlion.itm", "figspid.itm", "finsarev.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "hlolth.itm", "keldorn.spl", "korax01.itm", "kuobolt.itm", "leat01.itm", "miscbc.itm", "nebdag.itm", "nparm.itm", "npbelt.itm", "npbow.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npplat.itm", "npring01.itm", "npshld.itm", "npstaf.itm", "npsw01.itm", "plat01.itm", "quiver01.itm", "reaver.itm", "rods01.itm", "rods01.spl", "sahbolt.itm", "shld01.itm", "slng01.itm", "smoundsu.cre", "smoundsu.itm", "sper01.itm", "spidfgsu.cre", "staf01.itm", "sw1h01.itm", "waflail.itm", "wawak.itm", "xbow01.itm"]
@@ -1967,28 +1854,24 @@ lastupdate = 1970-01-01
 class = "SmallNPCs"
 url = "github:Skitia/SkitiaNPCs"
 description = "Skitia NPCs"
-archive = ""
 
 [mercenary]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Raduziel/Mercenary-Kit"
 description = "Mercenary (Fighter Kit)"
-archive = ""
 
 [hiddenadventure]
 lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:Gitjas/hiddenadventure"
 description = "Hidden Adventures"
-archive = ""
 
 [candlemem]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/CandlekeepMemories"
 description = "Check the Bodies Candlekeep Memories"
-archive = ""
 
 [eet_tweaks]
 lastupdate = 1970-01-01
@@ -2032,14 +1915,12 @@ lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:InfinityMods/Ascension"
 description = "Ascension"
-archive = ""
 
 [dw_lanthorn]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Gibberlings3/Restored-Rhynn-Lanthorn"
 description = "Restored Rhynn Lanthorn quest"
-archive = ""
 
 [anishai]
 lastupdate = 1970-01-01
@@ -2055,8 +1936,8 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
 description = "Tactics EE"
 archive = "Tactics2_for_EE.zip"
 
-    [eetact2.properties.310]
-    exclusive = ["dhadra01.bcs", "dragblac.bcs", "dragred.bcs", "spin691.spl", "spin693.spl", "udsilver.itm"]
+    [eetact2.properties.230]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
 
     [eetact2.properties.320]
     exclusive = ["behdir01.bcs", "behhiv01.bcs", "behold.itm", "behold01.bcs", "elderorb.bcs", "gauth01.bcs"]
@@ -2151,11 +2032,11 @@ archive = "Tactics2_for_EE.zip"
     [eetact2.properties.200]
     exclusive = ["ar9391.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "tsmaepet.cre"]
 
-    [eetact2.properties.230]
-    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
-
     [eetact2.properties.232]
     exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
+
+    [eetact2.properties.310]
+    exclusive = ["dhadra01.bcs", "dragblac.bcs", "dragred.bcs", "spin691.spl", "spin693.spl", "udsilver.itm"]
 
 [bgeearwe]
 lastupdate = 1970-01-01
@@ -2183,14 +2064,12 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:AngelGryph/MadeInHeaven_ItemPack"
 description = "Made In Heaven Item Pack"
-archive = ""
 
 [aurora]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:Sampsca/Auroras-Shoes-and-Boots"
 description = "Aurora's shoes and boots"
-archive = ""
 
 [xanbg1voice]
 lastupdate = 1970-01-01
@@ -2211,7 +2090,6 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Gibberlings3/CoranBGFriend"
 description = "Coran's BG Extended Friendship Talks"
-archive = ""
 
 [saradas_magic]
 lastupdate = 1970-01-01
@@ -2225,7 +2103,6 @@ lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:Gibberlings3/bg1npcmusic"
 description = "BG1 NPC Project Music Pack"
-archive = ""
 
 [bgeear]
 lastupdate = 1970-01-01
@@ -2246,7 +2123,6 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:Renegade0/msfm"
 description = "More Style for Mages"
-archive = ""
 
 [white]
 lastupdate = 1970-01-01
@@ -2260,7 +2136,6 @@ lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/SpeakDead"
 description = "Check the Bodies Speak to the Dead"
-archive = ""
 
 [eet_end]
 lastupdate = 1970-01-01
@@ -2274,28 +2149,24 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:AstroBryGuy/ChattyImoen"
 description = "Chatty Imoen"
-archive = ""
 
 ["c#endlessbg1"]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Gibberlings3/EndlessBG1"
 description = "Endless BG1"
-archive = ""
 
 [angelo]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gibberlings3/Angelo"
 description = "Angelo NPC"
-archive = ""
 
 [itemupgrade]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:Pocket-Plane-Group/Item_Upgrade"
 description = "Item Upgrade"
-archive = ""
 
 [neerabanters]
 lastupdate = 1970-01-01
@@ -2309,7 +2180,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/XulayeEet"
 description = "Xulaye"
-archive = ""
 
 [k9roughworld]
 lastupdate = 1970-01-01
@@ -2323,21 +2193,18 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/IylosEET"
 description = "Iylos"
-archive = ""
 
 ["a7#improvedarcher"]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Argent77/A7-ImprovedArcher"
 description = "Improved Archer Kit"
-archive = ""
 
 [a7-golemconstruction]
 lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Argent77/A7-GolemConstruction"
 description = "Golem Construction for Spellcasters"
-archive = ""
 
 [d5_random_tweaks]
 lastupdate = 1970-01-01
@@ -2493,7 +2360,6 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/Magestronghold"
 description = "Mage Stronghold"
-archive = ""
 
 [wmart]
 lastupdate = 1970-01-01
@@ -2514,56 +2380,48 @@ lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:Gibberlings3/Gavin_BG"
 description = "Gavin NPC"
-archive = ""
 
 [bggoeet]
 lastupdate = 1970-01-01
 class = "GUI"
 url = "github:BigWorldProject/BGGOEET"
 description = "Baldur's Gate Graphics Overhaul for EET and BGT"
-archive = ""
 
 [recoloredbuttons]
 lastupdate = 1970-01-01
 class = "GUI"
 url = "github:Argent77/A7-recoloredbuttons"
 description = "Recolored Toolbar Buttons"
-archive = ""
 
 [ehlastra]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/Ehlastra"
 description = "Ehlastra"
-archive = ""
 
 [finchnpc]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/Finch"
 description = "Finch NPC"
-archive = ""
 
 [militiaofficer]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Raduziel/MilitiaOfficer-Kit"
 description = "Militia Officer (Fighter Kit)"
-archive = ""
 
 [kido]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/KidoEE"
 description = "Kido NPC"
-archive = ""
 
 [convinientammunition]
 lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:MattyGroove/ConvinientAmmunition"
 description = "Convenient Ammunition"
-archive = ""
 
 [ninja]
 lastupdate = 1970-01-01
@@ -2577,56 +2435,48 @@ lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:FredrikLindgren/randomiser"
 description = "Item Randomiser"
-archive = ""
 
 [slandor]
 lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:SpellholdStudios/The_Minotaur_and_Lilacor"
 description = "The Minotaur and Lilacor"
-archive = ""
 
 [bgeeclassicmovies]
 lastupdate = 1970-01-01
 class = "GUI"
 url = "github:Sampsca/BGEE-Classic-Movies"
 description = "BG:EE Classic Movies"
-archive = ""
 
 [haerdalisromance]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:MattyGroove/haerdalisromance"
 description = "Haer'Dalis Romance"
-archive = ""
 
 [a7-npcgenerator]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Argent77/A7-NPCGenerator"
 description = "NPC Generator (New)"
-archive = ""
 
 [bg1npc]
 lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:Gibberlings3/BG1NPC"
 description = "BG1 NPC Project"
-archive = ""
 
 [kimpirate]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/Kim_Pirate"
 description = "Kim the Pirate"
-archive = ""
 
 [eet_swo]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:RoxanneSHS/Tamoko"
 description = "The Sword of Chaos (Tamoko)"
-archive = ""
 
 [wsr]
 lastupdate = 1970-01-01
@@ -2674,28 +2524,24 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:Eltamin/artaport"
 description = "Artaport"
-archive = ""
 
 [haerdalis_friendship]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/HaerdalisFriendship"
 description = "Haer'dalis Friendship"
-archive = ""
 
 [song_and_silence]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Gibberlings3/SongAndSilence"
 description = "Song and Silence"
-archive = ""
 
 [imoenfriendship]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/ImoenFriendship"
 description = "Imoen Friendship"
-archive = ""
 
 [yvette]
 lastupdate = 1970-01-01
@@ -2716,28 +2562,24 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gitjas/Brages_Redemption"
 description = "Brage's Redemption"
-archive = ""
 
 [lucy]
 lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:SpellholdStudios/Lucy_the_Wyvern"
 description = "Lucy the Wyvern"
-archive = ""
 
 [ninde_eet]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/NindeEET"
 description = "Ninde"
-archive = ""
 
 [darron]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:SpellholdStudios/Darron"
 description = "Darron"
-archive = ""
 
 [bp-bgt_worldmap_russian_addon]
 lastupdate = 1970-01-01
@@ -2751,35 +2593,30 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:DaftHunk/Portraits-Portraits-Everywhere"
 description = "Portraits Portraits Everywhere"
-archive = ""
 
 [druidgrovemakeover]
 lastupdate = 1970-01-01
 class = "GUI"
 url = "github:thisisulb/DruidGroveMakeover"
 description = "Druid Grove Makeover"
-archive = ""
 
 [druidsor]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Gibberlings3/Geomantic_Sorcerer"
 description = "Geomantic Sorcerer"
-archive = ""
 
 [bg2eer]
 lastupdate = 1970-01-01
 class = "Fixes"
 url = "github:EugVV/BG2EE-russian"
 description = "Russian text for Baldurs Gate II: Enhanced Edition"
-archive = ""
 
 [firkraag]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:SpellholdStudios/Super_Firkraag"
 description = "Super Firkraag"
-archive = ""
 
 [al_item_pack]
 lastupdate = 1970-01-01
@@ -2793,7 +2630,6 @@ lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:BGforgeNet/bg2-tweaks-and-tricks"
 description = "klatu Tweaks and Fixes"
-archive = ""
 
     [tnt.properties.51]
     exclusive = ["spwi607.spl"]
@@ -2827,7 +2663,6 @@ lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:BartVanBeurden/bgee-animus"
 description = "Animus: Sentient Weapon"
-archive = ""
 
 [eternalimoen]
 lastupdate = 1970-01-01
@@ -2841,10 +2676,9 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:r-e-d/LeUI"
 description = "lefreut's enhanced UI (requires game version 2.6)"
-archive = ""
 
 [rr]
-lastupdate = 1970-01-01
+lastupdate = 2021-07-20
 class = "Tweaks"
 url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 description = "Rogue Rebalancing"
@@ -2897,35 +2731,30 @@ lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:Gibberlings3/The_Calling"
 description = "The Calling"
-archive = ""
 
 [g3anniversary]
 lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:Gibberlings3/g3anniversary"
 description = "Anniversary"
-archive = ""
 
 [chloe]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/ChloeEET"
 description = "Chloe NPC"
-archive = ""
 
 [hubelpot]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
 url = "github:SpellholdStudios/Hubelpot_the_Vegetable_Merchant_NPC"
 description = "Hubelpot the Vegetable Merchant NPC"
-archive = ""
 
 [nosodsound]
 lastupdate = 1970-01-01
 class = "GUI"
 url = "github:thisisulb/NoSoDSound"
 description = "BG1 Sounds in SoD"
-archive = ""
 
 [spstuff]
 lastupdate = 1970-01-01
@@ -2957,7 +2786,6 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:RoxanneSHS/Corwin"
 description = "Corwin NPC for BG1"
-archive = ""
 
 [d0questpack]
 lastupdate = 1970-01-01
@@ -3022,7 +2850,6 @@ lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Pocket-Plane-Group/D0Tweak"
 description = "Ding0 Tweak Pack"
-archive = ""
 
     [d0tweak.properties.11]
     after = ["rr"]
@@ -3032,21 +2859,18 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/EET_Expanded_Thief_Stronghold"
 description = "Expanded Thief Stronghold"
-archive = ""
 
 [djinnicompanion]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Argent77/DjinniCompanion"
 description = "Afaaq, the Djinni Companion"
-archive = ""
 
 [lenshunt]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/LensHunt"
 description = "The Broken Lanthorn"
-archive = ""
 
 [sotsc]
 lastupdate = 1970-01-01
@@ -3060,14 +2884,12 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:tipun81/tipun_gui_mod"
 description = "Tipun's User Interface (New)"
-archive = ""
 
 [reunion]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Pocket-Plane-Group/Reunion"
 description = "Reunion"
-archive = ""
 
 [iwd1_eet]
 lastupdate = 1970-01-01
@@ -3088,35 +2910,30 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/YasraenaEET"
 description = "Yasraena NPC"
-archive = ""
 
 [eet]
 lastupdate = 1970-01-01
 class = "Initial"
 url = "github:Gibberlings3/EET"
 description = "Enhanced Edition Trilogy"
-archive = ""
 
 [xan]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Pocket-Plane-Group/Xan_for_BGII"
 description = "Xan NPC"
-archive = ""
 
 [sos]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/SoS-EE"
 description = "Shadows over Soubar (Re-wired)"
-archive = ""
 
 [ctbliberate]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/Hlondeth"
 description = "Check the Bodies Liberation of Hlondeth"
-archive = ""
 
 [px_chantelame]
 lastupdate = 1970-01-01
@@ -3130,7 +2947,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/Sime"
 description = "Sime"
-archive = ""
 
 [sandrahtot]
 lastupdate = 1970-01-01
@@ -3151,21 +2967,18 @@ lastupdate = 1970-01-01
 class = "Kits"
 url = "github:aquadrizzt/MonasticOrders"
 description = "Monastic Orders"
-archive = ""
 
 [nanstein]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:GwendolyneFreddy/Nanstein"
 description = "Nanstein item upgrade"
-archive = ""
 
 [a7-totlm-bg2ee]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Argent77/A7-TotLM-BG2EE"
 description = "Trials of the Luremaster"
-archive = ""
 
 [npc_strongholds]
 lastupdate = 1970-01-01
@@ -3193,7 +3006,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:PaulaMigrate/Saerileth"
 description = "Saerileth NPC"
-archive = ""
 
 [housetweaks]
 lastupdate = 1970-01-01
@@ -3214,7 +3026,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/LongerRoadEE"
 description = "Longer Road EET"
-archive = ""
 
 [glamnpcpack]
 lastupdate = 1970-01-01
@@ -3228,7 +3039,6 @@ lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Pocket-Plane-Group/D0XPmod"
 description = "Ding0's Experience Fixer"
-archive = ""
 
 [a7-customkits]
 lastupdate = 1970-01-01
@@ -3242,14 +3052,12 @@ lastupdate = 1970-01-01
 class = "Kits"
 url = "github:thisisulb/SpiritwalkerKit"
 description = "Spiritwalker"
-archive = ""
 
 [rolles]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:SpellholdStudios/Rolles"
 description = "Rolles Safyer"
-archive = ""
 
 [zzzz]
 lastupdate = 1970-01-01
@@ -3263,70 +3071,60 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:SpellholdStudios/HeartOfTheWood"
 description = "Heart of the Wood"
-archive = ""
 
 [korganfriendship]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/KorganFriendship"
 description = "Korgan Friendship"
-archive = ""
 
 [beyond_the_law]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:SpellholdStudios/Beyond_the_Law"
 description = "Beyond the Law"
-archive = ""
 
 [tsujatha]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/Tsujatha"
 description = "Tsujatha NPC"
-archive = ""
 
 [ntotsc]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:SpellholdStudios/NTotSC"
 description = "Northern Tales of the Sword Coast"
-archive = ""
 
 [sirinescall]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Pocket-Plane-Group/Lure_Of_Sirines_Call"
 description = "Lure of the Sirine's Call"
-archive = ""
 
 [maltese]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/MalteseArtefact"
 description = "Check the Bodies Of Elves and Artefacts"
-archive = ""
 
 [keto]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Pocket-Plane-Group/Keto"
 description = "Keto NPC (SoA)"
-archive = ""
 
 ["a7#improvedshamanicdance"]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:Argent77/A7-ImprovedShamanicDance"
 description = "Improved Shamanic Dance"
-archive = ""
 
 [bardicwonders]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:ArtemiusI/Bardic-Wonders"
 description = "Bardic Wonders"
-archive = ""
 
 ["c#sb_silber"]
 lastupdate = 1970-01-01
@@ -3354,21 +3152,18 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Gibberlings3/The_Boareskyr_Bridge_Scene"
 description = "The Boareskyr Bridge Scene"
-archive = ""
 
 [dsotsc]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:SpellholdStudios/DSotSC"
 description = "Dark Side of the Sword Coast for EET"
-archive = ""
 
 [hollyelf]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/HollytheElf"
 description = "Check the Bodies Holly the Elf"
-archive = ""
 
 [wings]
 lastupdate = 1970-01-01
@@ -3382,7 +3177,6 @@ lastupdate = 1970-01-01
 class = "SmallNPCs"
 url = "github:ArtemiusI/Pai-Na-NPC-mod-for-BG2-EE"
 description = "Pai Na"
-archive = ""
 
 [divine_remix]
 lastupdate = 1970-01-01
@@ -3458,14 +3252,12 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Gibberlings3/Road_To_Discovery_for_SoD"
 description = "Road to Discovery"
-archive = ""
 
 [gorionsdream]
 lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:RoxanneSHS/Gorion-s-Dream"
 description = "Gorion's Dream Restored"
-archive = ""
 
 [a7-convenienteenpcs]
 lastupdate = 1970-01-01
@@ -3479,14 +3271,12 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:BGforgeNet/bg2-uniqueartifacts"
 description = "Unique Artifacts (New)"
-archive = ""
 
 [luxleysoa]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:SpellholdStudios/The_Luxley_Family"
 description = "Luxley Family"
-archive = ""
 
 [quayle]
 lastupdate = 1970-01-01
@@ -3500,14 +3290,12 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Pocket-Plane-Group/Tiax_for_BGII"
 description = "Tiax NPC"
-archive = ""
 
 [aurenaseph]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gibberlings3/AurenAseph"
 description = "Auren Aseph NPC"
-archive = ""
 
 [tomeandblood]
 lastupdate = 1970-01-01
@@ -3516,8 +3304,8 @@ url = "github:subtledoctor/TomeAndBlood"
 description = "Tome and Blood"
 archive = "tomeandblood.tar.gz"
 
-    [tomeandblood.properties.16]
-    exclusive = ["spwi110.spl"]
+    [tomeandblood.properties.14]
+    exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
 
     [tomeandblood.properties.66]
     exclusive = ["scrl77.itm"]
@@ -3531,17 +3319,17 @@ archive = "tomeandblood.tar.gz"
     [tomeandblood.properties.48]
     exclusive = ["armored_spellcasting"]
 
+    [tomeandblood.properties.11]
+    exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
+
+    [tomeandblood.properties.16]
+    exclusive = ["spwi110.spl"]
+
     [tomeandblood.properties.""]
     after = ["spell_rev"]
 
     [tomeandblood.properties.69]
     exclusive = ["familiar_penalty"]
-
-    [tomeandblood.properties.11]
-    exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
-
-    [tomeandblood.properties.14]
-    exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
 
 [foundling]
 lastupdate = 1970-01-01
@@ -3555,7 +3343,6 @@ lastupdate = 1970-01-01
 class = "SmallNPCs"
 url = "github:Skitia/Helga-BG1"
 description = "Helga"
-archive = ""
 
 [willowisp]
 lastupdate = 1970-01-01
@@ -3569,28 +3356,24 @@ lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:abalabokhin/sod_rus"
 description = "SoD Translation RU"
-archive = ""
 
 [wildmage]
 lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:BGforgeNet/bg2-wildmage"
 description = "Wild Mage Additions"
-archive = ""
 
 [velvet]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/Velvetfoot"
 description = "Check the Bodies Velvetfoot"
-archive = ""
 
 [lightingpack]
 lastupdate = 1970-01-01
 class = "GUI"
 url = "github:Argent77/A7-LightingPackEE"
 description = "Lighting Pack: Shader Scripts"
-archive = ""
 
 [com_encounters]
 lastupdate = 1970-01-01
@@ -3604,14 +3387,12 @@ lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:Gibberlings3/Garricks_Infatuation"
 description = "Garrick's Infatuation"
-archive = ""
 
 [ajocmod]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/AjocMod"
 description = "Loron's Return (Ajocmod)"
-archive = ""
 
 [cliffkey]
 lastupdate = 1970-01-01
@@ -3625,28 +3406,24 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/Travellers"
 description = "Travellers in Faerun"
-archive = ""
 
 [a7-banteraccelerator]
 lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Argent77/A7-BanterAccelerator"
 description = "Banter Accelerator for Enhanced Edition games"
-archive = ""
 
 [recorder]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Skitia/Recorder-BG1"
 description = "Recorder"
-archive = ""
 
 [banterpack]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Pocket-Plane-Group/Banter_Pack"
 description = "Banter Packs"
-archive = ""
 
 [sandrahrtf]
 lastupdate = 1970-01-01
@@ -3660,7 +3437,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:cmorganbg/Aran-Whitehand"
 description = "Aran Whitehand NPC"
-archive = ""
 
 [epicthieving]
 lastupdate = 1970-01-01
@@ -3674,7 +3450,6 @@ lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/TDDz"
 description = "TDDz (EE-compatible installer for The Darkest Day)"
-archive = ""
 
 [eet_gui]
 lastupdate = 1970-01-01
@@ -3688,7 +3463,6 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Gibberlings3/Romantic_Encounters_BG2"
 description = "Romantic Encounters"
-archive = ""
 
 [bg_travel]
 lastupdate = 1970-01-01
@@ -3709,21 +3483,18 @@ lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:MattyGroove/DrizztSaga"
 description = "Drizzt Saga"
-archive = ""
 
 [a7-testyourmettle]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Argent77/A7-TestYourMettle"
 description = "Test Your Mettle"
-archive = ""
 
 [stormcaller]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:thisisulb/StormCallerKit"
 description = "Storm Caller Shaman Kit"
-archive = ""
 
 [npc_tweak]
 lastupdate = 1970-01-01
@@ -3737,14 +3508,12 @@ lastupdate = 1970-01-01
 class = "GUI"
 url = "github:r-e-d/LeUI-SoD"
 description = "lefreut's enhanced UI SoD Skin (requires game version 2.6)"
-archive = ""
 
 [portraitcolors]
 lastupdate = 1970-01-01
 class = "GUI"
 url = "github:anongit/portraitcolors"
 description = "Custom Portraitcolours (New)"
-archive = ""
 
 [emad]
 lastupdate = 1970-01-01
@@ -3786,28 +3555,24 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Pocket-Plane-Group/Sellswords"
 description = "The Sellswords"
-archive = ""
 
 [azengaard]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/AzengaardEE"
 description = "Azengaard Encounters"
-archive = ""
 
 [kiara-zaiya]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:SpellholdStudios/Kiara_Zaiya"
 description = "Kiara Zaiya NPCs"
-archive = ""
 
 [thalan]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:CrevsDaak/thalan"
 description = "Thalantyr Item Upgrade"
-archive = ""
 
 [npckit]
 lastupdate = 1970-01-01
@@ -3821,21 +3586,18 @@ lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/BoneHill"
 description = "Secret of Bone Hill (EET)"
-archive = ""
 
 [iepbanters]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/IEP_Extended_Banter"
 description = "IEP Extended Banters"
-archive = ""
 
 [drowlib]
 lastupdate = 1970-01-01
 class = "BigQuests"
 url = "github:RoxanneSHS/DrowLibrary"
 description = "Check the Bodies Drow Library"
-archive = ""
 
 [sandrahport]
 lastupdate = 1970-01-01
@@ -3849,7 +3611,6 @@ lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gibberlings3/Kivan_and_Deheriana"
 description = "Kivan and Deheriana Companions (Bugged)"
-archive = ""
 
 [bridgesblock]
 lastupdate = 1970-01-01
@@ -3863,35 +3624,30 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Gibberlings3/Crossmod_Banter_Pack_for_Baldurs_Gate_II"
 description = "Crossmod Banter Pack"
-archive = ""
 
 [bgeespawn]
 lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:AstroBryGuy/BGEESpawn"
 description = "BGEE Leveled Spawns"
-archive = ""
 
 [assassinations]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Pocket-Plane-Group/Assassinations"
 description = "Assassinations"
-archive = ""
 
 ["c#solaufein"]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gitjas/Solaufeins_Rescue_NPC"
 description = "Solaufein's Rescue"
-archive = ""
 
 [sarahtob]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gibberlings3/Sarah"
 description = "Sarah NPC"
-archive = ""
 
 [bgeew]
 lastupdate = 1970-01-01
@@ -3905,21 +3661,18 @@ lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:Gibberlings3/Lore_From_Learning"
 description = "Lore From Learning"
-archive = ""
 
 [forgotten-armament]
 lastupdate = 1970-01-01
 class = "Items"
 url = "github:Gibberlings3/Forgotten-Armament"
 description = "Forgotten Armament"
-archive = ""
 
 [ac_quest]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Gitjas/Ascalons_Questpack"
 description = "Ascalons Questpack"
-archive = ""
 
 [eetmoveitemssoa]
 lastupdate = 1970-01-01
@@ -3940,14 +3693,12 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/MazzyFriendship"
 description = "Mazzy Friendship"
-archive = ""
 
 [alternatives]
 lastupdate = 1970-01-01
 class = "Quests"
 url = "github:Gibberlings3/Alternatives"
 description = "Alternatives"
-archive = ""
 
 [whitequeen]
 lastupdate = 1970-01-01
@@ -3961,7 +3712,6 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:RoxanneSHS/VaultEE"
 description = "Vault"
-archive = ""
 
 [dsr]
 lastupdate = 1970-01-01
@@ -3975,21 +3725,18 @@ lastupdate = 1970-01-01
 class = "Quests"
 url = "github:SpellholdStudios/Fading_Promises"
 description = "Fading Promises"
-archive = ""
 
 [sheena]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/SheenaHD"
 description = "Sheena, a Half Dragon"
-archive = ""
 
 [bearwalker]
 lastupdate = 1970-01-01
 class = "Kits"
 url = "github:thisisulb/BearWalkerKit"
 description = "Bear Walker - a Werebear/Ranger Kit"
-archive = ""
 
 [icewind_eet]
 lastupdate = 1970-01-01
@@ -4010,28 +3757,24 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/Yeslick_NPC"
 description = "Yeslick for SoA/ToB"
-archive = ""
 
 [neera]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:SpellholdStudios/Neera_Expansion"
 description = "Neera Expansion for BG:EE"
-archive = ""
 
 [bank_of_baldurs_gate]
 lastupdate = 1970-01-01
 class = "SmallQuests"
 url = "github:SpellholdStudios/Bank_of_Baldurs_Gate"
 description = "Bank of Baldurs Gate"
-archive = ""
 
 [vienxay]
 lastupdate = 1970-01-01
 class = "PreEET"
 url = "github:Skitia/Vienxay-BG1"
 description = "Vienxay"
-archive = ""
 
 [thevanishingofskiesilvershield]
 lastupdate = 1970-01-01
@@ -4052,14 +3795,12 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:D2-mods/D2-WEAPON"
 description = "Souls-inspired Weapon Pack"
-archive = ""
 
 [gavin_bg2]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:Gibberlings3/Gavin_BG2"
 description = "Gavin NPC for BG2:ToB"
-archive = ""
 
 [nathaniel]
 lastupdate = 1970-01-01
@@ -4073,21 +3814,18 @@ lastupdate = 1970-01-01
 class = "NPCTweaks"
 url = "github:Gibberlings3/Corthala_Romantique"
 description = "Corthala Romantique"
-archive = ""
 
 [sodbanter]
 lastupdate = 1970-01-01
 class = "Tweaks"
 url = "github:RoxanneSHS/SoDBanterEET"
 description = "SoD Banter Restoration"
-archive = ""
 
 [evandra]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:MattyGroove/Evandra"
 description = "Evandra"
-archive = ""
 
 [m7tweaks]
 lastupdate = 1970-01-01

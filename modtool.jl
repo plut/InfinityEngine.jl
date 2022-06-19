@@ -31,6 +31,7 @@ module ModTool
 #  + read only the BG2 install order file
 #  + remove `games` field
 #  + auto determine `PreEET` category
+# - include tp2data in `Mod`
 # - do a complete EET installation routine
 # + add the following characteristics at a component-level:
 #  + before/after: declare install order
@@ -102,15 +103,16 @@ const MOD_CLASSES = split(replace("""
 	Tweaks # merges “tactical”, “rules” and “AI”
 	Late
 	Final
+	BADCLASS
 """, r"#[^\n]*\n" =>"\n"))
 
-struct ComponentProperties
+struct ComponentProperties#««
 	after::Vector{String}
 	before::Vector{String}
 	conflicts::Vector{String}
 	depends::Vector{String}
 	exclusive::Vector{String}
-end
+end#»»
 # we must not overqualify the type of `d`; passing `Dict()` is fine:
 @inline ComponentProperties(d::Dict) = ComponentProperties((get(d, s, String[])
 	for s in string.(fieldnames(ComponentProperties)))...)
@@ -120,49 +122,71 @@ end
 		for i in 1:fieldcount(ComponentProperties)
 		if !isempty(getfield(prop, i)))
 
+mutable struct ModComponent#««
+	id::String
+	name::String
+	@inline ModComponent(id, n) = new(string(id), n)
+end#»»
+
 mutable struct Mod#««
+	# data stored in moddb file:
 	id::String
 	url::String
 	description::String
 	archive::String
-	class::Int # install rank
+	class::String # install rank
 	lastupdate::Date
-	components::Dict{String,ComponentProperties}
+	properties::Dict{String,ComponentProperties}
+	# data recomputed at runtime:
+	tp2::String
+	languages::Vector{String}
+	sel_lang::Int # starts at zero (WeiDU indexing)
+	readme::String
+	components::Vector{ModComponent}
 	# components["1"] = Dict(
 	# 	"depends" => [ dependencies...],
 	# 	"exclusive" => [ list of symbols... ],
 	#	)
 # 	owns::Dict{Int,Vector{String}}
 
-	@inline Mod(id, url, desc, class, archive, date=1970, comp = Dict()) =
-		new(lowercase(id), url, desc, archive, modclass(class), Date(date), comp)
+	@inline Mod(;id, url, description, class, archive="", lastupdate=1970,
+		properties = Dict(), tp2 = "", languages = String[]) = begin
+		new(lowercase(id), url, description, archive, class, Date(lastupdate),
+			Dict(k=>ComponentProperties(v) for (k,v) in pairs(properties)), tp2,
+			languages, 0, "", ModComponent[])
+		end
+		
+# 	@inline Mod(id, url, desc, class, archive, date=1970, comp = Dict()) =
+# 		new(lowercase(id), url, desc, archive, modclass(class), Date(date), comp)
 	# each symbol (e.g. tac0 table) is owned at most once
 end#»»
-@inline sortkey(a::Mod) = (a.class, a.lastupdate)
+@inline sortkey(a::Mod) = (modclass(a.class), a.lastupdate)
 @inline Base.isless(a::Mod, b::Mod) = sortkey(a) < sortkey(b)
 @inline modclass(class::Integer) = class
 @inline modclass(class::AbstractString) = (findfirst(==(class), MOD_CLASSES))
 @inline modarchive(m::Mod) = m.id*match(r"\.[^.]*$", m.url).match
 const EET_class = modclass("EET")
-@inline modgame(m::Mod) = m.class < EET_class ? :bg1 : :bg2
+@inline modgame(m::Mod) = modclass(m.class) < EET_class ? :bg1 : :bg2
 
 # Mod DB handling ««1
 function read_moddb(io::IO)#««
 	dict = TOML.parse(io); return [
-		Mod(lowercase(id),
-			d["download"], d["description"], d["class"], get(d, "archive", ""),
-			Date(get(d, "lastupdate", "1970")),
-			Dict(k=>ComponentProperties(v)
-				for (k, v) in pairs(get(d, "components", Dict()))))
-	for (id, d) in dict ]
+		Mod(id=lowercase(id),
+			url=d["url"],
+			description=d["description"],
+			class=d["class"],
+			archive=get(d, "archive", ""),
+			lastupdate=get(d, "lastupdate", "1970"),
+			properties=get(d, "properties", Dict()),
+		) for (id, d) in dict ]
 end#»»
 function write_moddb(io::IO; moddb=global_moddb)#««
 	TOML.print(io, Dict(m.id => m for m in moddb)) do m
-		d = Dict("download" => m.url, "lastupdate" => m.lastupdate,
-		"description" => m.description, "archive"=>m.archive,
-		"class" => MOD_CLASSES[m.class])
-		!isempty(m.components) &&
-			(d["components"] = Dict(k=>Dict(v) for (k,v) in m.components))
+		d = Dict("url" => m.url, "lastupdate" => m.lastupdate,
+		"description" => m.description, "class" => MOD_CLASSES[m.class])
+		!isempty(m.archive) && (d["archive"] = m.archive)
+		!isempty(m.properties) &&
+			(d["properties"] = Dict(k=>Dict(v) for (k,v) in m.properties))
 		d
 	end
 end#»»
@@ -186,7 +210,8 @@ function updateurl(mod::Mod)#««
 	if req.status == 200
 		for line in split(String(req.body), '\n')
 			m = match(r"\"browser_download_url\"\s*:\s*\"([^\"]*\.(zip|rar|7z|tar\.gz)*)\"", line)
-			m ≠ nothing && (mod.archive=basename(m.captures[1]); return m.captures[1])
+			m ≠ nothing && (mod.archive=basename(m.captures[1]);
+			return m.captures[1])
 			m = match(r"\"tarball_url\"\s*:\s*\"([^\"]*)\"", line)
 			m ≠ nothing && (mod.archive=mod.id*".tar.gz"; return m.captures[1])
 		end
@@ -300,8 +325,11 @@ function extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 	return true
 end#»»
 function lastupdate!(mod::Mod; mods=MODS)
+	# we keep the date of the newest .tp2, .tpa, .tph file:
+	f = "setup-$(mod.id).tp2"; t = isfile(f) ? mtime(f) : 0
 	d = Date(unix2datetime(maximum(mtime(joinpath(root, f))
-		for (root,_,files) in walkdir(joinpath(mods, mod.id)) for f in files)))
+		for (root,_,files) in walkdir(joinpath(mods, mod.id))
+		for f in files if endswith(f, r"\.tp[2ah]"i); init=t)))
 	d == mod.lastupdate && return false
 	mod.lastupdate = d
 	printlog("$(mod.id): recomputed last update to $d")
@@ -325,43 +353,44 @@ function lang_score(langname, pref_lang=PREF_LANG)#««
 	end
 	return typemax(Int)
 end#»»
-mutable struct ModComponent#««
-	id::String
-	name::String
-	@inline ModComponent(id, n) = new(string(id), n)
-end#»»
 @inline description(c::ModComponent) = c.name
-function tp2data(tp2file, id)#««
-	languages = String[]
-	readme = ""
-	sel_lang = 0
-	components = ModComponent[]
-	cd(MODS) do
-	# languages««
-	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-languages $tp2file`)
-		m = match(r"^(\d+):(.*)$", line); isnothing(m) && continue
-		@assert parse(Int, m.captures[1]) == length(languages)
-		push!(languages, m.captures[2])
+function tp2data!(m)#««
+	extract(m) || return nothing
+	id = m.id; m.tp2 = ""
+	for path in ("$id.tp2", "$id/$id.tp2", "$id/setup-$id.tp2", "setup-$id.tp2")
+		ispath(joinpath(MODS, path)) && (m.tp2 = path; break)
 	end
-	isempty(languages) ||
-		(sel_lang = argmin([lang_score(l, PREF_LANG) for l in languages]) - 1)
+	isempty(m.tp2) && error("no TP2 file found")
+	m.languages = String[]
+	m.sel_lang = 0
+	cd(MODS) do
+	# m.languages««
+	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-languages $(m.tp2)`)
+		x = match(r"^(\d+):(.*)$", line); isnothing(x) && continue
+		@assert parse(Int, x.captures[1]) == length(m.languages)
+		push!(m.languages, x.captures[2])
+	end
+	isempty(m.languages) ||
+		(m.sel_lang = argmin([lang_score(l, PREF_LANG) for l in m.languages]) - 1)
 #»»
 	# components««
-	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-components $tp2file $sel_lang`)
-		m = match(r"^~([^~]*)~\s+#(\d+)\s+#(\d+)\s*//\s*(\S.*)$", line)
-		isnothing(m) && continue
-		push!(components, ModComponent(parse(Int, m.captures[3]), m.captures[4]))
+	m.components = ModComponent[]
+	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-components $(m.tp2) $(m.sel_lang)`)
+		x = match(r"^~([^~]*)~\s+#(\d+)\s+#(\d+)\s*//\s*(\S.*)$", line)
+		isnothing(x) && continue
+		push!(m.components, ModComponent(parse(Int, x.captures[3]), x.captures[4]))
 	end#»»
 	# readme««
-	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-readme $tp2file $sel_lang`)
-		m = match(r"^R (.*)", line); isnothing(m) && continue
-		isfile(m.captures[1]) && (readme = joinpath(MODS, m.captures[1]); break)
+	m.readme = ""
+	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-readme $(m.tp2) $(m.sel_lang)`)
+		x = match(r"^R (.*)", line); isnothing(x) && continue
+		isfile(x.captures[1]) && (m.readme = joinpath(MODS, x.captures[1]); break)
 	end
-	if isempty(readme) # try and guess...
+	if isempty(m.readme) # try and guess...
 		readmes = [ f for f in readdir(joinpath(MODS, id))
 			if occursin(r"readme"i, f) && isfile(joinpath(MODS, id, f)) ]
 		!isempty(readmes) && 
-			(readme = joinpath(MODS, id, 
+			(m.readme = joinpath(MODS, id, 
 				readmes[argmin([ lang_score(f, PREF_LANG) for f in readmes ])]))
 	end#»»
 # 	for (i, m) in pairs(groups)
@@ -369,44 +398,34 @@ function tp2data(tp2file, id)#««
 # 	end
 # 	# write table of (component -> translated component name)
 	end # cd(mods)
-	return (tp2 = tp2file, sel_lang = sel_lang,
-		language = isempty(languages) ? "" : languages[sel_lang+1],
-		readme = readme, components = components)
+# 	return (tp2 = tp2file, sel_lang = sel_lang,
+# 		language = isempty(languages) ? "" : languages[sel_lang+1],
+# 		readme = readme, components = components)
 end#»»
-function modtp2file(mod::Mod)#««
-	extract(mod) || return nothing
-	id = mod.id
-	for path in ("$id.tp2", "$id/$id.tp2", "$id/setup-$id.tp2", "setup-$id.tp2")
-		ispath(joinpath(MODS, path)) && return path
-	end
-	error("no TP2 file found")
-end#»»
-@inline modtp2data(mod::Mod) = tp2data(modtp2file(mod), mod.id)
 function readme(mod::Mod)#««
 	extract(mod) || return false
-	data = modtp2data(mod)
-	isnothing(data) && return false
-	printlog("showing readme file '$(data.readme)'")
-	if endswith(data.readme, r".html?"i)
-		if occursin('#', data.readme)
+	tp2data!(mod)
+	printlog("showing readme file '$(mod.readme)'")
+	if endswith(mod.readme, r".html?"i)
+		if occursin('#', mod.readme)
 		# cannot call w3m directly, it fails with mesh sign in filename
 		# don't run -dump — there might be links to supplemental info
-			cd(basename(data.readme)) do
-				run(pipeline(`cat $(data.readme)`, `w3m -T text/html`))
+			cd(basename(mod.readme)) do
+				run(pipeline(`cat $(mod.readme)`, `w3m -T text/html`))
 			end
 		else # preserve links etc.
-			run(`w3m $(data.readme)`)
+			run(`w3m $(mod.readme)`)
 		end
-	elseif endswith(data.readme, r"(.txt|.md)"i)
-		run(`view $(data.readme)`)
-	elseif endswith(data.readme, r".docx"i)
-		run(pipeline(`docx2txt $(data.readme) -`, `less`))
-	elseif endswith(data.readme, r".pdf"i)
-		run(pipeline(`pdftotext $(data.readme) -`, `less`))
-	elseif isempty(data.readme)
+	elseif endswith(mod.readme, r"(.txt|.md)"i)
+		run(`view $(mod.readme)`)
+	elseif endswith(mod.readme, r".docx"i)
+		run(pipeline(`docx2txt $(mod.readme) -`, `less`))
+	elseif endswith(mod.readme, r".pdf"i)
+		run(pipeline(`pdftotext $(mod.readme) -`, `less`))
+	elseif isempty(mod.readme)
 		printlog("(no readme file found for this mod)")
 	else
-		error("unknown file format: $(data.readme)")
+		error("unknown file format: $(mod.readme)")
 	end
 end#»»
 function tp2(mod::Mod)#««
@@ -497,13 +516,13 @@ end#»»
 # @inline componentstatus(db, tp2file, c) = (c ∈ modstatus(db, tp2file))
 function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 		less=true)
-	data = modtp2data(mod)
+	tp2data!(mod)
 	g = modgame(mod); gamedir = gamedirs[g]
-	ins = modstatus(weidu_status(joinpath(gamedir, "weidu.log")), data.tp2)
+	ins = modstatus(mod.tp2, gamedir)
 	sel = get!(selection, mod.id, Int[])
 	@printf("\e[1m%-30s %s\e[m\n", mod.id, mod.description)
 	open(less ? `view - ` : `cat`, "w", stdout) do io
-	for c in data.components
+	for c in mod.components
 		@printf(io, "% 4s %c%c %s\n", c.id, (c.id ∈ sel ? 's' : '.'),
 			isempty(ins) ? '.' : g == :bg1 ? '1' : '2', description(c))
 	end
@@ -511,16 +530,15 @@ function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 end#»»
 function components!(mod::Mod; selection=global_selection,#««
 		gamedir = GAMEDIR[modgame(mod)], cols=80)
-	data = modtp2data(mod)
-	ins = NamedTuple{GAME_LIST}(Set(modstatus(v, data.tp2))
-		for (k,v) ∈ pairs(status))
+	tp2data!(mod)
+	ins = modstatus(mod.tp2, gamedir)
 	sel = get!(selection, mod.id, Int[])
 	# call whiptail
 	args = [ "--output-fd", "2", "--separate-output",
 		"--checklist", "Select mod components", "25", string(cols), "15" ]
-	for c in data.components
-		push!(args, c.id, (c.id ∈ ins.bg1 ? '1' : '.')*
-			(c.id ∈ ins.bg2 ? '2' : '.')*' '*description(c),
+	for c in mod.components
+		push!(args, c.id,
+			(isempty(ins) ? '.' : modgame(mod)==:bg1 ? '1' : '2')*' '*description(c),
 			(c.id ∈ sel ? "1" : "0"))
 	end
 	fd = Pipe()
@@ -535,54 +553,60 @@ end#»»
 # Mod installation ««1
 "Returns the dependency matrix for these mods, encoded as
 (after = dict(mod1 => mod2, ...), before = dict(mod1 => mod2, ...))"
-function dependencies(;moddb=global_moddb, selection=global_selection)#««
+function dependencies(list ;moddb=global_moddb)#««
 	dep = (arrowsfrom = Dict{String,Set{String}}(),
-		arrowsto = Dict(id => 0 for (id, clist) in selection))
-	@inline connect((b, a),) =
-		(push!(get!(dep.arrowsfrom, b, Set{String}()), a); dep.arrowsto[a]+= 1)
-	for (id, clist) in selection
-		c = findmod(id; moddb).components
+		arrowsto = Dict(id => 0 for id in list))
+	function connect((b, a),)
+		fb = get!(dep.arrowsfrom, b, Set{String}())
+		a ∉ fb && (push!(fb, a); dep.arrowsto[a]+= 1)
+	end
+# 	@inline connect((b, a),) =
+# 		(push!(get!(dep.arrowsfrom, b, Set{String}()), a); dep.arrowsto[a]+= 1)
+	for id in list
+		c = findmod(id; moddb).properties
 		for (k, v) in pairs(c)
 			# special: empty key indicates a dependency for the whole mod
-			isempty(k) || (k ∈ clist) || continue
+			isempty(k) || continue
 			isempty(v.after) && isempty(v.before) && continue
-			for a in v.after
-				haskey(selection, a) && !isempty(selection[a]) && connect(a => id)
-			end
-			for b in v.before
-				haskey(selection, b) && !isempty(selection[b]) && connect(id => b)
-			end
+			for a in v.after; a ∈ list && connect(a => id); end
+			for b in v.before; b ∈ list && connect(id => b); end
 		end
 	end
 	return dep
 end#»»
 "Returns a list of mod IDs in install order, given all dependencies"
-function installorder(; moddb=global_moddb, selection=global_selection)#««
+function installorder(list; moddb=global_moddb)#««
 	# use Kahn's algorithm for topological sorting
 	# (this should be average-time quasi-linear with the use of a heap)
-	list = sizehint!(String[], length(selection))
-	todo = Set(keys(selection))
-	dep = dependencies(;moddb, selection)
+	ret = sizehint!(String[], length(list))
+	todo = Set(collect(list))
+	dep = dependencies(list;moddb)
 	ord = Base.Order.By(id -> sortkey(findmod(id;moddb)))
-	available = [ id for (id,_) in selection if iszero(dep.arrowsto[id]) ]
+	available = [ id for id in list if iszero(dep.arrowsto[id]) ]
 	heapify!(available, ord)
+	function check_arrows(y)
+		s = [ x for x ∈ todo if y ∈ get(dep.arrowsfrom, x, String[])]
+		n = count(y ∈ get(dep.arrowsfrom, x, String[]) for x ∈ todo)
+	end
+			
 	while !isempty(todo)
-		@assert !isempty(available) "Circular dependency found"
+		# loop invariant: arrowsfrom[y] = count of x ∈ todo such that x->y
+		@assert !isempty(available) "Circular dependency found: $(todo)"
 		x = heappop!(available, ord)
-		push!(list, x); delete!(todo, x)
+		push!(ret, x); delete!(todo, x)
 		for y in get(dep.arrowsfrom, x, String[])
 			dep.arrowsto[y]-= 1
 			iszero(dep.arrowsto[y]) && heappush!(available, y, ord)
 		end
 	end
-	return list
+	return ret
 end #»»
 function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
 	owners = Dict{String, Vector{Tuple{String, String}}}()
 	# check exclusivity
 	for (id, clist) in selection
 		mod = findmod(id; moddb)
-		for (c, v) in mod.components
+		for (c, v) in mod.properties
 			c ∈ clist || continue
 			for e in v.exclusive
 				push!(get!(owners, e, valtype(owners)([])), (id, c))
@@ -596,12 +620,12 @@ function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
 end#»»
 function install(mod; simulate=false, uninstall=false, #««
 		selection=global_selection, gamedirs=GAMEDIR)
-	id = mod.id; data = modtp2data(mod)
+	id = mod.id; tp2data!(mod)
 	selected = uninstall ? Int[] : get!(selection, id, Int[])
 
 	gamedir = gamedirs[modgame(mod)]
 	status = weidu_status(join(gamedir, "weidu.log"))
-	current = Set(modstatus(status, data.tp2))
+	current = Set(modstatus(status, mod.tp2))
 
 	to_add = string.(setdiff(selected, current))
 	to_del = string.(setdiff(current, selected))
@@ -619,7 +643,7 @@ function install(mod; simulate=false, uninstall=false, #««
 		end#»»
 	end
 	cd(gamedir) do#««
-		cmd = `weinstall $(mod.id) --language $(data.sel_lang-1) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $to_add --force-uninstall-list $to_del`
+		cmd = `weinstall $(mod.id) --language $(mod.sel_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $to_add --force-uninstall-list $to_del`
 		printlog(cmd)
 		simulate && return
 		run(cmd)
@@ -630,10 +654,9 @@ end#»»
 function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		selected = (f ≠ status), selection = global_selection, moddb=global_moddb,
 		kwargs...)
-	i = 0; c = 0
-	isnothing(class) || (class = modclass(class))
-	l = (f == status) ? [ mod.id for mod in sort(moddb; by=sortkey) ] :
-	 installorder(; selection, moddb)
+	i = 0; c = ""
+	l = installorder(f == status ? [mod.id for mod in moddb] :
+		[id for (id,l) in selection if !isempty(l)]; moddb)
 	for id in l
 		mod = findmod(id; moddb)
 		pause && (println("(paused)"); readline())
@@ -646,7 +669,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		s = !isempty(get(selection, mod.id, Int[]))
 		!selected || s || continue 
 		if f == status
-			(mod.class ≠ c) && (c = mod.class; println("\e[1m$(MOD_CLASSES[c])\e[m"))
+			(mod.class ≠ c) && (c = mod.class; println("\e[1m$c\e[m"))
 		else
 			printlog("\e[1m($n/$(length(global_selection)) $id)\e[m")
 		end
@@ -664,7 +687,7 @@ for f in list2; @eval begin
 end end
 
 # BWS mod db handling ««1
-function bws_moddb(source = BWS_MODDB, installorder=BWS_BG2IO)#««
+function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
 	thismod, url, name, arch = [ Dict{String,String}() for _ in 1:4 ]
 	id = ""
 	for line in eachline(source)
@@ -680,7 +703,7 @@ function bws_moddb(source = BWS_MODDB, installorder=BWS_BG2IO)#««
 	id_done = Set{String}()
 	class = Dict{String, String}()
 	current_game = 1
-	for line in eachline(installorder)
+	for line in eachline(orderfile)
 		occursin(r";EET;", line) && (current_game = 2)
 		v = split(line, ";")
 		first(v) ∈ ("MUC", "STD", "SUB") || continue
@@ -695,9 +718,9 @@ function bws_moddb(source = BWS_MODDB, installorder=BWS_BG2IO)#««
 		for id in id_done if haskey(url, id) ]
 end#»»
 function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
-		installorder = BWS_BG2IO)
+		orderfile = BWS_BG2IO)
 	file = joinpath(TEMP, "moddb")
-	db = bws_moddb(source, installorder)
+	db = bws_moddb(source, orderfile)
 	complete_db!(db)
 	write_moddb(file; moddb=db)
 	# we check that this produces a readable moddb before overwriting:
@@ -726,7 +749,7 @@ function import_bws_selection((source, dest) = BWS_SELECTION => SELECTION)#««
 end#»»
 
 # Generating mod DB ««1
-function mkmod(id, url, desc, class, archive = "")#««
+function mkmod(id, url, description, class, archive = "")#««
 	m = match(r"github.com/(([^/])*/([^/]*))", url)
 	id == "klatu" && (id = "tnt")
 	if m ≠ nothing
@@ -797,6 +820,7 @@ function mkmod(id, url, desc, class, archive = "")#««
 	"quayle" => "weaselmods:quayle-bg2",
 	"nathaniel" => "http://dl.spellholdstudios.net/nathaniel",
 	"faren" => "http://dl.spellholdstudios.net/faren",
+	"npckit" => "https://www.gibberlings3.net/files/file/793-npc-kitpack",
 	), id, url)#»»
 	if startswith(url, "github:")
 		archive = ""
@@ -820,17 +844,17 @@ function mkmod(id, url, desc, class, archive = "")#««
 # 	id ∈ (:bg1aerie, :bg1ub, :darkhorizonsbgee, :drake, :sirene, 
 # 		Symbol("garrick-tt"), :k9roughworld, :k9sharteelnpc, :tenyathermidor,
 # 		:soa, :karatur, :verrsza, :white) && (class = :PreEET)
-	return Mod(id, url, desc, class, archive)
+	return Mod(;id, url, description, class, archive)
 end#»»
 function mod_exclusives(mod::Mod; except = String[])#««
 	g = modgame(mod); gamedir = GAMEDIR[g]
-	data = modtp2data(mod)
+	tp2data!(mod)
 	ret = Pair{Int, Vector{String}}[]
 	cd(MODS) do
-		for c in data.components
+		for c in mod.components
 			printlog("Computing exclusivity for $(mod.id):$(c.id) '$(c.name)'")
 			excl = String[]
-			for line in eachline(ignorestatus(`weidu --game $gamedir --skip-at-view --no-exit-pause --noautoupdate --list-actions --language $(data.sel_lang) $(data.tp2) --force-install $(c.id)`))
+			for line in eachline(ignorestatus(`weidu --game $gamedir --skip-at-view --no-exit-pause --noautoupdate --list-actions --language $(mod.sel_lang) $(mod.tp2) --force-install $(c.id)`))
 				m = match(r"SIMULATE\s+(\S.*\S)\s+(\S.*)$", line); 
 				isnothing(m) && continue
 				if m.captures[1] == "COPY false"
@@ -843,9 +867,9 @@ function mod_exclusives(mod::Mod; except = String[])#««
 	end
 	return [ id => (exclusive = excl,) for (id, excl) in ret ]
 end#»»
-# function exclusive!(id;moddb = global_moddb, exclude_prefix=String[])
+# function exclusive!(id;moddb = global_moddb, except=String[])
 # 	mod = findmod(id;moddb)
-# 	setcomp!(mod.components, mod_exclusives(mod; exclude_prefix)...)
+# 	setcomp!(mod.components, mod_exclusives(mod; except)...)
 # end
 function complete_db!(moddb) #««
 	push!(moddb,
@@ -885,10 +909,12 @@ function complete_db!(moddb) #««
 	mkmod("c#solaufein", "github:Gitjas/Solaufeins_Rescue_NPC", "Solaufein's Rescue", "NPCs"),
 	mkmod("c#brage", "github:Gitjas/Brages_Redemption", "Brage's Redemption", "NPCs"),
 	# Github misc. ««3
+	mkmod("d0tweak", "github:Pocket-Plane-Group/D0Tweak", "Ding0 Tweak Pack", "Tweaks"),
 	mkmod("rttitempack", "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack",  "Return to Trademeet item pack", "Items"),
 	mkmod("nanstein", "github:GwendolyneFreddy/Nanstein", "Nanstein item upgrade", "Items"),
 	mkmod("iwditempack", "github:GwendolyneFreddy/IWD_Item_Pack", "IWD item pack", "Items"),
 	mkmod("aurora", "github:Sampsca/Auroras-Shoes-and-Boots", "Aurora's shoes and boots", "Items"),
+	mkmod("monasticorders", "github:aquadrizzt/MonasticOrders", "Monastic Orders", "Kits"),
 	# Weasel mods ««3
 	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPCs"),
 	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPCs"),
@@ -902,11 +928,11 @@ function complete_db!(moddb) #««
 	mkmod("unique_items", "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip", "BGEE/SOD Item replacement fun pack", "Items"),
 	#»»3
 	)
-	@inline setmod!(id, list...) = setcomp!(findmod(id;moddb).components, list...)
+	@inline setmod!(id, list...) = setcomp!(findmod(id;moddb).properties, list...)
 	@inline setcomp!(c, list...) = for (i, kv) in list
 		p = get!(c, string(i), ComponentProperties())
 		for (k, v) in pairs(kv)
-			push!(getfield(p, Symbol(k)), [v;]...)
+			push!(getfield(p, Symbol(k)), unique(sort([v;]))...)
 		end
 	end
 	setmod!("atweaks",#««
@@ -1051,6 +1077,9 @@ function complete_db!(moddb) #««
 		21 => (exclusive = ["ar0530.are", "ar0530.bcs",],),
  401 => (exclusive = ["sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre", "reddeath.bcs",],),
 	)#»»
+	setmod!("d0tweak",#««
+		11 => (after = ["rr",],), # ioun stones...
+	)#»»
 	setmod!("d5_random_tweaks", #««
 		"" => (after = ["spell_rev", "item_rev"],),
 # 		2105 => (exclusive = "spwi105.spl",), # Color Spray (not exclusive)
@@ -1111,6 +1140,8 @@ function complete_db!(moddb) #««
 		109 => (exclusive = "Tempus",),
 	)#»»
 	setmod!("faiths_and_powers",#««
+		"" => (after = ["divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
+			before = ["might_and_guile", "scales_of_balance", "stratagems", "cdtweaks"],),
 		# TODO
 	)#»»
 	setmod!("eet_tweaks",#««
@@ -1176,8 +1207,16 @@ function complete_db!(moddb) #««
 		3150 => (exclusive = "bdbelhif.cre",), # Belhifet
 		3200 => (exclusive = "weapprof.2da/styles",), # figthing styles
 	)#»»
+	setmod!("might_and_guile",#««
+		"" => (before = ["refinements", "stratagems"],),
+	),#»»
+	setmod!("npckit",#««
+		
+	)#»»
 	setmod!("rr",#««
-		"" => (after = ["refinements", "item_rev"],),
+		"" => (after = ["refinements", "item_rev", "eetact2", "song_and_silence", "divine_remix", "tod", "spell_rev", "ctb", "d0questpack", "beyond_the_law", ],
+			before = ["stratagems", "atweaks", "eet_tweaks", "virtue"],
+			conflicts = ["iispellsystemadjustments"],),
 		0 => (exclusive = ["weapprof.2da"],),
 		1 => (exclusive = ["clabth02.2da", "clabth04.2da", "clabth03.2da"],), # assassin ability table
 		2 => (exclusive = ["luth0.2da", "luth1.2da", "lumt0.2da", "luct0.2da", "luft0.2da"],),
@@ -1319,12 +1358,14 @@ function complete_db!(moddb) #««
 		"dlcmerger" => "DlcMerger",
 		"spell_rev" => "Early",
 		"item_rev" => "Early",
+		"eetact2" => "Quests",
 		"azengaard" => "Quests",
 		"impasylum" => "Quests",
 		"imnesvale" => "Quests",
 		"the_horde" => "Quests",
 		"butchery" => "Quests",
 		"turnabout" => "Quests",
+		"d0questpack" => "Quests",
 		"eet_end" => "Final",
 	);
 		isnothing(findmod(i;moddb)) && error("cannot find mod '$i'")

@@ -1,4049 +1,4111 @@
 [kale]
-lastupdate = 2022-05-03
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:Skitia/Kale-BG1"
+url = "github:Skitia/Kale-BG1"
 description = "Kale"
 archive = ""
 
 ["7c#sartweak"]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://www.dropbox.com/s/ryw4tn3r1vuohkn/7c%23sartweak_v1.2.zip?dl=1"
+url = "https://www.dropbox.com/s/ryw4tn3r1vuohkn/7c%23sartweak_v1.2.zip?dl=1"
 description = "Sarevok related tweaks"
 archive = "7c#sartweak_v1.2.zip"
 
 [etamin_soundsets]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:Eltamin/etamin-soundsets"
+url = "github:Eltamin/etamin-soundsets"
 description = "Etamin's Extra Soundsets"
 archive = ""
 
 [turnabout]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Pocket-Plane-Group/Turnabout"
+url = "github:Pocket-Plane-Group/Turnabout"
 description = "Turnabout"
 archive = ""
 
 [a7-chaossorcerer]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Argent77/A7-ChaosSorcerer"
+url = "github:Argent77/A7-ChaosSorcerer"
 description = "Chaos Sorcerer Kit"
 archive = ""
 
 [kittomes]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://www.dropbox.com/s/auuuyz5pc45jx4h/Kittomesv201.zip?dl=1"
+url = "https://www.dropbox.com/s/auuuyz5pc45jx4h/Kittomesv201.zip?dl=1"
 description = "Kit Tomes for BGT, TuTu & BG:EE"
 archive = "Kittomesv201.zip"
 
 [star]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:SpellholdStudios/Silver_Star_NPC"
+url = "github:SpellholdStudios/Silver_Star_NPC"
 description = "Silver Star"
 archive = ""
 
 [hammers]
-lastupdate = 2019-08-09
+lastupdate = 1970-01-01
 class = "GUI"
-download = "http://lynxlynx.info/ie/modhub.php?Sampsca/ThrownHammers&pre"
+url = "http://lynxlynx.info/ie/modhub.php?Sampsca/ThrownHammers&pre"
 description = "Thrown Hammers"
 archive = "Sampsca-ThrownHammers-v6.1.1-0-g5e933fc.zip"
 
 [bg2eetrans]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "http://lynxlynx.info/ie/modhub.php?Isaya/bg2eetrans"
+url = "http://lynxlynx.info/ie/modhub.php?Isaya/bg2eetrans"
 description = "Traduction Francais"
 archive = "Isaya-bg2eetrans-v0.7.16.6-0-gd316d0c.zip"
 
 [dreamwalker]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:thisisulb/DreamWalkerShamanKit"
+url = "github:thisisulb/DreamWalkerShamanKit"
 description = "Dreamwalker Shaman Kit"
 archive = ""
 
 [eseries]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/k91vhhek3892ed7/eseries_V3.zip?dl=1"
+url = "https://www.dropbox.com/s/k91vhhek3892ed7/eseries_V3.zip?dl=1"
 description = "Cirerrek's AI Scripts - eseries"
 archive = "eseries_V3.zip"
 
 [haldamir]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gibberlings3/Haldamir"
+url = "github:Gibberlings3/Haldamir"
 description = "Haldamir NPC"
 archive = ""
 
 [might_and_guile]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:UnearthedArcana/Might_and_Guile"
+url = "github:UnearthedArcana/Might_and_Guile"
 description = "Might and Guile"
-archive = ""
+archive = "might_and_guile.tar.gz"
+
+    [might_and_guile.properties.""]
+    before = ["refinements", "stratagems"]
 
 [tyrisflare]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/TyrisEE"
+url = "github:RoxanneSHS/TyrisEE"
 description = "Tyris Flare NPC"
 archive = ""
 
 [tod]
-lastupdate = 2020-10-04
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/TowerOfDeception"
+url = "github:RoxanneSHS/TowerOfDeception"
 description = "Tower of Deception"
 archive = ""
 
 [area_patcher]
 lastupdate = 1970-01-01
 class = "Fixes"
-download = "Manual"
+url = "Manual"
 description = "Nightfarer's Area Patcher"
 archive = "Manual"
 
 [saradas_magic_2]
 lastupdate = 1970-01-01
 class = "Spells"
-download = "github:SpellholdStudios/Saradas_Magic_for_BG2"
+url = "github:SpellholdStudios/Saradas_Magic_for_BG2"
 description = "Saradas BG2"
 archive = ""
 
 [jkits]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "https://us.v-cdn.net/5019558/uploads/editor/zo/hcv698q6oaev.zip"
+url = "https://us.v-cdn.net/5019558/uploads/editor/zo/hcv698q6oaev.zip"
 description = "JKits"
 archive = "JKits V7.zip"
 
 [bg1ub]
-lastupdate = 2021-06-23
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:Pocket-Plane-Group/bg1ub"
+url = "github:Pocket-Plane-Group/bg1ub"
 description = "BG1 Unfinished Business"
 archive = ""
 
 [arestorationp]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/e532jdc6p01hpnv/ARPv8-4.zip?dl=1"
+url = "https://www.dropbox.com/s/e532jdc6p01hpnv/ARPv8-4.zip?dl=1"
 description = "Almateria's Restoration Project"
 archive = "ARPv8-4.zip"
 
 [c0warlock]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:ArtemiusI/Warlock"
+url = "github:ArtemiusI/Warlock"
 description = "Warlock"
-archive = ""
+archive = "c0warlock.tar.gz"
 
 [kelsey]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Pocket-Plane-Group/Kelsey"
+url = "github:Pocket-Plane-Group/Kelsey"
 description = "Kelsey NPC"
 archive = ""
 
 [framed]
 lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:Gibberlings3/framed"
+url = "github:Gibberlings3/framed"
 description = "Framed"
 archive = ""
 
 [fade]
-lastupdate = 2020-08-03
+lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:SpellholdStudios/Fade_NPC"
+url = "github:SpellholdStudios/Fade_NPC"
 description = "Fade NPC"
 archive = ""
 
 [toa]
-lastupdate = 2021-05-11
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/ToA"
+url = "github:RoxanneSHS/ToA"
 description = "Tales of Anegh"
 archive = ""
 
 [vampiretales]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/Miriam"
+url = "github:RoxanneSHS/Miriam"
 description = "Vampire Tales"
 archive = ""
 
 ["neh'taniel"]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://www.dropbox.com/s/lnwu2b90ymdp6ro/Nehtaniel_V7.zip?dl=1"
+url = "https://www.dropbox.com/s/lnwu2b90ymdp6ro/Nehtaniel_V7.zip?dl=1"
 description = "Neh'taniel"
 archive = "Nehtaniel_V7.zip"
 
 [fr_rov]
 lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/j88fh19lb2b0xyp/FR_ROV_V9.zip?dl=1"
+url = "https://www.dropbox.com/s/j88fh19lb2b0xyp/FR_ROV_V9.zip?dl=1"
 description = "Freedom's Reign & Reign of Virtue"
 archive = "FR_ROV_V9.zip"
 
 [ctbvamp]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/MasterVampire"
+url = "github:RoxanneSHS/MasterVampire"
 description = "Check the Bodies Master Vampire"
 archive = ""
 
 [verrbg2]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://www.dropbox.com/sh/56dr4q8h2q7djri/AACD1-TgFkrb_KSUBXtqBeI4a/VERR%27SZA%20BG2EE%20NPC/VerrBG2%20v1.2.zip?dl=0"
+url = "https://www.dropbox.com/sh/56dr4q8h2q7djri/AACD1-TgFkrb_KSUBXtqBeI4a/VERR%27SZA%20BG2EE%20NPC/VerrBG2%20v1.2.zip?dl=0"
 description = "Verr'Sza BG2"
 archive = "VerrBG2 v1.2.zip"
 
 ["dragonspear_ui++"]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:anongit/DragonspearUI"
+url = "github:anongit/DragonspearUI"
 description = "DragonspearUI"
 archive = ""
 
 [vampire_world]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "http://www.shsforums.net/files/download/1195-vampire-world-for-eet/"
+url = "http://www.shsforums.net/files/download/1195-vampire-world-for-eet/"
 description = "Vampire World"
 archive = "Vampire_world_mod_v.0.55_EET.zip"
 
 [cdportraits]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:Gibberlings3/Continuous_NPC_Portraits"
+url = "github:Gibberlings3/Continuous_NPC_Portraits"
 description = "Continuous NPC Portraits"
 archive = ""
 
 [cernd]
-lastupdate = 2019-12-14
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/CerndFriendship"
+url = "github:SpellholdStudios/CerndFriendship"
 description = "Cernd Friendship"
 archive = ""
 
 [karatur]
-lastupdate = 2013-02-11
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://www.dropbox.com/s/cse9995k76knitr/KaraTur.rar?dl=1"
+url = "https://www.dropbox.com/s/cse9995k76knitr/KaraTur.rar?dl=1"
 description = "T'was a Slow Boat from Kara-Tur"
 archive = "karatur.rar"
 
 [yoshimoromance]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://downloads.weaselmods.net/download/yoshimo-romance/?wpdmdl=115"
+url = "https://downloads.weaselmods.net/download/yoshimo-romance/?wpdmdl=115"
 description = "Yoshimo Romance"
 archive = "yoshimoromance.zip"
 
 [ajantisbg1]
-lastupdate = 2022-03-19
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Gibberlings3/Ajantis_BG1_Expansion"
+url = "github:Gibberlings3/Ajantis_BG1_Expansion"
 description = "Ajantis BG1 Expansion"
 archive = ""
 
 [relievewizardslayer]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Raduziel/Relieve-Wizard-Slayer"
+url = "github:Raduziel/Relieve-Wizard-Slayer"
 description = "Relieve Wizard Slayer (Kit Revision)"
 archive = ""
 
 [roterror]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/RoT"
+url = "github:RoxanneSHS/RoT"
 description = "Region of Terror"
 archive = ""
 
 [ruad]
-lastupdate = 2022-06-17
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:SpellholdStudios/RuadRofhessaItemUpgrade"
+url = "github:SpellholdStudios/RuadRofhessaItemUpgrade"
 description = "Ruad Ro'fhessa Item Upgrade"
 archive = ""
 
 [sword_and_fist]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:MattyGroove/Sword-and-Fist"
+url = "github:MattyGroove/Sword-and-Fist"
 description = "Sword and Fist"
-archive = ""
+archive = "sword_and_fist.tar.gz"
 
 [thoghma]
-lastupdate = 2019-08-25
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://www.dropbox.com/s/vrplwuj5gz0cahu/ThOghma_v1.8.zip?dl=1"
+url = "https://www.dropbox.com/s/vrplwuj5gz0cahu/ThOghma_v1.8.zip?dl=1"
 description = "In Oghma's Service"
 archive = "ThOghma_v1.8.zip"
 
 [npc_ee]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:UnearthedArcana/NPC_EE"
+url = "github:UnearthedArcana/NPC_EE"
 description = "NPCs Enhanced for Everyone"
-archive = ""
+archive = "npc_ee.tar.gz"
 
 [ariena]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/ArienaEE"
+url = "github:RoxanneSHS/ArienaEE"
 description = "Ariena NPC"
 archive = ""
 
 [tenyathermidor]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:RoxanneSHS/Tenya"
+url = "github:RoxanneSHS/Tenya"
 description = "Tenya Thermidor NPC"
 archive = ""
 
 [w_packmule]
 lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/ii4vq2bjb9gktlr/w_packmule-v1.4b.zip?dl=1"
+url = "https://www.dropbox.com/s/ii4vq2bjb9gktlr/w_packmule-v1.4b.zip?dl=1"
 description = "Pack Mule (Bugged)"
 archive = "w_packmule-v1.4b.zip"
 
 [leui-bg1ee]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:r-e-d/LeUI-BG1EE"
+url = "github:r-e-d/LeUI-BG1EE"
 description = "lefreut's enhanced UI BG1 skin (requires game version 2.6)"
 archive = ""
 
 [sarevokfriendship]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/SarevokFriendship"
+url = "github:SpellholdStudios/SarevokFriendship"
 description = "Sarevok Friendship"
 archive = ""
 
 [viconia]
-lastupdate = 2019-11-26
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/ViconiaFriendship"
+url = "github:SpellholdStudios/ViconiaFriendship"
 description = "Viconia Friendship"
 archive = ""
 
 [eet-are_fix]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://us.v-cdn.net/5019558/uploads/editor/nh/tbuoytpm7px8.zip"
+url = "https://us.v-cdn.net/5019558/uploads/editor/nh/tbuoytpm7px8.zip"
 description = "V25 Area patch"
 archive = "EET-ARE_fix-v2.zip"
 
 [transitions]
 lastupdate = 1970-01-01
 class = "Fixes"
-download = "github:Gibberlings3/transitions"
+url = "github:Gibberlings3/transitions"
 description = "Transitions"
 archive = ""
 
 [unofficialitempack]
 lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/g84xly9my7jj23y/UnofficialItemPack_V2.7b.zip?dl=1"
+url = "https://www.dropbox.com/s/g84xly9my7jj23y/UnofficialItemPack_V2.7b.zip?dl=1"
 description = "Unofficial Item Pack (New)"
 archive = "UnofficialItemPack_V2.7b.zip"
 
 [thebeaurinlegacy]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://www.dropbox.com/s/cl4oj311z1gmib7/TheBeaurinLegacy.zip?dl=1"
+url = "https://www.dropbox.com/s/cl4oj311z1gmib7/TheBeaurinLegacy.zip?dl=1"
 description = "The Beaurin Legacy"
 archive = "TheBeaurinLegacy.zip"
 
 [3ed]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Holic75/Baldurs-gate-dnd-3.5"
+url = "github:Holic75/Baldurs-gate-dnd-3.5"
 description = "Baldur`s Gate DnD 3.5 (New)"
 archive = ""
 
 [worldmap_iwd_eet]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "https://www.dropbox.com/s/2la65kdfl12btbg/worldmap_iwdeet.zip?dl=1"
+url = "https://www.dropbox.com/s/2la65kdfl12btbg/worldmap_iwdeet.zip?dl=1"
 description = "Worldmap for IWD in EET (New, TEST)"
 archive = "worldmap_iwdeet.zip"
 
 [protagonist_can_die]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/ar7egyefm39m8o2/Protagonist_Can_Die_V93.zip?dl=1"
+url = "https://www.dropbox.com/s/ar7egyefm39m8o2/Protagonist_Can_Die_V93.zip?dl=1"
 description = "Protagonist Can Die"
 archive = "Protagonist_Can_Die_V93.zip"
 
 [ajantisbg2]
-lastupdate = 2019-06-16
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://www.baldurs-gate.de/index.php?resources/jasteys-sir-ajantis-f%C3%BCr-bgii-npc.9/download"
+url = "https://www.baldurs-gate.de/index.php?resources/jasteys-sir-ajantis-f%C3%BCr-bgii-npc.9/download"
 description = "Ajantis NPC for BG2"
 archive = "win-ajantisbg2-v20.zip"
 
 [underrep]
-lastupdate = 2021-05-27
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:Pocket-Plane-Group/Under-Respresented_Items"
+url = "github:Pocket-Plane-Group/Under-Respresented_Items"
 description = "Underrepresented Items (from Icewind Dale 2)"
 archive = ""
 
 [rjali]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://www.dropbox.com/s/m7l76g4dbi1i202/Rjali%20Romance%20-%20v12.0.zip?dl=1"
+url = "https://www.dropbox.com/s/m7l76g4dbi1i202/Rjali%20Romance%20-%20v12.0.zip?dl=1"
 description = "Rjali Romance"
 archive = "Rjali Romance-v12.0.zip"
 
 [bp-bgt-worldmap]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:SpellholdStudios/BP-BGT-Worldmap"
+url = "github:SpellholdStudios/BP-BGT-Worldmap"
 description = "Worldmap"
 archive = ""
 
 [minscfriendship]
-lastupdate = 2019-11-26
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/MinscFriendship"
+url = "github:SpellholdStudios/MinscFriendship"
 description = "Minsc Friendship"
 archive = ""
 
 [eeuitweaks]
-lastupdate = 2022-06-11
+lastupdate = 1970-01-01
 class = "GUI"
-download = "github:r-e-d/EEUITweaks"
+url = "github:r-e-d/EEUITweaks"
 description = "EEUITweaks"
 archive = ""
 
 [therune]
-lastupdate = 2022-06-17
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/The-Rune"
+url = "github:RoxanneSHS/The-Rune"
 description = "Twisting With The Rune"
 archive = "therune.tar.gz"
 
-    [therune.components.""]
+    [therune.properties.""]
     after = ["cowledmenace"]
 
 [hq_soundclips_bg2ee]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:Argent77/HQ-SoundClips-BG2EE"
+url = "github:Argent77/HQ-SoundClips-BG2EE"
 description = "High Quality soundclips for BG2EE extended content"
 archive = ""
 
 [artisanskitpack]
-lastupdate = 2022-06-10
+lastupdate = 1970-01-01
 class = "Kits"
-download = "github:ArtemiusI/The-Artisan-s-Kitpack"
+url = "github:ArtemiusI/The-Artisan-s-Kitpack"
 description = "Artisans Kitpack"
 archive = ""
 
 [yoshimo]
-lastupdate = 2019-11-26
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/YoshimoFriendship"
+url = "github:SpellholdStudios/YoshimoFriendship"
 description = "Yoshimo Friendship"
 archive = ""
 
 [spell_rev]
-lastupdate = 2022-06-17
+lastupdate = 1970-01-01
 class = "Early"
-download = "github:Gibberlings3/SpellRevisions"
+url = "github:Gibberlings3/SpellRevisions"
 description = "Spell Revisions v4 b18"
 archive = ""
 
-    [spell_rev.components.10]
-    exclusive = ["plangood.cre", "planevil.cre", "devagood.cre", "devaevil.cre"]
+    [spell_rev.properties.10]
+    exclusive = ["devaevil.cre", "devagood.cre", "planevil.cre", "plangood.cre"]
 
-    [spell_rev.components.0]
+    [spell_rev.properties.0]
     exclusive = ["elemtype.itm", "mstone.itm", "shille.itm", "shille2.itm", "shille3.itm", "spcl213.spl", "spcl721.spl", "spcl722.spl", "spdr101.spl", "spdr201.spl", "spdr301.spl", "spdr401.spl", "spdr501.spl", "spdr601.spl", "spentaai.bam", "spentaci.bam", "spin101.spl", "spin102.spl", "spin103.spl", "spin104.spl", "spin105.spl", "spin106.spl", "spin113.spl", "spin683.spl", "spin701.spl", "spin788.spl", "spin789.spl", "spmagglo.bam", "spmagglo.vvc", "sppr101.spl", "sppr102.spl", "sppr103.spl", "sppr104.spl", "sppr105.spl", "sppr106.spl", "sppr107.spl", "sppr108.spl", "sppr109.spl", "sppr110.spl", "sppr111.spl", "sppr113.spl", "sppr116.spl", "spra301.spl", "spra302.spl", "spra303.spl", "spra304.spl", "spra305.spl", "spra306.spl", "spwi977.spl", "spwi978.spl", "undtype.itm", "vermtype.itm"]
 
-    [spell_rev.components.""]
+    [spell_rev.properties.""]
     after = ["ub"]
 
-    [spell_rev.components.65]
+    [spell_rev.properties.65]
     exclusive = ["spcl900.spl", "spcl901.spl", "spcl907.spl", "spwish12.spl"]
 
 [vynd]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://www.dropbox.com/s/43era1wkgnm9eb4/vynd-v2.exe?dl=1"
+url = "https://www.dropbox.com/s/43era1wkgnm9eb4/vynd-v2.exe?dl=1"
 description = "Vynd NPC"
 archive = "Vynd-v2.exe"
 
 [bg2eear]
 lastupdate = 1970-01-01
 class = "Items"
-download = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=192"
+url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=192"
 description = "TeamBG Armor Pack for BG2"
 archive = "BG2eeAR102.rar"
 
 [sirene_bg2]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:ArtemiusI/Sirene-NPC-for-BG2-EE"
+url = "github:ArtemiusI/Sirene-NPC-for-BG2-EE"
 description = "Sirene NPC for BG2:EE"
 archive = ""
 
 [rttitempack]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack"
+url = "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack"
 description = "Return to Trademeet item pack"
 archive = ""
 
 [enhanced-powergaming-scripts]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Gibberlings3/Enhanced-Powergaming-Scripts"
+url = "github:Gibberlings3/Enhanced-Powergaming-Scripts"
 description = "Enhanced Powergaming Scripts"
 archive = ""
 
 [skills-and-abilities]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Gibberlings3/Skills-and-Abilities"
+url = "github:Gibberlings3/Skills-and-Abilities"
 description = "Skills and Abilities"
-archive = ""
+archive = "skills-and-abilities.tar.gz"
 
 [iylos]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:SpellholdStudios/Iylos"
+url = "github:SpellholdStudios/Iylos"
 description = "Iylos (ToB monk)"
 archive = ""
 
 [valhorn]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:Gibberlings3/Improved_Horns_of_Valhalla"
+url = "github:Gibberlings3/Improved_Horns_of_Valhalla"
 description = "Improved Horn of Valhalla"
 archive = ""
 
 [ihateundead]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Raduziel/I-Hate-Undead-Kitpack"
+url = "github:Raduziel/I-Hate-Undead-Kitpack"
 description = "I Hate Undead Kitpack"
 archive = ""
 
 [seatower]
-lastupdate = 2022-04-13
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/Balduran-s-Sea-Tower"
+url = "github:RoxanneSHS/Balduran-s-Sea-Tower"
 description = "Balduran's Sea Tower"
 archive = ""
 
 [butchery]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:GwendolyneFreddy/butchery"
+url = "github:GwendolyneFreddy/butchery"
 description = "BuTcHeRy"
 archive = ""
 
 [emily]
-lastupdate = 2022-06-09
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:Skitia/Emily-BG1"
+url = "github:Skitia/Emily-BG1"
 description = "Emily"
 archive = ""
 
 [alora]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://www.dropbox.com/s/kt9u12x8qagq8lu/AloraEE.zip?dl=1"
+url = "https://www.dropbox.com/s/kt9u12x8qagq8lu/AloraEE.zip?dl=1"
 description = "Alora NPC"
 archive = "AloraEE.zip"
 
 [isra_bg2]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:SpellholdStudios/Isra_NPC_BG2"
+url = "github:SpellholdStudios/Isra_NPC_BG2"
 description = "Isra BG2 NPC"
 archive = ""
 
 [animalcompanions]
-lastupdate = 2018-12-26
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:thisisulb/AnimalCompanions"
+url = "github:thisisulb/AnimalCompanions"
 description = "Animal Companions"
-archive = ""
+archive = "animalcompanions.tar.gz"
 
 [arath_eet]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/ArathEET"
+url = "github:RoxanneSHS/ArathEET"
 description = "Arath (Rewired)"
 archive = ""
 
 [tgc1e]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:K4thos/TGC1e"
+url = "github:K4thos/TGC1e"
 description = "The Grey Clan Episode I: In Candlelight"
 archive = ""
 
 ["c#brandock"]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gitjas/Brandock_the_Mage"
+url = "github:Gitjas/Brandock_the_Mage"
 description = "Brandock the Mage"
 archive = ""
 
 [allthingsmazzy]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "https://www.dropbox.com/s/j34zn57yzbx0l02/AllThingsMazzy_3.05.zip?dl=1"
+url = "https://www.dropbox.com/s/j34zn57yzbx0l02/AllThingsMazzy_3.05.zip?dl=1"
 description = "All Things Mazzy"
 archive = "AllThingsMazzy_3.05.zip"
 
 [rupert]
-lastupdate = 2018-07-26
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:MarkVadasz/Rupert"
+url = "github:MarkVadasz/Rupert"
 description = "Rupert the Dye Merchant"
 archive = ""
 
 [alchemy]
-lastupdate = 2020-08-30
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:SpellholdStudios/JansAlchemy"
+url = "github:SpellholdStudios/JansAlchemy"
 description = "Jan's Alchemy"
 archive = ""
 
 [touched]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "https://www.dropbox.com/s/eolau4r9cq60jjn/Touchstone.zip?dl=1"
+url = "https://www.dropbox.com/s/eolau4r9cq60jjn/Touchstone.zip?dl=1"
 description = "Touchstone"
 archive = "Touchstone.zip"
 
 [yoshimosremorse]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://www.dropbox.com/s/0aie0iftr1dl7sg/YoshimosRemorse_v3.0.zip?dl=1"
+url = "https://www.dropbox.com/s/0aie0iftr1dl7sg/YoshimosRemorse_v3.0.zip?dl=1"
 description = "Yoshimo's Remorse"
 archive = "YoshimosRemorse_v3.0.zip"
 
 [item_patcher]
 lastupdate = 1970-01-01
 class = "Fixes"
-download = "Manual"
+url = "Manual"
 description = "Item Patcher"
 archive = "Manual"
 
 [m7multikit]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "http://lynxlynx.info/ie/modhub.php?CrevsDaak/m7multikit&pre"
+url = "http://lynxlynx.info/ie/modhub.php?CrevsDaak/m7multikit&pre"
 description = "Multiclass Multikits"
 archive = "CrevsDaak-m7multikit-v0.27.11-0-gdaf5de8.zip"
 
 [dakkon]
 lastupdate = 1970-01-01
 class = "Items"
-download = "https://us.v-cdn.net/5019558/uploads/FileUpload/e9/036111ebc68d2a7a81d91441d2c799.7z"
+url = "https://us.v-cdn.net/5019558/uploads/FileUpload/e9/036111ebc68d2a7a81d91441d2c799.7z"
 description = "Upgradable Dak'kon's Blade"
 archive = "dakkon.7z"
 
 [atweaks]
-lastupdate = 2022-06-17
+lastupdate = 2018-05-19
 class = "Tweaks"
-download = "https://www.dropbox.com/s/hs3besqzichlru0/atweaks-v453.zip?dl=1"
+url = "https://www.dropbox.com/s/hs3besqzichlru0/atweaks-v453.zip?dl=1"
 description = "aTweaks"
 archive = "atweaks-v453.zip"
 
-    [atweaks.components.104]
-    exclusive = ["spwi105.spl", "spin937.spl"]
+    [atweaks.properties.104]
+    exclusive = ["spin937.spl", "spwi105.spl"]
 
-    [atweaks.components.300]
-    exclusive = ["spdimndr.bam", "eff_m09.wav"]
+    [atweaks.properties.300]
+    exclusive = ["eff_m09.wav", "spdimndr.bam"]
 
-    [atweaks.components.323]
+    [atweaks.properties.323]
     exclusive = ["spwi402.spl"]
 
-    [atweaks.components.324]
-    exclusive = ["spdimndr.bam", "eff_m09.wav"]
+    [atweaks.properties.324]
+    exclusive = ["eff_m09.wav", "spdimndr.bam"]
 
-    [atweaks.components.202]
-    exclusive = ["spin101.spl", "spin104.spl", "spin102.spl", "spin105.spl", "spin106.spl"]
+    [atweaks.properties.202]
+    exclusive = ["spin101.spl", "spin102.spl", "spin104.spl", "spin105.spl", "spin106.spl"]
 
-    [atweaks.components.""]
+    [atweaks.properties.""]
     after = ["rr", "stratagems"]
 
-    [atweaks.components.105]
+    [atweaks.properties.105]
     exclusive = ["spwi402.spl"]
 
-    [atweaks.components.322]
-    exclusive = ["spdimndr.bam", "eff_m09.wav"]
+    [atweaks.properties.322]
+    exclusive = ["eff_m09.wav", "spdimndr.bam"]
 
 [asharnpc]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "http://www.shsforums.net/files/download/1203-ashar-npc/"
+url = "http://www.shsforums.net/files/download/1203-ashar-npc/"
 description = "Ashar"
 archive = "AsharNPC_v131.rar"
 
 [dearnise]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:PaulaMigrate/NaliaEE"
+url = "github:PaulaMigrate/NaliaEE"
 description = "de'Arnise Romance"
 archive = ""
 
 [branwen]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Pocket-Plane-Group/Branwen_for_BGII"
+url = "github:Pocket-Plane-Group/Branwen_for_BGII"
 description = "Branwen BG2 NPC"
 archive = ""
 
 [npcflirt]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Pocket-Plane-Group/NPC_Flirt_Packs"
+url = "github:Pocket-Plane-Group/NPC_Flirt_Packs"
 description = "NPC Flirt Packs"
 archive = ""
 
 [disobedience]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/CivilDisobedience"
+url = "github:RoxanneSHS/CivilDisobedience"
 description = "Check the Bodies Civil Disobedience"
 archive = ""
 
 [valen]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/ValenEE"
+url = "github:RoxanneSHS/ValenEE"
 description = "Valen NPC"
 archive = ""
 
 [kindrek]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://www.dropbox.com/s/vrs3nf6dzumujyu/Kindrek_V28.zip?dl=1"
+url = "https://www.dropbox.com/s/vrs3nf6dzumujyu/Kindrek_V28.zip?dl=1"
 description = "Kindrek NPC"
 archive = "Kindrek_V28.zip"
 
 [tnoober]
-lastupdate = 2020-07-10
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:SpellholdStudios/TheSwordofNoober"
+url = "github:SpellholdStudios/TheSwordofNoober"
 description = "Sword of Noober"
 archive = ""
 
 [wilsonchronicles]
-lastupdate = 2022-05-06
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://downloads.weaselmods.net/download/wilson-chronicles/?wpdmdl=118"
+url = "https://downloads.weaselmods.net/download/wilson-chronicles/?wpdmdl=118"
 description = "Wilson Chronicles"
 archive = "wilsonchronicles.zip"
 
 [mortis]
 lastupdate = 1970-01-01
 class = "Items"
-download = "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip"
+url = "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip"
 description = "Mortis Mini Mod"
 archive = "mortis.zip"
 
 [theundying]
-lastupdate = 2015-04-11
+lastupdate = 1970-01-01
 class = "NPCs"
-download = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=8"
+url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=8"
 description = "The Undying"
 archive = "TheUndying2_53.rar"
 
 [bg1npcsoa]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://www.dropbox.com/s/mub3ozbrj1tiews/BG1NPC%20SoAToB_v13.5.rar?dl=1"
+url = "https://www.dropbox.com/s/mub3ozbrj1tiews/BG1NPC%20SoAToB_v13.5.rar?dl=1"
 description = "BG1 NPCs for SoA"
 archive = "BG1NPC SoAToB_v13.5.rar"
 
 [jaheirarecast]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "http://lynxlynx.info/ie/modhub.php?AstroBryGuy/JaheiraRecast"
+url = "http://lynxlynx.info/ie/modhub.php?AstroBryGuy/JaheiraRecast"
 description = "Jaheira Recast"
 archive = "AstroBryGuy-JaheiraRecast-v3.0-0-g501290c.zip"
 
 [ooze]
-lastupdate = 2022-05-13
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://downloads.weaselmods.net/download/oozes-lounge/?wpdmdl=59"
+url = "https://downloads.weaselmods.net/download/oozes-lounge/?wpdmdl=59"
 description = "Oozes Lounge"
 archive = "ooze.zip"
 
 [wtpfamiliars]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "github:flamewing/WTPFamiliars"
+url = "github:flamewing/WTPFamiliars"
 description = "WTP Familiars"
 archive = ""
 
 [safana]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:RoxanneSHS/SafanaBG2"
+url = "github:RoxanneSHS/SafanaBG2"
 description = "Safana in Amn"
 archive = ""
 
 [sentrizeal_aa_pack]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "https://www.dropbox.com/s/9xi5ehosra6ptq1/SentrizealAvatarPack.zip?dl=1"
+url = "https://www.dropbox.com/s/9xi5ehosra6ptq1/SentrizealAvatarPack.zip?dl=1"
 description = "Sentrizeal's Alternate Avatar Pack"
 archive = "SentrizealAvatarPack.zip"
 
 [stratagems]
-lastupdate = 2022-06-10
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Gibberlings3/SwordCoastStratagems"
+url = "github:Gibberlings3/SwordCoastStratagems"
 description = "Sword Coast Stratagems"
 archive = ""
 
-    [stratagems.components.8090]
-    exclusive = ["ar1515.are", "ar1512.are"]
+    [stratagems.properties.7220]
+    exclusive = ["battho.cre"]
 
-    [stratagems.components.5030]
+    [stratagems.properties.5030]
     exclusive = ["cloak_of_mirroring"]
 
-    [stratagems.components.6560]
-    exclusive = ["udmaster.cre", "flayer01.bcs", "flayer02.bcs", "flayun.bcs"]
+    [stratagems.properties.6560]
+    exclusive = ["flayer01.bcs", "flayer02.bcs", "flayun.bcs", "udmaster.cre"]
 
-    [stratagems.components.7040]
+    [stratagems.properties.7040]
     exclusive = ["grema_d.cre", "ogrema.cre"]
 
-    [stratagems.components.8050]
+    [stratagems.properties.8050]
     exclusive = ["reband01.cre"]
 
-    [stratagems.components.8140]
-    exclusive = ["drow06.cre", "drow01.cre", "uddrow01.cre", "daqilue.cre", "jael01.cre", "dagmag01.cre"]
+    [stratagems.properties.8140]
+    exclusive = ["dagmag01.cre", "daqilue.cre", "drow01.cre", "drow06.cre", "jael01.cre", "uddrow01.cre"]
 
-    [stratagems.components.5900]
+    [stratagems.properties.5900]
     exclusive = ["AI"]
 
-    [stratagems.components.6520]
+    [stratagems.properties.6520]
     exclusive = ["efreet01.bcs"]
 
-    [stratagems.components.7210]
-    exclusive = ["credus.cre", "bandit.bcs", "ardeno.cre", "taugos.cre"]
+    [stratagems.properties.7210]
+    exclusive = ["ardeno.cre", "bandit.bcs", "credus.cre", "taugos.cre"]
 
-    [stratagems.components.6840]
-    exclusive = ["finsend.bcs", "finsend.cre", "finiren.cre"]
+    [stratagems.properties.6840]
+    exclusive = ["finiren.cre", "finsend.bcs", "finsend.cre"]
     depends = ["ascension"]
 
-    [stratagems.components.7060]
-    exclusive = ["kaishwlf.cre", "baresh.bcs", "baresh2.cre", "barwlf.cre", "daese.cre"]
+    [stratagems.properties.7060]
+    exclusive = ["baresh.bcs", "baresh2.cre", "barwlf.cre", "daese.cre", "kaishwlf.cre"]
 
-    [stratagems.components.8010]
-    exclusive = ["shadel.bcs", "shadel.cre", "shalt01.cre", "rngsha02"]
+    [stratagems.properties.8010]
+    exclusive = ["rngsha02", "shadel.bcs", "shadel.cre", "shalt01.cre"]
 
-    [stratagems.components.3010]
+    [stratagems.properties.3010]
     exclusive = ["masterwork_arrows"]
 
-    [stratagems.components.7070]
-    exclusive = ["lovem.cre", "love.bcs", "fearm.cre", "avaricem.cre", "greed.bcs", "islann.cre", "fuerne.cre", "dopdur.cre", "dopdur1.cre", "dopdop.bcs", "rook.cre", "bishop.cre"]
+    [stratagems.properties.7070]
+    exclusive = ["avaricem.cre", "bishop.cre", "dopdop.bcs", "dopdur.cre", "dopdur1.cre", "fearm.cre", "fuerne.cre", "greed.bcs", "islann.cre", "love.bcs", "lovem.cre", "rook.cre"]
 
-    [stratagems.components.4230]
+    [stratagems.properties.4230]
     exclusive = ["wmart1.cre", "wmart2.cre"]
 
-    [stratagems.components.7140]
-    exclusive = ["shaldr.cre", "rahvin.cre", "haseo.cre", "wudei.cre"]
+    [stratagems.properties.7140]
+    exclusive = ["haseo.cre", "rahvin.cre", "shaldr.cre", "wudei.cre"]
 
-    [stratagems.components.8100]
-    exclusive = ["ppmur.cre", "ppjon.cre"]
+    [stratagems.properties.8100]
+    exclusive = ["ppjon.cre", "ppmur.cre"]
 
-    [stratagems.components.8150]
-    exclusive = ["gormind.cre", "gorsta01.cre", "ar3005.are", "ar3006.are", "ar3021.are"]
+    [stratagems.properties.8150]
+    exclusive = ["ar3005.are", "ar3006.are", "ar3021.are", "gormind.cre", "gorsta01.cre"]
 
-    [stratagems.components.7030]
-    exclusive = ["kobolda.cre", "kobold.cre"]
+    [stratagems.properties.7030]
+    exclusive = ["kobold.cre", "kobolda.cre"]
 
-    [stratagems.components.4120]
+    [stratagems.properties.4120]
     exclusive = ["NPC_at_inn"]
 
-    [stratagems.components.7900]
-    exclusive = ["slythe.cre", "jenkal.cre", "tamoko.cre", "sunin.cre", "hairto.cre", "gnarl.cre", "telka.cre"]
+    [stratagems.properties.7900]
+    exclusive = ["gnarl.cre", "hairto.cre", "jenkal.cre", "slythe.cre", "sunin.cre", "tamoko.cre", "telka.cre"]
 
-    [stratagems.components.6300]
-    exclusive = ["sirspell.bcs", "hama.bcs"]
+    [stratagems.properties.6300]
+    exclusive = ["hama.bcs", "sirspell.bcs"]
 
-    [stratagems.components.8170]
-    exclusive = ["senlich.cre", "elemogre.cre", "drofod02.cre"]
+    [stratagems.properties.8170]
+    exclusive = ["drofod02.cre", "elemogre.cre", "senlich.cre"]
 
-    [stratagems.components.7110]
+    [stratagems.properties.7110]
     exclusive = ["drasus.cre", "gentho.cre", "kysus.cre", "rezdan.cre"]
 
-    [stratagems.components.8000]
-    exclusive = ["duearc01.cre", "ar0602.are", "ar0603.are"]
+    [stratagems.properties.8000]
+    exclusive = ["ar0602.are", "ar0603.are", "duearc01.cre"]
 
-    [stratagems.components.6580]
-    exclusive = ["vampir01.bcs", "nevm4.bcs", "vampm01.cre", "vampjah.cre", "lassal.cre", "c6valen.cre", "bodvam01.cre"]
+    [stratagems.properties.6580]
+    exclusive = ["bodvam01.cre", "c6valen.cre", "lassal.cre", "nevm4.bcs", "vampir01.bcs", "vampjah.cre", "vampm01.cre"]
 
-    [stratagems.components.3022]
+    [stratagems.properties.3022]
     exclusive = ["masterwork_weapons"]
 
-    [stratagems.components.6310]
+    [stratagems.properties.6310]
     exclusive = ["crawler.bcs"]
 
-    [stratagems.components.7200]
-    exclusive = ["kobold7.cre", "mulahe.cre", "helpmul.cre"]
+    [stratagems.properties.7200]
+    exclusive = ["helpmul.cre", "kobold7.cre", "mulahe.cre"]
 
-    [stratagems.components.2111]
+    [stratagems.properties.2111]
     exclusive = ["spcl231.spl"]
 
-    [stratagems.components.8120]
+    [stratagems.properties.8120]
     exclusive = ["ar2101.are"]
 
-    [stratagems.components.6800]
+    [stratagems.properties.6800]
     exclusive = ["illasera.bcs"]
     depends = ["ascension"]
 
-    [stratagems.components.8070]
-    exclusive = ["bheye.cre", "bheye.bcs"]
+    [stratagems.properties.8070]
+    exclusive = ["bheye.bcs", "bheye.cre"]
 
-    [stratagems.components.6540]
-    exclusive = ["dragred1.itm", "firkra02.cre", "gorsal.cre", "fsdragon.cre", "dragblac.cre", "udsilver.cre", "shadra01.cre", "dragblue.cre", "dragblac.bcs", "dragbrow.bcs", "dragred.bcs"]
+    [stratagems.properties.6540]
+    exclusive = ["dragblac.bcs", "dragblac.cre", "dragblue.cre", "dragbrow.bcs", "dragred.bcs", "dragred1.itm", "firkra02.cre", "fsdragon.cre", "gorsal.cre", "shadra01.cre", "udsilver.cre"]
 
-    [stratagems.components.8020]
-    exclusive = ["hldemi.cre", "demilich.cre"]
+    [stratagems.properties.8020]
+    exclusive = ["demilich.cre", "hldemi.cre"]
 
-    [stratagems.components.7020]
-    exclusive = ["lamalh.cre", "molkar.cre", "maneir.cre", "telka.cre", "zeela.cre", "drakar.cre", "halaca.cre", "morvin.cre", "drakar.bcs", "halaca.bcs", "morvin.bcs", "molkar.bcs", "maneir.bcs", "lamalh.bcs"]
+    [stratagems.properties.7020]
+    exclusive = ["drakar.bcs", "drakar.cre", "halaca.bcs", "halaca.cre", "lamalh.bcs", "lamalh.cre", "maneir.bcs", "maneir.cre", "molkar.bcs", "molkar.cre", "morvin.bcs", "morvin.cre", "telka.cre", "zeela.cre"]
 
-    [stratagems.components.6810]
-    exclusive = ["jumjum.bcs", "fingrom.bcs"]
+    [stratagems.properties.6810]
+    exclusive = ["fingrom.bcs", "jumjum.bcs"]
     depends = ["ascension"]
 
-    [stratagems.components.6850]
-    exclusive = ["finbalor.bcs", "finaluf.bcs", "finmaril.bcs", "finnabas.bcs"]
+    [stratagems.properties.6850]
+    exclusive = ["finaluf.bcs", "finbalor.bcs", "finmaril.bcs", "finnabas.bcs"]
     depends = ["ascension"]
 
-    [stratagems.components.7080]
-    exclusive = ["tanar.cre", "tracea.cre", "cultt1.cre"]
+    [stratagems.properties.7080]
+    exclusive = ["cultt1.cre", "tanar.cre", "tracea.cre"]
 
-    [stratagems.components.7130]
-    exclusive = ["denak.cre", "brenda.cre", "lasala.cre", "diana.cre"]
+    [stratagems.properties.7130]
+    exclusive = ["brenda.cre", "denak.cre", "diana.cre", "lasala.cre"]
 
-    [stratagems.components.6820]
-    exclusive = ["yagaft.bcs", "finyaga.bcs"]
+    [stratagems.properties.6820]
+    exclusive = ["finyaga.bcs", "yagaft.bcs"]
     depends = ["ascension"]
 
-    [stratagems.components.6500]
-    exclusive = ["golcly01.cre", "golsto01.cre", "goliro01.cre", "golice01.cre", "golbra01.cre"]
+    [stratagems.properties.6500]
+    exclusive = ["golbra01.cre", "golcly01.cre", "golice01.cre", "goliro01.cre", "golsto01.cre"]
 
-    [stratagems.components.7100]
+    [stratagems.properties.7100]
     exclusive = ["bassil.cre"]
 
-    [stratagems.components.8040]
+    [stratagems.properties.8040]
     exclusive = ["spwnbeh.bcs", "spwndead.bcs", "spwndrow.bcs", "spwngol.bcs", "spwnmind.bcs", "spwnmon.bcs", "spwnorc.bcs", "spwnrak.bcs", "spwntoa.bcs", "spwntrol.bcs", "spwnvamp.bcs", "spwnwolf.bcs"]
 
-    [stratagems.components.8180]
-    exclusive = ["bazliz03.cre", "bazliz04.cre", "eyesek01.cre", "eyesnt01.bcs", "bazmonk.cre", "gorsal.bcs"]
+    [stratagems.properties.8180]
+    exclusive = ["bazliz03.cre", "bazliz04.cre", "bazmonk.cre", "eyesek01.cre", "eyesnt01.bcs", "gorsal.bcs"]
 
-    [stratagems.components.6830]
+    [stratagems.properties.6830]
     exclusive = ["abaz2.bcs", "drake.bcs"]
     depends = ["ascension"]
 
-    [stratagems.components.7050]
+    [stratagems.properties.7050]
     exclusive = ["ichary.cre"]
 
-    [stratagems.components.6550]
-    exclusive = ["beheld01.cre", "udelder.cre", "hlvaxal.cre", "hlhive.cre", "behold01.bcs", "behdir01.bcs", "gauth01.bcs"]
+    [stratagems.properties.6550]
+    exclusive = ["behdir01.bcs", "beheld01.cre", "behold01.bcs", "gauth01.bcs", "hlhive.cre", "hlvaxal.cre", "udelder.cre"]
 
-    [stratagems.components.2110]
+    [stratagems.properties.2110]
     exclusive = ["spcl231.spl"]
 
-    [stratagems.components.3021]
+    [stratagems.properties.3021]
     exclusive = ["masterwork_weapons"]
 
-    [stratagems.components.8110]
-    exclusive = ["sahamb01.bcs", "sahamb02.bcs", "sahamb01.cre", "sahbar01.cre", "sahpri01.cre", "sahpr2.cre", "sahkng01.cre"]
+    [stratagems.properties.8110]
+    exclusive = ["sahamb01.bcs", "sahamb01.cre", "sahamb02.bcs", "sahbar01.cre", "sahkng01.cre", "sahpr2.cre", "sahpri01.cre"]
 
-    [stratagems.components.3020]
+    [stratagems.properties.3020]
     exclusive = ["masterwork_weapons"]
 
-    [stratagems.components.6570]
+    [stratagems.properties.6570]
     exclusive = ["gith01.bcs", "gith01.cre", "gorgit.cre"]
 
-    [stratagems.components.7090]
-    exclusive = ["takiyah.cre", "izefia.cre", "corsone.cre", "osmadi.cre", "amaran.cre"]
+    [stratagems.properties.7090]
+    exclusive = ["amaran.cre", "corsone.cre", "izefia.cre", "osmadi.cre", "takiyah.cre"]
 
-    [stratagems.components.8060]
-    exclusive = ["torgal.cre", "torgal3.cre", "trolsi01.cre", "trolsp01.cre", "pptroll1.cre", "ar1300.are", "ar1301.are", "ar1302.are", "ar1303.are"]
+    [stratagems.properties.8060]
+    exclusive = ["ar1300.are", "ar1301.are", "ar1302.are", "ar1303.are", "pptroll1.cre", "torgal.cre", "torgal3.cre", "trolsi01.cre", "trolsp01.cre"]
 
-    [stratagems.components.6590]
+    [stratagems.properties.6590]
     exclusive = ["finmel.bcs", "meliss01.bcs"]
 
-    [stratagems.components.8190]
-    exclusive = ["smound01.cre", "ar1900.are", "bhguard2.cre", "talkni01.cre", "talmiss.cre", "druear01.cre", "elear01.cre", "elearg01.cre", "udelda.cre", "elair01.cre", "udelf.cre", "udelde.cre", "spmugg2.cre", "spmugg.cre"]
+    [stratagems.properties.8190]
+    exclusive = ["ar1900.are", "bhguard2.cre", "druear01.cre", "elair01.cre", "elear01.cre", "elearg01.cre", "smound01.cre", "spmugg.cre", "spmugg2.cre", "talkni01.cre", "talmiss.cre", "udelda.cre", "udelde.cre", "udelf.cre"]
 
-    [stratagems.components.7250]
-    exclusive = ["sarevo.cre", "tazok2.cre", "semaj.cre", "galdor.cre", "diarmid.cre"]
+    [stratagems.properties.7250]
+    exclusive = ["diarmid.cre", "galdor.cre", "sarevo.cre", "semaj.cre", "tazok2.cre"]
 
-    [stratagems.components.4030]
-    exclusive = ["spcl643.spl", "spcl644.spl", "spcl611.spl", "spcl612.spl"]
+    [stratagems.properties.4030]
+    exclusive = ["spcl611.spl", "spcl612.spl", "spcl643.spl", "spcl644.spl"]
 
-    [stratagems.components.7010]
-    exclusive = ["ronelit.cre", "ronguar.cre", "irongu.cre"]
+    [stratagems.properties.7010]
+    exclusive = ["irongu.cre", "ronelit.cre", "ronguar.cre"]
 
-    [stratagems.components.7150]
+    [stratagems.properties.7150]
     exclusive = ["carsa.cre", "kahrk.cre"]
 
-    [stratagems.components.6200]
-    exclusive = ["spidsw.cre", "spidhu.cre", "spidph.cre"]
+    [stratagems.properties.6200]
+    exclusive = ["spidhu.cre", "spidph.cre", "spidsw.cre"]
 
-    [stratagems.components.6320]
-    exclusive = ["lbasilsk.bcs", "gbasilsk.bcs"]
+    [stratagems.properties.6320]
+    exclusive = ["gbasilsk.bcs", "lbasilsk.bcs"]
 
-    [stratagems.components.6510]
-    exclusive = ["smarter_demons", "demfig01.cre", "demfig02.cre", "dembal01.cre", "dembal02.cre", "demglab.cre", "demglab2.cre", "glabrez.cre", "tanari.cre", "tanari2.cre", "marilith.cre", "demsuc.cre", "pwarden.cre", "dembal01.bcs", "demglab.bcs", "tanari.bcs", "cornugon.bcs", "erinyes.bcs"]
+    [stratagems.properties.6510]
+    exclusive = ["cornugon.bcs", "dembal01.bcs", "dembal01.cre", "dembal02.cre", "demfig01.cre", "demfig02.cre", "demglab.bcs", "demglab.cre", "demglab2.cre", "demsuc.cre", "erinyes.bcs", "glabrez.cre", "marilith.cre", "pwarden.cre", "smarter_demons", "tanari.bcs", "tanari.cre", "tanari2.cre"]
 
-    [stratagems.components.7000]
-    exclusive = ["noblpa.bcs", "doppss.bcs", "zorl.bcs", "sardopp.bcs"]
+    [stratagems.properties.7000]
+    exclusive = ["doppss.bcs", "noblpa.bcs", "sardopp.bcs", "zorl.bcs"]
 
-    [stratagems.components.8080]
-    exclusive = ["bodhi2.cre", "ppbodhi4.cre", "chevil08.cre", "bodhi2.bcs", "bodfgt01.cre", "bodfgt02.cre"]
+    [stratagems.properties.8080]
+    exclusive = ["bodfgt01.cre", "bodfgt02.cre", "bodhi2.bcs", "bodhi2.cre", "chevil08.cre", "ppbodhi4.cre"]
 
-    [stratagems.components.""]
-    after = ["item_rev", "d0questpack", "ascension", "refinements", "spell_rev", "tactics", "wheels", "eetact2"]
+    [stratagems.properties.""]
+    after = ["ascension", "d0questpack", "eetact2", "item_rev", "refinements", "spell_rev", "tactics", "wheels"]
     before = ["cdtweaks"]
 
-    [stratagems.components.5020]
+    [stratagems.properties.5020]
     exclusive = ["cloak_of_displacement"]
 
-    [stratagems.components.7220]
-    exclusive = ["battho.cre"]
+    [stratagems.properties.8090]
+    exclusive = ["ar1512.are", "ar1515.are"]
 
-    [stratagems.components.8160]
-    exclusive = ["gorsku01.bcs", "golbur01.bcs", "elemimix.bcs", "hgwar01.cre", "ysfire01.cre", "giafir01.cre", "ysguar01.cre"]
+    [stratagems.properties.8160]
+    exclusive = ["elemimix.bcs", "giafir01.cre", "golbur01.bcs", "gorsku01.bcs", "hgwar01.cre", "ysfire01.cre", "ysguar01.cre"]
 
 ["mur'neth"]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/Murneth"
+url = "github:RoxanneSHS/Murneth"
 description = "Mur'Neth NPC"
 archive = ""
 
 [rosere]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "github:RoxanneSHS/RoseRE"
+url = "github:RoxanneSHS/RoseRE"
 description = "Rose NPC Resurrected for EET"
 archive = ""
 
 [valygarfriendship]
-lastupdate = 2021-07-28
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/ValygarFriendship"
+url = "github:SpellholdStudios/ValygarFriendship"
 description = "Valygar Friendship"
 archive = ""
 
 [rgenie]
 lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/8irrveuglmlxjkf/RGenie_30.zip?dl=1"
+url = "https://www.dropbox.com/s/8irrveuglmlxjkf/RGenie_30.zip?dl=1"
 description = "Ribald's Genie"
 archive = "RGenie_30.zip"
 
 [shardsofice]
 lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:Gibberlings3/Shards_of_Ice"
+url = "github:Gibberlings3/Shards_of_Ice"
 description = "Shards of Ice"
 archive = ""
 
 [verrsza]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://downloads.weaselmods.net/download/verrsza-bg1ee/?wpdmdl=120"
+url = "https://downloads.weaselmods.net/download/verrsza-bg1ee/?wpdmdl=120"
 description = "Verr'Sza NPC"
 archive = "verrsza.zip"
 
 [bom]
-lastupdate = 2019-04-14
+lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/gjj3dlc1k8muywv/BoM_V3EE.zip?dl=1"
+url = "https://www.dropbox.com/s/gjj3dlc1k8muywv/BoM_V3EE.zip?dl=1"
 description = "Boards o' Magick Item Pack"
 archive = "BoM_V3EE.zip"
 
 [kitanya]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:PaulaMigrate/Kitanya-Resurrected"
+url = "github:PaulaMigrate/Kitanya-Resurrected"
 description = "Kitanya"
 archive = ""
 
 [faren]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "http://dl.spellholdstudios.net/faren"
+url = "http://dl.spellholdstudios.net/faren"
 description = "Faren NPC"
 archive = "Faren_V4.zip"
 
 [bgqe]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:Gibberlings3/BG_Quests_And_Encounters"
+url = "github:Gibberlings3/BG_Quests_And_Encounters"
 description = "BG1 Mini Quests and Encounters"
 archive = ""
 
 [eet_send_inn_simple]
 lastupdate = 1970-01-01
 class = "Fixes"
-download = "https://www.dropbox.com/s/km6ly9tlexfvuv2/SendNPCInnEET.zip?dl=1"
+url = "https://www.dropbox.com/s/km6ly9tlexfvuv2/SendNPCInnEET.zip?dl=1"
 description = "Send NPCs to an Inn"
 archive = "SendNPCInnEET.zip"
 
 [dr8_hotfix]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "https://www.dropbox.com/s/w3io6hbyb9axgjk/DR8_hotfix.zip?dl=1"
+url = "https://www.dropbox.com/s/w3io6hbyb9axgjk/DR8_hotfix.zip?dl=1"
 description = "Divine Remix Hotfix"
 archive = "DR8_hotfix.zip"
 
 [khalidbg2]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/khalid-bg2/?wpdmdl=449"
+url = "https://downloads.weaselmods.net/download/khalid-bg2/?wpdmdl=449"
 description = "Khalid BG2"
 archive = "khalidbg2.zip"
 
 [fishingfortrouble]
-lastupdate = 2022-02-28
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/FishingForTrouble"
+url = "github:RoxanneSHS/FishingForTrouble"
 description = "Fishing for Trouble"
 archive = ""
 
 [cdtweaks]
-lastupdate = 2022-06-15
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Gibberlings3/Tweaks-Anthology"
+url = "github:Gibberlings3/Tweaks-Anthology"
 description = "Tweaks Anthology"
 archive = ""
 
-    [cdtweaks.components.1040]
+    [cdtweaks.properties.1040]
     exclusive = ["amncen1.cre", "amng1.cre"]
 
-    [cdtweaks.components.3093]
+    [cdtweaks.properties.3093]
     exclusive = ["gem_stacking"]
 
-    [cdtweaks.components.3200]
+    [cdtweaks.properties.3200]
     exclusive = ["sellable_items"]
 
-    [cdtweaks.components.2430]
+    [cdtweaks.properties.2430]
     exclusive = ["multiclass_druid_weapons"]
 
-    [cdtweaks.components.2160]
+    [cdtweaks.properties.2160]
     exclusive = ["weapprof.2da/types"]
 
-    [cdtweaks.components.3100]
+    [cdtweaks.properties.3100]
     exclusive = ["potion_stacking"]
 
-    [cdtweaks.components.3031]
+    [cdtweaks.properties.3031]
     exclusive = ["spell_learning"]
 
-    [cdtweaks.components.3101]
+    [cdtweaks.properties.3101]
     exclusive = ["potion_stacking"]
 
-    [cdtweaks.components.3000]
+    [cdtweaks.properties.3000]
     exclusive = ["hpclass.2da"]
 
-    [cdtweaks.components.2163]
+    [cdtweaks.properties.2163]
     exclusive = ["weapprof.2da/types"]
 
-    [cdtweaks.components.2291]
+    [cdtweaks.properties.2291]
     exclusive = ["mxspldrd.2da"]
 
-    [cdtweaks.components.2294]
+    [cdtweaks.properties.2294]
     exclusive = ["mxspldrd.2da"]
 
-    [cdtweaks.components.2211]
+    [cdtweaks.properties.2211]
     exclusive = ["wspecial.2da/speed"]
 
-    [cdtweaks.components.2312]
+    [cdtweaks.properties.2312]
     exclusive = ["spell_save_penalties"]
 
-    [cdtweaks.components.3072]
+    [cdtweaks.properties.3072]
     exclusive = ["store_prices"]
 
-    [cdtweaks.components.4120]
+    [cdtweaks.properties.4120]
     exclusive = ["coran.cre"]
 
-    [cdtweaks.components.3008]
+    [cdtweaks.properties.3008]
     exclusive = ["hpclass.2da"]
 
-    [cdtweaks.components.1150]
-    exclusive = ["wwbearwe.cre", "wwbear.cre", "sppr604.spl", "spcl643.spl", "spcl644.spl", "anisum04.2da", "anisum05.2da"]
+    [cdtweaks.properties.1150]
+    exclusive = ["anisum04.2da", "anisum05.2da", "spcl643.spl", "spcl644.spl", "sppr604.spl", "wwbear.cre", "wwbearwe.cre"]
 
-    [cdtweaks.components.2040]
+    [cdtweaks.properties.2040]
     exclusive = ["universal_clubs"]
 
-    [cdtweaks.components.2092]
+    [cdtweaks.properties.2092]
     exclusive = ["xplevel.2da"]
 
-    [cdtweaks.components.2310]
+    [cdtweaks.properties.2310]
     exclusive = ["spell_save_penalties"]
 
-    [cdtweaks.components.3001]
+    [cdtweaks.properties.3001]
     exclusive = ["hpclass.2da"]
 
-    [cdtweaks.components.2400]
+    [cdtweaks.properties.2400]
     exclusive = ["mxsplran.2da"]
 
-    [cdtweaks.components.2298]
+    [cdtweaks.properties.2298]
     exclusive = ["mxspldrd.2da"]
 
-    [cdtweaks.components.3110]
+    [cdtweaks.properties.3110]
     exclusive = ["scroll_stacking"]
 
-    [cdtweaks.components.1130]
+    [cdtweaks.properties.1130]
     exclusive = ["reputation_reset"]
 
-    [cdtweaks.components.2311]
+    [cdtweaks.properties.2311]
     exclusive = ["spell_save_penalties"]
 
-    [cdtweaks.components.2372]
+    [cdtweaks.properties.2372]
     exclusive = ["clsrcreq.2da"]
 
-    [cdtweaks.components.2290]
+    [cdtweaks.properties.2290]
     exclusive = ["mxspldrd.2da"]
 
-    [cdtweaks.components.2152]
+    [cdtweaks.properties.2152]
     exclusive = ["protection_items"]
 
-    [cdtweaks.components.3112]
+    [cdtweaks.properties.3112]
     exclusive = ["scroll_stacking"]
 
-    [cdtweaks.components.3030]
+    [cdtweaks.properties.3030]
     exclusive = ["spell_learning"]
 
-    [cdtweaks.components.2270]
+    [cdtweaks.properties.2270]
     exclusive = ["mxsplbrd.2da"]
 
-    [cdtweaks.components.2420]
+    [cdtweaks.properties.2420]
     exclusive = ["multiclass_cleric_weapons"]
 
-    [cdtweaks.components.3103]
+    [cdtweaks.properties.3103]
     exclusive = ["potion_stacking"]
 
-    [cdtweaks.components.2370]
+    [cdtweaks.properties.2370]
     exclusive = ["clsrcreq.2da"]
 
-    [cdtweaks.components.3102]
+    [cdtweaks.properties.3102]
     exclusive = ["potion_stacking"]
 
-    [cdtweaks.components.3080]
+    [cdtweaks.properties.3080]
     exclusive = ["ammo_stacking"]
 
-    [cdtweaks.components.2162]
+    [cdtweaks.properties.2162]
     exclusive = ["weapprof.2da/types"]
 
-    [cdtweaks.components.3111]
+    [cdtweaks.properties.3111]
     exclusive = ["scroll_stacking"]
 
-    [cdtweaks.components.3071]
+    [cdtweaks.properties.3071]
     exclusive = ["store_prices"]
 
-    [cdtweaks.components.3040]
+    [cdtweaks.properties.3040]
     exclusive = ["container_capacity"]
 
-    [cdtweaks.components.3081]
+    [cdtweaks.properties.3081]
     exclusive = ["ammo_stacking"]
 
-    [cdtweaks.components.4110]
+    [cdtweaks.properties.4110]
     exclusive = ["kagain.cre"]
 
-    [cdtweaks.components.2300]
+    [cdtweaks.properties.2300]
     exclusive = ["lufmc.2da", "lufmt.2da"]
 
-    [cdtweaks.components.2080]
+    [cdtweaks.properties.2080]
     exclusive = ["lunumab.2da"]
 
-    [cdtweaks.components.2261]
+    [cdtweaks.properties.2261]
     exclusive = ["mxsplwiz.2da"]
 
-    [cdtweaks.components.3070]
+    [cdtweaks.properties.3070]
     exclusive = ["store_prices"]
 
-    [cdtweaks.components.2440]
+    [cdtweaks.properties.2440]
     exclusive = ["clswpbon.2da"]
 
-    [cdtweaks.components.2296]
+    [cdtweaks.properties.2296]
     exclusive = ["mxspldrd.2da"]
 
-    [cdtweaks.components.2100]
+    [cdtweaks.properties.2100]
     exclusive = ["armored_thieving"]
 
-    [cdtweaks.components.3073]
+    [cdtweaks.properties.3073]
     exclusive = ["store_prices"]
 
-    [cdtweaks.components.2410]
+    [cdtweaks.properties.2410]
     exclusive = ["druid_alignment"]
 
-    [cdtweaks.components.3120]
+    [cdtweaks.properties.3120]
     exclusive = ["happy_patch"]
 
-    [cdtweaks.components.2271]
+    [cdtweaks.properties.2271]
     exclusive = ["mxsplbrd.2da"]
 
-    [cdtweaks.components.2292]
+    [cdtweaks.properties.2292]
     exclusive = ["mxspldrd.2da"]
 
-    [cdtweaks.components.2391]
+    [cdtweaks.properties.2391]
     exclusive = ["mxsplpal.2da"]
 
-    [cdtweaks.components.2401]
+    [cdtweaks.properties.2401]
     exclusive = ["mxsplran.2da"]
 
-    [cdtweaks.components.3082]
+    [cdtweaks.properties.3082]
     exclusive = ["ammo_stacking"]
 
-    [cdtweaks.components.3091]
+    [cdtweaks.properties.3091]
     exclusive = ["gem_stacking"]
 
-    [cdtweaks.components.1120]
+    [cdtweaks.properties.1120]
     exclusive = ["store_stacks"]
 
-    [cdtweaks.components.2060]
+    [cdtweaks.properties.2060]
     exclusive = ["universal_fighting_styles"]
 
-    [cdtweaks.components.2240]
+    [cdtweaks.properties.2240]
     exclusive = ["thac0.2da"]
 
-    [cdtweaks.components.3002]
+    [cdtweaks.properties.3002]
     exclusive = ["hpclass.2da"]
 
-    [cdtweaks.components.3113]
+    [cdtweaks.properties.3113]
     exclusive = ["scroll_stacking"]
 
-    [cdtweaks.components.2161]
+    [cdtweaks.properties.2161]
     exclusive = ["weapprof.2da/types", "weapprof.2da/types"]
 
-    [cdtweaks.components.2210]
+    [cdtweaks.properties.2210]
     exclusive = ["wspecial.2da/speed"]
 
-    [cdtweaks.components.3083]
+    [cdtweaks.properties.3083]
     exclusive = ["ammo_stacking"]
 
-    [cdtweaks.components.2293]
+    [cdtweaks.properties.2293]
     exclusive = ["mxspldrd.2da"]
 
-    [cdtweaks.components.2151]
+    [cdtweaks.properties.2151]
     exclusive = ["protection_items"]
 
-    [cdtweaks.components.2090]
-    exclusive = ["xplevel.2da", "hpclass.2da"]
+    [cdtweaks.properties.2090]
+    exclusive = ["hpclass.2da", "xplevel.2da"]
 
-    [cdtweaks.components.2120]
+    [cdtweaks.properties.2120]
     exclusive = ["armored_spellcasting"]
 
-    [cdtweaks.components.2260]
+    [cdtweaks.properties.2260]
     exclusive = ["mxsplwiz.2da"]
 
-    [cdtweaks.components.2280]
+    [cdtweaks.properties.2280]
     exclusive = ["mxsplclr.2da"]
 
-    [cdtweaks.components.2164]
+    [cdtweaks.properties.2164]
     exclusive = ["weapprof.2da/types"]
 
-    [cdtweaks.components.3092]
+    [cdtweaks.properties.3092]
     exclusive = ["gem_stacking"]
 
-    [cdtweaks.components.2281]
+    [cdtweaks.properties.2281]
     exclusive = ["mxsplclr.2da"]
 
-    [cdtweaks.components.2250]
+    [cdtweaks.properties.2250]
     exclusive = ["mxsplsrc.2da"]
 
-    [cdtweaks.components.2530]
+    [cdtweaks.properties.2530]
     exclusive = ["lightning_bolt"]
 
-    [cdtweaks.components.2340]
+    [cdtweaks.properties.2340]
     exclusive = ["summlimt.2da/celestial"]
 
-    [cdtweaks.components.2091]
+    [cdtweaks.properties.2091]
     exclusive = ["xplevel.2da"]
 
-    [cdtweaks.components.2150]
+    [cdtweaks.properties.2150]
     exclusive = ["protection_items"]
 
-    [cdtweaks.components.4010]
+    [cdtweaks.properties.4010]
     exclusive = ["improved_fate_spirit"]
 
-    [cdtweaks.components.2431]
+    [cdtweaks.properties.2431]
     exclusive = ["multiclass_druid_weapons"]
 
-    [cdtweaks.components.2390]
+    [cdtweaks.properties.2390]
     exclusive = ["mxsplpal.2da"]
 
-    [cdtweaks.components.""]
-    after = ["tomeandblood", "bg1npc", "thecalling", "item_rev", "divine_remix"]
+    [cdtweaks.properties.""]
+    after = ["bg1npc", "divine_remix", "item_rev", "thecalling", "tomeandblood"]
 
-    [cdtweaks.components.2295]
+    [cdtweaks.properties.2295]
     exclusive = ["mxspldrd.2da"]
 
-    [cdtweaks.components.3090]
+    [cdtweaks.properties.3090]
     exclusive = ["gem_stacking"]
 
 [shadowadept]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:ArtemiusI/Shadow-Magic"
+url = "github:ArtemiusI/Shadow-Magic"
 description = "Shadow Magic (Pauses installation for manual input)"
 archive = ""
 
 [valerie]
-lastupdate = 2020-08-18
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:SpellholdStudios/Valerie_NPC"
+url = "github:SpellholdStudios/Valerie_NPC"
 description = "Valerie NPC"
 archive = ""
 
 [adrian]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:SpellholdStudios/Adrian_NPC"
+url = "github:SpellholdStudios/Adrian_NPC"
 description = "Adrian NPC"
 archive = ""
 
 [calin]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "https://www.dropbox.com/s/5h6f10aik02ygho/calin-v1.5.zip?dl=1"
+url = "https://www.dropbox.com/s/5h6f10aik02ygho/calin-v1.5.zip?dl=1"
 description = "Calin NPC"
 archive = "calin-v1.5.zip"
 
 [iwdification]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Gibberlings3/iwdification"
+url = "github:Gibberlings3/iwdification"
 description = "IWDification"
 archive = ""
 
 [isra]
-lastupdate = 2021-06-06
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:SpellholdStudios/Isra_NPC"
+url = "github:SpellholdStudios/Isra_NPC"
 description = "Isra NPC"
 archive = ""
 
 [bgeetextpack]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://www.dropbox.com/s/ampfnnzv72h1hrp/BG1RUS-EET-v19-fix5.zip?dl=1"
+url = "https://www.dropbox.com/s/ampfnnzv72h1hrp/BG1RUS-EET-v19-fix5.zip?dl=1"
 description = "Full Fixed Russian Translation for BG:EE"
 archive = "BG1RUS-EET-v19-fix5.zip"
 
 [uldar]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "https://www.dropbox.com/s/lu3ymv2j8l1w2dh/UldarNPC.zip?dl=1"
+url = "https://www.dropbox.com/s/lu3ymv2j8l1w2dh/UldarNPC.zip?dl=1"
 description = "Uldar the Barbarian"
 archive = "UldarNPC.zip"
 
 [sandrahnpc]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "http://lynxlynx.info/ie/modhub.php?RoxanneSHS/SandrahEET&master"
+url = "http://lynxlynx.info/ie/modhub.php?RoxanneSHS/SandrahEET&master"
 description = "Sandrah Saga I - Sandrah Appears"
 archive = "SandrahEET-master.zip"
 
 [fullplate]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "http://www.mediafire.com/download/726ji7jzgomi1vq/fullplate-v2.2.zip"
+url = "http://www.mediafire.com/download/726ji7jzgomi1vq/fullplate-v2.2.zip"
 description = "Full Plate and Packing Steel"
 archive = "fullplate-v2.2.zip"
 
 [edwinromance]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/Edwin_Romance"
+url = "github:SpellholdStudios/Edwin_Romance"
 description = "Edwin Romance"
 archive = ""
 
 [herthimoney]
-lastupdate = 2022-05-10
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Austin-BG/HTaM"
+url = "github:Austin-BG/HTaM"
 description = "Heroes, Thieves and Moneylenders"
 archive = ""
 
 [swordsaint]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "http://shadowlich.free.fr/BG2/SwordSaint-v1.0.7z"
+url = "http://shadowlich.free.fr/BG2/SwordSaint-v1.0.7z"
 description = "Sword Saint (New)"
 archive = "SwordSaint-v1.0.7z"
 
 [oldsound]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "https://www.dropbox.com/s/mogovd9x99niham/RestoreSound_V1.zip?dl=1"
+url = "https://www.dropbox.com/s/mogovd9x99niham/RestoreSound_V1.zip?dl=1"
 description = "Restore Original Casting Sounds"
 archive = "OldSound.zip"
-
-[keldorn_rom]
-lastupdate = 1970-01-01
-class = "NPCTweaks"
-download = "github:Gibberlings3/Keldorn_Romance"
-description = "Keldorn Romance"
-archive = ""
 
 [solaufein]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/Solaufein"
+url = "github:RoxanneSHS/Solaufein"
 description = "Solaufein NPC"
+archive = ""
+
+[keldorn_rom]
+lastupdate = 1970-01-01
+class = "NPCTweaks"
+url = "github:Gibberlings3/Keldorn_Romance"
+description = "Keldorn Romance"
 archive = ""
 
 [dh_tweaks]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/DarkHorizonsTweaks"
+url = "github:RoxanneSHS/DarkHorizonsTweaks"
 description = "Dark Horizons Tweaks"
 archive = ""
 
 [deepgnomes]
-lastupdate = 2020-06-28
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/DeepgnomesEET"
+url = "github:RoxanneSHS/DeepgnomesEET"
 description = "Deepgnomes on the Sword Coast"
 archive = ""
 
 [impasylum]
-lastupdate = 2021-04-18
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/Asylum"
+url = "github:RoxanneSHS/Asylum"
 description = "Improved Asylum"
 archive = ""
 
 [indinpc]
-lastupdate = 2021-06-22
+lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/Indira"
+url = "github:RoxanneSHS/Indira"
 description = "Indira NPC"
 archive = ""
 
 [ofheirloomsandclasses]
 lastupdate = 1970-01-01
 class = "Items"
-download = "https://downloads.weaselmods.net/download/of-heirlooms-and-classes/?wpdmdl=541"
+url = "https://downloads.weaselmods.net/download/of-heirlooms-and-classes/?wpdmdl=541"
 description = "Of Heirlooms and Classes"
 archive = "ofheirloomsandclasses.zip"
 
 [amber]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:MattyGroove/Amber"
+url = "github:MattyGroove/Amber"
 description = "Amber"
 archive = ""
 
 [stuffofthemagi]
-lastupdate = 2020-07-02
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:SpellholdStudios/StuffofTheMagi"
+url = "github:SpellholdStudios/StuffofTheMagi"
 description = "Stuff of the Magi"
 archive = ""
 
 [scales_of_balance]
-lastupdate = 2022-06-16
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:UnearthedArcana/Scales_of_Balance"
+url = "github:UnearthedArcana/Scales_of_Balance"
 description = "Scales of Balance"
-archive = ""
+archive = "scales_of_balance.tar.gz"
 
-    [scales_of_balance.components.205]
-    exclusive = ["hpconbon.2da", "hpbarb.2da", "hpcm.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmt.2da", "hpmonk.2da", "hpprs.2da", "hpprog.2da", "hpwar.2da", "hpwiz.2da"]
+    [scales_of_balance.properties.205]
+    exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
 
-    [scales_of_balance.components.201]
-    exclusive = ["splprot.2da", "mxsplwiz.2da"]
+    [scales_of_balance.properties.201]
+    exclusive = ["mxsplwiz.2da", "splprot.2da"]
 
-    [scales_of_balance.components.101]
+    [scales_of_balance.properties.101]
     exclusive = ["masterwork_weapons"]
 
-    [scales_of_balance.components.170]
+    [scales_of_balance.properties.170]
     exclusive = ["clabth01.2da"]
 
-    [scales_of_balance.components.210]
-    exclusive = ["xplevel.2da", "lunumab.2da", "mxspldru.2da"]
+    [scales_of_balance.properties.210]
+    exclusive = ["lunumab.2da", "mxspldru.2da", "xplevel.2da"]
 
-    [scales_of_balance.components.160]
+    [scales_of_balance.properties.160]
     exclusive = ["savemonk.2da", "saveprs.2da", "saverog.2da", "savewar.2da", "savewiz.2da"]
 
-    [scales_of_balance.components.124]
+    [scales_of_balance.properties.124]
     exclusive = ["weapprof.2da/styles"]
 
-    [scales_of_balance.components.122]
+    [scales_of_balance.properties.122]
     conflicts = ["rr"]
-    exclusive = ["universal_clubs", "weapprof.2da", "thac0.2da"]
+    exclusive = ["thac0.2da", "universal_clubs", "weapprof.2da"]
 
-    [scales_of_balance.components.""]
+    [scales_of_balance.properties.""]
     conflicts = ["kit_rev", "kitpack"]
-    after = ["cdtweaks", "item_rev", "kitpack", "tomeandblood", "might_and_guile"]
+    after = ["cdtweaks", "item_rev", "kitpack", "might_and_guile", "tomeandblood"]
 
-    [scales_of_balance.components.100]
+    [scales_of_balance.properties.100]
     exclusive = ["dexmod.2da", "skilldex.2da"]
 
-    [scales_of_balance.components.200]
-    exclusive = ["strmod.2da", "strmodex.2da", "intmod.2da", "savecndh.2da", "savecng.2da"]
+    [scales_of_balance.properties.200]
+    exclusive = ["intmod.2da", "savecndh.2da", "savecng.2da", "strmod.2da", "strmodex.2da"]
 
 [swordap]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:SpellholdStudios/HaerDalis_Swords"
+url = "github:SpellholdStudios/HaerDalis_Swords"
 description = "Haer'Dalis' Swords"
 archive = ""
 
 [7c-yoshi]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "http://lynxlynx.info/ie/modhub.php?CrevsDaak/7C-Yoshi&pre"
+url = "http://lynxlynx.info/ie/modhub.php?CrevsDaak/7C-Yoshi&pre"
 description = "Keeping Yoshimo"
 archive = "7C-Yoshi-latest.zip"
 
 [dc]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Pocket-Plane-Group/Dungeon_Crawl"
+url = "github:Pocket-Plane-Group/Dungeon_Crawl"
 description = "Dungeon Crawl"
 archive = ""
 
 [sirene]
-lastupdate = 2022-05-27
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:ArtemiusI/Sirene-NPC"
+url = "github:ArtemiusI/Sirene-NPC"
 description = "Sirene NPC for BG1:EE"
 archive = ""
 
 [celestials]
-lastupdate = 2022-06-18
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://github.com/Gibberlings3/PnP_Celestials/releases/download/v7/lin-celestials-v7.tar.gz"
+url = "github:Gibberlings3/PnP_Celestials"
 description = "P&P Celestials"
-archive = "lin-celestials-v7.tar.gz"
+archive = ""
 
 [tashia]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://www.dropbox.com/s/gan64pocpqrphn3/Tashia_V17.zip?dl=1"
+url = "https://www.dropbox.com/s/gan64pocpqrphn3/Tashia_V17.zip?dl=1"
 description = "Tashia NPC"
 archive = "Tashia_V17.zip"
 
 [imoenromance]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "http://www.blindmonkey.org/imoen/files/Imoen%20Romance.zip"
+url = "http://www.blindmonkey.org/imoen/files/Imoen%20Romance.zip"
 description = "Imoen Romance (Bugged)"
 archive = "Imoen Romance.zip"
 
 [eilistraee]
-lastupdate = 2022-05-11
+lastupdate = 1970-01-01
 class = "Quests"
-download = "https://downloads.weaselmods.net/download/eilistraees-song/?wpdmdl=89"
+url = "https://downloads.weaselmods.net/download/eilistraees-song/?wpdmdl=89"
 description = "Eilistraee's Song"
 archive = "eilistraee.zip"
 
 [dorn]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:trinit2/Bg2Dorn"
+url = "github:trinit2/Bg2Dorn"
 description = "Dorn Romance Expansion"
 archive = ""
 
 [dace_eet]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/DaceEET"
+url = "github:RoxanneSHS/DaceEET"
 description = "Dace Linton"
 archive = ""
 
 [lena]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:gungorenu/bg2-npcmod-lena"
+url = "github:gungorenu/bg2-npcmod-lena"
 description = "Lena"
 archive = ""
 
 [snakes]
-lastupdate = 2020-06-05
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:SpellholdStudios/TheSlitheringMenace"
+url = "github:SpellholdStudios/TheSlitheringMenace"
 description = "Slithering Menace"
 archive = ""
 
 [refinements]
-lastupdate = 2022-06-17
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:UnearthedArcana/refinements"
+url = "github:UnearthedArcana/refinements"
 description = "Refinements"
 archive = "refinements.tar.gz"
 
 [sod2bg2_iu]
-lastupdate = 2022-03-20
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:Gibberlings3/SoD-to-BG2EE-Item-Upgrade"
+url = "github:Gibberlings3/SoD-to-BG2EE-Item-Upgrade"
 description = "SoD to SoA Item Upgrade (New)"
 archive = ""
 
 [backbrynnlaw]
-lastupdate = 2019-02-04
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Pocket-Plane-Group/Back_to_Brynnlaw"
+url = "github:Pocket-Plane-Group/Back_to_Brynnlaw"
 description = "Back to Brynnlaw"
 archive = ""
 
 [ctbice]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/HaveIce"
+url = "github:RoxanneSHS/HaveIce"
 description = "Check the Bodies Have Ice"
 archive = ""
 
 [melynda]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/MelyndaMute"
+url = "github:RoxanneSHS/MelyndaMute"
 description = "Check the Bodies Melynda the Mute"
 archive = ""
 
 [shineoncaelar]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:RoxanneSHS/Caelar"
+url = "github:RoxanneSHS/Caelar"
 description = "Shine On Caelar"
 archive = ""
 
 [xanbg1friend]
-lastupdate = 2017-06-13
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Pocket-Plane-Group/Xan_BG1_Friendship"
+url = "github:Pocket-Plane-Group/Xan_BG1_Friendship"
 description = "Xan's Friendship Path for BG1"
 archive = ""
 
 [innershade]
-lastupdate = 2022-05-09
+lastupdate = 1970-01-01
 class = "Quests"
-download = "https://downloads.weaselmods.net/download/innershade/?wpdmdl=73"
+url = "https://downloads.weaselmods.net/download/innershade/?wpdmdl=73"
 description = "Innershade"
 archive = "innershade.zip"
 
 [varshoon]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/varshoon/?wpdmdl=125"
+url = "https://downloads.weaselmods.net/download/varshoon/?wpdmdl=125"
 description = "Varshoon an Illithid NPC"
 archive = "varshoon.zip"
 
 [alcool]
-lastupdate = 2020-04-02
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://www.dropbox.com/s/bw66infn2czuelv/MCAlcool.zip?dl=1"
+url = "https://www.dropbox.com/s/bw66infn2czuelv/MCAlcool.zip?dl=1"
 description = "Alcool"
 archive = "MCAlcool.zip"
 
 [coran]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Pocket-Plane-Group/Coran_for_BGII"
+url = "github:Pocket-Plane-Group/Coran_for_BGII"
 description = "Coran NPC for BG2"
 archive = ""
 
 [dlcmerger]
 lastupdate = 1970-01-01
 class = "DlcMerger"
-download = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
+url = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
 description = "DLC Merger"
 archive = "A7-DlcMerger-master.zip"
 
 [eet_fix]
 lastupdate = 1970-01-01
 class = "Fixes"
-download = "github:EE-Mod-Setup/EET_Fixpack"
+url = "github:EE-Mod-Setup/EET_Fixpack"
 description = "EET Fixpack"
 archive = ""
 
 [imnesvale]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/ImnesvaleEE"
+url = "github:RoxanneSHS/ImnesvaleEE"
 description = "Imnesvale Invasion"
 archive = ""
 
 [hiddengameplayoptions]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:Argent77/A7-HiddenGameplayOptions"
+url = "github:Argent77/A7-HiddenGameplayOptions"
 description = "Reveal Hidden Gameplay Options"
 archive = ""
 
 [the_horde]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "https://www.dropbox.com/s/dcs9dgiy0vcvgby/TheHorde_1.2.zip?dl=1"
+url = "https://www.dropbox.com/s/dcs9dgiy0vcvgby/TheHorde_1.2.zip?dl=1"
 description = "The Horde"
 archive = "TheHorde_1.2.zip"
 
 [duskblade]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "https://us.v-cdn.net/5019558/uploads/FileUpload/b4/6149ab6bc601779e77a24cb506ba16.zip"
+url = "https://us.v-cdn.net/5019558/uploads/FileUpload/b4/6149ab6bc601779e77a24cb506ba16.zip"
 description = "Duskblade Kit"
 archive = "duskblade kit for bg2ee.zip"
 
 [jimfix]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Banananaut/Jimfix"
+url = "github:Banananaut/Jimfix"
 description = "Jim's Fixes and Tweaks"
 archive = ""
 
 [bg1re]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Gibberlings3/BG1_Romantic_Encounters"
+url = "github:Gibberlings3/BG1_Romantic_Encounters"
 description = "Baldur's Gate Romantic Encounters"
 archive = ""
 
 [orelios]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:PaulaMigrate/Orelios"
+url = "github:PaulaMigrate/Orelios"
 description = "Orelios NPC"
 archive = ""
 
 [sarevokromance]
-lastupdate = 2019-09-13
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://www.dropbox.com/s/pifofoz21t15zph/Sarevok%20Romance%20v1.4.zip?dl=1"
+url = "https://www.dropbox.com/s/pifofoz21t15zph/Sarevok%20Romance%20v1.4.zip?dl=1"
 description = "Sarevok Romance"
 archive = "Sarevok Romance v1.4.zip"
 
 [thepicturestandard]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:MattyGroove/ThePictureStandard"
+url = "github:MattyGroove/ThePictureStandard"
 description = "The Picture Standard"
 archive = ""
 
 [nephele]
-lastupdate = 2020-08-02
+lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:SpellholdStudios/Nephele_NPC"
+url = "github:SpellholdStudios/Nephele_NPC"
 description = "Nephele NPC"
 archive = ""
 
 [charlatan]
-lastupdate = 2019-03-10
+lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Raduziel/Charlatan-Kit"
+url = "github:Raduziel/Charlatan-Kit"
 description = "Charlatan (Bard Kit)"
 archive = ""
 
 [warslingsniperkit]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "https://www.dropbox.com/s/rovr7ue6agrfrdz/WarslingSniperKit_v21.zip?dl=1"
+url = "https://www.dropbox.com/s/rovr7ue6agrfrdz/WarslingSniperKit_v21.zip?dl=1"
 description = "Warsling Sniper"
 archive = "WarslingSniperKit_v21.zip"
 
 [wheels]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Gibberlings3/WheelsOfProphecy"
+url = "github:Gibberlings3/WheelsOfProphecy"
 description = "Wheels of Prophecy"
 archive = "wheels.tar.gz"
 
-    [wheels.components.""]
+    [wheels.properties.""]
     before = ["stratagems"]
 
 [faiths_and_powers]
-lastupdate = 2022-06-15
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:UnearthedArcana/Faiths_and_Powers"
+url = "github:UnearthedArcana/Faiths_and_Powers"
 description = "Faiths and Powers"
 archive = "faiths_and_powers.tar.gz"
+
+    [faiths_and_powers.properties.""]
+    after = ["divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood"]
+    before = ["cdtweaks", "might_and_guile", "scales_of_balance", "stratagems"]
 
 [iwditempack]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:GwendolyneFreddy/IWD_Item_Pack"
+url = "github:GwendolyneFreddy/IWD_Item_Pack"
 description = "IWD item pack"
 archive = ""
 
 [aura_bg1]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:ArtemiusI/Aura_BG1"
+url = "github:ArtemiusI/Aura_BG1"
 description = "Aura"
 archive = ""
 
 [tangledisle]
 lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://downloads.weaselmods.net/download/tangled-oak-isle/?wpdmdl=317"
+url = "https://downloads.weaselmods.net/download/tangled-oak-isle/?wpdmdl=317"
 description = "Tangled Oak Isle"
 archive = "tangledisle.zip"
 
 [petsy]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/petsy/?wpdmdl=113"
+url = "https://downloads.weaselmods.net/download/petsy/?wpdmdl=113"
 description = "Petsy Chattertone NPC"
 archive = "petsy.zip"
 
 [acbre]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gitjas/Ascalons_Breagar"
+url = "github:Gitjas/Ascalons_Breagar"
 description = "Ascalons Breagar"
 archive = ""
 
 [k9sharteelnpc]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "https://www.dropbox.com/s/tjyghy37av8gw5a/k9SharteelNPC%20-%201.4.rar?dl=1"
+url = "https://www.dropbox.com/s/tjyghy37av8gw5a/k9SharteelNPC%20-%201.4.rar?dl=1"
 description = "Sharteel for SoD"
 archive = "k9SharteelNPC - 1.4.rar"
 
 [skiecost]
-lastupdate = 2022-04-20
+lastupdate = 1970-01-01
 class = "Items"
-download = "https://downloads.weaselmods.net/download/skie-the-cost-of-one-girls-soul/?wpdmdl=92"
+url = "https://downloads.weaselmods.net/download/skie-the-cost-of-one-girls-soul/?wpdmdl=92"
 description = "Skie, the Cost of One Girl's Soul"
 archive = "skiecost.zip"
 
 [item_rev]
-lastupdate = 2022-06-17
+lastupdate = 1970-01-01
 class = "Early"
-download = "github:Gibberlings3/ItemRevisions"
+url = "github:Gibberlings3/ItemRevisions"
 description = "Item Revisions"
 archive = ""
 
-    [item_rev.components.0]
-    exclusive = ["hlolth.itm", "clolth.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "blun01.itm", "bolt01.itm", "sahbolt.itm", "kuobolt.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bull01.itm", "chan01.itm", "clck01.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "amsoul01.itm", "leat01.itm", "aegis.itm", "bruenaxe.itm", "bruenpla.itm", "cattibow.itm", "catliowp.cre", "figlion.itm", "spidfgsu.cre", "figspid.itm", "bsw1h01.itm", "bersersu.cre", "bleat01.itm", "miscbc.itm", "nebdag.itm", "quiver01.itm", "reaver.itm", "korax01.itm", "nparm.itm", "npbow.itm", "npbelt.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npstaf.itm", "npplat.itm", "keldorn.spl", "npring01.itm", "npshld.itm", "npsw01.itm", "clolth.itm", "hlolth.itm", "finsarev.itm", "plat01.itm", "rods01.itm", "rods01.spl", "shld01.itm", "slng01.itm", "sper01.itm", "staf01.itm", "smoundsu.cre", "smoundsu.itm", "sw1h01.itm", "xbow01.itm", "waflail.itm", "wawak.itm"]
+    [item_rev.properties.0]
+    exclusive = ["aegis.itm", "amsoul01.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "bersersu.cre", "bleat01.itm", "blun01.itm", "bolt01.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bruenaxe.itm", "bruenpla.itm", "bsw1h01.itm", "bull01.itm", "catliowp.cre", "cattibow.itm", "chan01.itm", "clck01.itm", "clolth.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "figlion.itm", "figspid.itm", "finsarev.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "hlolth.itm", "keldorn.spl", "korax01.itm", "kuobolt.itm", "leat01.itm", "miscbc.itm", "nebdag.itm", "nparm.itm", "npbelt.itm", "npbow.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npplat.itm", "npring01.itm", "npshld.itm", "npstaf.itm", "npsw01.itm", "plat01.itm", "quiver01.itm", "reaver.itm", "rods01.itm", "rods01.spl", "sahbolt.itm", "shld01.itm", "slng01.itm", "smoundsu.cre", "smoundsu.itm", "sper01.itm", "spidfgsu.cre", "staf01.itm", "sw1h01.itm", "waflail.itm", "wawak.itm", "xbow01.itm"]
 
-    [item_rev.components.1030]
+    [item_rev.properties.1030]
     exclusive = ["chrmodst.2da", "repmodst.2da"]
 
 [garrick-tt]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://www.dropbox.com/s/bbbbx5bsgseodu5/garrick-tt_v1.26.7z?dl=1"
+url = "https://www.dropbox.com/s/bbbbx5bsgseodu5/garrick-tt_v1.26.7z?dl=1"
 description = "Garrick - Tales of a Troubadour"
 archive = "garrick-tt_v1.26.7z"
 
 [skitianpcs]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "github:Skitia/SkitiaNPCs"
+url = "github:Skitia/SkitiaNPCs"
 description = "Skitia NPCs"
 archive = ""
 
 [mercenary]
-lastupdate = 2019-03-10
+lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Raduziel/Mercenary-Kit"
+url = "github:Raduziel/Mercenary-Kit"
 description = "Mercenary (Fighter Kit)"
 archive = ""
 
 [hiddenadventure]
-lastupdate = 2021-07-14
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:Gitjas/hiddenadventure"
+url = "github:Gitjas/hiddenadventure"
 description = "Hidden Adventures"
 archive = ""
 
 [candlemem]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/CandlekeepMemories"
+url = "github:RoxanneSHS/CandlekeepMemories"
 description = "Check the Bodies Candlekeep Memories"
 archive = ""
 
 [eet_tweaks]
-lastupdate = 2022-06-15
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:K4thos/EET_Tweaks"
+url = "github:K4thos/EET_Tweaks"
 description = "EET (Enhanced Edition Trilogy) Tweaks"
 archive = "eet_tweaks.tar.gz"
 
-    [eet_tweaks.components.2041]
+    [eet_tweaks.properties.2041]
     exclusive = ["xpbonus.2da"]
 
-    [eet_tweaks.components.2043]
+    [eet_tweaks.properties.2043]
     exclusive = ["xpbonus.2da"]
 
-    [eet_tweaks.components.2000]
+    [eet_tweaks.properties.2000]
     exclusive = ["xplevel.2da"]
 
-    [eet_tweaks.components.2044]
+    [eet_tweaks.properties.2044]
     exclusive = ["xpbonus.2da"]
 
-    [eet_tweaks.components.2040]
+    [eet_tweaks.properties.2040]
     exclusive = ["xpbonus.2da"]
 
-    [eet_tweaks.components.2042]
+    [eet_tweaks.properties.2042]
     exclusive = ["xpbonus.2da"]
 
-    [eet_tweaks.components.4000]
+    [eet_tweaks.properties.4000]
     exclusive = ["Tempus"]
 
-    [eet_tweaks.components.2001]
+    [eet_tweaks.properties.2001]
     exclusive = ["xplevel.2da"]
 
-    [eet_tweaks.components.2002]
+    [eet_tweaks.properties.2002]
     exclusive = ["xplevel.2da"]
 
-    [eet_tweaks.components.2003]
+    [eet_tweaks.properties.2003]
     exclusive = ["xplevel.2da"]
 
 [ascension]
-lastupdate = 2022-05-21
+lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:InfinityMods/Ascension"
+url = "github:InfinityMods/Ascension"
 description = "Ascension"
 archive = ""
 
 [dw_lanthorn]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Gibberlings3/Restored-Rhynn-Lanthorn"
+url = "github:Gibberlings3/Restored-Rhynn-Lanthorn"
 description = "Restored Rhynn Lanthorn quest"
 archive = ""
 
 [anishai]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/Anishai"
+url = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/Anishai"
 description = "Anishai"
 archive = "Gibberlings3-Anishai-v3-0-gc1368e4.zip"
 
 [eetact2]
-lastupdate = 2022-06-18
-class = "Tweaks"
-download = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
+lastupdate = 1970-01-01
+class = "Quests"
+url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
 description = "Tactics EE"
 archive = "Tactics2_for_EE.zip"
 
-    [eetact2.components.400]
+    [eetact2.properties.310]
+    exclusive = ["dhadra01.bcs", "dragblac.bcs", "dragred.bcs", "spin691.spl", "spin693.spl", "udsilver.itm"]
+
+    [eetact2.properties.320]
+    exclusive = ["behdir01.bcs", "behhiv01.bcs", "behold.itm", "behold01.bcs", "elderorb.bcs", "gauth01.bcs"]
+
+    [eetact2.properties.350]
+    exclusive = ["golada01.cre", "goliro.itm", "goliro01.cre", "golsto.itm", "golsto01.cre"]
+
+    [eetact2.properties.400]
     exclusive = ["ar1800.are", "ar18arch.cre", "ar18dwaf.cre", "ar18fig.cre", "ar18mage.cre", "ar18prie.cre", "ar18skel.cre", "ar18thif.cre"]
 
-    [eetact2.components.130]
+    [eetact2.properties.130]
     exclusive = ["sahamb01.bcs", "sahcpt01.cre", "sahgrd01.cre"]
 
-    [eetact2.components.260]
+    [eetact2.properties.260]
     exclusive = ["spwnbeh.bcs", "spwndead.bcs", "spwndrow.bcs", "spwngol.bcs", "spwnmind.bcs", "spwnmon.bcs", "spwnorc.bcs", "spwnrak.bcs", "spwntoa.bcs", "spwntrol.bcs", "spwnvamp.bcs", "spwnwolf.bcs"]
 
-    [eetact2.components.420]
-    exclusive = ["dempit01.cre", "telpit1.cre"]
+    [eetact2.properties.420]
+    exclusive = ["demglab.bcs", "dempit.bcs", "dempit01.cre", "mage20c.bcs", "tanari.bcs", "telpit1.cre"]
 
-    [eetact2.components.210]
+    [eetact2.properties.210]
     exclusive = ["ar0318.are", "ar0318.bcs"]
 
-    [eetact2.components.160]
-    exclusive = ["ar0907.bcs", "hlkoshi.cre", "hlolaf.cre", "hlmafer.cre", "hlstal.cre", "hlketta.cre", "hlsion.cre", "hlketta.bcs"]
+    [eetact2.properties.160]
+    exclusive = ["ar0907.bcs", "hlketta.bcs", "hlketta.cre", "hlkoshi.cre", "hlmafer.cre", "hlolaf.cre", "hlsion.cre", "hlstal.cre"]
 
-    [eetact2.components.240]
+    [eetact2.properties.240]
     exclusive = ["ar0326.bcs"]
 
-    [eetact2.components.410]
+    [eetact2.properties.360]
+    exclusive = ["nymph.bcs"]
+
+    [eetact2.properties.432]
+    exclusive = ["ar1900.bcs", "impshad.bcs"]
+
+    [eetact2.properties.410]
     exclusive = ["ar5200.are"]
 
-    [eetact2.components.370]
+    [eetact2.properties.370]
     exclusive = ["ar0406.bcs"]
 
-    [eetact2.components.280]
+    [eetact2.properties.280]
     exclusive = ["ar0042.bcs", "ar0043.bcs", "ar0044.bcs"]
 
-    [eetact2.components.100]
-    exclusive = ["ar0602.are", "ar0603.are"]
+    [eetact2.properties.100]
+    exclusive = ["ar0601.are", "ily1.cre", "ilyhamm.itm"]
 
-    [eetact2.components.270]
+    [eetact2.properties.431]
+    exclusive = ["ar1900.bcs", "impshad.bcs"]
+
+    [eetact2.properties.270]
     exclusive = ["amncen1.cre", "ar0041.bcs", "ar0045.bcs", "ar0046.bcs"]
 
-    [eetact2.components.390]
+    [eetact2.properties.390]
     exclusive = ["ar1700.are"]
 
-    [eetact2.components.170]
-    exclusive = ["ar1008.bcs", "hlshang.cre", "hlrevan.cre", "hllayen.cre"]
+    [eetact2.properties.170]
+    exclusive = ["ar1008.bcs", "hllayen.cre", "hlrevan.cre", "hlshang.cre"]
 
-    [eetact2.components.290]
+    [eetact2.properties.290]
     exclusive = ["undead"]
 
-    [eetact2.components.231]
-    exclusive = ["hldemi.cre", "ar0331.bcs", "ar0330.bcs"]
+    [eetact2.properties.231]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
 
-    [eetact2.components.150]
-    exclusive = ["ar2900.bcs"]
+    [eetact2.properties.150]
+    exclusive = ["ar2900.bcs", "helljon.dlg"]
 
-    [eetact2.components.380]
-    exclusive = ["Oasis"]
+    [eetact2.properties.380]
+    exclusive = ["Oasis", "amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtmag01.cre", "amtpik01.cre"]
 
-    [eetact2.components.140]
+    [eetact2.properties.430]
+    exclusive = ["ar1900.bcs", "impshad.bcs"]
+
+    [eetact2.properties.140]
     exclusive = ["bodhi2.cre", "bodtan.cre"]
 
-    [eetact2.components.300]
+    [eetact2.properties.300]
     exclusive = ["flayer01.bcs", "gormind.bcs", "mindal01.bcs"]
 
-    [eetact2.components.120]
+    [eetact2.properties.340]
+    exclusive = ["bodtan.cre", "lavok01.cre", "lich01.cre", "mage10a.bcs"]
+
+    [eetact2.properties.440]
+    exclusive = ["giafir.itm", "ysfire01.cre", "ysg2.cre", "ysguar01.cre"]
+
+    [eetact2.properties.120]
     exclusive = ["torgal.cre"]
 
-    [eetact2.components.200]
-    exclusive = ["ar9391.bcs", "tsmaepet.cre", "mvguard1.cre", "mvpries.cre", "maevar.cre"]
+    [eetact2.properties.330]
+    exclusive = ["vamemi01.bcs", "vampir01.bcs"]
 
-    [eetact2.components.230]
-    exclusive = ["hldemi.cre", "ar0331.bcs", "ar0330.bcs"]
+    [eetact2.properties.200]
+    exclusive = ["ar9391.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "tsmaepet.cre"]
 
-    [eetact2.components.232]
-    exclusive = ["hldemi.cre", "ar0331.bcs", "ar0330.bcs"]
+    [eetact2.properties.230]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
+
+    [eetact2.properties.232]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
 
 [bgeearwe]
-lastupdate = 2020-07-08
+lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/htby4vqo0bgwphk/TeamBGAeWe.zip?dl=1"
+url = "https://www.dropbox.com/s/htby4vqo0bgwphk/TeamBGAeWe.zip?dl=1"
 description = "TeamBG's Armours and Weapons for EET"
 archive = "TeamBGAeWe.zip"
 
 [darkhorizonsbgee]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://www.dropbox.com/s/28i6ycnp9jmhk8t/DarkHorizonsBGee213.zip?dl=1"
+url = "https://www.dropbox.com/s/28i6ycnp9jmhk8t/DarkHorizonsBGee213.zip?dl=1"
 description = "Dark Horizons BGEE"
 archive = "DarkHorizonsBGee213.zip"
 
 [jini]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "https://www.dropbox.com/s/cui863b6rgesfe0/JiniRomancev3.0.zip?dl=1"
+url = "https://www.dropbox.com/s/cui863b6rgesfe0/JiniRomancev3.0.zip?dl=1"
 description = "Jini Romance"
 archive = "JiniRomancev3.0.zip"
 
 [mih_ip]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:AngelGryph/MadeInHeaven_ItemPack"
+url = "github:AngelGryph/MadeInHeaven_ItemPack"
 description = "Made In Heaven Item Pack"
 archive = ""
 
 [aurora]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:Sampsca/Auroras-Shoes-and-Boots"
+url = "github:Sampsca/Auroras-Shoes-and-Boots"
 description = "Aurora's shoes and boots"
 archive = ""
 
 [xanbg1voice]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "http://mods.pocketplane.net/kulyok/XanBG1Voice_v2.zip"
+url = "http://mods.pocketplane.net/kulyok/XanBG1Voice_v2.zip"
 description = "Xan original soundset"
 archive = "XanBG1Voice_v2.zip"
 
 [totdg]
-lastupdate = 2022-05-08
+lastupdate = 1970-01-01
 class = "Quests"
-download = "https://downloads.weaselmods.net/download/tales-of-the-deep-gardens/?wpdmdl=68"
+url = "https://downloads.weaselmods.net/download/tales-of-the-deep-gardens/?wpdmdl=68"
 description = "Tales of the Deep Gardens"
 archive = "totdg.zip"
 
 [coranbgfriend]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Gibberlings3/CoranBGFriend"
+url = "github:Gibberlings3/CoranBGFriend"
 description = "Coran's BG Extended Friendship Talks"
 archive = ""
 
 [saradas_magic]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip"
+url = "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip"
 description = "Saradas Magic"
 archive = "saradas_magic.zip"
 
 [bg1npcmusic]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:Gibberlings3/bg1npcmusic"
+url = "github:Gibberlings3/bg1npcmusic"
 description = "BG1 NPC Project Music Pack"
 archive = ""
 
 [bgeear]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=182"
+url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=182"
 description = "TeamBG Armor Pack for BG1"
 archive = "BGeeARv105.rar"
 
 [gahesh]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/gahesh/?wpdmdl=131"
+url = "https://downloads.weaselmods.net/download/gahesh/?wpdmdl=131"
 description = "Gahesh (LG half-orc sorcerer)"
 archive = "gahesh.zip"
 
 [msfm]
-lastupdate = 2021-01-10
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:Renegade0/msfm"
+url = "github:Renegade0/msfm"
 description = "More Style for Mages"
 archive = ""
 
 [white]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://downloads.weaselmods.net/download/white-npc/?wpdmdl=123"
+url = "https://downloads.weaselmods.net/download/white-npc/?wpdmdl=123"
 description = "White NPC"
 archive = "white.zip"
 
 [ryberg]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/SpeakDead"
+url = "github:RoxanneSHS/SpeakDead"
 description = "Check the Bodies Speak to the Dead"
 archive = ""
 
 [eet_end]
 lastupdate = 1970-01-01
 class = "Final"
-download = "Manual"
+url = "Manual"
 description = "Enhanced Edition Trilogy End"
 archive = "Manual"
 
 [chattyimoen]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:AstroBryGuy/ChattyImoen"
+url = "github:AstroBryGuy/ChattyImoen"
 description = "Chatty Imoen"
 archive = ""
 
 ["c#endlessbg1"]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Gibberlings3/EndlessBG1"
+url = "github:Gibberlings3/EndlessBG1"
 description = "Endless BG1"
 archive = ""
 
 [angelo]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gibberlings3/Angelo"
+url = "github:Gibberlings3/Angelo"
 description = "Angelo NPC"
 archive = ""
 
 [itemupgrade]
-lastupdate = 2022-05-21
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:Pocket-Plane-Group/Item_Upgrade"
+url = "github:Pocket-Plane-Group/Item_Upgrade"
 description = "Item Upgrade"
 archive = ""
 
 [neerabanters]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "http://lynxlynx.info/ie/modhub.php?AstroBryGuy/NeeraBanters"
+url = "http://lynxlynx.info/ie/modhub.php?AstroBryGuy/NeeraBanters"
 description = "Neera Banters for BG:EE"
 archive = "AstroBryGuy-NeeraBanters-v0.9.1-0-g7124366.zip"
 
 [xulaye_eet]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/XulayeEet"
+url = "github:RoxanneSHS/XulayeEet"
 description = "Xulaye"
 archive = ""
 
 [k9roughworld]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/mpkyir50rm1nyzd/k9RoughWorld%201.4.rar?dl=1"
+url = "https://www.dropbox.com/s/mpkyir50rm1nyzd/k9RoughWorld%201.4.rar?dl=1"
 description = "Rough World"
-archive = "k9RoughWorld.zip"
+archive = "k9roughworld.zip"
 
 [iylos_eet]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/IylosEET"
+url = "github:RoxanneSHS/IylosEET"
 description = "Iylos"
 archive = ""
 
 ["a7#improvedarcher"]
-lastupdate = 2021-08-22
+lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Argent77/A7-ImprovedArcher"
+url = "github:Argent77/A7-ImprovedArcher"
 description = "Improved Archer Kit"
 archive = ""
 
 [a7-golemconstruction]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Argent77/A7-GolemConstruction"
+url = "github:Argent77/A7-GolemConstruction"
 description = "Golem Construction for Spellcasters"
 archive = ""
 
 [d5_random_tweaks]
-lastupdate = 2022-04-20
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:subtledoctor/d5_Random_Tweaks"
+url = "github:subtledoctor/d5_Random_Tweaks"
 description = "SD's Random Tweaks"
 archive = "d5_random_tweaks.tar.gz"
 
-    [d5_random_tweaks.components.1202]
+    [d5_random_tweaks.properties.1202]
     exclusive = ["sppr202.spl"]
 
-    [d5_random_tweaks.components.2915]
+    [d5_random_tweaks.properties.2915]
     exclusive = ["spwi806.spl"]
 
-    [d5_random_tweaks.components.1323]
+    [d5_random_tweaks.properties.1323]
     exclusive = ["sppr350.spl"]
 
-    [d5_random_tweaks.components.3070]
+    [d5_random_tweaks.properties.3070]
     exclusive = ["hamm06.itm", "hamm06a.itm", "hamm06b.itm"]
 
-    [d5_random_tweaks.components.2923]
+    [d5_random_tweaks.properties.2923]
     exclusive = ["plangood.cre"]
 
-    [d5_random_tweaks.components.1212]
+    [d5_random_tweaks.properties.1212]
     exclusive = ["sppr212.spl"]
 
-    [d5_random_tweaks.components.3100]
+    [d5_random_tweaks.properties.3100]
     exclusive = ["clck15.itm"]
 
-    [d5_random_tweaks.components.2914]
-    exclusive = ["spwi914.spl", "spwi806.spl"]
+    [d5_random_tweaks.properties.2914]
+    exclusive = ["spwi806.spl", "spwi914.spl"]
 
-    [d5_random_tweaks.components.3010]
+    [d5_random_tweaks.properties.3010]
     exclusive = ["ring36.itm"]
 
-    [d5_random_tweaks.components.1207]
+    [d5_random_tweaks.properties.1207]
     exclusive = ["sppr207.spl"]
 
-    [d5_random_tweaks.components.1611]
+    [d5_random_tweaks.properties.1611]
     exclusive = ["sppr611.spl"]
 
-    [d5_random_tweaks.components.1710]
+    [d5_random_tweaks.properties.1710]
     exclusive = ["sppr710.spl"]
 
-    [d5_random_tweaks.components.2201]
+    [d5_random_tweaks.properties.2201]
     exclusive = ["7eyes.2da"]
 
-    [d5_random_tweaks.components.1251]
+    [d5_random_tweaks.properties.1251]
     exclusive = ["sppr251.spl"]
 
-    [d5_random_tweaks.components.2217]
+    [d5_random_tweaks.properties.2217]
     exclusive = ["spwi217.spl"]
 
-    [d5_random_tweaks.components.1351]
+    [d5_random_tweaks.properties.1351]
     exclusive = ["moonbla.itm"]
 
-    [d5_random_tweaks.components.2518]
+    [d5_random_tweaks.properties.2518]
     exclusive = ["spwi518.spl"]
 
-    [d5_random_tweaks.components.2916]
+    [d5_random_tweaks.properties.2916]
     exclusive = ["spwi916.spl", "spwi806.spl"]
 
-    [d5_random_tweaks.components.2224]
+    [d5_random_tweaks.properties.2224]
     exclusive = ["spwi224.spl"]
 
-    [d5_random_tweaks.components.2811]
-    exclusive = ["spwi811.spl", "scrl9f.itm"]
+    [d5_random_tweaks.properties.2811]
+    exclusive = ["scrl9f.itm", "spwi811.spl"]
 
-    [d5_random_tweaks.components.2808]
+    [d5_random_tweaks.properties.2808]
     exclusive = ["sppr603.spl"]
 
-    [d5_random_tweaks.components.2305]
-    exclusive = ["msectype.2da", "spwi312.spl", "potn14.spl", "spwi305.spl"]
+    [d5_random_tweaks.properties.2305]
+    exclusive = ["msectype.2da", "potn14.spl", "spwi305.spl", "spwi312.spl"]
 
-    [d5_random_tweaks.components.3030]
+    [d5_random_tweaks.properties.3030]
     exclusive = ["pfirea.bam", "pfirex.bam"]
 
-    [d5_random_tweaks.components.2212]
+    [d5_random_tweaks.properties.2212]
     exclusive = ["spwi212.spl"]
 
-    [d5_random_tweaks.components.3060]
+    [d5_random_tweaks.properties.3060]
     exclusive = ["boot12.spl"]
 
-    [d5_random_tweaks.components.2251]
+    [d5_random_tweaks.properties.2251]
     exclusive = ["cdideca.itm"]
 
-    [d5_random_tweaks.components.2708]
+    [d5_random_tweaks.properties.2708]
     exclusive = ["spwi708.spl"]
 
-    [d5_random_tweaks.components.2413]
+    [d5_random_tweaks.properties.2413]
     exclusive = ["spwi413a.spl", "spwi413d.spl"]
 
-    [d5_random_tweaks.components.2108]
+    [d5_random_tweaks.properties.2108]
     exclusive = ["spwi108.spl"]
 
-    [d5_random_tweaks.components.3020]
+    [d5_random_tweaks.properties.3020]
     exclusive = ["brac18.itm", "7eyes.2da"]
 
-    [d5_random_tweaks.components.1404]
+    [d5_random_tweaks.properties.1404]
     exclusive = ["sppr404.spl"]
 
-    [d5_random_tweaks.components.2112]
+    [d5_random_tweaks.properties.2112]
     exclusive = ["spwi112.spl"]
 
-    [d5_random_tweaks.components.1603]
+    [d5_random_tweaks.properties.1603]
     exclusive = ["sppr603.spl"]
 
-    [d5_random_tweaks.components.3080]
+    [d5_random_tweaks.properties.3080]
     exclusive = ["misc3n.itm", "misc3o.itm"]
 
-    [d5_random_tweaks.components.2215]
+    [d5_random_tweaks.properties.2215]
     exclusive = ["spwi215.spl"]
 
-    [d5_random_tweaks.components.2523]
+    [d5_random_tweaks.properties.2523]
     exclusive = ["spwi523.spl"]
 
-    [d5_random_tweaks.components.2324]
-    exclusive = ["spwi324.spl", "spwi234d.spl", "spwi720.spl"]
+    [d5_random_tweaks.properties.2324]
+    exclusive = ["spwi234d.spl", "spwi324.spl", "spwi720.spl"]
 
-    [d5_random_tweaks.components.2209]
+    [d5_random_tweaks.properties.2209]
     exclusive = ["spwi209.spl"]
 
-    [d5_random_tweaks.components.2418]
-    exclusive = ["spwi418.spl", "spwi403.spl"]
+    [d5_random_tweaks.properties.2418]
+    exclusive = ["spwi403.spl", "spwi418.spl"]
 
-    [d5_random_tweaks.components.3040]
+    [d5_random_tweaks.properties.3040]
     exclusive = ["leat14.itm", "eff_e02.wav"]
 
-    [d5_random_tweaks.components.1614]
+    [d5_random_tweaks.properties.1614]
     exclusive = ["sorb.itm"]
 
-    [d5_random_tweaks.components.2213]
+    [d5_random_tweaks.properties.2213]
     exclusive = ["spwi213.spl"]
 
-    [d5_random_tweaks.components.2451]
+    [d5_random_tweaks.properties.2451]
     exclusive = ["shades.2da"]
 
-    [d5_random_tweaks.components.""]
-    after = ["spell_rev", "item_rev"]
+    [d5_random_tweaks.properties.""]
+    after = ["item_rev", "spell_rev"]
 
-    [d5_random_tweaks.components.3090]
+    [d5_random_tweaks.properties.3090]
     exclusive = ["misc89.itm"]
 
 [isnf]
-lastupdate = 2022-05-08
+lastupdate = 1970-01-01
 class = "Quests"
-download = "https://downloads.weaselmods.net/download/i-shall-never-forget/?wpdmdl=77"
+url = "https://downloads.weaselmods.net/download/i-shall-never-forget/?wpdmdl=77"
 description = "I Shall Never Forget"
 archive = "isnf.zip"
 
 [magestronghold_eet]
-lastupdate = 2022-03-24
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/Magestronghold"
+url = "github:RoxanneSHS/Magestronghold"
 description = "Mage Stronghold"
 archive = ""
 
 [wmart]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://www.dropbox.com/s/203baxjpt9miblq/BGeeWmart3.7z?dl=1"
+url = "https://www.dropbox.com/s/203baxjpt9miblq/BGeeWmart3.7z?dl=1"
 description = "Deidre and Joluv in BG:EE"
 archive = "BGeeWmart3.7z"
 
 [ub]
-lastupdate = 2022-06-17
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:AngelGryph/UnfinishedBusiness"
+url = "github:AngelGryph/UnfinishedBusiness"
 description = "BG2 Unfinished Business"
 archive = "ub.tar.gz"
 
 [gavin]
-lastupdate = 2021-07-26
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:Gibberlings3/Gavin_BG"
+url = "github:Gibberlings3/Gavin_BG"
 description = "Gavin NPC"
 archive = ""
 
 [bggoeet]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:BigWorldProject/BGGOEET"
+url = "github:BigWorldProject/BGGOEET"
 description = "Baldur's Gate Graphics Overhaul for EET and BGT"
 archive = ""
 
 [recoloredbuttons]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:Argent77/A7-recoloredbuttons"
+url = "github:Argent77/A7-recoloredbuttons"
 description = "Recolored Toolbar Buttons"
 archive = ""
 
 [ehlastra]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/Ehlastra"
+url = "github:RoxanneSHS/Ehlastra"
 description = "Ehlastra"
 archive = ""
 
 [finchnpc]
-lastupdate = 2021-06-22
+lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/Finch"
+url = "github:RoxanneSHS/Finch"
 description = "Finch NPC"
 archive = ""
 
 [militiaofficer]
-lastupdate = 2019-03-17
+lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Raduziel/MilitiaOfficer-Kit"
+url = "github:Raduziel/MilitiaOfficer-Kit"
 description = "Militia Officer (Fighter Kit)"
 archive = ""
 
 [kido]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/KidoEE"
+url = "github:RoxanneSHS/KidoEE"
 description = "Kido NPC"
 archive = ""
 
 [convinientammunition]
-lastupdate = 2019-08-22
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:MattyGroove/ConvinientAmmunition"
+url = "github:MattyGroove/ConvinientAmmunition"
 description = "Convenient Ammunition"
 archive = ""
 
 [ninja]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "https://www.dropbox.com/s/whwctp4ussj87an/EENinja.zip?dl=1"
+url = "https://www.dropbox.com/s/whwctp4ussj87an/EENinja.zip?dl=1"
 description = "Ninja Kit"
 archive = "EENinja.zip"
 
 [randomiser]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:FredrikLindgren/randomiser"
+url = "github:FredrikLindgren/randomiser"
 description = "Item Randomiser"
 archive = ""
 
 [slandor]
-lastupdate = 2018-10-21
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:SpellholdStudios/The_Minotaur_and_Lilacor"
+url = "github:SpellholdStudios/The_Minotaur_and_Lilacor"
 description = "The Minotaur and Lilacor"
 archive = ""
 
 [bgeeclassicmovies]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:Sampsca/BGEE-Classic-Movies"
+url = "github:Sampsca/BGEE-Classic-Movies"
 description = "BG:EE Classic Movies"
 archive = ""
 
 [haerdalisromance]
-lastupdate = 2019-09-14
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:MattyGroove/haerdalisromance"
+url = "github:MattyGroove/haerdalisromance"
 description = "Haer'Dalis Romance"
 archive = ""
 
 [a7-npcgenerator]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Argent77/A7-NPCGenerator"
+url = "github:Argent77/A7-NPCGenerator"
 description = "NPC Generator (New)"
 archive = ""
 
 [bg1npc]
-lastupdate = 2021-07-28
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:Gibberlings3/BG1NPC"
+url = "github:Gibberlings3/BG1NPC"
 description = "BG1 NPC Project"
 archive = ""
 
 [kimpirate]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/Kim_Pirate"
+url = "github:RoxanneSHS/Kim_Pirate"
 description = "Kim the Pirate"
 archive = ""
 
 [eet_swo]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:RoxanneSHS/Tamoko"
+url = "github:RoxanneSHS/Tamoko"
 description = "The Sword of Chaos (Tamoko)"
 archive = ""
 
 [wsr]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/pt2gpnqi8dmp4ux/wsr_v114.zip?dl=1"
+url = "https://www.dropbox.com/s/pt2gpnqi8dmp4ux/wsr_v114.zip?dl=1"
 description = "Wizard Slayer Rebalancing"
 archive = "wsr_v114.zip"
 
 [metweaks]
-lastupdate = 2022-06-18
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:OlvynChuru/METweaks"
+url = "github:OlvynChuru/METweaks"
 description = "Olvyn Tweaks"
 archive = "metweaks.tar.gz"
 
-    [metweaks.components.1000]
+    [metweaks.properties.1000]
     exclusive = ["7eyes.2da"]
 
-    [metweaks.components.1400]
+    [metweaks.properties.1400]
     exclusive = ["spcl311.spl"]
 
-    [metweaks.components.1600]
+    [metweaks.properties.1600]
     exclusive = ["spcl131.spl"]
 
-    [metweaks.components.1800]
+    [metweaks.properties.1800]
     exclusive = ["backstab.2da"]
 
-    [metweaks.components.2000]
+    [metweaks.properties.2000]
     exclusive = ["scrl11.itm", "scrl12.itm", "scrl13.itm", "scrl14.itm", "scrl15.itm", "scrl16.itm", "scrl17.itm"]
 
-    [metweaks.components.3150]
+    [metweaks.properties.3150]
     exclusive = ["bdbelhif.cre"]
 
-    [metweaks.components.1200]
+    [metweaks.properties.1200]
     exclusive = ["spcl922.spl"]
 
-    [metweaks.components.1500]
+    [metweaks.properties.1500]
     exclusive = ["spcl212.spl"]
 
-    [metweaks.components.3200]
+    [metweaks.properties.3200]
     exclusive = ["weapprof.2da/styles"]
 
 [artaport]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:Eltamin/artaport"
+url = "github:Eltamin/artaport"
 description = "Artaport"
 archive = ""
 
 [haerdalis_friendship]
-lastupdate = 2019-11-26
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/HaerdalisFriendship"
+url = "github:SpellholdStudios/HaerdalisFriendship"
 description = "Haer'dalis Friendship"
 archive = ""
 
 [song_and_silence]
-lastupdate = 2022-03-07
+lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Gibberlings3/SongAndSilence"
+url = "github:Gibberlings3/SongAndSilence"
 description = "Song and Silence"
 archive = ""
 
 [imoenfriendship]
-lastupdate = 2020-09-02
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/ImoenFriendship"
+url = "github:SpellholdStudios/ImoenFriendship"
 description = "Imoen Friendship"
 archive = ""
 
 [yvette]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/yvette-romance/?wpdmdl=79"
+url = "https://downloads.weaselmods.net/download/yvette-romance/?wpdmdl=79"
 description = "Yvette Romance"
 archive = "yvette.zip"
 
 ["weasels!"]
 lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://downloads.weaselmods.net/download/weasels/?wpdmdl=141"
+url = "https://downloads.weaselmods.net/download/weasels/?wpdmdl=141"
 description = "Weasels"
 archive = "weasels!.zip"
 
 ["c#brage"]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gitjas/Brages_Redemption"
+url = "github:Gitjas/Brages_Redemption"
 description = "Brage's Redemption"
 archive = ""
 
 [lucy]
-lastupdate = 2019-10-17
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:SpellholdStudios/Lucy_the_Wyvern"
+url = "github:SpellholdStudios/Lucy_the_Wyvern"
 description = "Lucy the Wyvern"
 archive = ""
 
 [ninde_eet]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/NindeEET"
+url = "github:RoxanneSHS/NindeEET"
 description = "Ninde"
 archive = ""
 
 [darron]
-lastupdate = 2020-08-04
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:SpellholdStudios/Darron"
+url = "github:SpellholdStudios/Darron"
 description = "Darron"
 archive = ""
 
 [bp-bgt_worldmap_russian_addon]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "https://www.dropbox.com/s/pdluvpg37olb2sg/worldmapRU.zip?dl=1"
+url = "https://www.dropbox.com/s/pdluvpg37olb2sg/worldmapRU.zip?dl=1"
 description = "Worldmap Russian background"
 archive = "worldmapRU.zip"
 
 [ppe]
-lastupdate = 2021-08-25
+lastupdate = 1970-01-01
 class = "GUI"
-download = "github:DaftHunk/Portraits-Portraits-Everywhere"
+url = "github:DaftHunk/Portraits-Portraits-Everywhere"
 description = "Portraits Portraits Everywhere"
 archive = ""
 
 [druidgrovemakeover]
-lastupdate = 2018-03-18
+lastupdate = 1970-01-01
 class = "GUI"
-download = "github:thisisulb/DruidGroveMakeover"
+url = "github:thisisulb/DruidGroveMakeover"
 description = "Druid Grove Makeover"
 archive = ""
 
 [druidsor]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Gibberlings3/Geomantic_Sorcerer"
+url = "github:Gibberlings3/Geomantic_Sorcerer"
 description = "Geomantic Sorcerer"
 archive = ""
 
 [bg2eer]
 lastupdate = 1970-01-01
 class = "Fixes"
-download = "github:EugVV/BG2EE-russian"
+url = "github:EugVV/BG2EE-russian"
 description = "Russian text for Baldurs Gate II: Enhanced Edition"
 archive = ""
 
 [firkraag]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:SpellholdStudios/Super_Firkraag"
+url = "github:SpellholdStudios/Super_Firkraag"
 description = "Super Firkraag"
 archive = ""
 
 [al_item_pack]
-lastupdate = 2021-06-20
+lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/v6et6uxv5tuyntp/ArcaneTreasury.zip?dl=1"
+url = "https://www.dropbox.com/s/v6et6uxv5tuyntp/ArcaneTreasury.zip?dl=1"
 description = "Arcane Treasury (New)"
 archive = "ArcaneTreasury.zip"
 
 [tnt]
-lastupdate = 2022-03-27
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:BGforgeNet/bg2-tweaks-and-tricks"
+url = "github:BGforgeNet/bg2-tweaks-and-tricks"
 description = "klatu Tweaks and Fixes"
 archive = ""
 
-    [tnt.components.51]
+    [tnt.properties.51]
     exclusive = ["spwi607.spl"]
 
-    [tnt.components.53]
+    [tnt.properties.53]
     exclusive = ["store_prices"]
 
-    [tnt.components.46]
+    [tnt.properties.46]
     exclusive = ["spwi413a.spl", "spwi413d.spl"]
 
-    [tnt.components.0]
-    exclusive = ["fmcat.cre", "fmmep.cre", "fmfae.cre", "fmfer.cre", "fmimp.cre", "fmqua.cre", "fmrab.cre", "famps.cre", "fmspd.cre"]
+    [tnt.properties.0]
+    exclusive = ["famps.cre", "fmcat.cre", "fmfae.cre", "fmfer.cre", "fmimp.cre", "fmmep.cre", "fmqua.cre", "fmrab.cre", "fmspd.cre"]
 
-    [tnt.components.""]
+    [tnt.properties.""]
     after = ["ctb"]
 
-    [tnt.components.45]
+    [tnt.properties.45]
     exclusive = ["spwi609.spl"]
 
-    [tnt.components.48]
-    exclusive = ["spwi515.spl", "spwi609.spl", "spcl505.spl"]
+    [tnt.properties.48]
+    exclusive = ["spcl505.spl", "spwi515.spl", "spwi609.spl"]
 
-    [tnt.components.50]
+    [tnt.properties.50]
     exclusive = ["spwi703.spl"]
 
-    [tnt.components.56]
+    [tnt.properties.56]
     exclusive = ["taerom_ankhegs"]
 
 [animus]
-lastupdate = 2017-07-02
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:BartVanBeurden/bgee-animus"
+url = "github:BartVanBeurden/bgee-animus"
 description = "Animus: Sentient Weapon"
 archive = ""
 
 [eternalimoen]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/4rnre1nw386f47s/EternalImoen_v6.3.zip?dl=1"
+url = "https://www.dropbox.com/s/4rnre1nw386f47s/EternalImoen_v6.3.zip?dl=1"
 description = "Eternal Imoen"
 archive = "EternalImoen_v6.3.zip"
 
 [leui]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:r-e-d/LeUI"
+url = "github:r-e-d/LeUI"
 description = "lefreut's enhanced UI (requires game version 2.6)"
 archive = ""
 
 [rr]
-lastupdate = 2022-06-18
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
+url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 description = "Rogue Rebalancing"
 archive = "rr-493.zip"
 
-    [rr.components.4]
-    exclusive = ["clabba01.2da", "clabba04.2da", "clabba03.2da"]
+    [rr.properties.4]
+    exclusive = ["clabba01.2da", "clabba03.2da", "clabba04.2da"]
 
-    [rr.components.1]
-    exclusive = ["clabth02.2da", "clabth04.2da", "clabth03.2da"]
+    [rr.properties.1]
+    exclusive = ["clabth02.2da", "clabth03.2da", "clabth04.2da"]
 
-    [rr.components.12]
-    exclusive = ["c6arkan.cre", "c6arkan3.cre", "c6kach.cre", "c6yean.cre", "c6arkan.bcs", "stguard1.cre", "mook02.cre", "arkanisg.cre", "mookft01.cre", "palern.cre", "ar0300.bcs", "stguard1.bcs", "aran.cre", "gaelan.cre", "mook.cre", "booter.cre"]
+    [rr.properties.12]
+    exclusive = ["ar0300.bcs", "aran.cre", "arkanisg.cre", "booter.cre", "c6arkan.bcs", "c6arkan.cre", "c6arkan3.cre", "c6kach.cre", "c6yean.cre", "gaelan.cre", "mook.cre", "mook02.cre", "mookft01.cre", "palern.cre", "stguard1.bcs", "stguard1.cre"]
 
-    [rr.components.2]
-    exclusive = ["luth0.2da", "luth1.2da", "lumt0.2da", "luct0.2da", "luft0.2da"]
+    [rr.properties.2]
+    exclusive = ["luct0.2da", "luft0.2da", "lumt0.2da", "luth0.2da", "luth1.2da"]
 
-    [rr.components.6]
+    [rr.properties.6]
     exclusive = ["mxsplbrd.2da"]
 
-    [rr.components.5]
+    [rr.properties.5]
     exclusive = ["luba0.2da", "luba2.2da", "luba3.2da"]
 
-    [rr.components.10]
+    [rr.properties.10]
     exclusive = ["potn36.itm", "potn39.itm"]
 
-    [rr.components.0]
+    [rr.properties.0]
     exclusive = ["weapprof.2da"]
 
-    [rr.components.""]
-    after = ["refinements", "item_rev"]
+    [rr.properties.""]
+    conflicts = ["iispellsystemadjustments"]
+    after = ["beyond_the_law", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "refinements", "song_and_silence", "spell_rev", "tod"]
+    before = ["atweaks", "eet_tweaks", "stratagems", "virtue"]
 
-    [rr.components.9]
+    [rr.properties.9]
     exclusive = ["potn36.itm", "potn39.itm"]
 
-    [rr.components.3]
+    [rr.properties.3]
     exclusive = ["skillrac.2da"]
 
 [hephernaanbg2]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://downloads.weaselmods.net/download/hephernaan-bg2/?wpdmdl=281"
+url = "https://downloads.weaselmods.net/download/hephernaan-bg2/?wpdmdl=281"
 description = "Hephernaan NPC"
 archive = "hephernaanbg2.zip"
 
 [thecalling]
-lastupdate = 2022-06-12
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:Gibberlings3/The_Calling"
+url = "github:Gibberlings3/The_Calling"
 description = "The Calling"
 archive = ""
 
 [g3anniversary]
-lastupdate = 2021-07-13
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:Gibberlings3/g3anniversary"
+url = "github:Gibberlings3/g3anniversary"
 description = "Anniversary"
 archive = ""
 
 [chloe]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/ChloeEET"
+url = "github:RoxanneSHS/ChloeEET"
 description = "Chloe NPC"
 archive = ""
 
 [hubelpot]
-lastupdate = 2021-02-21
+lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "github:SpellholdStudios/Hubelpot_the_Vegetable_Merchant_NPC"
+url = "github:SpellholdStudios/Hubelpot_the_Vegetable_Merchant_NPC"
 description = "Hubelpot the Vegetable Merchant NPC"
 archive = ""
 
 [nosodsound]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:thisisulb/NoSoDSound"
+url = "github:thisisulb/NoSoDSound"
 description = "BG1 Sounds in SoD"
 archive = ""
 
 [spstuff]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "https://www.dropbox.com/s/b58zr6nuehrluff/spstuff-v11.zip?dl=1"
+url = "https://www.dropbox.com/s/b58zr6nuehrluff/spstuff-v11.zip?dl=1"
 description = "Sorcerer's Place Collection (New)"
 archive = "spstuff-v11.zip"
 
 [isandir]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "https://www.dropbox.com/s/dqw52l3jl7nqvls/ISANDIRS_PORTRAIT_PACK.7z?dl=1"
+url = "https://www.dropbox.com/s/dqw52l3jl7nqvls/ISANDIRS_PORTRAIT_PACK.7z?dl=1"
 description = "Isandir's Portrait Pack"
 archive = "ISANDIRS_PORTRAIT_PACK.7z"
 
 [cowledmenace]
-lastupdate = 2022-06-17
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Maltodaxtrin/CowledMenace"
+url = "github:Maltodaxtrin/CowledMenace"
 description = "Cowled Menace"
 archive = "cowledmenace.tar.gz"
 
-    [cowledmenace.components.""]
+    [cowledmenace.properties.""]
     after = ["eet"]
     depends = ["eet"]
 
 [corwineet]
-lastupdate = 2022-03-26
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:RoxanneSHS/Corwin"
+url = "github:RoxanneSHS/Corwin"
 description = "Corwin NPC for BG1"
 archive = ""
 
 [d0questpack]
-lastupdate = 2022-06-18
-class = "Tweaks"
-download = "http://mods.pocketplane.net/win-questpack-v34.zip"
+lastupdate = 1970-01-01
+class = "Quests"
+url = "http://mods.pocketplane.net/win-questpack-v34.zip"
 description = "Ding0's Quest Pack"
 archive = "Win-QuestPack-v34.zip"
 
-    [d0questpack.components.12]
+    [d0questpack.properties.12]
     exclusive = ["Oasis", "ar6300.are"]
 
-    [d0questpack.components.21]
+    [d0questpack.properties.21]
     exclusive = ["ar0530.are", "ar0530.bcs"]
 
-    [d0questpack.components.20]
-    exclusive = ["ar2100.bcs", "spin671.spl"]
+    [d0questpack.properties.20]
+    exclusive = ["spin671.spl"]
 
-    [d0questpack.components.11]
-    exclusive = ["Oasis", "amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"]
+    [d0questpack.properties.6]
+    exclusive = ["sw1h50.itm"]
 
-    [d0questpack.components.13]
-    exclusive = ["ppsanik.cre", "pirmur02.cre", "pirmur05.cre"]
+    [d0questpack.properties.11]
+    exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"]
 
-    [d0questpack.components.8]
+    [d0questpack.properties.13]
+    exclusive = ["pirmur02.cre", "pirmur05.cre", "ppsanik.cre"]
+
+    [d0questpack.properties.8]
     exclusive = ["ar0812.are", "ar1515.bcs", "thumb.cre"]
 
-    [d0questpack.components.17]
+    [d0questpack.properties.17]
     exclusive = ["kamir.cre"]
 
-    [d0questpack.components.5]
-    exclusive = ["c6kach.cre", "ar0300.bcs", "ar0300.are", "aran.cre", "maevar.cre", "mvguard1.cre", "mvpries.cre", "aran02.cre", "arnfgt03.cre", "arnfgt04.cre", "renal.cre", "thief1.cre", "tassa.cre", "c6tanov.bcs", "vvtanov.cre"]
+    [d0questpack.properties.5]
+    exclusive = ["ar0300.are", "ar0300.bcs", "aran.cre", "aran02.cre", "arnfgt03.cre", "arnfgt04.cre", "c6kach.cre", "c6tanov.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "renal.cre", "tassa.cre", "thief1.cre", "vvtanov.cre"]
 
-    [d0questpack.components.15]
-    exclusive = ["suinvis.cre", "sumound.cre", "sudryad.cre", "sufake.itm", "sutear.itm"]
+    [d0questpack.properties.15]
+    exclusive = ["sudryad.cre", "sufake.bam", "sufake.itm", "suinvis.cre", "sumound.cre", "sutear.bam", "sutear.itm"]
 
-    [d0questpack.components.10]
-    exclusive = ["hdragsil.cre", "ar2905.bcs"]
+    [d0questpack.properties.401]
+    exclusive = ["reddeath.bcs", "sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre"]
 
-    [d0questpack.components.0]
+    [d0questpack.properties.10]
+    exclusive = ["cutc7g.bcs", "hellgen2.cre", "hellself.cre", "hellself.eff", "sphl001.spl", "sphl002.spl", "sphl003.spl", "sphl004.spl", "sphl005.spl", "spin747.spl", "spin749.spl", "spin751.spl", "spin753.spl", "spin755.spl"]
+
+    [d0questpack.properties.0]
     exclusive = ["AI"]
 
-    [d0questpack.components.19]
+    [d0questpack.properties.19]
     exclusive = ["ar2402.are"]
 
-    [d0questpack.components.""]
+    [d0questpack.properties.16]
+    exclusive = ["baisera.cre", "besamen.cre"]
+
+    [d0questpack.properties.""]
     after = ["kelsey", "keto", "ub"]
 
-    [d0questpack.components.16]
-    exclusive = ["besamen.cre", "baisera.cre", "ar0811.bcs"]
-
-    [d0questpack.components.9]
+    [d0questpack.properties.9]
     exclusive = ["potn33.itm", "potn38.itm", "spwi106.spl", "spwi815.spl"]
 
+[d0tweak]
+lastupdate = 1970-01-01
+class = "Tweaks"
+url = "github:Pocket-Plane-Group/D0Tweak"
+description = "Ding0 Tweak Pack"
+archive = ""
+
+    [d0tweak.properties.11]
+    after = ["rr"]
+
 [eetgbthfkp]
-lastupdate = 2020-10-07
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/EET_Expanded_Thief_Stronghold"
+url = "github:RoxanneSHS/EET_Expanded_Thief_Stronghold"
 description = "Expanded Thief Stronghold"
 archive = ""
 
 [djinnicompanion]
-lastupdate = 2021-06-05
+lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Argent77/DjinniCompanion"
+url = "github:Argent77/DjinniCompanion"
 description = "Afaaq, the Djinni Companion"
 archive = ""
 
 [lenshunt]
-lastupdate = 2022-04-13
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/LensHunt"
+url = "github:RoxanneSHS/LensHunt"
 description = "The Broken Lanthorn"
 archive = ""
 
 [sotsc]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "https://downloads.weaselmods.net/download/shades-of-the-sword-coast/?wpdmdl=396"
+url = "https://downloads.weaselmods.net/download/shades-of-the-sword-coast/?wpdmdl=396"
 description = "Shades of the Sword Coast"
 archive = "sotsc.zip"
 
 [tipun_gui]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:tipun81/tipun_gui_mod"
+url = "github:tipun81/tipun_gui_mod"
 description = "Tipun's User Interface (New)"
 archive = ""
 
 [reunion]
-lastupdate = 2019-03-29
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Pocket-Plane-Group/Reunion"
+url = "github:Pocket-Plane-Group/Reunion"
 description = "Reunion"
 archive = ""
 
 [iwd1_eet]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "https://drive.google.com/u/0/uc?export=download&confirm=0nC5&id=1zmy3x9DqgOoxghNSXM4C66S1OyYkzSRH"
+url = "https://drive.google.com/u/0/uc?export=download&confirm=0nC5&id=1zmy3x9DqgOoxghNSXM4C66S1OyYkzSRH"
 description = "IWD in EET (New, TEST)"
 archive = "iwd1_eet_alpha.zip"
 
 [viconiarevamped]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://downloads.weaselmods.net/download/viconia-revamped/?wpdmdl=139"
+url = "https://downloads.weaselmods.net/download/viconia-revamped/?wpdmdl=139"
 description = "Viconia Revamped"
 archive = "viconiarevamped.zip"
 
 [yasraena]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/YasraenaEET"
+url = "github:RoxanneSHS/YasraenaEET"
 description = "Yasraena NPC"
 archive = ""
 
 [eet]
 lastupdate = 1970-01-01
 class = "Initial"
-download = "github:Gibberlings3/EET"
+url = "github:Gibberlings3/EET"
 description = "Enhanced Edition Trilogy"
 archive = ""
 
 [xan]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Pocket-Plane-Group/Xan_for_BGII"
+url = "github:Pocket-Plane-Group/Xan_for_BGII"
 description = "Xan NPC"
 archive = ""
 
 [sos]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/SoS-EE"
+url = "github:RoxanneSHS/SoS-EE"
 description = "Shadows over Soubar (Re-wired)"
 archive = ""
 
 [ctbliberate]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/Hlondeth"
+url = "github:RoxanneSHS/Hlondeth"
 description = "Check the Bodies Liberation of Hlondeth"
 archive = ""
 
 [px_chantelame]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "https://www.dropbox.com/s/4cily610ibunjtw/Chantelame%20v6.zip?dl=1"
+url = "https://www.dropbox.com/s/4cily610ibunjtw/Chantelame%20v6.zip?dl=1"
 description = "Chantelame"
 archive = "Chantelame v6.zip"
 
 [simenpc]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/Sime"
+url = "github:RoxanneSHS/Sime"
 description = "Sime"
 archive = ""
 
 [sandrahtot]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "http://lynxlynx.info/ie/modhub.php?RoxanneSHS/SandrahToT&master"
+url = "http://lynxlynx.info/ie/modhub.php?RoxanneSHS/SandrahToT&master"
 description = "Sandrah Saga III - Time of Troubles Revisited"
 archive = "SandrahToT-master.zip"
 
 [bristlelick]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/bristlelick/?wpdmdl=406"
+url = "https://downloads.weaselmods.net/download/bristlelick/?wpdmdl=406"
 description = "Bristlelick (gnoll NPC)"
 archive = "bristlelick.zip"
+
+[monasticorders]
+lastupdate = 1970-01-01
+class = "Kits"
+url = "github:aquadrizzt/MonasticOrders"
+description = "Monastic Orders"
+archive = ""
 
 [nanstein]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:GwendolyneFreddy/Nanstein"
+url = "github:GwendolyneFreddy/Nanstein"
 description = "Nanstein item upgrade"
 archive = ""
 
 [a7-totlm-bg2ee]
-lastupdate = 2021-08-24
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Argent77/A7-TotLM-BG2EE"
+url = "github:Argent77/A7-TotLM-BG2EE"
 description = "Trials of the Luremaster"
 archive = ""
 
 [npc_strongholds]
-lastupdate = 2022-06-10
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.gibberlings3.net/files/file/959-npc-strongholds/"
+url = "https://www.gibberlings3.net/files/file/959-npc-strongholds/"
 description = "NPC Strongholds"
 archive = "NPCStrongholds_V14.zip"
 
 [spirithunter]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:thisisulb/SpiritHunterShamanKit"
+url = "github:thisisulb/SpiritHunterShamanKit"
 description = "Spirit Hunter (New)"
-archive = ""
+archive = "spirithunter.tar.gz"
 
 [bg2eew]
 lastupdate = 1970-01-01
 class = "Items"
-download = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=191"
+url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=191"
 description = "TeamBG Weapon Pack for BG2"
 archive = "BG2EEWv101.rar"
 
 [saerileth]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:PaulaMigrate/Saerileth"
+url = "github:PaulaMigrate/Saerileth"
 description = "Saerileth NPC"
 archive = ""
 
 [housetweaks]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:ArtemiusI/House-Rule-Tweaks"
+url = "github:ArtemiusI/House-Rule-Tweaks"
 description = "House Rule Tweaks"
-archive = ""
+archive = "housetweaks.tar.gz"
 
 [drake]
-lastupdate = 2019-07-09
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://www.dropbox.com/s/oj3fj1fpar1imzw/Drake-master.zip?dl=1"
+url = "https://www.dropbox.com/s/oj3fj1fpar1imzw/Drake-master.zip?dl=1"
 description = "Drake NPC"
 archive = "Drake-master.zip"
 
 [longerroadee]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/LongerRoadEE"
+url = "github:RoxanneSHS/LongerRoadEE"
 description = "Longer Road EET"
 archive = ""
 
 [glamnpcpack]
-lastupdate = 2021-08-26
+lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://www.dropbox.com/s/tauiizag44zz2vz/GlamNPCPack-v3.1.zip?dl=1"
+url = "https://www.dropbox.com/s/tauiizag44zz2vz/GlamNPCPack-v3.1.zip?dl=1"
 description = "Glam's NPC Pack"
 archive = "GlamNPCPack-v3.1.zip"
 
 [xpmod]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Pocket-Plane-Group/D0XPmod"
+url = "github:Pocket-Plane-Group/D0XPmod"
 description = "Ding0's Experience Fixer"
 archive = ""
 
 [a7-customkits]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "https://www.dropbox.com/s/gpxkd39wcqf6ew3/A7-Spellsword-v1.5.zip?dl=1"
+url = "https://www.dropbox.com/s/gpxkd39wcqf6ew3/A7-Spellsword-v1.5.zip?dl=1"
 description = "Spellsword Custom Kit"
 archive = "A7-Spellsword-v1.5.zip"
 
 [spiritwalker]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:thisisulb/SpiritwalkerKit"
+url = "github:thisisulb/SpiritwalkerKit"
 description = "Spiritwalker"
 archive = ""
 
 [rolles]
-lastupdate = 2021-06-08
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:SpellholdStudios/Rolles"
+url = "github:SpellholdStudios/Rolles"
 description = "Rolles Safyer"
 archive = ""
 
 [zzzz]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "manual"
+url = "manual"
 description = "ZZZZ"
 archive = "manual"
 
 [heartwood]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:SpellholdStudios/HeartOfTheWood"
+url = "github:SpellholdStudios/HeartOfTheWood"
 description = "Heart of the Wood"
 archive = ""
 
 [korganfriendship]
-lastupdate = 2020-05-31
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/KorganFriendship"
+url = "github:SpellholdStudios/KorganFriendship"
 description = "Korgan Friendship"
 archive = ""
 
 [beyond_the_law]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:SpellholdStudios/Beyond_the_Law"
+url = "github:SpellholdStudios/Beyond_the_Law"
 description = "Beyond the Law"
 archive = ""
 
 [tsujatha]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/Tsujatha"
+url = "github:RoxanneSHS/Tsujatha"
 description = "Tsujatha NPC"
 archive = ""
 
 [ntotsc]
-lastupdate = 2021-11-05
+lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:SpellholdStudios/NTotSC"
+url = "github:SpellholdStudios/NTotSC"
 description = "Northern Tales of the Sword Coast"
 archive = ""
 
 [sirinescall]
-lastupdate = 2022-03-23
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Pocket-Plane-Group/Lure_Of_Sirines_Call"
+url = "github:Pocket-Plane-Group/Lure_Of_Sirines_Call"
 description = "Lure of the Sirine's Call"
 archive = ""
 
 [maltese]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/MalteseArtefact"
+url = "github:RoxanneSHS/MalteseArtefact"
 description = "Check the Bodies Of Elves and Artefacts"
 archive = ""
 
 [keto]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Pocket-Plane-Group/Keto"
+url = "github:Pocket-Plane-Group/Keto"
 description = "Keto NPC (SoA)"
 archive = ""
 
 ["a7#improvedshamanicdance"]
-lastupdate = 2021-08-07
+lastupdate = 1970-01-01
 class = "Kits"
-download = "github:Argent77/A7-ImprovedShamanicDance"
+url = "github:Argent77/A7-ImprovedShamanicDance"
 description = "Improved Shamanic Dance"
 archive = ""
 
 [bardicwonders]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:ArtemiusI/Bardic-Wonders"
+url = "github:ArtemiusI/Bardic-Wonders"
 description = "Bardic Wonders"
 archive = ""
 
 ["c#sb_silber"]
-lastupdate = 2017-06-11
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://www.baldurs-gate.de/index.php?resources/adalons-blood-silberdrachenblutmod.5/download&version=6"
+url = "https://www.baldurs-gate.de/index.php?resources/adalons-blood-silberdrachenblutmod.5/download&version=6"
 description = "Adalon's Blood"
 archive = "AdalonsBlood_v14.zip"
 
 [extraexpandedencounters]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip"
+url = "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip"
 description = "Extra Expanded Encounters"
 archive = "extraexpandedencounters.zip"
 
 [bgsodde]
 lastupdate = 1970-01-01
 class = "Initial"
-download = "https://www.dropbox.com/s/qdvhlx6hg9lh10n/SoDGerman.zip?dl=1"
+url = "https://www.dropbox.com/s/qdvhlx6hg9lh10n/SoDGerman.zip?dl=1"
 description = "SoD Deutsch"
 archive = "SoDGerman.zip"
 
 ["c#sodboabri"]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Gibberlings3/The_Boareskyr_Bridge_Scene"
+url = "github:Gibberlings3/The_Boareskyr_Bridge_Scene"
 description = "The Boareskyr Bridge Scene"
 archive = ""
 
 [dsotsc]
-lastupdate = 2020-12-13
+lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:SpellholdStudios/DSotSC"
+url = "github:SpellholdStudios/DSotSC"
 description = "Dark Side of the Sword Coast for EET"
 archive = ""
 
 [hollyelf]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/HollytheElf"
+url = "github:RoxanneSHS/HollytheElf"
 description = "Check the Bodies Holly the Elf"
 archive = ""
 
 [wings]
-lastupdate = 2020-05-17
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://www.dropbox.com/s/4dqo1xl6bhhrq8j/Wings_EET.zip?dl=1"
+url = "https://www.dropbox.com/s/4dqo1xl6bhhrq8j/Wings_EET.zip?dl=1"
 description = "Wings: Aerie expansion"
 archive = "Wings_EET.zip"
 
 [paina]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "github:ArtemiusI/Pai-Na-NPC-mod-for-BG2-EE"
+url = "github:ArtemiusI/Pai-Na-NPC-mod-for-BG2-EE"
 description = "Pai Na"
 archive = ""
 
 [divine_remix]
-lastupdate = 2022-06-16
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Gibberlings3/Divine_Remix"
+url = "github:Gibberlings3/Divine_Remix"
 description = "Divine Remix"
 archive = "divine_remix.tar.gz"
 
-    [divine_remix.components.109]
+    [divine_remix.properties.109]
     exclusive = ["Tempus"]
 
-    [divine_remix.components.100]
+    [divine_remix.properties.100]
     exclusive = ["mxsplprs.2da"]
 
 [iispellsystemadjustments]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/pbl4vy4j2lw8nk0/iispellsystemadjustmentsv7.1.zip?dl=1"
+url = "https://www.dropbox.com/s/pbl4vy4j2lw8nk0/iispellsystemadjustmentsv7.1.zip?dl=1"
 description = "igi's Spell System Adjustments"
 archive = "iispellsystemadjustmentsv7.1.zip"
 
 [lim_rest]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/xhox98i4vl9sklm/LimitedResting.zip?dl=1"
+url = "https://www.dropbox.com/s/xhox98i4vl9sklm/LimitedResting.zip?dl=1"
 description = "Limited Resting (New)"
 archive = "LimitedResting.zip"
 
 [soa]
-lastupdate = 2020-04-24
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "http://www.users.totalise.co.uk/~bluerift/tsoaV2_2.zip"
+url = "http://www.users.totalise.co.uk/~bluerift/tsoaV2_2.zip"
 description = "The Stone of Askavar"
 archive = "tsoaV2_2.zip"
 
 [faldornbg2]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/faldorn-bg2ee/?wpdmdl=480"
+url = "https://downloads.weaselmods.net/download/faldorn-bg2ee/?wpdmdl=480"
 description = "Faldorn BG2"
 archive = "faldornbg2.zip"
 
 [ajantisportraitpack]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "https://www.baldurs-gate.de/index.php?resources/jasteys-ajantis-portrait-pack.10/download&version=11"
+url = "https://www.baldurs-gate.de/index.php?resources/jasteys-ajantis-portrait-pack.10/download&version=11"
 description = "Ajantis Portrait Pack"
 archive = "AjantisPortraitPack_v4.zip"
 
 [pcvamp]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "http://www.baldursgate-refugium.de/download.php?dat=Mal%20des%20Vampirismus&version=v1.1"
+url = "http://www.baldursgate-refugium.de/download.php?dat=Mal%20des%20Vampirismus&version=v1.1"
 description = "Mal des Vampirismus"
 archive = "Mal-des-Vampirismus v1.1.7z"
 
 [subrace]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:tipun81/Subrace-mod"
+url = "github:tipun81/Subrace-mod"
 description = "Subraces (New)"
-archive = ""
+archive = "subrace.tar.gz"
 
 [ironmodders]
-lastupdate = 2022-04-09
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://www.dropbox.com/s/5nntq074v7svlab/IronmodsEET.zip?dl=1"
+url = "https://www.dropbox.com/s/5nntq074v7svlab/IronmodsEET.zip?dl=1"
 description = "Iron Modders Collection"
 archive = "IronmodsEET.zip"
 
 [sodtrtd]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Gibberlings3/Road_To_Discovery_for_SoD"
+url = "github:Gibberlings3/Road_To_Discovery_for_SoD"
 description = "Road to Discovery"
 archive = ""
 
 [gorionsdream]
 lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:RoxanneSHS/Gorion-s-Dream"
+url = "github:RoxanneSHS/Gorion-s-Dream"
 description = "Gorion's Dream Restored"
 archive = ""
 
 [a7-convenienteenpcs]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Argent77/A7-NoEENPCs"
+url = "github:Argent77/A7-NoEENPCs"
 description = "Convenient EE NPCs"
 archive = "a7-convenienteenpcs.zip"
 
 [ua]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:BGforgeNet/bg2-uniqueartifacts"
+url = "github:BGforgeNet/bg2-uniqueartifacts"
 description = "Unique Artifacts (New)"
 archive = ""
 
 [luxleysoa]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:SpellholdStudios/The_Luxley_Family"
+url = "github:SpellholdStudios/The_Luxley_Family"
 description = "Luxley Family"
 archive = ""
 
 [quayle]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/quayle-bg2/?wpdmdl=127"
+url = "https://downloads.weaselmods.net/download/quayle-bg2/?wpdmdl=127"
 description = "Quayle ReDone"
 archive = "quayle.zip"
 
 [tiax]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Pocket-Plane-Group/Tiax_for_BGII"
+url = "github:Pocket-Plane-Group/Tiax_for_BGII"
 description = "Tiax NPC"
 archive = ""
 
 [aurenaseph]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gibberlings3/AurenAseph"
+url = "github:Gibberlings3/AurenAseph"
 description = "Auren Aseph NPC"
 archive = ""
 
 [tomeandblood]
-lastupdate = 2022-05-22
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:subtledoctor/TomeAndBlood"
+url = "github:subtledoctor/TomeAndBlood"
 description = "Tome and Blood"
 archive = "tomeandblood.tar.gz"
 
-    [tomeandblood.components.14]
-    exclusive = ["spwi203.spl", "spwi224.spl", "sppr309.spl", "spwi322.spl", "scrl6k.itm", "spwi224.spl", "spwi515.spl", "spwi609.spl"]
-
-    [tomeandblood.components.66]
-    exclusive = ["scrl77.itm"]
-
-    [tomeandblood.components.67]
-    exclusive = ["select_familiar"]
-
-    [tomeandblood.components.71]
-    exclusive = ["spell_switching"]
-
-    [tomeandblood.components.48]
-    exclusive = ["armored_spellcasting"]
-
-    [tomeandblood.components.11]
-    exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
-
-    [tomeandblood.components.16]
+    [tomeandblood.properties.16]
     exclusive = ["spwi110.spl"]
 
-    [tomeandblood.components.""]
+    [tomeandblood.properties.66]
+    exclusive = ["scrl77.itm"]
+
+    [tomeandblood.properties.67]
+    exclusive = ["select_familiar"]
+
+    [tomeandblood.properties.71]
+    exclusive = ["spell_switching"]
+
+    [tomeandblood.properties.48]
+    exclusive = ["armored_spellcasting"]
+
+    [tomeandblood.properties.""]
     after = ["spell_rev"]
 
-    [tomeandblood.components.69]
+    [tomeandblood.properties.69]
     exclusive = ["familiar_penalty"]
+
+    [tomeandblood.properties.11]
+    exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
+
+    [tomeandblood.properties.14]
+    exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
 
 [foundling]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/foundling-between-the-shades/?wpdmdl=81"
+url = "https://downloads.weaselmods.net/download/foundling-between-the-shades/?wpdmdl=81"
 description = "Foundling: Between the Shades"
 archive = "foundling.zip"
 
 [helga]
-lastupdate = 2022-05-03
+lastupdate = 1970-01-01
 class = "SmallNPCs"
-download = "github:Skitia/Helga-BG1"
+url = "github:Skitia/Helga-BG1"
 description = "Helga"
 archive = ""
 
 [willowisp]
-lastupdate = 2021-10-17
+lastupdate = 1970-01-01
 class = "Kits"
-download = "https://downloads.weaselmods.net/download/will-of-the-wisps/?wpdmdl=91"
+url = "https://downloads.weaselmods.net/download/will-of-the-wisps/?wpdmdl=91"
 description = "Will of the Wisps"
 archive = "willowisp.zip"
 
 [sodrus]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:abalabokhin/sod_rus"
+url = "github:abalabokhin/sod_rus"
 description = "SoD Translation RU"
 archive = ""
 
 [wildmage]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:BGforgeNet/bg2-wildmage"
+url = "github:BGforgeNet/bg2-wildmage"
 description = "Wild Mage Additions"
 archive = ""
 
 [velvet]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/Velvetfoot"
+url = "github:RoxanneSHS/Velvetfoot"
 description = "Check the Bodies Velvetfoot"
 archive = ""
 
 [lightingpack]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:Argent77/A7-LightingPackEE"
+url = "github:Argent77/A7-LightingPackEE"
 description = "Lighting Pack: Shader Scripts"
 archive = ""
 
 [com_encounters]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=53"
+url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=53"
 description = "CoM Encounters"
 archive = "EncountersV110.zip"
 
 [garrick_flirt]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:Gibberlings3/Garricks_Infatuation"
+url = "github:Gibberlings3/Garricks_Infatuation"
 description = "Garrick's Infatuation"
 archive = ""
 
 [ajocmod]
-lastupdate = 2022-04-26
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/AjocMod"
+url = "github:RoxanneSHS/AjocMod"
 description = "Loron's Return (Ajocmod)"
 archive = ""
 
 [cliffkey]
-lastupdate = 2021-06-13
+lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/qmc3ufhbllddkwl/keyring.zip?dl=1"
+url = "https://www.dropbox.com/s/qmc3ufhbllddkwl/keyring.zip?dl=1"
 description = "Keyring (A mod for the orderly)"
 archive = "keyring.zip"
 
 [travellers]
-lastupdate = 2022-04-14
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/Travellers"
+url = "github:RoxanneSHS/Travellers"
 description = "Travellers in Faerun"
 archive = ""
 
 [a7-banteraccelerator]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Argent77/A7-BanterAccelerator"
+url = "github:Argent77/A7-BanterAccelerator"
 description = "Banter Accelerator for Enhanced Edition games"
 archive = ""
 
 [recorder]
-lastupdate = 2022-05-18
+lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Skitia/Recorder-BG1"
+url = "github:Skitia/Recorder-BG1"
 description = "Recorder"
 archive = ""
 
 [banterpack]
-lastupdate = 2018-03-22
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Pocket-Plane-Group/Banter_Pack"
+url = "github:Pocket-Plane-Group/Banter_Pack"
 description = "Banter Packs"
 archive = ""
 
 [sandrahrtf]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "http://lynxlynx.info/ie/modhub.php?RoxanneSHS/SandrahRtF&master"
+url = "http://lynxlynx.info/ie/modhub.php?RoxanneSHS/SandrahRtF&master"
 description = "Sandrah Saga II - Return to Faerun"
 archive = "SandrahRtF-master.zip"
 
 [aranw]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:cmorganbg/Aran-Whitehand"
+url = "github:cmorganbg/Aran-Whitehand"
 description = "Aran Whitehand NPC"
 archive = ""
 
 [epicthieving]
-lastupdate = 2022-06-17
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:OlvynChuru/Epic-Thieving"
+url = "github:OlvynChuru/Epic-Thieving"
 description = "Epic Thieving"
 archive = "epicthieving.tar.gz"
 
 [tddz]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/TDDz"
+url = "github:RoxanneSHS/TDDz"
 description = "TDDz (EE-compatible installer for The Darkest Day)"
 archive = ""
 
 [eet_gui]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "Manual"
+url = "Manual"
 description = "EET Alternative GUI (SoD)"
 archive = "Manual"
 
 [re]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Gibberlings3/Romantic_Encounters_BG2"
+url = "github:Gibberlings3/Romantic_Encounters_BG2"
 description = "Romantic Encounters"
 archive = ""
 
 [bg_travel]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "http://athkatla.cob-bg.pl/download.php?id=1595"
+url = "http://athkatla.cob-bg.pl/download.php?id=1595"
 description = "BG Travel"
 archive = "BG_Travel for BG1&BGEE&BGT&Tutu&EET v2,1.rar"
 
 [unique_items]
 lastupdate = 1970-01-01
 class = "Items"
-download = "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip"
+url = "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip"
 description = "BGEE/SOD Item replacement fun pack"
 archive = "unique_items.zip"
 
 [drizztsaga]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:MattyGroove/DrizztSaga"
+url = "github:MattyGroove/DrizztSaga"
 description = "Drizzt Saga"
 archive = ""
 
 [a7-testyourmettle]
-lastupdate = 2021-07-09
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Argent77/A7-TestYourMettle"
+url = "github:Argent77/A7-TestYourMettle"
 description = "Test Your Mettle"
 archive = ""
 
 [stormcaller]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:thisisulb/StormCallerKit"
+url = "github:thisisulb/StormCallerKit"
 description = "Storm Caller Shaman Kit"
 archive = ""
 
 [npc_tweak]
-lastupdate = 2016-09-17
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/NPCTweak&pre"
+url = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/NPCTweak&pre"
 description = "NPC Tweak"
 archive = "Gibberlings3-NPCTweak-v7-0-gc77817b.zip"
 
 [leui-sod]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:r-e-d/LeUI-SoD"
+url = "github:r-e-d/LeUI-SoD"
 description = "lefreut's enhanced UI SoD Skin (requires game version 2.6)"
 archive = ""
 
 [portraitcolors]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "github:anongit/portraitcolors"
+url = "github:anongit/portraitcolors"
 description = "Custom Portraitcolours (New)"
 archive = ""
 
 [emad]
 lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://www.gibberlings3.net/files/file/707-every-mod-and-dog/?do=download"
+url = "https://www.gibberlings3.net/files/file/707-every-mod-and-dog/?do=download"
 description = "Every Mod and Dog"
 archive = "emad_v11.zip"
 
 [walahnan]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/walahnan-bg1ee/?wpdmdl=428"
+url = "https://downloads.weaselmods.net/download/walahnan-bg1ee/?wpdmdl=428"
 description = "Walahnan (gnome chronomancer)"
 archive = "walahnan.zip"
 
 [janquest]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "https://www.dropbox.com/s/u35zhecotxb42qx/JansQuest1.5.0.zip?dl=1"
+url = "https://www.dropbox.com/s/u35zhecotxb42qx/JansQuest1.5.0.zip?dl=1"
 description = "Jan's Extended Quest"
 archive = "JansQuest1.5.0.zip"
 
 [difftweak]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "https://www.dropbox.com/s/an1hcwvfhzexm9u/Diff_Tweak.zip?dl=1"
+url = "https://www.dropbox.com/s/an1hcwvfhzexm9u/Diff_Tweak.zip?dl=1"
 description = "Difficulty and Tweak mod"
 archive = "Diff_Tweak.zip"
 
 [fnp_multiclass]
-lastupdate = 2022-06-15
+lastupdate = 1970-01-01
 class = "Kits"
-download = "manual"
+url = "manual"
 description = "Faith and Powers Multiclass Clerics"
 archive = "manual"
 
 [sellswords]
 lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Pocket-Plane-Group/Sellswords"
+url = "github:Pocket-Plane-Group/Sellswords"
 description = "The Sellswords"
 archive = ""
 
 [azengaard]
-lastupdate = 2022-04-24
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/AzengaardEE"
+url = "github:RoxanneSHS/AzengaardEE"
 description = "Azengaard Encounters"
 archive = ""
 
 [kiara-zaiya]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:SpellholdStudios/Kiara_Zaiya"
+url = "github:SpellholdStudios/Kiara_Zaiya"
 description = "Kiara Zaiya NPCs"
 archive = ""
 
 [thalan]
-lastupdate = 2019-06-23
+lastupdate = 1970-01-01
 class = "Items"
-download = "github:CrevsDaak/thalan"
+url = "github:CrevsDaak/thalan"
 description = "Thalantyr Item Upgrade"
 archive = ""
 
 [npckit]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "https://www.dropbox.com/s/ctvxd6bjxgladlp/npckit-v5.exe?dl=1"
+url = "https://www.gibberlings3.net/files/file/793-npc-kitpack"
 description = "NPC Kitpack"
 archive = "npckit-v5.exe"
 
 [bonehilleet]
-lastupdate = 2021-09-17
+lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/BoneHill"
+url = "github:RoxanneSHS/BoneHill"
 description = "Secret of Bone Hill (EET)"
 archive = ""
 
 [iepbanters]
-lastupdate = 2021-07-18
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/IEP_Extended_Banter"
+url = "github:SpellholdStudios/IEP_Extended_Banter"
 description = "IEP Extended Banters"
 archive = ""
 
 [drowlib]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "github:RoxanneSHS/DrowLibrary"
+url = "github:RoxanneSHS/DrowLibrary"
 description = "Check the Bodies Drow Library"
 archive = ""
 
 [sandrahport]
 lastupdate = 1970-01-01
 class = "GUI"
-download = "https://www.dropbox.com/s/lhfhi7q44gnxmj4/SandrahPortrait.zip?dl=1"
+url = "https://www.dropbox.com/s/lhfhi7q44gnxmj4/SandrahPortrait.zip?dl=1"
 description = "Sandrah Alternative Portraits or Class"
 archive = "SandrahPortrait.zip"
 
 [kivan]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gibberlings3/Kivan_and_Deheriana"
+url = "github:Gibberlings3/Kivan_and_Deheriana"
 description = "Kivan and Deheriana Companions (Bugged)"
 archive = ""
 
 [bridgesblock]
 lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://downloads.weaselmods.net/download/bridges-block/?wpdmdl=478"
+url = "https://downloads.weaselmods.net/download/bridges-block/?wpdmdl=478"
 description = "Bridge's Block"
 archive = "bridgesblock.zip"
 
 [crossmodbg2]
-lastupdate = 2021-10-14
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Gibberlings3/Crossmod_Banter_Pack_for_Baldurs_Gate_II"
+url = "github:Gibberlings3/Crossmod_Banter_Pack_for_Baldurs_Gate_II"
 description = "Crossmod Banter Pack"
 archive = ""
 
 [bgeespawn]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:AstroBryGuy/BGEESpawn"
+url = "github:AstroBryGuy/BGEESpawn"
 description = "BGEE Leveled Spawns"
 archive = ""
 
 [assassinations]
-lastupdate = 2021-05-15
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Pocket-Plane-Group/Assassinations"
+url = "github:Pocket-Plane-Group/Assassinations"
 description = "Assassinations"
 archive = ""
 
 ["c#solaufein"]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gitjas/Solaufeins_Rescue_NPC"
+url = "github:Gitjas/Solaufeins_Rescue_NPC"
 description = "Solaufein's Rescue"
 archive = ""
 
 [sarahtob]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gibberlings3/Sarah"
+url = "github:Gibberlings3/Sarah"
 description = "Sarah NPC"
 archive = ""
 
 [bgeew]
 lastupdate = 1970-01-01
 class = "PreEET"
-download = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=186"
+url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=186"
 description = "TeamBG Weapon Pack for BG1"
 archive = "BGeeWv105.rar"
 
 [cdlore]
 lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Gibberlings3/Lore_From_Learning"
+url = "github:Gibberlings3/Lore_From_Learning"
 description = "Lore From Learning"
 archive = ""
 
 [forgotten-armament]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:Gibberlings3/Forgotten-Armament"
+url = "github:Gibberlings3/Forgotten-Armament"
 description = "Forgotten Armament"
 archive = ""
 
 [ac_quest]
-lastupdate = 2021-09-09
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Gitjas/Ascalons_Questpack"
+url = "github:Gitjas/Ascalons_Questpack"
 description = "Ascalons Questpack"
 archive = ""
 
 [eetmoveitemssoa]
 lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/ryb76gshhvkax3j/EETMoveItemsSoA.zip?dl=1"
+url = "https://www.dropbox.com/s/ryb76gshhvkax3j/EETMoveItemsSoA.zip?dl=1"
 description = "Move Items into SoA"
 archive = "EETMoveItemsSoA.zip"
 
 [bg2ee_ga]
 lastupdate = 1970-01-01
 class = "Initial"
-download = "http://www.whiteagnus.de/downloads/BG2EE_GermanAP_Beta2.rar"
+url = "http://www.whiteagnus.de/downloads/BG2EE_GermanAP_Beta2.rar"
 description = "BG2EE German Audio Patch"
 archive = "BG2EE_GermanAP_Beta2.rar"
 
 [mazzy]
-lastupdate = 2020-02-15
+lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/MazzyFriendship"
+url = "github:SpellholdStudios/MazzyFriendship"
 description = "Mazzy Friendship"
 archive = ""
 
 [alternatives]
-lastupdate = 2021-03-28
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:Gibberlings3/Alternatives"
+url = "github:Gibberlings3/Alternatives"
 description = "Alternatives"
 archive = ""
 
 [whitequeen]
-lastupdate = 2022-05-08
+lastupdate = 1970-01-01
 class = "Quests"
-download = "https://downloads.weaselmods.net/download/the-white-queen/?wpdmdl=75"
+url = "https://downloads.weaselmods.net/download/the-white-queen/?wpdmdl=75"
 description = "The White Queen"
 archive = "whitequeen.zip"
 
 [vaulteet]
-lastupdate = 2020-12-06
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:RoxanneSHS/VaultEE"
+url = "github:RoxanneSHS/VaultEE"
 description = "Vault"
 archive = ""
 
 [dsr]
 lastupdate = 1970-01-01
 class = "Items"
-download = "https://www.dropbox.com/s/5g43s13138wkpgc/Demon%20Summon%20Ritual_v7.zip?dl=1"
+url = "https://www.dropbox.com/s/5g43s13138wkpgc/Demon%20Summon%20Ritual_v7.zip?dl=1"
 description = "Unholy Gate Opening Ritual Book"
 archive = "Demon Summon Ritual_v7.zip"
 
 [fadingpromises]
-lastupdate = 2020-03-05
+lastupdate = 1970-01-01
 class = "Quests"
-download = "github:SpellholdStudios/Fading_Promises"
+url = "github:SpellholdStudios/Fading_Promises"
 description = "Fading Promises"
 archive = ""
 
 [sheena]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:RoxanneSHS/SheenaHD"
+url = "github:RoxanneSHS/SheenaHD"
 description = "Sheena, a Half Dragon"
 archive = ""
 
 [bearwalker]
 lastupdate = 1970-01-01
 class = "Kits"
-download = "github:thisisulb/BearWalkerKit"
+url = "github:thisisulb/BearWalkerKit"
 description = "Bear Walker - a Werebear/Ranger Kit"
 archive = ""
 
 [icewind_eet]
 lastupdate = 1970-01-01
 class = "BigQuests"
-download = "https://www.dropbox.com/s/c6hulnvz8172agx/icewind_eet.zip?dl=1"
+url = "https://www.dropbox.com/s/c6hulnvz8172agx/icewind_eet.zip?dl=1"
 description = "IWD in EET Transition (New, TEST)"
 archive = "icewind_eet.zip"
 
 [sagaman]
 lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://www.dropbox.com/s/kmg5tvtcus95eh5/Ulrien-SagaMaster.zip?dl=1"
+url = "https://www.dropbox.com/s/kmg5tvtcus95eh5/Ulrien-SagaMaster.zip?dl=1"
 description = "Ulrien Of Cormyr, Saga Master"
 archive = "Ulrien-SagaMaster.zip"
 
 [yeslicknpc]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/Yeslick_NPC"
+url = "github:SpellholdStudios/Yeslick_NPC"
 description = "Yeslick for SoA/ToB"
 archive = ""
 
 [neera]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:SpellholdStudios/Neera_Expansion"
+url = "github:SpellholdStudios/Neera_Expansion"
 description = "Neera Expansion for BG:EE"
 archive = ""
 
 [bank_of_baldurs_gate]
-lastupdate = 2021-01-10
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "github:SpellholdStudios/Bank_of_Baldurs_Gate"
+url = "github:SpellholdStudios/Bank_of_Baldurs_Gate"
 description = "Bank of Baldurs Gate"
 archive = ""
 
 [vienxay]
-lastupdate = 2022-06-03
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "github:Skitia/Vienxay-BG1"
+url = "github:Skitia/Vienxay-BG1"
 description = "Vienxay"
 archive = ""
 
 [thevanishingofskiesilvershield]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "https://downloads.weaselmods.net/download/the-vanishing-of-skie-silvershield/?wpdmdl=402"
+url = "https://downloads.weaselmods.net/download/the-vanishing-of-skie-silvershield/?wpdmdl=402"
 description = "The vanishing of Skie Silvershield"
 archive = "thevanishingofskiesilvershield.zip"
 
 [raduzielsuniversalspells]
-lastupdate = 2019-04-23
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:Raduziel/Raduziels-Universal-Wizard-Spells"
+url = "github:Raduziel/Raduziels-Universal-Wizard-Spells"
 description = "Universal Wizard Spells"
 archive = "raduzielsuniversalspells.tar.gz"
 
 [d2-weapon]
 lastupdate = 1970-01-01
 class = "Items"
-download = "github:D2-mods/D2-WEAPON"
+url = "github:D2-mods/D2-WEAPON"
 description = "Souls-inspired Weapon Pack"
 archive = ""
 
 [gavin_bg2]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:Gibberlings3/Gavin_BG2"
+url = "github:Gibberlings3/Gavin_BG2"
 description = "Gavin NPC for BG2:ToB"
 archive = ""
 
 [nathaniel]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "http://dl.spellholdstudios.net/nathaniel"
+url = "http://dl.spellholdstudios.net/nathaniel"
 description = "Nathaniel NPC"
 archive = "nathaniel_v5.zip"
 
 [corthalaromantique]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
-download = "github:Gibberlings3/Corthala_Romantique"
+url = "github:Gibberlings3/Corthala_Romantique"
 description = "Corthala Romantique"
 archive = ""
 
 [sodbanter]
-lastupdate = 2020-08-16
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:RoxanneSHS/SoDBanterEET"
+url = "github:RoxanneSHS/SoDBanterEET"
 description = "SoD Banter Restoration"
 archive = ""
 
 [evandra]
 lastupdate = 1970-01-01
 class = "NPCs"
-download = "github:MattyGroove/Evandra"
+url = "github:MattyGroove/Evandra"
 description = "Evandra"
 archive = ""
 
 [m7tweaks]
-lastupdate = 2020-07-14
+lastupdate = 1970-01-01
 class = "Tweaks"
-download = "github:flamewing/m7tweaks"
+url = "github:flamewing/m7tweaks"
 description = "Flamewing's Tweaks"
 archive = "m7tweaks.tar.gz"
 
 [bg1aerie]
-lastupdate = 2020-08-19
+lastupdate = 1970-01-01
 class = "PreEET"
-download = "https://www.dropbox.com/s/7obd7oopktkl5jv/BG1AerieV12.zip?dl=1"
+url = "https://www.dropbox.com/s/7obd7oopktkl5jv/BG1AerieV12.zip?dl=1"
 description = "Aerie in BG:EE"
 archive = "BG1AerieV12.zip"
 
 [southernedge]
-lastupdate = 2022-05-16
+lastupdate = 1970-01-01
 class = "SmallQuests"
-download = "https://downloads.weaselmods.net/download/southern-edge/?wpdmdl=36"
+url = "https://downloads.weaselmods.net/download/southern-edge/?wpdmdl=36"
 description = "Southern Edge"
 archive = "southernedge.zip"

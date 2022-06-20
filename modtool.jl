@@ -25,13 +25,13 @@ module ModTool
 #  - list-actions [MODDED]
 # + remove useless mod archive field
 #   (but preserve on importation from bws)
-# - import_moddb should try to guess the date if possible
+# + import_moddb should try to guess the date if possible
 #  (or at least extract() for already-extracted mods should do it)
 # + `uninstall`
 #  + read only the BG2 install order file
 #  + remove `games` field
 #  + auto determine `PreEET` category
-# - include tp2data in `Mod`
+# + include tp2data in `Mod`
 # - do a complete EET installation routine
 # + add the following characteristics at a component-level:
 #  + before/after: declare install order
@@ -924,13 +924,19 @@ function complete_db!(moddb) #««
 	mkmod("unique_items", "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip", "BGEE/SOD Item replacement fun pack", "Items"),
 	#»»3
 	)
-	@inline setmod!(id, list...) = setcomp!(findmod(id;moddb).properties, list...)
-	@inline setcomp!(c, list...) = for (i, kv) in list
-		p = get!(c, string(i), ComponentProperties())
-		for (k, v) in pairs(kv)
-			push!(getfield(p, Symbol(k)), unique(sort([v;]))...)
+	function setmod!(id, list...; kwargs...)#««
+		m = findmod(id; moddb)
+		for (i, kv) in list
+			p = get!(m.properties, string(i), ComponentProperties())
+			for (k, v) in pairs(kv)
+				push!(getfield(p, Symbol(k)), unique(sort([v;]))...)
+			end
 		end
-	end
+		for (k, v) in kwargs
+			k == :class && (m.class = v; break)
+			error("unknown keyword: $k")
+		end
+	end#»»
 	setmod!("atweaks",#««
 		"" => (after = ["rr", "stratagems"],),
 # 		102 => (exclusive = "shammr.itm",), # spiritual hammer
@@ -1072,7 +1078,7 @@ function complete_db!(moddb) #««
   20 => (exclusive = ["spin671.spl"],),
 		21 => (exclusive = ["ar0530.are", "ar0530.bcs",],),
  401 => (exclusive = ["sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre", "reddeath.bcs",],),
-	)#»»
+	; class = "Quests")#»»
 	setmod!("d0tweak",#««
 		11 => (after = ["rr",],), # ioun stones...
 	)#»»
@@ -1191,7 +1197,7 @@ function complete_db!(moddb) #««
 	setmod!("item_rev",#««
 	0 => (exclusive = ["hlolth.itm", "clolth.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "blun01.itm", "bolt01.itm", "sahbolt.itm", "kuobolt.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bull01.itm", "chan01.itm", "clck01.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "amsoul01.itm", "leat01.itm", "aegis.itm", "bruenaxe.itm", "bruenpla.itm", "cattibow.itm", "catliowp.cre", "figlion.itm", "spidfgsu.cre", "figspid.itm", "bsw1h01.itm", "bersersu.cre", "bleat01.itm", "miscbc.itm", "nebdag.itm", "quiver01.itm", "reaver.itm", "korax01.itm", "nparm.itm", "npbow.itm", "npbelt.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npstaf.itm", "npplat.itm", "keldorn.spl", "npring01.itm", "npshld.itm", "npsw01.itm", "clolth.itm", "hlolth.itm", "finsarev.itm", "plat01.itm", "rods01.itm", "rods01.spl", "shld01.itm", "slng01.itm", "sper01.itm", "staf01.itm", "smoundsu.cre", "smoundsu.itm", "sw1h01.itm", "xbow01.itm", "waflail.itm", "wawak.itm"],),
  1030 => (exclusive = ["chrmodst.2da", "repmodst.2da"],),
-	)#»»
+	; class = "Early")#»»
 	setmod!("metweaks",#««
 		1000 => (exclusive = "7eyes.2da",), # monk deflect missile
 		1200 => (exclusive = "spcl922.spl",), # ranger tracking
@@ -1246,7 +1252,7 @@ function complete_db!(moddb) #««
 		0 => (exclusive = ["elemtype.itm","mstone.itm", "shille.itm", "shille2.itm", "shille3.itm", "spcl213.spl", "spcl721.spl", "spcl722.spl", "spdr101.spl", "spdr201.spl", "spdr301.spl", "spdr401.spl", "spdr501.spl", "spdr601.spl", "spentaai.bam", "spentaci.bam", "spin101.spl", "spin102.spl", "spin103.spl", "spin104.spl", "spin105.spl", "spin106.spl", "spin113.spl", "spin683.spl", "spin701.spl", "spin788.spl", "spin789.spl", "spmagglo.bam", "spmagglo.vvc", "sppr101.spl", "sppr102.spl", "sppr103.spl", "sppr104.spl", "sppr105.spl", "sppr106.spl", "sppr107.spl", "sppr108.spl", "sppr109.spl", "sppr110.spl", "sppr111.spl", "sppr113.spl", "sppr116.spl", "spra301.spl", "spra302.spl", "spra303.spl", "spra304.spl", "spra305.spl", "spra306.spl", "spwi977.spl", "spwi978.spl", "undtype.itm", "vermtype.itm"],),
 		10 => (exclusive = ["plangood.cre", "planevil.cre", "devagood.cre", "devaevil.cre"],),
 		65 => (exclusive = ["spcl900.spl","spcl901.spl","spcl907.spl","spwish12.spl"],),
-	)#»»
+	; class = "Early")#»»
 	setmod!("stratagems",#««
 		"" => (after = ["item_rev", "d0questpack", "ascension", "refinements",
 			"spell_rev", "tactics", "wheels", "eetact2"],
@@ -1350,23 +1356,17 @@ function complete_db!(moddb) #««
 		"" => (before = "stratagems",),
 	),#»»
 	# Modify a few mod classes ««
-	for (i, c) in (
-		"dlcmerger" => "DlcMerger",
-		"spell_rev" => "Early",
-		"item_rev" => "Early",
-		"eetact2" => "Quests",
-		"azengaard" => "Quests",
-		"impasylum" => "Quests",
-		"imnesvale" => "Quests",
-		"the_horde" => "Quests",
-		"butchery" => "Quests",
-		"turnabout" => "Quests",
-		"d0questpack" => "Quests",
-		"eet_end" => "Final",
-# 		"might_and_guile" => "Tweaks",
-	);
-		isnothing(findmod(i;moddb)) && error("cannot find mod '$i'")
-		findmod(i;moddb).class = modclass(c); end#»»
+		setmod!("dlcmerger"; class="DlcMerger")
+		setmod!("eetact2"; class="Quests")
+		setmod!("azengaard"; class="Quests")
+		setmod!("impasylum"; class="Quests")
+		setmod!("imnesvale"; class="Quests")
+		setmod!("the_horde"; class="Quests")
+		setmod!("butchery"; class="Quests")
+		setmod!("turnabout"; class="Quests")
+		setmod!("eet_end"; class="Final")
+# 		setmod!("might_and_guile"; class="Tweaks")
+		# »»
 		# update `lastupdate` field««
 		for mod in moddb
 			isdir(joinpath(MODS, mod.id)) && lastupdate!(mod)

@@ -79,7 +79,7 @@ function __init__()# setup global variables and filesystem ««
 	for d in (DOWN, MODS, TEMP) ispath(d) || mkdir(d); end
 end#»»
 
-@inline printlog(s) = println(s)
+@inline printlog(s...) = println(s...)
 
 # Mod classes for install order
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
@@ -317,7 +317,7 @@ function extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 		# - patch SCS to have inquisitor dispel at (level+5) instead of (1.5*level)
 		@assert isdir(mod.id)
 		mod.id == "stratagems" &&
-			run(`sed -e 's,(3\*ability_true_level)/2,(ability_true_level+5),' stratagems/spell/inquisitor.tpa`)
+			run(`sed -i -e 's,(3\*ability_true_level)/2,(ability_true_level+5),' stratagems/spell/inquisitor.tpa`)
 		#  - d0questpack has a badly named directory
 		mod.id == "d0questpack" &&
 			(mv("questpack", mod.id); symlink(mod.id, "questpack"))
@@ -409,7 +409,7 @@ function readme(mod::Mod)#««
 			cd(basename(mod.readme)) do
 				run(pipeline(`cat $(mod.readme)`, `w3m -T text/html`))
 			end
-		else # preserve links etc.
+		else # to preserve links etc., run interactive w3m:
 			run(`w3m $(mod.readme)`)
 		end
 	elseif endswith(mod.readme, r"(.txt|.md)"i)
@@ -519,8 +519,9 @@ function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 	@printf("\e[1m%-30s %s\e[m\n", mod.id, mod.description)
 	open(less ? `view - ` : `cat`, "w", stdout) do io
 	for c in mod.components
-		@printf(io, "% 4s %c%c %s\n", c.id, (c.id ∈ sel ? 's' : '.'),
-			isempty(ins) ? '.' : g == :bg1 ? '1' : '2', description(c))
+		s = c.id ∈ sel ? 's' : '.'
+		i = isempty(ins) ? '.' : g == :bg1 ? '1' : '2'
+		@printf(io, "%c%c % 4s %s\n", s, i, c.id, description(c))
 	end
 	end
 end#»»
@@ -529,21 +530,52 @@ function components!(mod::Mod; selection=global_selection,#««
 	tp2data!(mod)
 	ins = modstatus(mod.tp2, gamedir)
 	sel = get!(selection, mod.id, Int[])
-	# call whiptail
-	args = [ "--output-fd", "2", "--separate-output",
-		"--checklist", "Select mod components", "25", string(cols), "15" ]
-	for c in mod.components
-		push!(args, c.id,
-			(isempty(ins) ? '.' : modgame(mod)==:bg1 ? '1' : '2')*' '*description(c),
-			(c.id ∈ sel ? "1" : "0"))
+	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
+	open(filename, "w") do io
+		g = ""; h = ""
+		for c in mod.components
+			g ≠ c.group && (g = c.group; println(io, "# ", g, "««1"))
+			h ≠ c.subgroup &&
+				(h = c.subgroup; println(io, "## ", h, isempty(h) ? "»»2" : "««2"))
+			s = c.id ∈ sel ? 's' : '.'
+			i = isempty(ins) ? '.' : modgame(mod) == :bg1 ? '1' : '2'
+			@printf(io, "%c%c % 4s %s\n", s, i, c.id, description(c))
+		end
 	end
-	fd = Pipe()
-	proc = run(pipeline(ignorestatus(`whiptail $args`), stderr=fd))
-	close(fd.in)
-	iszero(proc.exitcode) || return
-	sel = [ replace(x, '"' => "") for x in eachline(fd) ]
-	found = false
-	selection[mod.id] = sel
+	# vim will be better than whiptail: we have syntax highlight + folding
+	run(`vim -c 'se ft= fdm=marker fmr=««,»»|
+	sy match modAdd /^s\. .*$/|hi link modAdd DiffAdd|
+	sy match modDel /^\.[12] .*$/|hi link modDel DiffDel|
+	sy match modSel /^s[12] .*$/|hi link modSel DiffChange|
+	sy match modGrp /^# .*$/|hi link modGrp ModeMsg|
+	sy match modSub /^## .*$/|hi link modSub Title|
+	nmap <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>' $filename`)
+	newsel = String[]
+	open(filename, "r") do io; for line in eachline(io)
+		m = match(r"^([s])[.12]\s+(\d+)\s+", line); isnothing(m) && continue
+		push!(newsel, m.captures[2])
+	end end
+	rm(filename)
+	to_add, to_del = setdiff(newsel, selection[mod.id]),
+		setdiff(selection[mod.id], newsel)
+	printlog("added $(length(to_add)) components: ", join(to_add, ", "))
+	printlog("deleted $(length(to_del)) components: ", join(to_del, ", "))
+	selection[mod.id] = newsel
+	# call whiptail
+# 	args = [ "--output-fd", "2", "--separate-output",
+# 		"--checklist", "Select mod components", "25", string(cols), "15" ]
+# 	for c in mod.components
+# 		push!(args, c.id,
+# 			(isempty(ins) ? '.' : modgame(mod)==:bg1 ? '1' : '2')*' '*description(c),
+# 			(c.id ∈ sel ? "1" : "0"))
+# 	end
+# 	fd = Pipe()
+# 	proc = run(pipeline(ignorestatus(`whiptail $args`), stderr=fd))
+# 	close(fd.in)
+# 	iszero(proc.exitcode) || return
+# 	sel = [ replace(x, '"' => "") for x in eachline(fd) ]
+# 	found = false
+# 	selection[mod.id] = sel
 	return
 end#»»
 # Mod installation ««1

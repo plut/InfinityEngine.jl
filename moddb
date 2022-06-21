@@ -756,13 +756,14 @@ description = "Sentrizeal's Alternate Avatar Pack"
 archive = "SentrizealAvatarPack.zip"
 
 [stratagems]
-lastupdate = 1970-01-01
+lastupdate = 2021-09-20
 class = "Tweaks"
-url = "github:Gibberlings3/SwordCoastStratagems"
+url = "https://github.com/Gibberlings3/SwordCoastStratagems/releases/download/v34.3/lin-stratagems-34.3.zip"
 description = "Sword Coast Stratagems"
+archive = "lin-stratagems-34.3.zip"
 
-    [stratagems.properties.8090]
-    exclusive = ["ar1512.are", "ar1515.are"]
+    [stratagems.properties.7220]
+    exclusive = ["battho.cre"]
 
     [stratagems.properties.5030]
     exclusive = ["cloak_of_mirroring"]
@@ -972,8 +973,8 @@ description = "Sword Coast Stratagems"
     [stratagems.properties.5020]
     exclusive = ["cloak_of_displacement"]
 
-    [stratagems.properties.7220]
-    exclusive = ["battho.cre"]
+    [stratagems.properties.8090]
+    exclusive = ["ar1512.are", "ar1515.are"]
 
     [stratagems.properties.8160]
     exclusive = ["elemimix.bcs", "giafir01.cre", "golbur01.bcs", "gorsku01.bcs", "hgwar01.cre", "ysfire01.cre", "ysguar01.cre"]
@@ -1430,17 +1431,17 @@ url = "https://www.dropbox.com/s/mogovd9x99niham/RestoreSound_V1.zip?dl=1"
 description = "Restore Original Casting Sounds"
 archive = "OldSound.zip"
 
-[keldorn_rom]
-lastupdate = 1970-01-01
-class = "NPCTweaks"
-url = "github:Gibberlings3/Keldorn_Romance"
-description = "Keldorn Romance"
-
 [solaufein]
 lastupdate = 1970-01-01
 class = "NPCs"
 url = "github:RoxanneSHS/Solaufein"
 description = "Solaufein NPC"
+
+[keldorn_rom]
+lastupdate = 1970-01-01
+class = "NPCTweaks"
+url = "github:Gibberlings3/Keldorn_Romance"
+description = "Keldorn Romance"
 
 [dh_tweaks]
 lastupdate = 1970-01-01
@@ -1935,8 +1936,8 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
 description = "Tactics EE"
 archive = "Tactics2_for_EE.zip"
 
-    [eetact2.properties.232]
-    exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
+    [eetact2.properties.310]
+    exclusive = ["dhadra01.bcs", "dragblac.bcs", "dragred.bcs", "spin691.spl", "spin693.spl", "udsilver.itm"]
 
     [eetact2.properties.320]
     exclusive = ["behdir01.bcs", "behhiv01.bcs", "behold.itm", "behold01.bcs", "elderorb.bcs", "gauth01.bcs"]
@@ -2034,8 +2035,8 @@ archive = "Tactics2_for_EE.zip"
     [eetact2.properties.230]
     exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
 
-    [eetact2.properties.310]
-    exclusive = ["dhadra01.bcs", "dragblac.bcs", "dragred.bcs", "spin691.spl", "spin693.spl", "udsilver.itm"]
+    [eetact2.properties.232]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
 
 [bgeearwe]
 lastupdate = 1970-01-01
@@ -3303,8 +3304,8 @@ url = "github:subtledoctor/TomeAndBlood"
 description = "Tome and Blood"
 archive = "tomeandblood.tar.gz"
 
-    [tomeandblood.properties.14]
-    exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
+    [tomeandblood.properties.16]
+    exclusive = ["spwi110.spl"]
 
     [tomeandblood.properties.66]
     exclusive = ["scrl77.itm"]
@@ -3315,6 +3316,9 @@ archive = "tomeandblood.tar.gz"
     [tomeandblood.properties.71]
     exclusive = ["spell_switching"]
 
+    [tomeandblood.properties.48]
+    exclusive = ["armored_spellcasting"]
+
     [tomeandblood.properties.""]
     after = ["spell_rev"]
 
@@ -3324,11 +3328,8 @@ archive = "tomeandblood.tar.gz"
     [tomeandblood.properties.11]
     exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
 
-    [tomeandblood.properties.16]
-    exclusive = ["spwi110.spl"]
-
-    [tomeandblood.properties.48]
-    exclusive = ["armored_spellcasting"]
+    [tomeandblood.properties.14]
+    exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
 
 [foundling]
 lastupdate = 1970-01-01

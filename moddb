@@ -606,6 +606,12 @@ url = "http://lynxlynx.info/ie/modhub.php?CrevsDaak/m7multikit&pre"
 description = "Multiclass Multikits"
 archive = "CrevsDaak-m7multikit-v0.27.11-0-gdaf5de8.zip"
 
+[deities-of-faerun]
+lastupdate = 1970-01-01
+class = "Kits"
+url = "github:Raduziel/Deities-Of-Faerun"
+description = "Deities of Faerun"
+
 [dakkon]
 lastupdate = 1970-01-01
 class = "Items"
@@ -758,9 +764,8 @@ archive = "SentrizealAvatarPack.zip"
 [stratagems]
 lastupdate = 2021-09-20
 class = "Tweaks"
-url = "https://github.com/Gibberlings3/SwordCoastStratagems/releases/download/v34.3/lin-stratagems-34.3.zip"
+url = "github:Gibberlings3/SwordCoastStratagems"
 description = "Sword Coast Stratagems"
-archive = "lin-stratagems-34.3.zip"
 
     [stratagems.properties.7220]
     exclusive = ["battho.cre"]
@@ -1399,7 +1404,7 @@ description = "Sandrah Saga I - Sandrah Appears"
 archive = "SandrahEET-master.zip"
 
 [fullplate]
-lastupdate = 1970-01-01
+lastupdate = 2015-07-18
 class = "Tweaks"
 url = "http://www.mediafire.com/download/726ji7jzgomi1vq/fullplate-v2.2.zip"
 description = "Full Plate and Packing Steel"
@@ -1487,7 +1492,7 @@ url = "github:SpellholdStudios/StuffofTheMagi"
 description = "Stuff of the Magi"
 
 [scales_of_balance]
-lastupdate = 1970-01-01
+lastupdate = 2022-06-21
 class = "Tweaks"
 url = "github:UnearthedArcana/Scales_of_Balance"
 description = "Scales of Balance"
@@ -1520,7 +1525,7 @@ archive = "scales_of_balance.tar.gz"
 
     [scales_of_balance.properties.""]
     conflicts = ["kit_rev", "kitpack"]
-    after = ["cdtweaks", "item_rev", "kitpack", "might_and_guile", "tomeandblood"]
+    after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "tomeandblood"]
 
     [scales_of_balance.properties.100]
     exclusive = ["dexmod.2da", "skilldex.2da"]
@@ -1605,7 +1610,7 @@ url = "github:SpellholdStudios/TheSlitheringMenace"
 description = "Slithering Menace"
 
 [refinements]
-lastupdate = 1970-01-01
+lastupdate = 2022-06-21
 class = "Tweaks"
 url = "github:UnearthedArcana/refinements"
 description = "Refinements"
@@ -1774,15 +1779,15 @@ archive = "wheels.tar.gz"
     before = ["stratagems"]
 
 [faiths_and_powers]
-lastupdate = 1970-01-01
-class = "Tweaks"
+lastupdate = 2022-06-21
+class = "Kits"
 url = "github:UnearthedArcana/Faiths_and_Powers"
 description = "Faiths and Powers"
 archive = "faiths_and_powers.tar.gz"
 
     [faiths_and_powers.properties.""]
     after = ["divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood"]
-    before = ["cdtweaks", "might_and_guile", "scales_of_balance", "stratagems"]
+    before = ["cdtweaks", "fnp_multiclass", "might_and_guile", "scales_of_balance", "stratagems"]
 
 [iwditempack]
 lastupdate = 1970-01-01
@@ -1874,7 +1879,7 @@ url = "github:RoxanneSHS/CandlekeepMemories"
 description = "Check the Bodies Candlekeep Memories"
 
 [eet_tweaks]
-lastupdate = 1970-01-01
+lastupdate = 2022-06-21
 class = "Tweaks"
 url = "github:K4thos/EET_Tweaks"
 description = "EET (Enhanced Edition Trilogy) Tweaks"
@@ -2032,11 +2037,11 @@ archive = "Tactics2_for_EE.zip"
     [eetact2.properties.200]
     exclusive = ["ar9391.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "tsmaepet.cre"]
 
-    [eetact2.properties.230]
-    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
-
     [eetact2.properties.232]
     exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
+
+    [eetact2.properties.230]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
 
 [bgeearwe]
 lastupdate = 1970-01-01
@@ -2201,13 +2206,14 @@ url = "github:Argent77/A7-ImprovedArcher"
 description = "Improved Archer Kit"
 
 [a7-golemconstruction]
-lastupdate = 1970-01-01
+lastupdate = 2020-09-13
 class = "Tweaks"
-url = "github:Argent77/A7-GolemConstruction"
+url = "https://github.com/Argent77/A7-GolemConstruction/releases/download/v6.2/lin-A7-GolemConstruction-v6.2.zip"
 description = "Golem Construction for Spellcasters"
+archive = "lin-A7-GolemConstruction-v6.2.zip"
 
 [d5_random_tweaks]
-lastupdate = 1970-01-01
+lastupdate = 2022-06-21
 class = "Tweaks"
 url = "github:subtledoctor/d5_Random_Tweaks"
 description = "SD's Random Tweaks"
@@ -2626,10 +2632,11 @@ description = "Arcane Treasury (New)"
 archive = "ArcaneTreasury.zip"
 
 [tnt]
-lastupdate = 1970-01-01
+lastupdate = 2022-03-27
 class = "Tweaks"
-url = "github:BGforgeNet/bg2-tweaks-and-tricks"
-description = "klatu Tweaks and Fixes"
+url = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/releases/download/v8.19/tweaks-and-tricks-v8.19.zip"
+description = "Tweaks and Tricks"
+archive = "tweaks-and-tricks-v8.19.zip"
 
     [tnt.properties.51]
     exclusive = ["spwi607.spl"]
@@ -2679,7 +2686,7 @@ description = "lefreut's enhanced UI (requires game version 2.6)"
 
 [rr]
 lastupdate = 2021-07-20
-class = "Tweaks"
+class = "Kits"
 url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 description = "Rogue Rebalancing"
 archive = "rr-493.zip"
@@ -2846,7 +2853,7 @@ archive = "Win-QuestPack-v34.zip"
     exclusive = ["potn33.itm", "potn38.itm", "spwi106.spl", "spwi815.spl"]
 
 [d0tweak]
-lastupdate = 1970-01-01
+lastupdate = 2019-06-19
 class = "Tweaks"
 url = "github:Pocket-Plane-Group/D0Tweak"
 description = "Ding0 Tweak Pack"
@@ -3084,6 +3091,13 @@ class = "NPCs"
 url = "github:SpellholdStudios/Beyond_the_Law"
 description = "Beyond the Law"
 
+[klatu]
+lastupdate = 2016-10-07
+class = "Tweaks"
+url = "https://www.dropbox.com/s/7755znu08x690sa/klatu_Tweaks_and_Fixes_1.7.7z?dl=1"
+description = "klatu Tweaks and Fixes"
+archive = "klatu_Tweaks_and_Fixes_1.7.7z"
+
 [tsujatha]
 lastupdate = 1970-01-01
 class = "NPCs"
@@ -3304,8 +3318,8 @@ url = "github:subtledoctor/TomeAndBlood"
 description = "Tome and Blood"
 archive = "tomeandblood.tar.gz"
 
-    [tomeandblood.properties.16]
-    exclusive = ["spwi110.spl"]
+    [tomeandblood.properties.""]
+    after = ["spell_rev"]
 
     [tomeandblood.properties.66]
     exclusive = ["scrl77.itm"]
@@ -3319,14 +3333,14 @@ archive = "tomeandblood.tar.gz"
     [tomeandblood.properties.48]
     exclusive = ["armored_spellcasting"]
 
-    [tomeandblood.properties.""]
-    after = ["spell_rev"]
-
     [tomeandblood.properties.69]
     exclusive = ["familiar_penalty"]
 
     [tomeandblood.properties.11]
     exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
+
+    [tomeandblood.properties.16]
+    exclusive = ["spwi110.spl"]
 
     [tomeandblood.properties.14]
     exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
@@ -3544,11 +3558,15 @@ description = "Difficulty and Tweak mod"
 archive = "Diff_Tweak.zip"
 
 [fnp_multiclass]
-lastupdate = 1970-01-01
-class = "Kits"
+lastupdate = 2022-06-21
+class = "Tweaks"
 url = "manual"
 description = "Faith and Powers Multiclass Clerics"
 archive = "manual"
+
+    [fnp_multiclass.properties.""]
+    after = ["deities-of-faerun", "divine_remix", "fnp", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood"]
+    before = ["cdtweaks", "scales_of_balance", "stratagems"]
 
 [sellswords]
 lastupdate = 1970-01-01

@@ -22,7 +22,7 @@ module ModTool
 #  + list-languages
 #  + list-components
 #  + list-readme [MODDED]
-#  - list-actions [MODDED]
+#  + list-actions [MODDED]
 # + remove useless mod archive field
 #   (but preserve on importation from bws)
 # + import_moddb should try to guess the date if possible
@@ -39,6 +39,10 @@ module ModTool
 #  + exclusive: owns a symbol
 # - complete dependency & conflict checking
 # - try and guess readme for individual components (IMPOSSIBLE)
+# - hardcode readme if needed
+# fnp https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/
+# klatu http://www.shsforums.net/topic/57873-mod-klatu-tweaks-and-fixes/
+# tnt https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs
 using Printf
 using Dates
 using TOML
@@ -144,7 +148,7 @@ mutable struct Mod#««
 	class::String # install rank
 	lastupdate::Date
 	properties::Dict{String,ComponentProperties}
-	# data recomputed at runtime:
+	# this data exists only once the mod is extracted:
 	tp2::String
 	languages::Vector{String}
 	sel_lang::Int # starts at zero (WeiDU indexing)
@@ -278,9 +282,9 @@ function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 	end
 	true
 end#»»
-function extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
+function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
+	lowercase(mod.archive) == "manual" && return true
 	download(mod; down=DOWN) || return false
-	mod.archive == "Manual" && return true
 	archive = joinpath(down, mod.archive)
 	isdir(joinpath(mods, mod.id)) || mktempdir(TEMP) do(dir); cd(dir) do
 		printlog("extract $archive to $dir")
@@ -315,7 +319,7 @@ function extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 # 		end
 		# SPECIAL
 		# - patch SCS to have inquisitor dispel at (level+5) instead of (1.5*level)
-		@assert isdir(mod.id)
+		@assert isdir(joinpath(mods, mod.id))
 		mod.id == "stratagems" &&
 			run(`sed -i -e 's,(3\*ability_true_level)/2,(ability_true_level+5),' stratagems/spell/inquisitor.tpa`)
 		#  - d0questpack has a badly named directory
@@ -348,7 +352,6 @@ function status(mod::Mod; selection=global_selection, selected=false)#««
 		Dates.format(mod.lastupdate, "yyyy-mm"),
 		mod.id, mod.description)
 end#»»
-
 # TP2 data extraction ««1
 function lang_score(langname, pref_lang=PREF_LANG)#««
 	for (i, pref) in pairs(pref_lang)
@@ -356,10 +359,11 @@ function lang_score(langname, pref_lang=PREF_LANG)#««
 	end
 	return typemax(Int)
 end#»»
-function tp2data!(m)#««
-	extract(m) || return nothing
+function extract(m)#««
+	do_extract(m) || return false
 	id = m.id; m.tp2 = ""
-	for path in ("$id.tp2", "$id/$id.tp2", "$id/setup-$id.tp2", "setup-$id.tp2")
+	for path in ("$id.tp2", "$id/$id.tp2", "$id/setup-$id.tp2", "setup-$id.tp2",
+		"setup-$id.exe", "$id/setup-$id.exe")
 		ispath(joinpath(MODS, path)) && (m.tp2 = path; break)
 	end
 	isempty(m.tp2) && error("no TP2 file found")
@@ -397,10 +401,10 @@ function tp2data!(m)#««
 				readmes[argmin([ lang_score(f, PREF_LANG) for f in readmes ])]))
 	end#»»
 	end # cd(mods)
+	true
 end#»»
 function readme(mod::Mod)#««
 	extract(mod) || return false
-	tp2data!(mod)
 	printlog("showing readme file '$(mod.readme)'")
 	if endswith(mod.readme, r".html?"i)
 		if occursin('#', mod.readme)
@@ -424,10 +428,7 @@ function readme(mod::Mod)#««
 		error("unknown file format: $(mod.readme)")
 	end
 end#»»
-function tp2(mod::Mod)#««
-	extract(mod) || return
-	run(`less $MODS/$(modtp2file(mod))`)
-end#»»
+@inline tp2(mod::Mod) = extract(mod) && run(`view $(joinpath(MODS, mod.tp2))`)
 
 # Selection files handling««1
 function read_selection_line(line)#««
@@ -512,7 +513,7 @@ end#»»
 # @inline componentstatus(db, tp2file, c) = (c ∈ modstatus(db, tp2file))
 function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 		less=true)
-	tp2data!(mod)
+	extract(mod) || return
 	g = modgame(mod); gamedir = gamedirs[g]
 	ins = modstatus(mod.tp2, gamedir)
 	sel = get!(selection, mod.id, Int[])
@@ -527,7 +528,7 @@ function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 end#»»
 function components!(mod::Mod; selection=global_selection,#««
 		gamedir = GAMEDIR[modgame(mod)], cols=80)
-	tp2data!(mod)
+	extract(mod) || return
 	ins = modstatus(mod.tp2, gamedir)
 	sel = get!(selection, mod.id, Int[])
 	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
@@ -549,7 +550,7 @@ function components!(mod::Mod; selection=global_selection,#««
 	sy match modSel /^s[12] .*$/|hi link modSel DiffChange|
 	sy match modGrp /^# .*$/|hi link modGrp ModeMsg|
 	sy match modSub /^## .*$/|hi link modSub Title|
-	nmap <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>' $filename`)
+	nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>' $filename`)
 	newsel = String[]
 	open(filename, "r") do io; for line in eachline(io)
 		m = match(r"^([s])[.12]\s+(\d+)\s+", line); isnothing(m) && continue
@@ -648,7 +649,8 @@ function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
 end#»»
 function install(mod; simulate=false, uninstall=false, #««
 		selection=global_selection, gamedirs=GAMEDIR)
-	id = mod.id; tp2data!(mod)
+	extract(mod) || return
+	id = mod.id
 	selected = uninstall ? Int[] : get!(selection, id, Int[])
 
 	gamedir = gamedirs[modgame(mod)]
@@ -779,7 +781,6 @@ end#»»
 # Generating mod DB ««1
 function mkmod(id, url, description, class, archive = "")#««
 	m = match(r"github.com/(([^/])*/([^/]*))", url)
-	id == "klatu" && (id = "tnt")
 	if m ≠ nothing
 		url = "github:"*m.captures[1]
 		archive = ""
@@ -803,7 +804,6 @@ function mkmod(id, url, description, class, archive = "")#««
 	"bolsa" => "github:SpellholdStudios/Bolsa",
 	"fadingpromises" => "github:SpellholdStudios/Fading_Promises",
 	"lucy" => "github:SpellholdStudios/Lucy_the_Wyvern",
-	"tnt" => "github:BGforgeNet/bg2-tweaks-and-tricks",
 	"bg1npcs" => "github:Gibberlings3/BG1NPC",
 	"underrep" => "github:Pocket-Plane-Group/Under-Respresented_Items", #SIC!
 	"banterpack" => "github:Pocket-Plane-Group/Banter_Pack",
@@ -876,7 +876,7 @@ function mkmod(id, url, description, class, archive = "")#««
 end#»»
 function mod_exclusives(mod::Mod; except = String[])#««
 	g = modgame(mod); gamedir = GAMEDIR[g]
-	tp2data!(mod)
+	extract(mod)
 	ret = Pair{Int, Vector{String}}[]
 	cd(MODS) do
 		for c in mod.components
@@ -943,6 +943,8 @@ function complete_db!(moddb) #««
 	mkmod("iwditempack", "github:GwendolyneFreddy/IWD_Item_Pack", "IWD item pack", "Items"),
 	mkmod("aurora", "github:Sampsca/Auroras-Shoes-and-Boots", "Aurora's shoes and boots", "Items"),
 	mkmod("monasticorders", "github:aquadrizzt/MonasticOrders", "Monastic Orders", "Kits"),
+	mkmod("deities-of-faerun", "github:Raduziel/Deities-Of-Faerun", "Deities of Faerun", "Kits"),
+	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweaks"),
 	# Weasel mods ««3
 	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPCs"),
 	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPCs"),
@@ -1175,9 +1177,13 @@ function complete_db!(moddb) #««
 	)#»»
 	setmod!("faiths_and_powers",#««
 		"" => (after = ["divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
-			before = ["might_and_guile", "scales_of_balance", "stratagems", "cdtweaks"],),
+			before = ["fnp_multiclass", "might_and_guile", "scales_of_balance", "stratagems", "cdtweaks"],),
 		# TODO
-	)#»»
+	; class="Kits")#»»
+	setmod!("fnp_multiclass",#««
+		"" => (after = ["fnp", "divine_remix", "deities-of-faerun", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
+			before = ["scales_of_balance", "stratagems", "cdtweaks"],),
+	; class="Tweaks")#»»
 	setmod!("eet_tweaks",#««
 		2000 => (exclusive = "xplevel.2da",),
 		2001 => (exclusive = "xplevel.2da",),
@@ -1261,11 +1267,11 @@ function complete_db!(moddb) #««
 		9 => (exclusive = ["potn36.itm", "potn39.itm"],),
 		10 => (exclusive = ["potn36.itm", "potn39.itm"],),
 		12 => (exclusive = ["c6arkan.cre", "c6arkan3.cre", "c6kach.cre", "c6yean.cre", "c6arkan.bcs", "stguard1.cre", "mook02.cre", "arkanisg.cre", "mookft01.cre", "palern.cre", "ar0300.bcs", "stguard1.bcs", "aran.cre", "gaelan.cre", "mook.cre", "booter.cre"],),
-	)#»»
+	; class="Kits")#»»
 	setmod!("scales_of_balance",#««
 		"" => (conflicts = ["kit_rev", "kitpack",],
 			after = ["cdtweaks", "item_rev", "kitpack", "tomeandblood",
-				"might_and_guile"],),
+				"might_and_guile", "atweaks"],),
 		100 => (exclusive = ["dexmod.2da", "skilldex.2da"],),
 		101 => (exclusive = "masterwork_weapons",),
 		122 => (conflicts = ["rr"],

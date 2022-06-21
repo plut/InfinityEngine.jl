@@ -39,9 +39,7 @@ module ModTool
 #  + exclusive: owns a symbol
 # - complete dependency & conflict checking
 # - try and guess readme for individual components (IMPOSSIBLE)
-# - hardcode readme if needed
-# fnp https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/
-# tnt https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs
+# - organize (some) components in a tree-like structure and edit choices
 using Printf
 using Dates
 using TOML
@@ -116,6 +114,7 @@ struct ComponentProperties#««
 	conflicts::Vector{String}
 	depends::Vector{String}
 	exclusive::Vector{String}
+	position::Vector{String} # e.g. ["Weapons&Armor", "Proficiencies"]
 end#»»
 # we must not overqualify the type of `d`; passing `Dict()` is fine:
 @inline ComponentProperties(d::Dict) = ComponentProperties((get(d, s, String[])
@@ -541,9 +540,9 @@ function components!(mod::Mod; selection=global_selection,#««
 	open(filename, "w") do io
 		g = ""; h = ""
 		for c in mod.components
-			g ≠ c.group && (g = c.group; println(io, "# ", g, "««1"))
+			g ≠ c.group && (g = c.group; println(io, "# ", g, "«"*"«1"))
 			h ≠ c.subgroup &&
-				(h = c.subgroup; println(io, "## ", h, isempty(h) ? "»»2" : "««2"))
+				(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
 			s = c.id ∈ sel ? 's' : '.'
 			i = isempty(ins) ? '.' : modgame(mod) == :bg1 ? '1' : '2'
 			@printf(io, "%c%c % 4s %s\n", s, i, c.id, description(c))

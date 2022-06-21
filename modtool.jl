@@ -41,7 +41,6 @@ module ModTool
 # - try and guess readme for individual components (IMPOSSIBLE)
 # - hardcode readme if needed
 # fnp https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/
-# klatu http://www.shsforums.net/topic/57873-mod-klatu-tweaks-and-fixes/
 # tnt https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs
 using Printf
 using Dates
@@ -149,10 +148,10 @@ mutable struct Mod#««
 	lastupdate::Date
 	properties::Dict{String,ComponentProperties}
 	# this data exists only once the mod is extracted:
+	readme::String # can exceptionally be hardcoded
 	tp2::String
 	languages::Vector{String}
 	sel_lang::Int # starts at zero (WeiDU indexing)
-	readme::String
 	components::Vector{ModComponent}
 	# components["1"] = Dict(
 	# 	"depends" => [ dependencies...],
@@ -161,10 +160,10 @@ mutable struct Mod#««
 	#	)
 
 	@inline Mod(;id, url, description, class, archive="", lastupdate=1970,
-		properties = Dict(), tp2 = "", languages = String[]) = begin
+		properties = Dict(), tp2 = "", languages = String[], readme="") = begin
 		new(lowercase(id), url, description, archive, class, Date(lastupdate),
-			Dict(k=>ComponentProperties(v) for (k,v) in pairs(properties)), tp2,
-			languages, 0, "", [])
+			Dict(k=>ComponentProperties(v) for (k,v) in pairs(properties)),
+			readme, tp2, languages, 0, [])
 		end
 end#»»
 @inline sortkey(a::Mod) = (modclass(a.class), a.lastupdate)
@@ -185,6 +184,7 @@ function read_moddb(io::IO)#««
 			archive=get(d, "archive", ""),
 			lastupdate=get(d, "lastupdate", "1970"),
 			properties=get(d, "properties", Dict()),
+			readme=get(d, "readme", "")
 		) for (id, d) in dict ]
 end#»»
 function write_moddb(io::IO; moddb=global_moddb)#««
@@ -192,6 +192,7 @@ function write_moddb(io::IO; moddb=global_moddb)#««
 		d = Dict("url" => m.url, "lastupdate" => m.lastupdate,
 		"description" => m.description, "class" => m.class)
 		isempty(m.archive) || (d["archive"] = m.archive)
+		startswith(m.readme, "https://") && (d["readme"] = m.readme)
 		isempty(m.properties) ||
 			(d["properties"] = Dict(k=>Dict(v) for (k,v) in m.properties))
 		d
@@ -319,7 +320,7 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 # 		end
 		# SPECIAL
 		# - patch SCS to have inquisitor dispel at (level+5) instead of (1.5*level)
-		@assert isdir(joinpath(mods, mod.id))
+		@assert isdir(mod.id)
 		mod.id == "stratagems" &&
 			run(`sed -i -e 's,(3\*ability_true_level)/2,(ability_true_level+5),' stratagems/spell/inquisitor.tpa`)
 		#  - d0questpack has a badly named directory
@@ -333,10 +334,9 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 end#»»
 function lastupdate!(mod::Mod; mods=MODS)
 	# we keep the date of the newest .tp2, .tpa, .tph file:
-	f = "setup-$(mod.id).tp2"; t = isfile(f) ? mtime(f) : 0
 	d = Date(unix2datetime(maximum(mtime(joinpath(root, f))
 		for (root,_,files) in walkdir(joinpath(mods, mod.id))
-		for f in files if endswith(f, r"\.tp[2ah]"i); init=t)))
+		for f in files if endswith(f, r"\.tp[2ah]"i); init=0)))
 	d == mod.lastupdate && return false
 	mod.lastupdate = d
 	printlog("$(mod.id): recomputed last update to $d")
@@ -387,11 +387,12 @@ function extract(m)#««
 		m.components = [ ModComponent(x["number"], x["name"], 
 			get(x["group"], 1, ""), get(x, "subgroup", "")) for x in v ]
 	end#»»
-	# readme««
-	m.readme = ""
-	for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-readme $(m.tp2) $(m.sel_lang)`)
-		x = match(r"^R (.*)", line); isnothing(x) && continue
-		isfile(x.captures[1]) && (m.readme = joinpath(MODS, x.captures[1]); break)
+	# readme (if no online readme provided)««
+	if isempty(m.readme)
+		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-readme $(m.tp2) $(m.sel_lang)`)
+			x = match(r"^R (.*)", line); isnothing(x) && continue
+			isfile(x.captures[1]) && (m.readme = joinpath(MODS, x.captures[1]); break)
+		end
 	end
 	if isempty(m.readme) # try and guess...
 		readmes = [ f for f in readdir(joinpath(MODS, id))
@@ -404,6 +405,11 @@ function extract(m)#««
 	true
 end#»»
 function readme(mod::Mod)#««
+	if startswith(mod.readme, "https://")
+		printlog("showing online documentation '$(mod.readme)'")
+		run(`w3m $(mod.readme)`)
+		return
+	end
 	extract(mod) || return false
 	printlog("showing readme file '$(mod.readme)'")
 	if endswith(mod.readme, r".html?"i)
@@ -1405,6 +1411,8 @@ function complete_db!(moddb) #««
 		setmod!("eet_end"; class="Final")
 # 		setmod!("might_and_guile"; class="Tweaks")
 		# »»
+		findmod("faiths_and_powers"; moddb).readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
+		findmod("tnt"; moddb).readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
 		# update `lastupdate` field««
 		for mod in moddb
 			isdir(joinpath(MODS, mod.id)) && lastupdate!(mod)

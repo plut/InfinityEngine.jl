@@ -138,7 +138,7 @@ description = "Warlock"
 archive = "c0warlock.tar.gz"
 
 [kelsey]
-lastupdate = 1970-01-01
+lastupdate = 2020-01-12
 class = "NPCs"
 url = "github:Pocket-Plane-Group/Kelsey"
 description = "Kelsey NPC"
@@ -1371,7 +1371,7 @@ description = "Calin NPC"
 archive = "calin-v1.5.zip"
 
 [iwdification]
-lastupdate = 1970-01-01
+lastupdate = 2022-06-21
 class = "Tweaks"
 url = "github:Gibberlings3/iwdification"
 description = "IWDification"
@@ -1781,6 +1781,7 @@ archive = "wheels.tar.gz"
 [faiths_and_powers]
 lastupdate = 2022-06-21
 class = "Kits"
+readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
 url = "github:UnearthedArcana/Faiths_and_Powers"
 description = "Faiths and Powers"
 archive = "faiths_and_powers.tar.gz"
@@ -2037,11 +2038,11 @@ archive = "Tactics2_for_EE.zip"
     [eetact2.properties.200]
     exclusive = ["ar9391.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "tsmaepet.cre"]
 
-    [eetact2.properties.232]
-    exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
-
     [eetact2.properties.230]
     exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
+
+    [eetact2.properties.232]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
 
 [bgeearwe]
 lastupdate = 1970-01-01
@@ -2208,9 +2209,8 @@ description = "Improved Archer Kit"
 [a7-golemconstruction]
 lastupdate = 2020-09-13
 class = "Tweaks"
-url = "https://github.com/Argent77/A7-GolemConstruction/releases/download/v6.2/lin-A7-GolemConstruction-v6.2.zip"
+url = "github:Argent77/A7-GolemConstruction"
 description = "Golem Construction for Spellcasters"
-archive = "lin-A7-GolemConstruction-v6.2.zip"
 
 [d5_random_tweaks]
 lastupdate = 2022-06-21
@@ -2634,6 +2634,7 @@ archive = "ArcaneTreasury.zip"
 [tnt]
 lastupdate = 2022-03-27
 class = "Tweaks"
+readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
 url = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/releases/download/v8.19/tweaks-and-tricks-v8.19.zip"
 description = "Tweaks and Tricks"
 archive = "tweaks-and-tricks-v8.19.zip"
@@ -3318,8 +3319,8 @@ url = "github:subtledoctor/TomeAndBlood"
 description = "Tome and Blood"
 archive = "tomeandblood.tar.gz"
 
-    [tomeandblood.properties.""]
-    after = ["spell_rev"]
+    [tomeandblood.properties.16]
+    exclusive = ["spwi110.spl"]
 
     [tomeandblood.properties.66]
     exclusive = ["scrl77.itm"]
@@ -3333,14 +3334,14 @@ archive = "tomeandblood.tar.gz"
     [tomeandblood.properties.48]
     exclusive = ["armored_spellcasting"]
 
+    [tomeandblood.properties.""]
+    after = ["spell_rev"]
+
     [tomeandblood.properties.69]
     exclusive = ["familiar_penalty"]
 
     [tomeandblood.properties.11]
     exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
-
-    [tomeandblood.properties.16]
-    exclusive = ["spwi110.spl"]
 
     [tomeandblood.properties.14]
     exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
@@ -3453,7 +3454,7 @@ url = "github:cmorganbg/Aran-Whitehand"
 description = "Aran Whitehand NPC"
 
 [epicthieving]
-lastupdate = 1970-01-01
+lastupdate = 2022-06-21
 class = "Tweaks"
 url = "github:OlvynChuru/Epic-Thieving"
 description = "Epic Thieving"

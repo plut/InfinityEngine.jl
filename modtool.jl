@@ -114,12 +114,12 @@ struct ComponentProperties#««
 	conflicts::Vector{String}
 	depends::Vector{String}
 	exclusive::Vector{String}
-	position::Vector{String} # e.g. ["Weapons&Armor", "Proficiencies"]
+	path::Vector{String} # e.g. ["Weapons&Armor", "Proficiencies"]
 end#»»
 # we must not overqualify the type of `d`; passing `Dict()` is fine:
 @inline ComponentProperties(d::Dict) = ComponentProperties((get(d, s, String[])
 	for s in string.(fieldnames(ComponentProperties)))...)
-@inline ComponentProperties() = ComponentProperties([], [], [], [], [])
+@inline ComponentProperties() = ComponentProperties(Dict())
 @inline Base.Dict(prop::ComponentProperties) =
 	Dict(string(fieldname(ComponentProperties, i)) => getfield(prop, i)
 		for i in 1:fieldcount(ComponentProperties)
@@ -206,6 +206,9 @@ end#»»
 	for mod in moddb; mod.id == lowercase(string(id)) && return mod; end
 @inline findmod(pattern::Regex; moddb = global_moddb) =
 	[ mod.id for mod in moddb if occursin(pattern, mod.id) ]
+@inline findcomponent(mod, k) =
+	mod.components[findfirst(c->c.id == lowercase(string(k)), mod.components)]
+
 
 # Pre-TP2 functions: download, extract, status ««1
 function updateurl(mod::Mod)#««
@@ -521,16 +524,25 @@ function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 	extract(mod) || return
 	g = modgame(mod); gamedir = gamedirs[g]
 	ins = modstatus(mod.tp2, gamedir)
-	sel = get!(selection, mod.id, Int[])
+	sel = get!(selection, mod.id, String[])
 	@printf("\e[1m%-30s %s\e[m\n", mod.id, mod.description)
 	open(less ? `view - ` : `cat`, "w", stdout) do io
 	for c in mod.components
 		s = c.id ∈ sel ? 's' : '.'
-		i = isempty(ins) ? '.' : g == :bg1 ? '1' : '2'
+		i = c.id ∉ ins ? '.' : g == :bg1 ? '1' : '2'
 		@printf(io, "%c%c % 4s %s\n", s, i, c.id, description(c))
 	end
 	end
 end#»»
+@inline component_editor(filename) =
+	run(`vim -c 'se ft= fdm=marker fmr=««,»»|
+	sy match modAdd /^s\. .*$/|hi link modAdd DiffAdd|
+	sy match modDel /^\.[12] .*$/|hi link modDel DiffDel|
+	sy match modSel /^s[12] .*$/|hi link modSel DiffChange|
+	sy match modGrp /^# .*$/|hi link modGrp ModeMsg|
+	sy match modSub /^## .*$/|hi link modSub Title|
+	nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>'
+	$filename`)
 function components!(mod::Mod; selection=global_selection,#««
 		gamedir = GAMEDIR[modgame(mod)], cols=80)
 	extract(mod) || return
@@ -549,13 +561,7 @@ function components!(mod::Mod; selection=global_selection,#««
 		end
 	end
 	# vim will be better than whiptail: we have syntax highlight + folding
-	run(`vim -c 'se ft= fdm=marker fmr=««,»»|
-	sy match modAdd /^s\. .*$/|hi link modAdd DiffAdd|
-	sy match modDel /^\.[12] .*$/|hi link modDel DiffDel|
-	sy match modSel /^s[12] .*$/|hi link modSel DiffChange|
-	sy match modGrp /^# .*$/|hi link modGrp ModeMsg|
-	sy match modSub /^## .*$/|hi link modSub Title|
-	nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>' $filename`)
+	component_editor(filename)
 	newsel = String[]
 	open(filename, "r") do io; for line in eachline(io)
 		m = match(r"^([s])[.12]\s+(\d+)\s+", line); isnothing(m) && continue
@@ -720,6 +726,46 @@ list2 = (list1..., :readme, :tp2, :components!, :components, :status)
 for f in list2; @eval begin
 	@inline $f(id::Union{String,Symbol}; kwargs...) = $f(findmod(id); kwargs...)
 end end
+
+# Configuration editor
+struct ComponentTree
+	alternatives::Vector{NTuple{2,String}}
+	children::Dict{String,ComponentTree}
+	@inline ComponentTree() = new([], Dict())
+end
+findbranch(root::ComponentTree, path) = isempty(path) ? root :
+	findbranch(get!(root.children, first(path), ComponentTree()), path[2:end])
+function build_tree(;moddb=global_moddb)#««
+	root = ComponentTree()
+	for m in moddb, (k, v) in m.properties
+		isempty(v.path) && continue
+		push!(findbranch(root, v.path).alternatives, (m.id, k))
+	end
+	root
+end#»»
+function display_tree(io::IO, root, level=1;#««
+		moddb=global_moddb, selection=global_selection, gamedirs=GAMEDIR)
+	for (id, k) in root.alternatives
+		m = findmod(id; moddb); extract(m)
+		c = findcomponent(m, k); t = description(c)
+		gamedir = gamedirs[modgame(m)]; ins = modstatus(m.tp2, gamedir)
+		sel = get!(selection, m.id, String[])
+		s = c.id ∈ sel ? 's' : '.'
+		i = c.id ∉ ins ? '.' : modgame(m) == :bg1 ? '1' : '2'
+		println(io, "$s$i `$id:$k` $t")
+	end
+	for (s, c) in sort(collect(root.children); by=first)
+		println(io, '#'^level, ' ', s, " «",'«', level)
+		display_tree(io, c, level+1; selection)
+	end
+end#»»
+function config(;selection=global_selection,moddb=global_moddb)
+	f = joinpath(TEMP, "config")
+	open(f, "w") do io
+		display_tree(io, build_tree(;moddb); selection, moddb)
+	end
+	component_editor(f)
+end
 
 # BWS mod db handling ««1
 function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
@@ -968,7 +1014,8 @@ function complete_db!(moddb) #««
 		for (i, kv) in list
 			p = get!(m.properties, string(i), ComponentProperties())
 			for (k, v) in pairs(kv)
-				push!(getfield(p, Symbol(k)), unique(sort([v;]))...)
+				k != :path && (v = unique!(sort!([v;])))
+				push!(getfield(p, Symbol(k)), v...)
 			end
 		end
 		for (k, v) in kwargs
@@ -1011,9 +1058,12 @@ function complete_db!(moddb) #««
 		1120 => (exclusive = "store_stacks",),
 		1130 => (exclusive = "reputation_reset",),
 		1150 => (exclusive = ["wwbearwe.cre", "wwbear.cre", "sppr604.spl", "spcl643.spl", "spcl644.spl", "anisum04.2da", "anisum05.2da"],),
-		2040 => (exclusive = "universal_clubs",),
-		2060 => (exclusive = "universal_fighting_styles",),
-		2080 => (exclusive = "lunumab.2da",),
+		2040 => (exclusive = "universal_clubs",
+			path=["Weapons", "Proficiencies"]),
+		2060 => (exclusive = "universal_fighting_styles",
+			path=["Weapons", "Figthing styles"]),
+		2080 => (exclusive = "lunumab.2da",
+			path=["Tables", "HLA"]),
 		2090 => (exclusive = ["xplevel.2da", "hpclass.2da",],),
 		2091 => (exclusive = "xplevel.2da",),
 		2092 => (exclusive = "xplevel.2da",),

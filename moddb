@@ -1078,8 +1078,9 @@ description = "Fishing for Trouble"
 [cdtweaks]
 lastupdate = 2022-06-19
 class = "Tweaks"
-url = "github:Gibberlings3/Tweaks-Anthology"
+url = "https://github.com/Gibberlings3/Tweaks-Anthology/releases/download/v15/lin-cdtweaks-v15.tar.gz"
 description = "Tweaks Anthology"
+archive = "lin-cdtweaks-v15.tar.gz"
 
     [cdtweaks.properties.1040]
     exclusive = ["amncen1.cre", "amng1.cre"]
@@ -1137,6 +1138,7 @@ description = "Tweaks Anthology"
 
     [cdtweaks.properties.2040]
     exclusive = ["universal_clubs"]
+    path = ["Weapons", "Proficiencies"]
 
     [cdtweaks.properties.2092]
     exclusive = ["xplevel.2da"]
@@ -1218,6 +1220,7 @@ description = "Tweaks Anthology"
 
     [cdtweaks.properties.2080]
     exclusive = ["lunumab.2da"]
+    path = ["Tables", "HLA"]
 
     [cdtweaks.properties.2261]
     exclusive = ["mxsplwiz.2da"]
@@ -1266,6 +1269,7 @@ description = "Tweaks Anthology"
 
     [cdtweaks.properties.2060]
     exclusive = ["universal_fighting_styles"]
+    path = ["Weapons", "Figthing styles"]
 
     [cdtweaks.properties.2240]
     exclusive = ["thac0.2da"]
@@ -2635,9 +2639,8 @@ archive = "ArcaneTreasury.zip"
 lastupdate = 2022-03-27
 class = "Tweaks"
 readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
-url = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/releases/download/v8.19/tweaks-and-tricks-v8.19.zip"
+url = "github:BGforgeNet/bg2-tweaks-and-tricks"
 description = "Tweaks and Tricks"
-archive = "tweaks-and-tricks-v8.19.zip"
 
     [tnt.properties.51]
     exclusive = ["spwi607.spl"]

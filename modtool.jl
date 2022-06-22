@@ -548,11 +548,10 @@ function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 		less=true)
 	extract(mod) || return
 	g = modgame(mod); gamedir = gamedirs[g]
-	ins = modstatus(mod.tp2, gamedir)
-	sel = get!(selection, mod.id, String[])
+	installed = weidu_status(gamedirs...)
 	@printf("\e[1m%-30s %s\e[m\n", mod.id, mod.description)
 	open(less ? `view - ` : `cat`, "w", stdout) do io
-	for c in modcomponents(mod); printcomp(io, mod, c; sel, ins); end
+	for c in modcomponents(mod); printcomp(io, mod, c; selection, installed); end
 	end
 end#»»
 function components!(mod::Mod; selection=global_selection,#««
@@ -576,7 +575,7 @@ function components!(mod::Mod; selection=global_selection,#««
 	component_editor(filename)
 	newsel = String[]
 	open(filename, "r") do io; for line in eachline(io)
-		m = match(r"^([s])[.12]\s+(\d+)\s+", line); isnothing(m) && continue
+		m = match(r"^([s])[.12][.p]\s+(\d+)\s+", line); isnothing(m) && continue
 		push!(newsel, m.captures[2])
 	end end
 	rm(filename)
@@ -777,6 +776,17 @@ function config(;selection=global_selection,moddb=global_moddb)#««
 	f = joinpath(TEMP, "config")
 	open(f, "w") do io
 		display_tree(io, build_tree(;moddb); selection, moddb, installed, order)
+		lastid = ""
+		println(io, "# Individual, unsorted components «"*"«1")
+		for id in order
+			m = moddb[id]
+			for c in modcomponents(m)
+				isempty(c.path) || continue
+				id ≠ lastid && (extract(m); lastid=id; println(io, "## $id «"*"«2"))
+				printcomp(io, m, c; selection, installed)
+			end
+		end
+				
 	end
 	component_editor(f)
 end#»»
@@ -1043,47 +1053,64 @@ function complete_db!(moddb) #««
 		"" => (after = ["rr", "stratagems"],),
 		100 => (path = ["Skills", "Infravision"],),
 		101 => (path = ["Creatures"],),
-		102 => (exclusive="shammr.itm", path = ["Items", "Magic weapons"],),
-# 		102 => (exclusive = "shammr.itm",), # spiritual hammer
-# 		103 => (exclusive = ["spwi406.spl", "spwi602.spl"],), # globes of invul.?
-# 		104 => (exclusive = "spwi105.spl",), # colored spray
-# 		105 => (exclusive = "spdimndr.bam",), # dim. door animation
-# 		110 => (exclusive = "arrow_damage",),
-# 		125 => (exclusive = "spcl311.spl",), # animal empathy
-# 		150 => (exclusive = "smarter_demons",),
-# 		152 => (exclusive = "smarter_demons",),
-# 		153 => (exclusive = "smarter_demons",),
-# 		186 => (exclusive = "sppr410.spl",), # call woodland beings
-# 		205 => (exclusive = "simulacrum_items",),
-# 		211 => (exclusive = "sppr409.spl",), # death ward
-# 		212 => (exclusive = "sppr209.spl",), # know alignment
-# 		261 => (exclusive = "xpbonus.2da",), # trap XP
+		102 => (exclusive="shammr.itm", path = ["Items", "Summoned weapons"],),
 # 		301 => (exclusive = "npchan.itm",), # Corthala armor
 # 		302 => (exclusive = "wa2robe.itm",), # Vecna robe
 # 		500 => (exclusive = "container_capacity",),
 # 		502 => (exclusive = "container_capacity",),
 # 		 101 => (exclusive = ["fl#idim3.eff"],)
- 103 => (path = ["Spells", "Abjuration"],),
+ 103 => (exclusive=["spwi406.spl", "spwi602.spl"], path = ["Spells", "Abjuration"],),
  104 => (exclusive = ["spwi105.spl", "spin937.spl"],path=["Spells", "Alteration"],),
  105 => (exclusive = ["spwi402.spl"], path=["Spells", "Alteration"],),
+ 110 => (path = ["Items"],),
+ 115 => (path = ["Skills", "Scribing"],),
+ 117 => (path = ["Skills", "Scribing"],),
  120 => (path = ["Classes", "Paladin"],),
- 125 => (path = ["Classes", "Ranger"],),
+ 125 => (path = ["Skills", "Charm animal"],),
  130 => (path = ["Tables", "Races"],),
  135 => (path = ["Tables", "Races"],),
+ 140 => (path = ["Tables", "Races"],),
+ 150 => (path = ["Creatures", "Fiends"],),
+ 152 => (path = ["Creatures", "Fiends"],),
+ 153 => (path = ["Creatures", "Fiends"],),
+ 155 => (path = ["Creatures", "Fiends"],),
+ 156 => (path = ["Creatures", "Fiends"],),
+ 160 => (path = ["Creatures", "Undead"],),
+ 180 => (path = ["Creatures", "Fiends"],),
+ 185 => (path = ["Creatures"],),
+ 186 => (exclusive = "sppr410.spl", path = ["Spells", "Conjuration"],),
+ 190 => (path = ["Creatures", "Elementals"],),
+ 191 => (path = ["Creatures", "Elementals"],),
+ 200 => (path = ["Spells", "Abjuration"],),
+ 201 => (path = ["Classes", "Fighter"],),
  202 => (exclusive = ["spin101.spl", "spin104.spl", "spin102.spl", "spin105.spl", "spin106.spl"], path=["Skills", "Bhaalspawn"],),
  203 => (path = ["Skills", "Shapeshifting"],),
+ 204 => (path = ["Spells", "Illusion"],),
  205 => (path = ["Spells", "Illusion"],),
- 211 => (path = ["Spells", "Abjuration"],),
- 212 => (path = ["Spells", "Divination"],),
+ 210 => (path = ["Creatures"],),
+ 211 => (exclusive = "sppr409.spl", path = ["Spells", "Abjuration"],), # death ward
+ 212 => (exclusive = "sppr209.spl", path = ["Spells", "Divination"],), # know alignment
  213 => (path = ["Tables", "Saving throws"],),
+ 216 => (path = ["Classes", "Bard"],),
+ 217 => (path = ["Classes", "Bard"],),
+ 218 => (path = ["Skills", "Bhaalspawn"],),
+ 220 => (path = ["Classes", "Thief"],),
+ 230 => (path = ["Classes", "Bard"],),
+ 239 => (path = ["Classes", "Cleric"],),
+ 241 => (path = ["Skills", "Bhaalspawn"],),
  261 => (path = ["Tables", "Bonus XP"],),
  262 => (path = ["Tables", "Bonus XP"],),
- 300 => (exclusive = ["spdimndr.bam", "eff_m09.wav"],),
- 322 => (exclusive = ["spdimndr.bam", "eff_m09.wav"],),
- 323 => (exclusive = ["spwi402.spl"],),
- 324 => (exclusive = ["spdimndr.bam", "eff_m09.wav"],),
+ 300 => (exclusive = ["spdimndr.bam", "eff_m09.wav"], path = ["Cosmetic", "Spells"],),
+ 301 => (path = ["Items"],),
+ 302 => (path = ["Items"],),
+ 310 => (path = ["Cosmetic", "Sprites"],),
+ 322 => (exclusive = ["spdimndr.bam", "eff_m09.wav"], path = ["Cosmetic", "Spells"],),
+ 323 => (exclusive = ["spwi402.spl"], path = ["Cosmetic", "Spells"]),
+ 324 => (exclusive = ["spdimndr.bam", "eff_m09.wav"], path=["Cosmetic", "Spells"]),
  500 => (path = ["Items", "Containers"],),
  502 => (path = ["Items", "Containers"],),
+ 510 => (path = ["Items", "Stores"],),
+ 999 => (path = ["Cosmetic", "Icons"],),
 	)#»»
 	setmod!("cdtweaks",#««
 		"" => (after = ["tomeandblood", "bg1npc", "thecalling", "item_rev", "divine_remix"],),
@@ -1100,6 +1127,8 @@ function complete_db!(moddb) #««
 		110 => (path = ["Cosmetic", "Icons"],),
 		140 => (path = ["Cosmetic", "Sprites"],),
 		160 => (path = ["Cosmetic", "Sprites"],),
+		170 => (path = ["Cosmetic", "Icons"],),
+		171 => (path = ["Cosmetic", "Icons"],),
 		180 => (path = ["Items", "Containers"],),
 		181 => (path = ["Items", "Containers"],),
 		182 => (path = ["Items", "Containers"],),
@@ -1113,7 +1142,13 @@ function complete_db!(moddb) #««
 		3150 => (path = ["Cosmetic", "Sprites"],),
 		3151 => (path = ["Cosmetic", "Sprites"],),
 		2010 => (path = ["Cosmetic", "Portraits"],),
-		1040 => (exclusive = ["amncen1.cre", "amng1.cre" ],), #(Etc.) Amn guards
+		1010 => (path = ["NPC"],),
+		1020 => (path = ["NPC"],),
+		1030 => (path = ["Story", "BG1"],),
+		1035 => (path = ["Story", "BG1"],),
+		1036 => (path = ["Story", "BG1"],),
+		1040 => (exclusive = ["amncen1.cre", "amng1.cre" ], path=["Creatures"],), #(Etc.) Amn guards
+		1075 => (path = ["NPC"],),
 		1080 => (path = ["Items", "Containers"],),
 		1100 => (path = ["Cosmetic", "Maps"],),
 		1101 => (path = ["Cosmetic", "Maps"],),
@@ -1123,6 +1158,8 @@ function complete_db!(moddb) #««
 		1130 => (exclusive = "reputation_reset",),
 		1150 => (exclusive = ["wwbearwe.cre", "wwbear.cre", "sppr604.spl", "spcl643.spl", "spcl644.spl", "anisum04.2da", "anisum05.2da"],
 			path = ["Skills", "Shapeshifting"],),
+		1160 => (path = ["Story", "BG2", "Stronghold"],),
+		1161 => (path = ["Story", "BG2", "Stronghold"],),
 		1180 => (path = ["NPC", "Edwin"],),
 		1200 => (path = ["NPC", "Imoen"],),
 		1220 => (path = ["Items", "Upgrades"],),
@@ -1130,6 +1167,14 @@ function complete_db!(moddb) #««
 		1226 => (path = ["Items", "Upgrades"],),
 		1227 => (path = ["Items", "Upgrades"],),
 		1230 => (path = ["Items", "Upgrades"],),
+		1340 => (path = ["Story", "BG2", "Stronghold"],),
+		1341 => (path = ["Story", "BG2", "Stronghold"],),
+		1342 => (path = ["Story", "BG2", "Stronghold"],),
+		1343 => (path = ["Story", "BG2", "Stronghold"],),
+		1344 => (path = ["Story", "BG2", "Stronghold"],),
+		1345 => (path = ["Story", "BG2", "Stronghold"],),
+		1346 => (path = ["Story", "BG2", "Stronghold"],),
+		1347 => (path = ["Story", "BG2", "Stronghold"],),
 		2040 => (exclusive = "universal_clubs", path=["Fighting", "Proficiencies"]),
 		2060 => (exclusive = "universal_fighting_styles",
 			path=["Fighting", "Fighting styles"]),
@@ -1139,16 +1184,21 @@ function complete_db!(moddb) #««
 		2092 => (exclusive= "xplevel.2da", path=["Tables", "XP"]),
 		2100 => (exclusive = "armored_thieving", path=["Skills", "Thieving"],),
 		2120 => (exclusive = "armored_spellcasting", path=["Skills", "Casting"],),
-		2150 => (exclusive = "protection_items",),
-		2151 => (exclusive = "protection_items",),
-		2152 => (exclusive = "protection_items",),
+		2140 => (path=["Classes", "Restrictions"],),
+		2150 => (exclusive = "protection_items", path=["Items", "Protection"],),
+		2151 => (exclusive = "protection_items", path=["Items", "Protection"],),
+		2152 => (exclusive = "protection_items", path=["Items", "Protection"],),
 		2160 => (exclusive="weapprof.2da/types", path=["Fighting", "Proficiencies"]),
 		2161 => (exclusive="weapprof.2da/types", path=["Fighting", "Proficiencies"]),
 		2162 => (exclusive="weapprof.2da/types", path=["Fighting", "Proficiencies"]),
 		2163 => (exclusive="weapprof.2da/types", path=["Fighting", "Proficiencies"]),
 		2164 => (exclusive="weapprof.2da/types", path=["Fighting", "Proficiencies"]),
+		2170 => (path = ["Items", "Scrolls"],),
+		2200 => (path = ["Fighting", "Proficiencies"],),
 		2210 => (exclusive="wspecial.2da/speed", path=["Fighting", "Proficiencies"]),
 		2211 => (exclusive="wspecial.2da/speed", path=["Fighting", "Proficiencies"]),
+		2220 => (path = ["Items", "Summoned weapons"],),
+		2230 => (path = ["Items", "Magic weapons"],),
 		2240 => (exclusive = "thac0.2da", path=["Tables", "THAC0"]),
 		2250 => (exclusive = "mxsplsrc.2da", path=["Tables", "Spell slots"]),
 		2260 => (exclusive = "mxsplwiz.2da", path=["Tables", "Spell slots"]),
@@ -1172,25 +1222,44 @@ function complete_db!(moddb) #««
 		2311 => (exclusive = "spell_save_penalties",),
 		2312 => (exclusive = "spell_save_penalties",),
 		2340 => (exclusive = "summlimt.2da/celestial",),
-		2370 => (exclusive = "clsrcreq.2da",),
-		2372 => (exclusive = "clsrcreq.2da",),
+		2350 => (path = ["Classes", "Restrictions"],),
+		2351 => (path = ["Classes", "Restrictions"],),
+		2353 => (path = ["Classes", "Restrictions"],),
+		2357 => (path = ["Classes", "Restrictions"],),
+		2358 => (path = ["Classes", "Restrictions"],),
+		2360 => (path = ["Classes", "Restrictions"],),
+		2370 => (exclusive = "clsrcreq.2da", path=["Classes", "Restrictions"],),
+		2371 => (exclusive = "clsrcreq.2da", path=["Classes", "Restrictions"],),
+		2372 => (exclusive = "clsrcreq.2da", path=["Classes", "Restrictions"],),
 		2390 => (exclusive = "mxsplpal.2da", path=["Tables", "Spell slots"]),
 		2391 => (exclusive = "mxsplpal.2da", path=["Tables", "Spell slots"]),
 		2400 => (exclusive = "mxsplran.2da", path=["Tables", "Spell slots"]),
 		2401 => (exclusive = "mxsplran.2da", path=["Tables", "Spell slots"]),
-		2410 => (exclusive = "druid_alignment",),
-		2420 => (exclusive = "multiclass_cleric_weapons",),
-		2430 => (exclusive = "multiclass_druid_weapons",),
-		2431 => (exclusive = "multiclass_druid_weapons",),
+		2410 => (exclusive = "druid_alignment", path=["Classes", "Druid"],),
+		2420 => (exclusive = "multiclass_cleric_weapons", path=["Classes", "Cleric"],),
+		2430 => (exclusive = "multiclass_druid_weapons", path=["Classes", "Druid"],),
+		2431 => (exclusive = "multiclass_druid_weapons", path=["Classes", "Druid"],),
 		2440 => (exclusive = "clswpbon.2da", path=["Fighting", "Proficiencies"]),
-		2530 => (exclusive = "lightning_bolt",),
+		2450 => (path=["Classes", "Restrictions"],),
+		2500 => (path = ["Tables", "Abilities"],),
+		2510 => (path=["Items", "Scrolls"],),
+		2520 => (path=["Items"],),
+		2530 => (exclusive = "lightning_bolt", path=["Spells", "Evocation"],),
+		2550 => (path=["Classes", "Restrictions"],),
+		2551 => (path=["Classes", "Restrictions"],),
+		2552 => (path=["Classes", "Restrictions"],),
+		2560 => (path=["Classes", "Monk"],),
+		2590 => (path=["Skills", "Backstab"],),
+		2999 => (path=["Tables", "HP"],),
 		3000 => (exclusive = "hpclass.2da", path=["Tables", "HP"]),
 		3001 => (exclusive = "hpclass.2da", path=["Tables", "HP"]),
 		3002 => (exclusive = "hpclass.2da", path=["Tables", "HP"]),
 		3008 => (exclusive = "hpclass.2da", path=["Tables", "HP"]),
-		3030 => (exclusive = "spell_learning",),
-		3031 => (exclusive = "spell_learning",),
+		3020 => (path=["Skills", "Lore"],),
+		3030 => (path=["Skills", "Scribing"],),
+		3031 => (path=["Skills", "Scribing"],),
 		3040 => (exclusive = "container_capacity", path=["Items", "Containers"],),
+		3050 => (path=["Spells", "Healing"],),
 		3070 => (exclusive = "store_prices", path=["Items", "Stores"],),
 		3071 => (exclusive = "store_prices", path=["Items", "Stores"],),
 		3072 => (exclusive = "store_prices", path=["Items", "Stores"],),
@@ -1211,9 +1280,23 @@ function complete_db!(moddb) #««
 		3111 => (exclusive = "scroll_stacking", path=["Items", "Stacking"],),
 		3112 => (exclusive = "scroll_stacking", path=["Items", "Stacking"],),
 		3113 => (exclusive = "scroll_stacking", path=["Items", "Stacking"],),
-		3120 => (exclusive = "happy_patch",),
-		3200 => (exclusive = "sellable_items",),
-		4010 => (exclusive = "improved_fate_spirit",),
+		3120 => (path = ["NPC", "Happy patch"],),
+		3121 => (path = ["NPC", "Happy patch"],),
+		3122 => (path = ["NPC", "Happy patch"],),
+		3123 => (path = ["NPC", "Happy patch"],),
+		3124 => (path = ["NPC", "Happy patch"],),
+		3125 => (path = ["NPC", "Happy patch"],),
+		3130 => (path = ["Skills", "Thieving"],),
+		3160 => (path = ["Items"],),
+		3170 => (path = ["Cosmetic", "Sprites"],),
+		3200 => (path = ["Items", "Stores"],),
+		3205 => (path = ["Items", "Stores"],),
+		3230 => (path = ["Items", "Upgrades"],),
+		3320 => (path = ["Items", "Stores"],),
+		4000 => (path = ["Skills", "Reputation"],),
+		4010 => (path = ["NPC"],),
+		4020 => (path = ["NPC"],),
+		4025 => (path = ["NPC"],),
 		4030 => (path = ["NPC", "Edwin"],),
 		4031 => (path = ["NPC", "Edwin"],),
 		4040 => (path = ["NPC", "Jaheira"],),
@@ -1232,8 +1315,10 @@ function complete_db!(moddb) #««
 		4131 => (path = ["NPC", "Dynaheir"],),
 		4132 => (path = ["NPC", "Xzar"],),
 		4133 => (path = ["NPC", "Edwin"],),
+		4150 => (path = ["NPC", "Minsc"],),
 		4160 => (path = ["NPC", "Yeslick"],),
 		4170 => (path = ["NPC", "Shar-Teel"],),
+		4180 => (path = ["Items"],),
 	)#»»
 	setmod!("cowledmenace",#««
 		"" => (after = "eet", depends = "eet",),
@@ -1241,24 +1326,24 @@ function complete_db!(moddb) #««
 	setmod!("d0questpack", #««
 		"" => (after = ["kelsey", "keto", "ub" ],),
 		0 => (exclusive = "AI",),
-		5 => (exclusive = ["c6kach.cre", "ar0300.bcs", "ar0300.are", "aran.cre", "maevar.cre", "mvguard1.cre", "mvpries.cre", "aran02.cre", "arnfgt03.cre", "arnfgt04.cre", "renal.cre", "thief1.cre", "tassa.cre", "c6tanov.bcs", "vvtanov.cre",],),
-   6 => (exclusive = ["sw1h50.itm"],),
-		8 => (exclusive = ["ar0812.are", "ar1515.bcs", "thumb.cre", ],),
-		9 => (exclusive = ["potn33.itm", "potn38.itm", "spwi106.spl", "spwi815.spl",],),
-  10 => (exclusive = ["hellself.eff", "spin755.spl", "spin751.spl", "sphl004.spl", "spin753.spl", "hellself.cre", "sphl003.spl", "sphl005.spl", "hellgen2.cre", "sphl001.spl", "sphl002.spl", "cutc7g.bcs", "spin749.spl", "spin747.spl"],),
-  11 => (exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"],),
-		12 => (exclusive = ["Oasis", "ar6300.are", ],),
-		13 => (exclusive = ["ppsanik.cre", "pirmur02.cre", "pirmur05.cre",],),
-  15 => (exclusive = ["suinvis.cre", "sumound.cre", "sudryad.cre", "sufake.itm", "sutear.itm", "sutear.bam", "sufake.bam"],),
-  16 => (exclusive = ["besamen.cre", "baisera.cre"],),
-		17 => (exclusive = ["kamir.cre",],),
-		19 => (exclusive = ["ar2402.are",],),
-  20 => (exclusive = ["spin671.spl"],),
-		21 => (exclusive = ["ar0530.are", "ar0530.bcs",],),
+		5 => (exclusive = ["c6kach.cre", "ar0300.bcs", "ar0300.are", "aran.cre", "maevar.cre", "mvguard1.cre", "mvpries.cre", "aran02.cre", "arnfgt03.cre", "arnfgt04.cre", "renal.cre", "thief1.cre", "tassa.cre", "c6tanov.bcs", "vvtanov.cre",], path=["Story", "BG2"],),
+   6 => (exclusive = ["sw1h50.itm"], path=["Story", "BG2"],),
+		8 => (exclusive = ["ar0812.are", "ar1515.bcs", "thumb.cre", ], path=["Story", "BG2"],),
+		9 => (exclusive = ["potn33.itm", "potn38.itm", "spwi106.spl", "spwi815.spl",],path=["Story", "BG2"],),
+  10 => (exclusive = ["hellself.eff", "spin755.spl", "spin751.spl", "sphl004.spl", "spin753.spl", "hellself.cre", "sphl003.spl", "sphl005.spl", "hellgen2.cre", "sphl001.spl", "sphl002.spl", "cutc7g.bcs", "spin749.spl", "spin747.spl"], path=["Areas", "BG2", "Ending"],),
+  11 => (exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"], path=["Areas", "BG2", "Oasis"],),
+		12 => (exclusive = ["Oasis", "ar6300.are", ], path=["Areas", "BG2", "Oasis"],),
+		13 => (exclusive = ["ppsanik.cre", "pirmur02.cre", "pirmur05.cre",], path=["Story", "BG2"],),
+  15 => (exclusive = ["suinvis.cre", "sumound.cre", "sudryad.cre", "sufake.itm", "sutear.itm", "sutear.bam", "sufake.bam"], path=["Quests", "BG2"],),
+  16 => (exclusive = ["besamen.cre", "baisera.cre"], path=["Quests", "BG2"],),
+		17 => (exclusive = ["kamir.cre",], path=["Quests", "BG2"],),
+		19 => (exclusive = ["ar2402.are",], path=["Quests", "BG2"],),
+  20 => (exclusive = ["spin671.spl"], path=["Quests", "BG2"],),
+		21 => (exclusive = ["ar0530.are", "ar0530.bcs",], path=["Quests", "BG2"],),
  401 => (exclusive = ["sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre", "reddeath.bcs",],),
 	; class = "Quests")#»»
 	setmod!("d0tweak",#««
-		11 => (after = ["rr",],), # ioun stones...
+		11 => (after = ["rr",], path=["Cosmetic", "Sprites"],), # ioun stones...
 	)#»»
 	setmod!("d5_random_tweaks", #««
 		"" => (after = ["spell_rev", "item_rev"],),
@@ -1269,21 +1354,22 @@ function complete_db!(moddb) #««
 #  3030 => (exclusive = ["b_pfire.pro", "pfirea.bam", "pfirex.bam", "#prfire.vvc", "#eff_p45.wav", "#are_p03.wav"],),
 		 1202 => (exclusive = "sppr202.spl",), # barkskin
 		 1202 => (path = ["Spells", "Alteration"],),
-		 1207 => (exclusive = ["sppr207.spl"],),
+		 1207 => (exclusive = ["sppr207.spl"], path=["Spells", "Alteration"],), # goodberry
 		 1212 => (exclusive = "sppr212.spl", path=["Spells", "Healing"],), # slow poison
 		 1251 => (exclusive = "sppr251.spl", path=["Spells", "New spells"],), # alicorn lance
 		 1323 => (exclusive = ["sppr350.spl"], path=["Spells", "New spells"],), # clarity/exaltation
 		 1351 => (exclusive = ["moonbla.itm"],), # moonblade
-		 1351 => (path = ["Items", "Magic weapons"],),
+		 1351 => (path = ["Items", "Summoned weapons"],),
 		 1404 => (exclusive = "sppr404.spl", path=["Spells", "Healing"],), # neutralize poison
 		 1505 => (path=["Spells", "Divination"],),
 		 1603 => (exclusive = "sppr603.spl", path=["Spells", "Evocation"],), # blade barrier
 		 1609 => (path=["Spells", "Evocation"],),
-		 1611 => (exclusive = "sppr611.spl",), # wondrous recall
+		 1611 => (exclusive = "sppr611.spl", path=["Spells", "Alteration"],), # wondrous recall
 		 1613 => (path=["Spells", "Abjuration"],),
-		 1614 => (exclusive = "sorb.itm",), # sol's searing orb
+		 1614 => (exclusive = "sorb.itm", path=["Items", "Summoned weapons"],), # sol's searing orb
 		 1707 => (path=["Spells", "Evocation"],),
 		 1710 => (exclusive = "sppr710.spl", path=["Spells", "Conjuration"],), # holy word
+		2105 => (exclusive = "spwi105.spl", path=["Spells", "Alteration"],), # Color Spray (not exclusive)
 		 2108 => (exclusive = "spwi108.spl", path=["Spells", "Abjuration"],),
 # 		 2112 => (exclusive = "spwi112.spl", path=["Spells", "Evocation"]), # magic missile
 		2116 => (path = ["Spells", "Enchantment"],),
@@ -1300,9 +1386,10 @@ function complete_db!(moddb) #««
 		 2224 => (exclusive = "spwi224.spl",), # glitterdust
 		 2224 => (path = ["Spells", "Conjuration"],),
 		 2251 => (exclusive = "cdideca.itm",), # decastave
-		 2251 => (path = ["Items", "Magic weapons"],),
+		 2251 => (path = ["Items", "Summoned weapons"],),
 		 2305 => (exclusive = ["msectype.2da", "spwi312.spl", "potn14.spl", "spwi305.spl"],), # haste/slow
 		 2305 => (path = ["Spells", "Alteration"],),
+		 2321 => (exclusive="spwi321.spl", path=["Spells", "Abjuration"],),
 		 2324 => (exclusive = ["spwi324.spl", "spwi234d.spl", "spwi720.spl"],), # hold/control undead
 		 2324 => (path = ["Spells", "Necromancy"],),
 		 2413 => (exclusive = ["spwi413a.spl","spwi413d.spl"],), # otiluke
@@ -1311,7 +1398,7 @@ function complete_db!(moddb) #««
 		 2418 => (path = ["Spells", "Abjuration"],),
 		 2451 => (exclusive = ["shades.2da"],), # shades/shadow monsters
 		 2518 => (exclusive = "spwi518.spl",), # phantom blade
-		 2518 => (path = ["Items", "Magic weapons"],),
+		 2518 => (path = ["Items", "Summoned weapons"],),
 		 2523 => (exclusive = "spwi523.spl", path=["Spells", "Evocation"],), # sunfire
 		 2708 => (exclusive = "spwi708.spl", path=["Spells", "Abjuration"],), # mantle
 		 2711 => (path=["Spells", "Enchantment"],),
@@ -1322,6 +1409,7 @@ function complete_db!(moddb) #««
  2915 => (exclusive = ["spwi806.spl"], path=["Spells", "Conjuration"],),
 		 2916 => (exclusive = "spwi916.spl", path=["Spells", "Alteration"],), # shapechange
 		 2923 => (exclusive = "plangood.cre", path=["Creatures"],), # planetar
+		 3000 => (path = ["Items", "Summoned weapons"],),
 		 3010 => (exclusive = "ring36.itm", path=["Items"],), # ring of danger sense
  3020 => (exclusive = ["7eyes.2da", "brac18.itm"], path=["Items"],),
 		 3030 => (exclusive = ["pfirea.bam", "pfirex.bam"], path=["Items"],), # exploding weapons
@@ -1372,6 +1460,7 @@ function complete_db!(moddb) #««
 		600 => (path = ["NPC", "Branwen"],),
 		605 => (path = ["NPC", "Jaheira"],),
 		610 => (path = ["NPC", "Viconia"],),
+		1000 => (path = ["Spells", "Sphere system"],),
 	)#»»
 	setmod!("epicthieving",#««
 	)#»»
@@ -1400,7 +1489,7 @@ function complete_db!(moddb) #««
 		1001 => (path = ["NPC", "Edwin", "Appearance"],),
 		1010 => (path = ["NPC", "Imoen", "Appearance"],),
 		1011 => (path = ["NPC", "Imoen", "Appearance"],),
-		1011 => (path = ["NPC", "Imoen", "Appearance"],),
+		1012 => (path = ["NPC", "Imoen", "Appearance"],),
 		1020 => (path = ["NPC", "Jaheira", "Appearance"],),
 		1021 => (path = ["NPC", "Jaheira", "Appearance"],),
 		1030 => (path = ["NPC", "Minsc", "Appearance"],),
@@ -1408,10 +1497,23 @@ function complete_db!(moddb) #««
 		1040 => (path = ["NPC", "Viconia", "Appearance"],),
 		1041 => (path = ["NPC", "Viconia", "Appearance"],),
 		1042 => (path = ["NPC", "Viconia", "Appearance"],),
+		1050 => (path = ["NPC"],),
 		2000 => (exclusive = "xplevel.2da", path=["Tables", "XP"],),
 		2001 => (exclusive = "xplevel.2da", path=["Tables", "XP"],),
 		2002 => (exclusive = "xplevel.2da", path=["Tables", "XP"],),
 		2003 => (exclusive = "xplevel.2da", path=["Tables", "XP"],),
+		2010 => (path=["Tables", "XP", "Cap"],),
+		2011 => (path=["Tables", "XP", "Cap"],),
+		2012 => (path=["Tables", "XP", "Cap"],),
+		2013 => (path=["Tables", "XP", "Cap"],),
+		2020 => (path=["Tables", "XP", "Cap"],),
+		2021 => (path=["Tables", "XP", "Cap"],),
+		2022 => (path=["Tables", "XP", "Cap"],),
+		2023 => (path=["Tables", "XP", "Cap"],),
+		2030 => (path=["Tables", "XP", "Cap"],),
+		2031 => (path=["Tables", "XP", "Cap"],),
+		2032 => (path=["Tables", "XP", "Cap"],),
+		2033 => (path=["Tables", "XP", "Cap"],),
 		2040 => (exclusive = "xpbonus.2da", path=["Tables", "Bonus XP"]),
 		2041 => (exclusive = "xpbonus.2da", path=["Tables", "Bonus XP"]),
 		2042 => (exclusive = "xpbonus.2da", path=["Tables", "Bonus XP"]),
@@ -1420,6 +1522,9 @@ function complete_db!(moddb) #««
 		3020 => (path = ["Skills", "Familiar"],),
 		3021 => (path = ["Skills", "Familiar"],),
 		3022 => (path = ["Skills", "Familiar"],),
+		4040 => (path = ["Story", "BG2"],),
+		4060 => (path = ["Items"],),
+		4070 => (path = ["Items"],),
 	)#»»
 	setmod!("eetact2",#««
 		100 => (exclusive = ["ar0601.are", "ily1.cre", "ilyhamm.itm", ],),
@@ -1447,7 +1552,7 @@ function complete_db!(moddb) #««
 		350 => (exclusive = ["goliro.itm", "golsto.itm", "goliro01.cre", "golsto01.cre", "golada01.cre",],),
 		360 => (exclusive = ["nymph.bcs",],),
 		370 => (exclusive = ["ar0406.bcs",],), # improved coronet
-		380 => (exclusive = ["Oasis", "amtarc01.cre", "amtmag01.cre", "amtcle01.cre", "amtcap01.cre", "amtpik01.cre"],),
+		380 => (exclusive = ["Oasis", "amtarc01.cre", "amtmag01.cre", "amtcle01.cre", "amtcap01.cre", "amtpik01.cre"], path=["Areas", "BG2", "Oasis"],),
 		390 => (exclusive = ["ar1700.are",],), # small teeth
 		400 => (exclusive = ["ar1800.are", "ar18arch.cre", "ar18dwaf.cre", "ar18fig.cre", "ar18mage.cre", "ar18prie.cre", "ar18skel.cre", "ar18thif.cre"],), # north forest
 		410 => (exclusive = ["ar5200.are",],), # marching mountains
@@ -1458,7 +1563,8 @@ function complete_db!(moddb) #««
 		440 => (exclusive = ["giafir.itm", "ysg2.cre", "ysfire01.cre", "ysguar01.cre"],),
 	)#»»
 	setmod!("item_rev",#««
-	0 => (exclusive = ["hlolth.itm", "clolth.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "blun01.itm", "bolt01.itm", "sahbolt.itm", "kuobolt.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bull01.itm", "chan01.itm", "clck01.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "amsoul01.itm", "leat01.itm", "aegis.itm", "bruenaxe.itm", "bruenpla.itm", "cattibow.itm", "catliowp.cre", "figlion.itm", "spidfgsu.cre", "figspid.itm", "bsw1h01.itm", "bersersu.cre", "bleat01.itm", "miscbc.itm", "nebdag.itm", "quiver01.itm", "reaver.itm", "korax01.itm", "nparm.itm", "npbow.itm", "npbelt.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npstaf.itm", "npplat.itm", "keldorn.spl", "npring01.itm", "npshld.itm", "npsw01.itm", "clolth.itm", "hlolth.itm", "finsarev.itm", "plat01.itm", "rods01.itm", "rods01.spl", "shld01.itm", "slng01.itm", "sper01.itm", "staf01.itm", "smoundsu.cre", "smoundsu.itm", "sw1h01.itm", "xbow01.itm", "waflail.itm", "wawak.itm"],),
+	0 => (exclusive = ["hlolth.itm", "clolth.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "blun01.itm", "bolt01.itm", "sahbolt.itm", "kuobolt.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bull01.itm", "chan01.itm", "clck01.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "amsoul01.itm", "leat01.itm", "aegis.itm", "bruenaxe.itm", "bruenpla.itm", "cattibow.itm", "catliowp.cre", "figlion.itm", "spidfgsu.cre", "figspid.itm", "bsw1h01.itm", "bersersu.cre", "bleat01.itm", "miscbc.itm", "nebdag.itm", "quiver01.itm", "reaver.itm", "korax01.itm", "nparm.itm", "npbow.itm", "npbelt.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npstaf.itm", "npplat.itm", "keldorn.spl", "npring01.itm", "npshld.itm", "npsw01.itm", "clolth.itm", "hlolth.itm", "finsarev.itm", "plat01.itm", "rods01.itm", "rods01.spl", "shld01.itm", "slng01.itm", "sper01.itm", "staf01.itm", "smoundsu.cre", "smoundsu.itm", "sw1h01.itm", "xbow01.itm", "waflail.itm", "wawak.itm"], path=["Items"],),
+	1 => (path = ["Items", "Magic weapons"],),
 	2 => (path = ["Skills", "Casting"],),
 	3 => (path = ["Skills", "Casting"],),
 	4 => (path = ["Skills", "Casting"],),
@@ -1474,16 +1580,50 @@ function complete_db!(moddb) #««
 	1050 => (path = ["Fighting", "Armor"],),
 	10 => (path = ["Fighting", "Armor"],),
 	11 => (path = ["Fighting", "Fighting styles"],),
+	12 => (path = ["Items", "Protection"],),
+	13 => (path = ["Items", "Weapons"],),
 	15 => (path = ["Classes", "Druid"],),
 	16 => (path = ["Classes", "Druid"],),
+	17 => (path = ["Items", "Weapons"],),
+	1020 => (path = ["Items", "Potions"],),
 	1060 => (path = ["Classes", "Fighter"],),
 	1070 => (path = ["Classes", "Thief"],),
 	18 => (path = ["Skills", "Backstab"],),
 	19 => (path = ["Skills", "Backstab"],),
 	20 => (path = ["Skills", "Backstab"],),
  1030 => (exclusive = ["chrmodst.2da", "repmodst.2da"],),
+ 1040 => (path = ["Fighting", "Armor"],),
+ 1043 => (path = ["Fighting", "Armor"],),
+ 1090 => (path = ["Classes", "Cleric"],),
+ 1091 => (path = ["Classes", "Cleric"],),
+ 1092 => (path = ["Classes", "Cleric"],),
+ 1093 => (path = ["Classes", "Cleric"],),
 	; class = "Early")#»»
+	setmod!("klatu",#««
+		1000 => (path=["Items"],),
+		1010 => (path=["Items"],),
+		1020 => (path=["Spells", "Conjuration"],),
+		1040 => (path=["NPC", "Hexxat"],),
+		1050 => (path=["Creatures"],),
+		2000 => (path=["Tables", "Spell slots"],),
+		2010 => (path=["Tables", "Spell slots"],),
+		2020 => (path=["Items", "Stores"],),
+		2030 => (path=["Items", "Stores"],),
+		2040 => (path=["Classes", "Wizard"],),
+		2050 => (path=["Spells", "Conjuration"],),
+		2060 => (path=["Spells", "Alteration"],), # for haste
+		2110 => (path=["Skills"],),
+		2130 => (path=["Skills", "Bard song"],),
+		2140 => (path=["Skills", "Casting"],),
+		2150 => (path=["Skills", "Thieving"],),
+		2160 => (path=["Spells", "Alteration"],),
+		2170 => (path=["Items", "Stores"],),
+		2180 => (path=["Items", "Stores"],),
+		2200 => (path=["Skills", "Familiar"],),
+		3070 => (path=["Cosmetic", "Icons"],),
+	)#»»
 	setmod!("metweaks",#««
+		200 => (path=["Tables", "XP", "Quest"],),
 		400 => (path=["Fighting", "Proficiencies"],),
 		500 => (path=["Fighting", "Proficiencies"],),
 		505 => (path=["Fighting", "Proficiencies"],),
@@ -1495,11 +1635,21 @@ function complete_db!(moddb) #««
 		1500 => (exclusive = "spcl212.spl", path=["Skills", "Detect evil"],),
 		1600 => (exclusive = "spcl131.spl", path=["Skills", "Magic resistance"],),
 		1800 => (exclusive = "backstab.2da", path=["Skills", "Backstab"],),
-		2000 => (exclusive = [ "scrl1$i.itm" for i in 1:7 ],), # cursed scrolls
-		3150 => (exclusive = "bdbelhif.cre",), # Belhifet
+		2000 => (exclusive = [ "scrl1$i.itm" for i in 1:7 ], path=["Items"],), # cursed scrolls
+		2200 => (path = ["Creatures"],),
+		2600 => (path = ["UI"],),
+		2800 => (path = ["Story", "BG1"],),
+		3000 => (path = ["Story", "BG1"],),
+		3100 => (path = ["Story", "BG1"],),
+		3150 => (path=["Creatures", "Fiends"], exclusive = "bdbelhif.cre",), # Belhifet
 		3200 => (path=["Skills", "Infravision"],),
 		3205 => (path=["Skills", "Infravision"],),
 		3210 => (path=["Skills", "Infravision"],),
+		3600 => (path=["Cosmetic", "Sprites"],),
+		3800 => (path=["Skills", "Backstab"],),
+		3805 => (path=["Skills", "Backstab"],),
+		3810 => (path=["Skills", "Backstab"],),
+		3815 => (path=["Skills", "Backstab"],),
 		4000 => (exclusive = "weapprof.2da/styles", path=["Fighting", "Fighting styles"],),
 	)#»»
 	setmod!("might_and_guile",#««
@@ -1542,8 +1692,10 @@ function complete_db!(moddb) #««
 		5 => (exclusive = ["luba0.2da", "luba2.2da", "luba3.2da"],
 			path=["Tables", "HLA"],),
 		6 => (exclusive = ["mxsplbrd.2da"], path=["Tables", "Spell slots"],),
-		9 => (exclusive = ["potn36.itm", "potn39.itm"],),
-		10 => (exclusive = ["potn36.itm", "potn39.itm"],),
+		7 => (path=["Items"],),
+		8 => (path=["Items", "Upgrades"],),
+		9 => (exclusive = ["potn36.itm", "potn39.itm"], path=["Items", "Potions"],),
+		10 => (exclusive = ["potn36.itm", "potn39.itm"], path=["Items", "Potions"]),
 		12 => (exclusive = ["c6arkan.cre", "c6arkan3.cre", "c6kach.cre", "c6yean.cre", "c6arkan.bcs", "stguard1.cre", "mook02.cre", "arkanisg.cre", "mookft01.cre", "palern.cre", "ar0300.bcs", "stguard1.bcs", "aran.cre", "gaelan.cre", "mook.cre", "booter.cre"],),
 	; class="Kits")#»»
 	setmod!("refinements",#««
@@ -1564,6 +1716,8 @@ function complete_db!(moddb) #««
 		22 => (path=["NPC", "Imoen"],),
 		30 => (path=["Skills", "Shapeshifting"],),
 		31 => (path=["Skills", "Shapeshifting"],),
+		40 => (path=["Items"],),
+		50 => (path=["Classes", "Fighter"],),
 		70 => (path=["Fighting", "Armor"],),
 		71 => (path=["Fighting", "Armor"],),
 		72 => (path=["Fighting", "Armor"],),
@@ -1579,6 +1733,7 @@ function complete_db!(moddb) #««
 			path = ["Fighting", "Armor"],),
 		101 => (exclusive = "masterwork_weapons",),
 		102 => (path = ["Fighting", "Tweaks"],),
+		121 => (path = ["Items", "Weapons"],),
 		122 => (conflicts = ["rr"],
 			exclusive=["universal_clubs", "weapprof.2da", "thac0.2da"],
 			path = ["Fighting", "Proficiencies"]),
@@ -1594,16 +1749,22 @@ function complete_db!(moddb) #««
 			path = ["Tables", "Stat bonuses"],),
 		201 => (exclusive = ["splprot.2da","mxsplwiz.2da"],
 			path = ["Tables", "Spell slots"],),
+		202 => (path = ["Items", "Weapons"],),
 		206 => (exclusive = ["hpconbon.2da", "hpbarb.2da", "hpcm.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmt.2da", "hpmonk.2da", "hpprs.2da", "hpprog.2da", "hpwar.2da", "hpwiz.2da"], path = ["Tables", "HP"],),
 		207 => (exclusive = ["hpconbon.2da", "hpbarb.2da", "hpcm.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmt.2da", "hpmonk.2da", "hpprs.2da", "hpprog.2da", "hpwar.2da", "hpwiz.2da"], path = ["Tables", "HP"],),
 		208 => (exclusive = ["hpconbon.2da", "hpbarb.2da", "hpcm.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmt.2da", "hpmonk.2da", "hpprs.2da", "hpprog.2da", "hpwar.2da", "hpwiz.2da"], path = ["Tables", "HP"],),
 		210 => (exclusive = ["xplevel.2da", "lunumab.2da", "mxspldru.2da",],
 			path = ["Tables", "XP"],),
+		1012 => (path=["Items", "Magic weapons"],),
 	)#»»
 	setmod!("spell_rev",#««
 		"" => (after = ["ub",],),
-		0 => (exclusive = ["elemtype.itm","mstone.itm", "shille.itm", "shille2.itm", "shille3.itm", "spcl213.spl", "spcl721.spl", "spcl722.spl", "spdr101.spl", "spdr201.spl", "spdr301.spl", "spdr401.spl", "spdr501.spl", "spdr601.spl", "spentaai.bam", "spentaci.bam", "spin101.spl", "spin102.spl", "spin103.spl", "spin104.spl", "spin105.spl", "spin106.spl", "spin113.spl", "spin683.spl", "spin701.spl", "spin788.spl", "spin789.spl", "spmagglo.bam", "spmagglo.vvc", "sppr101.spl", "sppr102.spl", "sppr103.spl", "sppr104.spl", "sppr105.spl", "sppr106.spl", "sppr107.spl", "sppr108.spl", "sppr109.spl", "sppr110.spl", "sppr111.spl", "sppr113.spl", "sppr116.spl", "spra301.spl", "spra302.spl", "spra303.spl", "spra304.spl", "spra305.spl", "spra306.spl", "spwi977.spl", "spwi978.spl", "undtype.itm", "vermtype.itm"],),
-		10 => (exclusive = ["plangood.cre", "planevil.cre", "devagood.cre", "devaevil.cre"],),
+		0 => (exclusive = ["elemtype.itm","mstone.itm", "shille.itm", "shille2.itm", "shille3.itm", "spcl213.spl", "spcl721.spl", "spcl722.spl", "spdr101.spl", "spdr201.spl", "spdr301.spl", "spdr401.spl", "spdr501.spl", "spdr601.spl", "spentaai.bam", "spentaci.bam", "spin101.spl", "spin102.spl", "spin103.spl", "spin104.spl", "spin105.spl", "spin106.spl", "spin113.spl", "spin683.spl", "spin701.spl", "spin788.spl", "spin789.spl", "spmagglo.bam", "spmagglo.vvc", "sppr101.spl", "sppr102.spl", "sppr103.spl", "sppr104.spl", "sppr105.spl", "sppr106.spl", "sppr107.spl", "sppr108.spl", "sppr109.spl", "sppr110.spl", "sppr111.spl", "sppr113.spl", "sppr116.spl", "spra301.spl", "spra302.spl", "spra303.spl", "spra304.spl", "spra305.spl", "spra306.spl", "spwi977.spl", "spwi978.spl", "undtype.itm", "vermtype.itm"], path=["Spells"],),
+		10 => (exclusive = ["plangood.cre", "planevil.cre", "devagood.cre", "devaevil.cre"], path=["Cosmetic", "Sprites"],),
+		20 => (path = ["Spells", "Illusion"],),
+		30 => (path = ["Spells", "Abjuration"],),
+		40 => (path = ["Spells", "Enchantment"],),
+		50 => (path = ["Spells"],),
 		65 => (exclusive = ["spcl900.spl","spcl901.spl","spcl907.spl","spwish12.spl"],),
 	; class = "Early")#»»
 	setmod!("spstuff",#««
@@ -1621,21 +1782,24 @@ function complete_db!(moddb) #««
 			before = ["cdtweaks"],),
 		1500 => (path = ["Spells", "New spells"],),
 		1510 => (path = ["Spells", "New spells"],),
-		2110 => (exclusive = "spcl231.spl",), # inquisitor dispel
-		2111 => (exclusive = "spcl231.spl",), # inquisitor dispel
+		2110 => (exclusive = "spcl231.spl", path=["Classes", "Paladin"],), # inquisitor dispel
+		2111 => (exclusive = "spcl231.spl", path=["Classes", "Paladin"],), # inquisitor dispel
+		2900 => (path = ["Items"],),
 		3010 => (path = ["Items", "Magic weapons"],),
 		3020 => (path = ["Items", "Magic weapons"],),
 		3021 => (path = ["Items", "Magic weapons"],),
 		3022 => (path = ["Items", "Magic weapons"],),
-# 		3020 => (exclusive = "masterwork_arrows",),
-# 		3020 => (exclusive = "masterwork_arrows",),
-# 		3020 => (exclusive = "masterwork_weapons",),
-# 		3021 => (exclusive = "masterwork_weapons",),
-# 		3022 => (exclusive = "masterwork_weapons",),
+		3040 => (path = ["Items", "Stores"],),
+		3041 => (path = ["Items", "Stores"],),
+		3505 => (path = ["Items", "Scrolls"],),
+		3540 => (path = ["Classes", "Paladin"],),
+		3541 => (path = ["Classes", "Paladin"],),
 		3550 => (path = ["Spells", "Healing"],),
 		3551 => (path = ["Spells", "Healing"],),
 		3552 => (path = ["Spells", "Healing"],),
 		3580 => (path = ["Spells", "Healing"],),
+		4000 => (path = ["Creatures"],),
+		4020 => (path = ["Creatures"],),
 		4030 => (exclusive = ["spcl643.spl", "spcl644.spl", "spcl611.spl", "spcl612.spl"],
 			path=["Skills", "Shapeshifting"],),
 		4050 => (path = ["Skills", "Reputation"],),
@@ -1646,34 +1810,38 @@ function complete_db!(moddb) #««
 		4100 => (path = ["NPC"],),
 		4115 => (path = ["Skills", "Thieving"],),
 		4120 => (exclusive = "NPC_at_inn",),
-		4230 => (exclusive = ["wmart1.cre", "wmart2.cre"],), # Joluv, Deidre
+		4230 => (exclusive = ["wmart1.cre", "wmart2.cre"], path=["Items", "Stores"],), # Joluv, Deidre
+		4190 => (path = ["Story", "ToB"],),
+		4210 => (path = ["Story", "ToB"],),
+		4240 => (path = ["Spells", "HLA"],),
 # 		5020 => (exclusive = "cloak_of_displacement",),
 # 		5030 => (exclusive = "cloak_of_mirroring",),
+		5070 => (path = ["Cosmetic", "Sprites"],),
 		5900 => (exclusive = "AI",),
-		6200 => (exclusive = ["spidsw.cre", "spidhu.cre", "spidph.cre"],),
-		6300 => (exclusive = ["sirspell.bcs", "hama.bcs",],),
-		6310 => (exclusive = ["crawler.bcs",],),
-		6320 => (exclusive = ["lbasilsk.bcs", "gbasilsk.bcs",],),
-		6500 => (exclusive = ["golcly01.cre", "golsto01.cre", "goliro01.cre", "golice01.cre", "golbra01.cre",],),
-		6510 => (exclusive = ["smarter_demons", "demfig01.cre", "demfig02.cre", "dembal01.cre", "dembal02.cre", "demglab.cre", "demglab2.cre", "glabrez.cre", "tanari.cre", "tanari2.cre", "marilith.cre", "demsuc.cre", "pwarden.cre", "dembal01.bcs", "demglab.bcs", "tanari.bcs", "cornugon.bcs", "erinyes.bcs"],),
-		6520 => (exclusive = "efreet01.bcs",),
-		6540 => (exclusive = ["dragred1.itm", "firkra02.cre", "gorsal.cre", "fsdragon.cre", "dragblac.cre", "udsilver.cre", "shadra01.cre", "dragblue.cre", "dragblac.bcs", "dragbrow.bcs", "dragred.bcs"],),
-		6550 => (exclusive = ["beheld01.cre", "udelder.cre", "hlvaxal.cre", "hlhive.cre", "behold01.bcs", "behdir01.bcs", "gauth01.bcs"],),
-		6560 => (exclusive = ["udmaster.cre", "flayer01.bcs", "flayer02.bcs", "flayun.bcs"],),
-		6570 => (exclusive = ["gith01.bcs", "gith01.cre", "gorgit.cre"],),
-		6580 => (exclusive = ["vampir01.bcs", "nevm4.bcs", "vampm01.cre", "vampjah.cre", "lassal.cre", "c6valen.cre", "bodvam01.cre",],),
-		6590 => (exclusive = ["finmel.bcs", "meliss01.bcs",],),
-		6800 => (depends = "ascension", exclusive = ["illasera.bcs"],),
-		6810 => (depends = "ascension", exclusive = ["jumjum.bcs", "fingrom.bcs"],),
-		6820 => (depends = "ascension", exclusive = ["yagaft.bcs", "finyaga.bcs"],),
-		6830 => (depends = "ascension", exclusive = ["abaz2.bcs", "drake.bcs"],),
-		6840 => (depends = "ascension", exclusive = ["finsend.bcs", "finsend.cre", "finiren.cre"],),
-		6850 => (depends = "ascension", exclusive = ["finbalor.bcs", "finaluf.bcs", "finmaril.bcs", "finnabas.bcs"],),
-		7000 => (exclusive = ["noblpa.bcs", "doppss.bcs", "zorl.bcs", "sardopp.bcs"],),
-		7010 => (exclusive = ["ronelit.cre", "ronguar.cre", "irongu.cre"],),
-		7020 => (exclusive = ["lamalh.cre", "molkar.cre", "maneir.cre", "telka.cre", "zeela.cre", "drakar.cre", "halaca.cre", "morvin.cre", "drakar.bcs", "halaca.bcs", "morvin.bcs", "molkar.bcs", "maneir.bcs", "lamalh.bcs"],),
-		7030 => (exclusive = ["kobolda.cre", "kobold.cre",],),
-		7040 => (exclusive = ["grema_d.cre", "ogrema.cre",],),
+		6200 => (exclusive = ["spidsw.cre", "spidhu.cre", "spidph.cre"], path=["Creatures"],),
+		6300 => (exclusive = ["sirspell.bcs", "hama.bcs",], path=["Creatures"],),
+		6310 => (exclusive = ["crawler.bcs",], path=["Creatures"],),
+		6320 => (exclusive = ["lbasilsk.bcs", "gbasilsk.bcs",], path=["Creatures"],),
+		6500 => (exclusive = ["golcly01.cre", "golsto01.cre", "goliro01.cre", "golice01.cre", "golbra01.cre",], path=["Creatures"],),
+		6510 => (exclusive = ["smarter_demons", "demfig01.cre", "demfig02.cre", "dembal01.cre", "dembal02.cre", "demglab.cre", "demglab2.cre", "glabrez.cre", "tanari.cre", "tanari2.cre", "marilith.cre", "demsuc.cre", "pwarden.cre", "dembal01.bcs", "demglab.bcs", "tanari.bcs", "cornugon.bcs", "erinyes.bcs"], path=["Creatures", "Fiends"],),
+		6520 => (exclusive = "efreet01.bcs", path=["Creatures"],),
+		6540 => (exclusive = ["dragred1.itm", "firkra02.cre", "gorsal.cre", "fsdragon.cre", "dragblac.cre", "udsilver.cre", "shadra01.cre", "dragblue.cre", "dragblac.bcs", "dragbrow.bcs", "dragred.bcs"], path=["Creatures", "Dragons"],),
+		6550 => (exclusive = ["beheld01.cre", "udelder.cre", "hlvaxal.cre", "hlhive.cre", "behold01.bcs", "behdir01.bcs", "gauth01.bcs"], path=["Creatures"],),
+		6560 => (exclusive = ["udmaster.cre", "flayer01.bcs", "flayer02.bcs", "flayun.bcs"], path=["Creatures"],),
+		6570 => (exclusive = ["gith01.bcs", "gith01.cre", "gorgit.cre"], path=["Creatures"],),
+		6580 => (exclusive = ["vampir01.bcs", "nevm4.bcs", "vampm01.cre", "vampjah.cre", "lassal.cre", "c6valen.cre", "bodvam01.cre",], path=["Creatures", "Undead"],),
+		6590 => (exclusive = ["finmel.bcs", "meliss01.bcs",], path=["Creatures"],),
+		6800 => (depends = "ascension", exclusive = ["illasera.bcs"], path=["Creatures"],),
+		6810 => (depends = "ascension", exclusive = ["jumjum.bcs", "fingrom.bcs"], path=["Creatures"],),
+		6820 => (depends = "ascension", exclusive = ["yagaft.bcs", "finyaga.bcs"], path=["Creatures"],),
+		6830 => (depends = "ascension", exclusive = ["abaz2.bcs", "drake.bcs"], path=["Creatures"],),
+		6840 => (depends = "ascension", exclusive = ["finsend.bcs", "finsend.cre", "finiren.cre"], path=["Creatures"],),
+		6850 => (depends = "ascension", exclusive = ["finbalor.bcs", "finaluf.bcs", "finmaril.bcs", "finnabas.bcs"], path=["Creatures", "Fiends"],),
+		7000 => (exclusive = ["noblpa.bcs", "doppss.bcs", "zorl.bcs", "sardopp.bcs"], path=["Creatures"],),
+		7010 => (exclusive = ["ronelit.cre", "ronguar.cre", "irongu.cre"], path=["Creatures"],),
+		7020 => (exclusive = ["lamalh.cre", "molkar.cre", "maneir.cre", "telka.cre", "zeela.cre", "drakar.cre", "halaca.cre", "morvin.cre", "drakar.bcs", "halaca.bcs", "morvin.bcs", "molkar.bcs", "maneir.bcs", "lamalh.bcs"], path=["Creatures"],),
+		7030 => (exclusive = ["kobolda.cre", "kobold.cre",], path=["Creatures"],),
+		7040 => (exclusive = ["grema_d.cre", "ogrema.cre",], path=["Creatures"],),
 		7050 => (exclusive = ["ichary.cre",],),
 		7060 => (exclusive = ["kaishwlf.cre", "baresh.bcs", "baresh2.cre", "barwlf.cre", "daese.cre"],),
 		7070 => (exclusive = ["lovem.cre", "love.bcs", "fearm.cre", "avaricem.cre", "greed.bcs", "islann.cre", "fuerne.cre", "dopdur.cre", "dopdur1.cre", "dopdop.bcs", "rook.cre", "bishop.cre",],),
@@ -1730,9 +1898,27 @@ function complete_db!(moddb) #««
 		14 => (path=["Skills", "Thieving"],),
 		15 => (path=["Skills", "Thieving"],),
 		24 => (path=["Items", "Ammunition"],),
+		25 => (path=["Items", "Ammunition"],),
+		26 => (path=["Items", "Ammunition"],),
+		27 => (path=["Items", "Ammunition"],),
+		28 => (path=["Cosmetic", "Sprites"],),
+		31 => (path=["Items", "Wands"],),
+		32 => (path=["Items", "Wands"],),
+		33 => (path=["Items", "Potions"],),
+		35 => (path=["Items"],),
+		36 => (path=["Items"],),
+		37 => (path=["Items", "Weapons"],),
+		38 => (path=["Items"],),
+		40 => (path=["Items", "Protection"],),
+		41 => (path=["Skills", "Shapeshifting"],),
+		42 => (path=["Skills", "Bhaalspawn"],),
+		43 => (path=["Skills", "Bhaalspawn"],),
+		44 => (path=["Skills", "Bhaalspawn"],),
 		45 => (exclusive = "spwi609.spl", path=["Spells", "Divination"]),
 		46 => (exclusive = ["spwi413a.spl","spwi413d.spl"], path=["Spells", "Otiluke"],),
+		47 => (path=["Spells", "Enchantment"],),
 		48 => (exclusive = ["spwi515.spl", "spwi609.spl", "spcl505.spl"], path=["Spells", "Illusion"],),
+		49 => (path=["Spells", "Enchantment"],),
 		50 => (exclusive = "spwi703.spl", path=["Spells", "Illusion"],),
 		51 => (exclusive = "spwi607.spl", path=["Spells", "Illusion"],),
 		56 => (exclusive = "taerom_ankhegs", path=["Items", "Upgrades"],),
@@ -1741,12 +1927,17 @@ function complete_db!(moddb) #««
 		54 => (path=["Items", "Stores"],),
 		55 => (path=["Items", "Stores"],),
 		57 => (path=["Items", "Stores"],),
+		62 => (path=["Fighting", "Proficiencies"],),
+		63 => (path=["Classes", "Restrictions"],),
+		65 => (path=["Story", "BG2", "Stronghold"],),
+		66 => (path=["Story", "BG1"],),
 		68 => (path=["Cosmetic", "Maps"],),
 	)#»»
 	setmod!("tomeandblood",#««
 		"" => (after = ["spell_rev"],),
 		11 => (exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"],
 			path=["Spells", "Schools"],), # simulacrum
+		13 => (path=["Spells", "Illusion"],),
 		14 => (exclusive = ["spwi203.spl", "spwi224.spl", "sppr309.spl", "spwi322.spl", "scrl6k.itm", "spwi224.spl", "spwi515.spl", "spwi609.spl"], path=["Spells", "Illusion"],), # invisibility etc.
 		16 => (exclusive = "spwi110.spl", path=["Spells", "Identify"],), # identify
 		20 => (path=["Classes", "Sorcerer"],),
@@ -1761,10 +1952,23 @@ function complete_db!(moddb) #««
 		52 => (path=["Spells", "Metamagic"],),
 		53 => (path=["Spells", "Metamagic"],),
 		54 => (path=["Spells", "Metamagic"],),
+		61 => (path=["Spells"],),
+		62 => (path=["Spells"],),
+		63 => (path=["Spells"],),
 		66 => (exclusive = "scrl77.itm", path=["Skills", "Familiar"],),
 		67 => (exclusive = "select_familiar", path=["Skills", "Familiar"],),
+		68 => (path=["Skills", "Familiar"],),
 		69 => (exclusive = "familiar_penalty", path=["Skills", "Familiar"],),
 		71 => (exclusive = "spell_switching", path=["Skills", "Familiar"],),
+		72 => (path=["Classes", "Sorcerer"],),
+		80 => (path=["Classes", "Sorcerer"],),
+		82 => (path=["Classes", "Mage"],),
+		85 => (path=["Classes", "Sorcerer"],),
+		92 => (path=["Classes", "Mage"],),
+		93 => (path=["Classes", "Mage"],),
+		1201 => (path=["Spells", "Spell schools"],),
+		1202 => (path=["Spells", "Spell schools"],),
+		1203 => (path=["Spells", "Spell schools"],),
 	)#»»
 	setmod!("wheels",#««
 		"" => (before = "stratagems",),

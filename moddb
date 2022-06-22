@@ -201,6 +201,13 @@ url = "https://www.dropbox.com/s/e532jdc6p01hpnv/ARPv8-4.zip?dl=1"
 description = "Almateria's Restoration Project"
 archive = "ARPv8-4.zip"
 
+[arcanearcher]
+lastupdate = 1970-01-01
+class = "Kits"
+url = "www.shsforums.net/files/download/994-arcane-archer/"
+description = "Arcane Archer"
+archive = "arcanearcher.zip"
+
 [c0warlock]
 lastupdate = 1970-01-01
 class = "Kits"
@@ -753,7 +760,7 @@ archive = "atweaks-v453.zip"
     path = ["Creatures", "Undead"]
 
     [atweaks.components.218]
-    path = ["Spells", "Bhaalspawn"]
+    path = ["Skills", "Bhaalspawn"]
 
     [atweaks.components.302]
     path = ["Items"]
@@ -794,7 +801,7 @@ archive = "atweaks-v453.zip"
     path = ["Skills", "Shapeshifting"]
 
     [atweaks.components.125]
-    path = ["Classes", "Ranger"]
+    path = ["Skills", "Charm animal"]
 
     [atweaks.components.110]
     path = ["Items"]
@@ -870,7 +877,7 @@ archive = "atweaks-v453.zip"
     path = ["Spells", "Conjuration"]
 
     [atweaks.components.241]
-    path = ["Spells", "Bhaalspawn"]
+    path = ["Skills", "Bhaalspawn"]
 
     [atweaks.components.180]
     path = ["Creatures", "Fiends"]
@@ -1334,7 +1341,7 @@ archive = "lin-stratagems-34.3.zip"
     path = ["Classes", "Paladin"]
 
     [stratagems.components.2900]
-    path = ["Itmems"]
+    path = ["Items"]
 
     [stratagems.components.3552]
     path = ["Spells", "Healing"]
@@ -2550,22 +2557,8 @@ archive = "scales_of_balance.tar.gz"
     exclusive = ["clabth01.2da"]
     path = ["Skills", "Evasion"]
 
-    [scales_of_balance.components.109]
-
-    [scales_of_balance.components.229]
-
-    [scales_of_balance.components.221]
-
-    [scales_of_balance.components.""]
-    conflicts = ["kit_rev", "kitpack"]
-    after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "tomeandblood"]
-
     [scales_of_balance.components.101]
     exclusive = ["masterwork_weapons"]
-
-    [scales_of_balance.components.180]
-
-    [scales_of_balance.components.1012]
 
     [scales_of_balance.components.210]
     exclusive = ["lunumab.2da", "mxspldru.2da", "xplevel.2da"]
@@ -2575,11 +2568,8 @@ archive = "scales_of_balance.tar.gz"
     exclusive = ["savemonk.2da", "saveprs.2da", "saverog.2da", "savewar.2da", "savewiz.2da"]
     path = ["Tables", "Saving throws"]
 
-    [scales_of_balance.components.2122]
-
-    [scales_of_balance.components.104]
-
-    [scales_of_balance.components.2123]
+    [scales_of_balance.components.1012]
+    path = ["Items", "Magic weapons"]
 
     [scales_of_balance.components.124]
     exclusive = ["weapprof.2da/styles"]
@@ -2601,10 +2591,6 @@ archive = "scales_of_balance.tar.gz"
     exclusive = ["dexmod.2da", "skilldex.2da"]
     path = ["Fighting", "Armor"]
 
-    [scales_of_balance.components.228]
-
-    [scales_of_balance.components.227]
-
     [scales_of_balance.components.201]
     exclusive = ["mxsplwiz.2da", "splprot.2da"]
     path = ["Tables", "Spell slots"]
@@ -2612,17 +2598,9 @@ archive = "scales_of_balance.tar.gz"
     [scales_of_balance.components.121]
     path = ["Items", "Weapons"]
 
-    [scales_of_balance.components.2121]
-
-    [scales_of_balance.components.223]
-
     [scales_of_balance.components.208]
     exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
     path = ["Tables", "HP"]
-
-    [scales_of_balance.components.222]
-
-    [scales_of_balance.components.2012]
 
     [scales_of_balance.components.202]
     path = ["Items", "Weapons"]
@@ -2631,18 +2609,16 @@ archive = "scales_of_balance.tar.gz"
     exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
     path = ["Tables", "HP"]
 
-    [scales_of_balance.components.2013]
+    [scales_of_balance.components.""]
+    conflicts = ["kit_rev", "kitpack"]
+    after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "tomeandblood"]
 
     [scales_of_balance.components.102]
     path = ["Fighting", "Tweaks"]
 
-    [scales_of_balance.components.224]
-
     [scales_of_balance.components.200]
     exclusive = ["intmod.2da", "savecndh.2da", "savecng.2da", "strmod.2da", "strmodex.2da"]
     path = ["Tables", "Stat bonuses"]
-
-    [scales_of_balance.components.226]
 
     [scales_of_balance.components.171]
     exclusive = ["clabth01.2da"]
@@ -2911,9 +2887,8 @@ archive = "duskblade kit for bg2ee.zip"
 [jimfix]
 lastupdate = 2020-09-27
 class = "Tweaks"
-url = "https://github.com/Banananaut/Jimfix/releases/download/v3.1a/jimfix-v3.1a.zip"
+url = "github:Banananaut/Jimfix"
 description = "Jim's Fixes and Tweaks"
-archive = "jimfix-v3.1a.zip"
 
 [bg1re]
 lastupdate = 1970-01-01
@@ -3218,37 +3193,72 @@ url = "github:K4thos/EET_Tweaks"
 description = "EET (Enhanced Edition Trilogy) Tweaks"
 archive = "eet_tweaks.tar.gz"
 
-    [eet_tweaks.components.3050]
+    [eet_tweaks.components.2010]
+    path = ["Tables", "XP", "Cap"]
 
     [eet_tweaks.components.1040]
     path = ["NPC", "Viconia", "Appearance"]
 
+    [eet_tweaks.components.1030]
+    path = ["NPC", "Minsc", "Appearance"]
+
+    [eet_tweaks.components.1050]
+    path = ["NPC"]
+
     [eet_tweaks.components.2030]
     path = ["Tables", "XP", "Cap"]
 
-    [eet_tweaks.components.1060]
+    [eet_tweaks.components.1012]
+    path = ["NPC", "Imoen", "Appearance"]
+
+    [eet_tweaks.components.1041]
+    path = ["NPC", "Viconia", "Appearance"]
 
     [eet_tweaks.components.2002]
     exclusive = ["xplevel.2da"]
     path = ["Tables", "XP"]
 
-    [eet_tweaks.components.2052]
+    [eet_tweaks.components.2033]
+    path = ["Tables", "XP", "Cap"]
 
-    [eet_tweaks.components.4020]
+    [eet_tweaks.components.4060]
+    path = ["Items"]
 
-    [eet_tweaks.components.2063]
+    [eet_tweaks.components.2043]
+    exclusive = ["xpbonus.2da"]
+    path = ["Tables", "Bonus XP"]
 
-    [eet_tweaks.components.3010]
+    [eet_tweaks.components.1011]
+    path = ["NPC", "Imoen", "Appearance"]
+
+    [eet_tweaks.components.2044]
+    exclusive = ["xpbonus.2da"]
+    path = ["Tables", "Bonus XP"]
 
     [eet_tweaks.components.2023]
     path = ["Tables", "XP", "Cap"]
 
-    [eet_tweaks.components.3000]
+    [eet_tweaks.components.3021]
+    path = ["Skills", "Familiar"]
 
-    [eet_tweaks.components.2065]
+    [eet_tweaks.components.1042]
+    path = ["NPC", "Viconia", "Appearance"]
+
+    [eet_tweaks.components.3020]
+    path = ["Skills", "Familiar"]
+
+    [eet_tweaks.components.4070]
+    path = ["Items"]
+
+    [eet_tweaks.components.2041]
+    exclusive = ["xpbonus.2da"]
+    path = ["Tables", "Bonus XP"]
 
     [eet_tweaks.components.2022]
     path = ["Tables", "XP", "Cap"]
+
+    [eet_tweaks.components.1001]
+    path = ["NPC", "Edwin", "Appearance"]
 
     [eet_tweaks.components.1031]
     path = ["NPC", "Minsc", "Appearance"]
@@ -3256,6 +3266,12 @@ archive = "eet_tweaks.tar.gz"
     [eet_tweaks.components.2000]
     exclusive = ["xplevel.2da"]
     path = ["Tables", "XP"]
+
+    [eet_tweaks.components.2021]
+    path = ["Tables", "XP", "Cap"]
+
+    [eet_tweaks.components.1010]
+    path = ["NPC", "Imoen", "Appearance"]
 
     [eet_tweaks.components.2040]
     exclusive = ["xpbonus.2da"]
@@ -3269,71 +3285,11 @@ archive = "eet_tweaks.tar.gz"
     exclusive = ["xplevel.2da"]
     path = ["Tables", "XP"]
 
-    [eet_tweaks.components.3022]
-    path = ["Skills", "Familiar"]
-
-    [eet_tweaks.components.2064]
-
-    [eet_tweaks.components.2003]
-    exclusive = ["xplevel.2da"]
-    path = ["Tables", "XP"]
-
-    [eet_tweaks.components.1050]
-    path = ["NPC"]
-
-    [eet_tweaks.components.2061]
-
-    [eet_tweaks.components.4050]
-
-    [eet_tweaks.components.3021]
-    path = ["Skills", "Familiar"]
-
-    [eet_tweaks.components.3020]
-    path = ["Skills", "Familiar"]
-
-    [eet_tweaks.components.2054]
-
-    [eet_tweaks.components.4080]
-
-    [eet_tweaks.components.2070]
-
-    [eet_tweaks.components.4040]
-    path = ["Story", "BG2"]
-
-    [eet_tweaks.components.2031]
+    [eet_tweaks.components.2011]
     path = ["Tables", "XP", "Cap"]
 
-    [eet_tweaks.components.2062]
-
-    [eet_tweaks.components.2080]
-
-    [eet_tweaks.components.1030]
-    path = ["NPC", "Minsc", "Appearance"]
-
-    [eet_tweaks.components.1012]
-    path = ["NPC", "Imoen", "Appearance"]
-
-    [eet_tweaks.components.4060]
-    path = ["Items"]
-
-    [eet_tweaks.components.2044]
-    exclusive = ["xpbonus.2da"]
-    path = ["Tables", "Bonus XP"]
-
-    [eet_tweaks.components.2056]
-
-    [eet_tweaks.components.1042]
-    path = ["NPC", "Viconia", "Appearance"]
-
-    [eet_tweaks.components.4070]
-    path = ["Items"]
-
-    [eet_tweaks.components.2041]
-    exclusive = ["xpbonus.2da"]
-    path = ["Tables", "Bonus XP"]
-
-    [eet_tweaks.components.1010]
-    path = ["NPC", "Imoen", "Appearance"]
+    [eet_tweaks.components.3022]
+    path = ["Skills", "Familiar"]
 
     [eet_tweaks.components.1000]
     path = ["NPC", "Edwin", "Appearance"]
@@ -3341,59 +3297,30 @@ archive = "eet_tweaks.tar.gz"
     [eet_tweaks.components.1021]
     path = ["NPC", "Jaheira", "Appearance"]
 
-    [eet_tweaks.components.2012]
-    path = ["Tables", "XP", "Cap"]
-
-    [eet_tweaks.components.2060]
-
-    [eet_tweaks.components.2013]
-    path = ["Tables", "XP", "Cap"]
-
-    [eet_tweaks.components.2020]
-    path = ["Tables", "XP", "Cap"]
-
-    [eet_tweaks.components.2010]
-    path = ["Tables", "XP", "Cap"]
-
-    [eet_tweaks.components.2033]
-    path = ["Tables", "XP", "Cap"]
-
-    [eet_tweaks.components.1041]
-    path = ["NPC", "Viconia", "Appearance"]
-
-    [eet_tweaks.components.4081]
-
-    [eet_tweaks.components.2043]
-    exclusive = ["xpbonus.2da"]
-    path = ["Tables", "Bonus XP"]
-
-    [eet_tweaks.components.1011]
-    path = ["NPC", "Imoen", "Appearance"]
-
-    [eet_tweaks.components.2055]
-
-    [eet_tweaks.components.1001]
-    path = ["NPC", "Edwin", "Appearance"]
-
-    [eet_tweaks.components.2021]
-    path = ["Tables", "XP", "Cap"]
-
-    [eet_tweaks.components.2066]
-
-    [eet_tweaks.components.2011]
-    path = ["Tables", "XP", "Cap"]
-
-    [eet_tweaks.components.2051]
-
     [eet_tweaks.components.2032]
+    path = ["Tables", "XP", "Cap"]
+
+    [eet_tweaks.components.2012]
     path = ["Tables", "XP", "Cap"]
 
     [eet_tweaks.components.1020]
     path = ["NPC", "Jaheira", "Appearance"]
 
-    [eet_tweaks.components.2053]
+    [eet_tweaks.components.2013]
+    path = ["Tables", "XP", "Cap"]
 
-    [eet_tweaks.components.2050]
+    [eet_tweaks.components.4040]
+    path = ["Story", "BG2"]
+
+    [eet_tweaks.components.2031]
+    path = ["Tables", "XP", "Cap"]
+
+    [eet_tweaks.components.2003]
+    exclusive = ["xplevel.2da"]
+    path = ["Tables", "XP"]
+
+    [eet_tweaks.components.2020]
+    path = ["Tables", "XP", "Cap"]
 
 [ascension]
 lastupdate = 1970-01-01
@@ -3717,13 +3644,9 @@ url = "github:subtledoctor/d5_Random_Tweaks"
 description = "SD's Random Tweaks"
 archive = "d5_random_tweaks.tar.gz"
 
-    [d5_random_tweaks.components.3050]
-
     [d5_random_tweaks.components.3093]
     exclusive = ["misc89.itm"]
     path = ["NPC", "Edwin"]
-
-    [d5_random_tweaks.components.4020]
 
     [d5_random_tweaks.components.2923]
     exclusive = ["plangood.cre"]
@@ -3742,7 +3665,7 @@ archive = "d5_random_tweaks.tar.gz"
 
     [d5_random_tweaks.components.1207]
     exclusive = ["sppr207.spl"]
-    path = ["Alteration"]
+    path = ["Spells", "Alteration"]
 
     [d5_random_tweaks.components.1710]
     exclusive = ["sppr710.spl"]
@@ -3770,8 +3693,6 @@ archive = "d5_random_tweaks.tar.gz"
 
     [d5_random_tweaks.components.2808]
     exclusive = ["sppr603.spl"]
-
-    [d5_random_tweaks.components.1151]
 
     [d5_random_tweaks.components.2714]
     path = ["Spells", "Evocation"]
@@ -3819,8 +3740,6 @@ archive = "d5_random_tweaks.tar.gz"
     exclusive = ["spwi234d.spl", "spwi324.spl", "spwi720.spl"]
     path = ["Spells", "Necromancy"]
 
-    [d5_random_tweaks.components.2508]
-
     [d5_random_tweaks.components.2209]
     exclusive = ["spwi209.spl"]
     path = ["Spells", "Enchantment"]
@@ -3843,12 +3762,8 @@ archive = "d5_random_tweaks.tar.gz"
     [d5_random_tweaks.components.2451]
     exclusive = ["shades.2da"]
 
-    [d5_random_tweaks.components.1352]
-
     [d5_random_tweaks.components.5010]
     path = ["Spells", "Healing"]
-
-    [d5_random_tweaks.components.1451]
 
     [d5_random_tweaks.components.4031]
     path = ["Creatures", "Dragons"]
@@ -3950,8 +3865,6 @@ archive = "d5_random_tweaks.tar.gz"
     [d5_random_tweaks.components.1614]
     exclusive = ["sorb.itm"]
     path = ["Items", "Summoned weapons"]
-
-    [d5_random_tweaks.components.1152]
 
     [d5_random_tweaks.components.""]
     after = ["item_rev", "spell_rev"]
@@ -4109,12 +4022,8 @@ archive = "metweaks.tar.gz"
     [metweaks.components.3210]
     path = ["Skills", "Infravision"]
 
-    [metweaks.components.800]
-
     [metweaks.components.3810]
     path = ["Skills", "Backstab"]
-
-    [metweaks.components.3415]
 
     [metweaks.components.1200]
     exclusive = ["spcl922.spl"]
@@ -4167,14 +4076,8 @@ archive = "metweaks.tar.gz"
     [metweaks.components.2200]
     path = ["Creatures"]
 
-    [metweaks.components.810]
-
-    [metweaks.components.900]
-
     [metweaks.components.2800]
     path = ["Story", "BG1"]
-
-    [metweaks.components.3405]
 
     [metweaks.components.510]
     path = ["Fighting", "Proficiencies"]
@@ -4191,10 +4094,6 @@ archive = "metweaks.tar.gz"
     exclusive = ["backstab.2da"]
     path = ["Skills", "Backstab"]
 
-    [metweaks.components.805]
-
-    [metweaks.components.2400]
-
     [metweaks.components.2600]
     path = ["UI"]
 
@@ -4207,14 +4106,8 @@ archive = "metweaks.tar.gz"
     [metweaks.components.3205]
     path = ["Skills", "Infravision"]
 
-    [metweaks.components.3400]
-
     [metweaks.components.200]
     path = ["Tables", "XP", "Quest"]
-
-    [metweaks.components.3410]
-
-    [metweaks.components.4200]
 
 [artaport]
 lastupdate = 1970-01-01
@@ -4347,6 +4240,7 @@ archive = "tweaks-and-tricks-v8.19.zip"
     [tnt.components.74]
 
     [tnt.components.41]
+    path = ["Skills", "Shapeshifting"]
 
     [tnt.components.65]
     path = ["Story", "BG2", "Stronghold"]
@@ -4365,6 +4259,7 @@ archive = "tweaks-and-tricks-v8.19.zip"
     [tnt.components.75]
 
     [tnt.components.42]
+    path = ["Skills", "Bhaalspawn"]
 
     [tnt.components.33]
     path = ["Items", "Potions"]
@@ -4380,6 +4275,7 @@ archive = "tweaks-and-tricks-v8.19.zip"
     path = ["Skills", "Blade spin"]
 
     [tnt.components.63]
+    path = ["Classes", "Restrictions"]
 
     [tnt.components.26]
     path = ["Items", "Ammunition"]
@@ -4414,12 +4310,14 @@ archive = "tweaks-and-tricks-v8.19.zip"
     path = ["Fighting", "Proficiencies"]
 
     [tnt.components.43]
+    path = ["Skills", "Bhaalspawn"]
 
     [tnt.components.39]
 
-    [tnt.components.34]
-
     [tnt.components.44]
+    path = ["Skills", "Bhaalspawn"]
+
+    [tnt.components.34]
 
     [tnt.components.55]
     path = ["Items", "Stores"]
@@ -4805,41 +4703,9 @@ url = "https://github.com/Pocket-Plane-Group/D0Tweak/releases/download/v25/d0twe
 description = "Ding0 Tweak Pack"
 archive = "d0tweak-v25.zip"
 
-    [d0tweak.components.4]
-
-    [d0tweak.components.20]
-
-    [d0tweak.components.6]
-
-    [d0tweak.components.23]
-
     [d0tweak.components.11]
     after = ["rr"]
     path = ["Cosmetic", "Sprites"]
-
-    [d0tweak.components.13]
-
-    [d0tweak.components.5]
-
-    [d0tweak.components.15]
-
-    [d0tweak.components.16]
-
-    [d0tweak.components.21]
-
-    [d0tweak.components.7]
-
-    [d0tweak.components.17]
-
-    [d0tweak.components.19]
-
-    [d0tweak.components.0]
-
-    [d0tweak.components.9]
-
-    [d0tweak.components.18]
-
-    [d0tweak.components.3]
 
 [eetgbthfkp]
 lastupdate = 1970-01-01
@@ -5077,6 +4943,153 @@ class = "Tweaks"
 url = "https://www.dropbox.com/s/7755znu08x690sa/klatu_Tweaks_and_Fixes_1.7.7z?dl=1"
 description = "klatu Tweaks and Fixes"
 archive = "klatu_Tweaks_and_Fixes_1.7.7z"
+
+    [klatu.components.3050]
+
+    [klatu.components.1040]
+    path = ["NPC", "Hexxat"]
+
+    [klatu.components.3093]
+
+    [klatu.components.2030]
+    path = ["Items", "Stores"]
+
+    [klatu.components.1060]
+
+    [klatu.components.3115]
+
+    [klatu.components.2160]
+    path = ["Spells", "Alteration"]
+
+    [klatu.components.3100]
+
+    [klatu.components.3010]
+
+    [klatu.components.3094]
+
+    [klatu.components.3101]
+
+    [klatu.components.3000]
+
+    [klatu.components.2140]
+    path = ["Skills", "Casting"]
+
+    [klatu.components.1070]
+
+    [klatu.components.2000]
+    path = ["Tables", "Spell slots"]
+
+    [klatu.components.2040]
+    path = ["Classes", "Wizard"]
+
+    [klatu.components.2170]
+    path = ["Items", "Stores"]
+
+    [klatu.components.3110]
+
+    [klatu.components.1050]
+    path = ["Creatures"]
+
+    [klatu.components.3112]
+
+    [klatu.components.3030]
+
+    [klatu.components.2110]
+    path = ["Skills"]
+
+    [klatu.components.3020]
+
+    [klatu.components.3103]
+
+    [klatu.components.3102]
+
+    [klatu.components.3080]
+
+    [klatu.components.3085]
+
+    [klatu.components.3111]
+
+    [klatu.components.3105]
+
+    [klatu.components.2070]
+
+    [klatu.components.3040]
+
+    [klatu.components.3081]
+
+    [klatu.components.2130]
+    path = ["Skills", "Bard song"]
+
+    [klatu.components.3114]
+
+    [klatu.components.2080]
+
+    [klatu.components.1030]
+
+    [klatu.components.3070]
+    path = ["Cosmetic", "Icons"]
+
+    [klatu.components.3104]
+
+    [klatu.components.1080]
+
+    [klatu.components.3084]
+
+    [klatu.components.2180]
+    path = ["Items", "Stores"]
+
+    [klatu.components.2100]
+
+    [klatu.components.1090]
+
+    [klatu.components.3095]
+
+    [klatu.components.1010]
+    path = ["Items"]
+
+    [klatu.components.2200]
+    path = ["Skills", "Familiar"]
+
+    [klatu.components.1000]
+    path = ["Items"]
+
+    [klatu.components.3082]
+
+    [klatu.components.3091]
+
+    [klatu.components.2060]
+    path = ["Spells", "Alteration"]
+
+    [klatu.components.3113]
+
+    [klatu.components.2020]
+    path = ["Items", "Stores"]
+
+    [klatu.components.2010]
+    path = ["Tables", "Spell slots"]
+
+    [klatu.components.3083]
+
+    [klatu.components.2190]
+
+    [klatu.components.3060]
+
+    [klatu.components.2090]
+
+    [klatu.components.2120]
+
+    [klatu.components.3092]
+
+    [klatu.components.2150]
+    path = ["Skills", "Thieving"]
+
+    [klatu.components.1020]
+    path = ["Spells", "Conjuration"]
+
+    [klatu.components.3090]
+
+    [klatu.components.2050]
+    path = ["Spells", "Conjuration"]
 
 [tsujatha]
 lastupdate = 1970-01-01

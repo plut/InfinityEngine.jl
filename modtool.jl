@@ -13,6 +13,7 @@ module ModTool
 # Generic installation order
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
 # FIXME:
+# http://www.shsforums.net/topic/53558-arcane-archer/
 # + fix updating selection file
 # + allow # on right side of =
 # + mod subcomponents
@@ -527,14 +528,42 @@ function modstatus(tp2file, dir)#««
 end#»»
 # @inline modstatus(db, tp2file) = get(db, tp2file, Int[])
 # @inline componentstatus(db, tp2file, c) = (c ∈ modstatus(db, tp2file))
-function printcomp(io::IO, m, c::ModComponent; selection, installed)
+function printcomp(io::IO, m, c::ModComponent; selection, installed)#««
 	@printf(io, "%c%c%c `%s:%s` %s\n",
 		c.id ∈ get(selection, m.id, []) ? 's' : '.',
 		c.id ∉ get(installed, m.tp2, []) ? '.' : modgame(m) == :bg1 ? '1' : '2',
 		isempty(c.path) ? '.' : 'p',
 		m.id, c.id, description(c))
-end
-@inline component_editor(filename) =#««
+end#»»
+function readcomp(io::IO; selection=global_selection)#««
+	newsel = Dict{String, Dict{String,Bool}}()
+	for line in eachline(io)
+		m = match(r"^([.s])[.12][.p]\s+`([^`:]*):(\d+)`\s+", line)
+		isnothing(m) && continue
+		get!(newsel, m.captures[2], Dict{String,Bool}())[m.captures[3]] =
+			(m.captures[1] == "s")
+	end
+	global S=newsel
+	to_add = Dict{String,Vector{String}}()
+	to_del = Dict{String,Vector{String}}()
+	for (id, d) in newsel
+		old = get!(selection, id, String[])
+		for (k, v) in d
+			if v && (k ∉ old)
+				push!(get!(to_add, id, String[]), k)
+				push!(old, k)
+			elseif !v && (k ∈ old)
+				push!(get!(to_del, id, String[]), k)
+				filter!(!=(k), old)
+			end
+		end
+	end
+	printlog("Added:")
+	for (k, v) in to_add; printlog("\e[32m+", k, ": ", join(v, ", "), "\e[m");end
+	printlog("Removed:")
+	for (k, v) in to_del; printlog("\e[31m-", k, ": ", join(v, ", "), "\e[m");end
+end#»»
+function component_editor(filename; selection)#««
 	run(`vim -c 'se ft= fdm=marker fmr=««,»»|
 sy match modComp /\`[^\`]*\`/|hi link modComp Constant|
 sy match modAdd /^s\.[.p] .*$/ contains=modComp |hi link modAdd DiffAdd|
@@ -543,7 +572,9 @@ sy match modSel /^s[12][.p] .*$/|hi link modSel DiffChange|
 sy match modGrp /^# .*$/|hi link modGrp ModeMsg|
 sy match modSub /^## .*$/|hi link modSub Title|
 	nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>'
-	$filename`)#»»
+	$filename`)
+	open(filename, "r") do io; readcomp(io; selection); end
+end#»»
 function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 		less=true)
 	extract(mod) || return
@@ -566,41 +597,59 @@ function components!(mod::Mod; selection=global_selection,#««
 			h ≠ c.subgroup &&
 				(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
 			printcomp(io, mod, c; selection, installed)
-# 			s = c.id ∈ sel ? 's' : '.'
-# 			i = isempty(ins) ? '.' : modgame(mod) == :bg1 ? '1' : '2'
-# 			@printf(io, "%c%c % 4s %s\n", s, i, c.id, description(c))
 		end
 	end
-	# vim will be better than whiptail: we have syntax highlight + folding
-	component_editor(filename)
-	newsel = String[]
-	open(filename, "r") do io; for line in eachline(io)
-		m = match(r"^([s])[.12][.p]\s+(\d+)\s+", line); isnothing(m) && continue
-		push!(newsel, m.captures[2])
-	end end
-	rm(filename)
-	to_add, to_del = setdiff(newsel, selection[mod.id]),
-		setdiff(selection[mod.id], newsel)
-	printlog("added $(length(to_add)) components: ", join(to_add, ", "))
-	printlog("deleted $(length(to_del)) components: ", join(to_del, ", "))
-	selection[mod.id] = newsel
-	# call whiptail
-# 	args = [ "--output-fd", "2", "--separate-output",
-# 		"--checklist", "Select mod components", "25", string(cols), "15" ]
-# 	for c in mod.components
-# 		push!(args, c.id,
-# 			(isempty(ins) ? '.' : modgame(mod)==:bg1 ? '1' : '2')*' '*description(c),
-# 			(c.id ∈ sel ? "1" : "0"))
-# 	end
-# 	fd = Pipe()
-# 	proc = run(pipeline(ignorestatus(`whiptail $args`), stderr=fd))
-# 	close(fd.in)
-# 	iszero(proc.exitcode) || return
-# 	sel = [ replace(x, '"' => "") for x in eachline(fd) ]
-# 	found = false
-# 	selection[mod.id] = sel
-	return
+	component_editor(filename; selection)
 end#»»
+# Configuration editor««2
+struct ComponentTree#««
+	alternatives::Vector{NTuple{2,String}}
+	children::Dict{String,ComponentTree}
+	@inline ComponentTree() = new([], Dict())
+end#»»
+findbranch(root::ComponentTree, path) = isempty(path) ? root :
+	findbranch(get!(root.children, first(path), ComponentTree()), path[2:end])
+function build_tree(;moddb=global_moddb)#««
+	root = ComponentTree()
+	for (id, m) in moddb, (k, v) in m.components
+		isempty(v.path) && continue
+		push!(findbranch(root, v.path).alternatives, (id, k))
+	end
+	root
+end#»»
+function display_tree(io::IO, root, level=1;#««
+		moddb=global_moddb, selection=global_selection, installed, order)
+	for (id, k) in sort(collect(root.alternatives);
+			lt=(x,y)->comp_isless(x,y,order))
+		m = findmod(id; moddb); extract(m)
+		c = findcomponent(m, k)
+		printcomp(io, m, m.components[k]; selection, installed)
+	end
+	for (s, c) in sort(collect(root.children); by=first)
+		println(io, '#'^level, ' ', s, " «",'«', level)
+		display_tree(io, c, level+1; selection, moddb, installed, order)
+	end
+end#»»
+function components!(;selection=global_selection,moddb=global_moddb)#««
+	installed = weidu_status(GAMEDIR...)
+	order = installorder(keys(moddb); moddb)
+	f = joinpath(TEMP, "config")
+	open(f, "w") do io
+		display_tree(io, build_tree(;moddb); selection, moddb, installed, order)
+		lastid = ""
+		println(io, "# Individual, unsorted components «"*"«1")
+		for id in order
+			m = moddb[id]
+			for c in modcomponents(m)
+				isempty(c.path) || continue
+				id ≠ lastid && (extract(m); lastid=id; println(io, "## $id «"*"«2"))
+				printcomp(io, m, c; selection, installed)
+			end
+		end
+	end
+	component_editor(f; selection)
+end#»»
+
 # Mod installation ««1
 "Returns the dependency matrix for these mods, encoded as
 (after = dict(mod1 => mod2, ...), before = dict(mod1 => mod2, ...))"
@@ -740,56 +789,6 @@ list2 = (list1..., :readme, :tp2, :components!, :components, :status)
 for f in list2; @eval begin
 	@inline $f(id::Union{String,Symbol}; kwargs...) = $f(findmod(id); kwargs...)
 end end
-
-# Configuration editor
-struct ComponentTree
-	alternatives::Vector{NTuple{2,String}}
-	children::Dict{String,ComponentTree}
-	@inline ComponentTree() = new([], Dict())
-end
-findbranch(root::ComponentTree, path) = isempty(path) ? root :
-	findbranch(get!(root.children, first(path), ComponentTree()), path[2:end])
-function build_tree(;moddb=global_moddb)#««
-	root = ComponentTree()
-	for (id, m) in moddb, (k, v) in m.components
-		isempty(v.path) && continue
-		push!(findbranch(root, v.path).alternatives, (id, k))
-	end
-	root
-end#»»
-function display_tree(io::IO, root, level=1;#««
-		moddb=global_moddb, selection=global_selection, installed, order)
-	for (id, k) in sort(collect(root.alternatives);
-			lt=(x,y)->comp_isless(x,y,order))
-		m = findmod(id; moddb); extract(m)
-		c = findcomponent(m, k)
-		printcomp(io, m, m.components[k]; selection, installed)
-	end
-	for (s, c) in sort(collect(root.children); by=first)
-		println(io, '#'^level, ' ', s, " «",'«', level)
-		display_tree(io, c, level+1; selection, moddb, installed, order)
-	end
-end#»»
-function config(;selection=global_selection,moddb=global_moddb)#««
-	installed = weidu_status(GAMEDIR...)
-	order = installorder(keys(moddb); moddb)
-	f = joinpath(TEMP, "config")
-	open(f, "w") do io
-		display_tree(io, build_tree(;moddb); selection, moddb, installed, order)
-		lastid = ""
-		println(io, "# Individual, unsorted components «"*"«1")
-		for id in order
-			m = moddb[id]
-			for c in modcomponents(m)
-				isempty(c.path) || continue
-				id ≠ lastid && (extract(m); lastid=id; println(io, "## $id «"*"«2"))
-				printcomp(io, m, c; selection, installed)
-			end
-		end
-				
-	end
-	component_editor(f)
-end#»»
 
 # BWS mod db handling ««1
 function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
@@ -1032,6 +1031,7 @@ function complete_db!(moddb) #««
 	# Misc. ««3
 	mkmod("mortis", "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip", "Mortis Mini Mod", "Items"),
 	mkmod("unique_items", "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip", "BGEE/SOD Item replacement fun pack", "Items"),
+	mkmod("arcanearcher", "www.shsforums.net/files/download/994-arcane-archer/", "Arcane Archer", "Kits"),
 	#»»3
 	)
 	function setmod!(id, list...; kwargs...)#««
@@ -1100,10 +1100,12 @@ function complete_db!(moddb) #««
  241 => (path = ["Skills", "Bhaalspawn"],),
  261 => (path = ["Tables", "Bonus XP"],),
  262 => (path = ["Tables", "Bonus XP"],),
+ 270 => (path = ["Tables", "XP", "Quest"],),
  300 => (exclusive = ["spdimndr.bam", "eff_m09.wav"], path = ["Cosmetic", "Spells"],),
  301 => (path = ["Items"],),
  302 => (path = ["Items"],),
  310 => (path = ["Cosmetic", "Sprites"],),
+ 315 => (path = ["Cosmetic", "Sound"],),
  322 => (exclusive = ["spdimndr.bam", "eff_m09.wav"], path = ["Cosmetic", "Spells"],),
  323 => (exclusive = ["spwi402.spl"], path = ["Cosmetic", "Spells"]),
  324 => (exclusive = ["spdimndr.bam", "eff_m09.wav"], path=["Cosmetic", "Spells"]),
@@ -1344,6 +1346,8 @@ function complete_db!(moddb) #««
 	; class = "Quests")#»»
 	setmod!("d0tweak",#««
 		11 => (after = ["rr",], path=["Cosmetic", "Sprites"],), # ioun stones...
+		17 => (path = ["Skills", "Lore"],),
+		18 => (path = ["Skills", "Backstab"],),
 	)#»»
 	setmod!("d5_random_tweaks", #««
 		"" => (after = ["spell_rev", "item_rev"],),
@@ -1811,6 +1815,9 @@ function complete_db!(moddb) #««
 		4115 => (path = ["Skills", "Thieving"],),
 		4120 => (exclusive = "NPC_at_inn",),
 		4230 => (exclusive = ["wmart1.cre", "wmart2.cre"], path=["Items", "Stores"],), # Joluv, Deidre
+		4145 => (path = ["Story", "BG1"],),
+		4146 => (path = ["Story", "BG1"],),
+		4150 => (path = ["Story", "BG2"],),
 		4190 => (path = ["Story", "ToB"],),
 		4210 => (path = ["Story", "ToB"],),
 		4240 => (path = ["Spells", "HLA"],),
@@ -1987,6 +1994,7 @@ function complete_db!(moddb) #««
 		# »»
 		findmod("faiths_and_powers"; moddb).readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
 		findmod("tnt"; moddb).readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
+		findmod("arcanearcher";moddb).archive = "arcanearcher.zip"
 		# update `lastupdate` field««
 		for (id, mod) in moddb
 			isdir(joinpath(MODS, id)) && lastupdate!(mod)

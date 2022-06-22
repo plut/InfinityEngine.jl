@@ -82,70 +82,70 @@ url = "github:UnearthedArcana/Might_and_Guile"
 description = "Might and Guile"
 archive = "might_and_guile.tar.gz"
 
-    [might_and_guile.properties.265]
+    [might_and_guile.components.265]
     path = ["Classes", "Monk"]
 
-    [might_and_guile.properties.245]
+    [might_and_guile.components.245]
     path = ["Classes", "Barbarian"]
 
-    [might_and_guile.properties.320]
+    [might_and_guile.components.320]
     path = ["Classes", "Fighter"]
 
-    [might_and_guile.properties.350]
+    [might_and_guile.components.350]
     path = ["Classes", "Ranger"]
 
-    [might_and_guile.properties.235]
+    [might_and_guile.components.235]
     path = ["Classes", "Ranger"]
 
-    [might_and_guile.properties.470]
+    [might_and_guile.components.470]
     path = ["Classes", "Bard"]
 
-    [might_and_guile.properties.420]
+    [might_and_guile.components.420]
     path = ["Classes", "Thief"]
 
-    [might_and_guile.properties.480]
+    [might_and_guile.components.480]
     path = ["Classes", "Bard"]
 
-    [might_and_guile.properties.210]
+    [might_and_guile.components.210]
     path = ["Classes", "Bard"]
 
-    [might_and_guile.properties.450]
+    [might_and_guile.components.450]
     path = ["Classes", "Bard"]
 
-    [might_and_guile.properties.240]
+    [might_and_guile.components.240]
     path = ["Classes", "Ranger"]
 
-    [might_and_guile.properties.360]
+    [might_and_guile.components.360]
     path = ["Classes", "Ranger"]
 
-    [might_and_guile.properties.275]
+    [might_and_guile.components.275]
     path = ["Classes", "Thief"]
 
-    [might_and_guile.properties.324]
+    [might_and_guile.components.324]
     path = ["Classes", "Ranger"]
 
-    [might_and_guile.properties.410]
+    [might_and_guile.components.410]
     path = ["Classes", "Thief"]
 
-    [might_and_guile.properties.490]
+    [might_and_guile.components.490]
     path = ["Classes", "Bard"]
 
-    [might_and_guile.properties.322]
+    [might_and_guile.components.322]
     path = ["Classes", "Ranger"]
 
-    [might_and_guile.properties.460]
+    [might_and_guile.components.460]
     path = ["Classes", "Bard"]
 
-    [might_and_guile.properties.250]
+    [might_and_guile.components.250]
     path = ["Skills", "Rage"]
 
-    [might_and_guile.properties.""]
+    [might_and_guile.components.""]
     before = ["refinements", "stratagems"]
 
-    [might_and_guile.properties.230]
+    [might_and_guile.components.230]
     path = ["Classes", "Ranger"]
 
-    [might_and_guile.properties.310]
+    [might_and_guile.components.310]
     path = ["Classes", "Fighter"]
 
 [tyrisflare]
@@ -470,7 +470,7 @@ url = "github:RoxanneSHS/The-Rune"
 description = "Twisting With The Rune"
 archive = "therune.tar.gz"
 
-    [therune.properties.""]
+    [therune.components.""]
     after = ["cowledmenace"]
 
 [hq_soundclips_bg2ee]
@@ -497,16 +497,16 @@ class = "Early"
 url = "github:Gibberlings3/SpellRevisions"
 description = "Spell Revisions v4 b18"
 
-    [spell_rev.properties.10]
+    [spell_rev.components.10]
     exclusive = ["devaevil.cre", "devagood.cre", "planevil.cre", "plangood.cre"]
 
-    [spell_rev.properties.0]
+    [spell_rev.components.0]
     exclusive = ["elemtype.itm", "mstone.itm", "shille.itm", "shille2.itm", "shille3.itm", "spcl213.spl", "spcl721.spl", "spcl722.spl", "spdr101.spl", "spdr201.spl", "spdr301.spl", "spdr401.spl", "spdr501.spl", "spdr601.spl", "spentaai.bam", "spentaci.bam", "spin101.spl", "spin102.spl", "spin103.spl", "spin104.spl", "spin105.spl", "spin106.spl", "spin113.spl", "spin683.spl", "spin701.spl", "spin788.spl", "spin789.spl", "spmagglo.bam", "spmagglo.vvc", "sppr101.spl", "sppr102.spl", "sppr103.spl", "sppr104.spl", "sppr105.spl", "sppr106.spl", "sppr107.spl", "sppr108.spl", "sppr109.spl", "sppr110.spl", "sppr111.spl", "sppr113.spl", "sppr116.spl", "spra301.spl", "spra302.spl", "spra303.spl", "spra304.spl", "spra305.spl", "spra306.spl", "spwi977.spl", "spwi978.spl", "undtype.itm", "vermtype.itm"]
 
-    [spell_rev.properties.""]
+    [spell_rev.components.""]
     after = ["ub"]
 
-    [spell_rev.properties.65]
+    [spell_rev.components.65]
     exclusive = ["spcl900.spl", "spcl901.spl", "spcl907.spl", "spwish12.spl"]
 
 [vynd]
@@ -689,63 +689,84 @@ url = "https://www.dropbox.com/s/hs3besqzichlru0/atweaks-v453.zip?dl=1"
 description = "aTweaks"
 archive = "atweaks-v453.zip"
 
-    [atweaks.properties.105]
-    exclusive = ["spwi402.spl"]
+    [atweaks.components.101]
+    path = ["Creatures"]
 
-    [atweaks.properties.205]
-    path = ["Spells", "Illusion"]
+    [atweaks.components.130]
+    path = ["Tables", "Races"]
 
-    [atweaks.properties.212]
+    [atweaks.components.212]
     path = ["Spells", "Divination"]
 
-    [atweaks.properties.502]
+    [atweaks.components.502]
     path = ["Items", "Containers"]
 
-    [atweaks.properties.261]
-    path = ["Tables", "Bonus XP"]
-
-    [atweaks.properties.211]
+    [atweaks.components.211]
     path = ["Spells", "Abjuration"]
 
-    [atweaks.properties.104]
+    [atweaks.components.104]
     exclusive = ["spin937.spl", "spwi105.spl"]
+    path = ["Spells", "Alteration"]
 
-    [atweaks.properties.203]
+    [atweaks.components.203]
     path = ["Skills", "Shapeshifting"]
 
-    [atweaks.properties.300]
+    [atweaks.components.125]
+    path = ["Classes", "Ranger"]
+
+    [atweaks.components.324]
     exclusive = ["eff_m09.wav", "spdimndr.bam"]
 
-    [atweaks.properties.324]
-    exclusive = ["eff_m09.wav", "spdimndr.bam"]
-
-    [atweaks.properties.213]
-    path = ["Tables", "Saving throws"]
-
-    [atweaks.properties.323]
-    exclusive = ["spwi402.spl"]
-
-    [atweaks.properties.202]
-    exclusive = ["spin101.spl", "spin102.spl", "spin104.spl", "spin105.spl", "spin106.spl"]
-
-    [atweaks.properties.262]
-    path = ["Tables", "Bonus XP"]
-
-    [atweaks.properties.""]
-    after = ["rr", "stratagems"]
-
-    [atweaks.properties.100]
+    [atweaks.components.100]
     path = ["Skills", "Infravision"]
 
-    [atweaks.properties.500]
+    [atweaks.components.500]
     path = ["Items", "Containers"]
 
-    [atweaks.properties.102]
+    [atweaks.components.322]
+    exclusive = ["eff_m09.wav", "spdimndr.bam"]
+
+    [atweaks.components.205]
+    path = ["Spells", "Illusion"]
+
+    [atweaks.components.261]
+    path = ["Tables", "Bonus XP"]
+
+    [atweaks.components.300]
+    exclusive = ["eff_m09.wav", "spdimndr.bam"]
+
+    [atweaks.components.213]
+    path = ["Tables", "Saving throws"]
+
+    [atweaks.components.323]
+    exclusive = ["spwi402.spl"]
+
+    [atweaks.components.202]
+    exclusive = ["spin101.spl", "spin102.spl", "spin104.spl", "spin105.spl", "spin106.spl"]
+    path = ["Skills", "Bhaalspawn"]
+
+    [atweaks.components.120]
+    path = ["Classes", "Paladin"]
+
+    [atweaks.components.135]
+    path = ["Tables", "Races"]
+
+    [atweaks.components.""]
+    after = ["rr", "stratagems"]
+
+    [atweaks.components.102]
     exclusive = ["shammr.itm"]
     path = ["Items", "Magic weapons"]
 
-    [atweaks.properties.322]
-    exclusive = ["eff_m09.wav", "spdimndr.bam"]
+    [atweaks.components.103]
+    path = ["Spells", "Abjuration"]
+
+    [atweaks.components.105]
+    exclusive = ["spwi402.spl"]
+    path = ["Spells", "Alteration"]
+
+    [atweaks.components.262]
+    path = ["Tables", "Bonus XP"]
 
 [asharnpc]
 lastupdate = 1970-01-01
@@ -865,256 +886,256 @@ url = "https://github.com/Gibberlings3/SwordCoastStratagems/releases/download/v3
 description = "Sword Coast Stratagems"
 archive = "lin-stratagems-34.3.zip"
 
-    [stratagems.properties.8160]
-    exclusive = ["elemimix.bcs", "giafir01.cre", "golbur01.bcs", "gorsku01.bcs", "hgwar01.cre", "ysfire01.cre", "ysguar01.cre"]
-
-    [stratagems.properties.7220]
-    exclusive = ["battho.cre"]
-
-    [stratagems.properties.6560]
-    exclusive = ["flayer01.bcs", "flayer02.bcs", "flayun.bcs", "udmaster.cre"]
-
-    [stratagems.properties.7040]
-    exclusive = ["grema_d.cre", "ogrema.cre"]
-
-    [stratagems.properties.8050]
-    exclusive = ["reband01.cre"]
-
-    [stratagems.properties.8140]
-    exclusive = ["dagmag01.cre", "daqilue.cre", "drow01.cre", "drow06.cre", "jael01.cre", "uddrow01.cre"]
-
-    [stratagems.properties.5900]
-    exclusive = ["AI"]
-
-    [stratagems.properties.6520]
-    exclusive = ["efreet01.bcs"]
-
-    [stratagems.properties.7210]
-    exclusive = ["ardeno.cre", "bandit.bcs", "credus.cre", "taugos.cre"]
-
-    [stratagems.properties.6840]
+    [stratagems.components.6840]
     exclusive = ["finiren.cre", "finsend.bcs", "finsend.cre"]
     depends = ["ascension"]
 
-    [stratagems.properties.7060]
+    [stratagems.components.7060]
     exclusive = ["baresh.bcs", "baresh2.cre", "barwlf.cre", "daese.cre", "kaishwlf.cre"]
 
-    [stratagems.properties.8010]
+    [stratagems.components.8010]
     exclusive = ["rngsha02", "shadel.bcs", "shadel.cre", "shalt01.cre"]
 
-    [stratagems.properties.3010]
+    [stratagems.components.3010]
     path = ["Items", "Magic weapons"]
 
-    [stratagems.properties.3550]
+    [stratagems.components.3550]
     path = ["Spells", "Healing"]
 
-    [stratagems.properties.7070]
+    [stratagems.components.7070]
     exclusive = ["avaricem.cre", "bishop.cre", "dopdop.bcs", "dopdur.cre", "dopdur1.cre", "fearm.cre", "fuerne.cre", "greed.bcs", "islann.cre", "love.bcs", "lovem.cre", "rook.cre"]
 
-    [stratagems.properties.4051]
-    path = ["Skills", "Reputation"]
-
-    [stratagems.properties.4230]
+    [stratagems.components.4230]
     exclusive = ["wmart1.cre", "wmart2.cre"]
 
-    [stratagems.properties.7140]
-    exclusive = ["haseo.cre", "rahvin.cre", "shaldr.cre", "wudei.cre"]
-
-    [stratagems.properties.8100]
-    exclusive = ["ppjon.cre", "ppmur.cre"]
-
-    [stratagems.properties.8150]
+    [stratagems.components.8150]
     exclusive = ["ar3005.are", "ar3006.are", "ar3021.are", "gormind.cre", "gorsta01.cre"]
 
-    [stratagems.properties.7030]
-    exclusive = ["kobold.cre", "kobolda.cre"]
-
-    [stratagems.properties.4120]
+    [stratagems.components.4120]
     exclusive = ["NPC_at_inn"]
 
-    [stratagems.properties.7900]
-    exclusive = ["gnarl.cre", "hairto.cre", "jenkal.cre", "slythe.cre", "sunin.cre", "tamoko.cre", "telka.cre"]
-
-    [stratagems.properties.6300]
-    exclusive = ["hama.bcs", "sirspell.bcs"]
-
-    [stratagems.properties.8170]
-    exclusive = ["drofod02.cre", "elemogre.cre", "senlich.cre"]
-
-    [stratagems.properties.7110]
+    [stratagems.components.7110]
     exclusive = ["drasus.cre", "gentho.cre", "kysus.cre", "rezdan.cre"]
 
-    [stratagems.properties.8000]
+    [stratagems.components.8000]
     exclusive = ["ar0602.are", "ar0603.are", "duearc01.cre"]
 
-    [stratagems.properties.1500]
+    [stratagems.components.1500]
     path = ["Spells", "New spells"]
 
-    [stratagems.properties.6580]
+    [stratagems.components.6580]
     exclusive = ["bodvam01.cre", "c6valen.cre", "lassal.cre", "nevm4.bcs", "vampir01.bcs", "vampjah.cre", "vampm01.cre"]
 
-    [stratagems.properties.3022]
+    [stratagems.components.3022]
     path = ["Items", "Magic weapons"]
 
-    [stratagems.properties.6310]
+    [stratagems.components.6310]
     exclusive = ["crawler.bcs"]
 
-    [stratagems.properties.7200]
+    [stratagems.components.7200]
     exclusive = ["helpmul.cre", "kobold7.cre", "mulahe.cre"]
 
-    [stratagems.properties.4052]
+    [stratagems.components.4052]
     path = ["Skills", "Reputation"]
 
-    [stratagems.properties.2111]
-    exclusive = ["spcl231.spl"]
-
-    [stratagems.properties.8120]
-    exclusive = ["ar2101.are"]
-
-    [stratagems.properties.8070]
+    [stratagems.components.8070]
     exclusive = ["bheye.bcs", "bheye.cre"]
 
-    [stratagems.properties.6800]
-    exclusive = ["illasera.bcs"]
-    depends = ["ascension"]
-
-    [stratagems.properties.6540]
+    [stratagems.components.6540]
     exclusive = ["dragblac.bcs", "dragblac.cre", "dragblue.cre", "dragbrow.bcs", "dragred.bcs", "dragred1.itm", "firkra02.cre", "fsdragon.cre", "gorsal.cre", "shadra01.cre", "udsilver.cre"]
 
-    [stratagems.properties.8020]
+    [stratagems.components.8020]
     exclusive = ["demilich.cre", "hldemi.cre"]
 
-    [stratagems.properties.4115]
-    path = ["Skills", "Thieving"]
-
-    [stratagems.properties.7020]
-    exclusive = ["drakar.bcs", "drakar.cre", "halaca.bcs", "halaca.cre", "lamalh.bcs", "lamalh.cre", "maneir.bcs", "maneir.cre", "molkar.bcs", "molkar.cre", "morvin.bcs", "morvin.cre", "telka.cre", "zeela.cre"]
-
-    [stratagems.properties.6810]
+    [stratagems.components.6810]
     exclusive = ["fingrom.bcs", "jumjum.bcs"]
     depends = ["ascension"]
 
-    [stratagems.properties.6850]
+    [stratagems.components.6850]
     exclusive = ["finaluf.bcs", "finbalor.bcs", "finmaril.bcs", "finnabas.bcs"]
     depends = ["ascension"]
 
-    [stratagems.properties.4099]
-    path = ["NPC"]
-
-    [stratagems.properties.4050]
+    [stratagems.components.4050]
     path = ["Skills", "Reputation"]
 
-    [stratagems.properties.7130]
+    [stratagems.components.7130]
     exclusive = ["brenda.cre", "denak.cre", "diana.cre", "lasala.cre"]
 
-    [stratagems.properties.6820]
+    [stratagems.components.6820]
     exclusive = ["finyaga.bcs", "yagaft.bcs"]
     depends = ["ascension"]
 
-    [stratagems.properties.7080]
-    exclusive = ["cultt1.cre", "tanar.cre", "tracea.cre"]
-
-    [stratagems.properties.7100]
+    [stratagems.components.7100]
     exclusive = ["bassil.cre"]
 
-    [stratagems.properties.8040]
+    [stratagems.components.8040]
     exclusive = ["spwnbeh.bcs", "spwndead.bcs", "spwndrow.bcs", "spwngol.bcs", "spwnmind.bcs", "spwnmon.bcs", "spwnorc.bcs", "spwnrak.bcs", "spwntoa.bcs", "spwntrol.bcs", "spwnvamp.bcs", "spwnwolf.bcs"]
 
-    [stratagems.properties.3580]
-    path = ["Spells", "Healing"]
-
-    [stratagems.properties.3551]
-    path = ["Spells", "Healing"]
-
-    [stratagems.properties.6500]
-    exclusive = ["golbra01.cre", "golcly01.cre", "golice01.cre", "goliro01.cre", "golsto01.cre"]
-
-    [stratagems.properties.4100]
+    [stratagems.components.4100]
     path = ["NPC"]
 
-    [stratagems.properties.6830]
+    [stratagems.components.6830]
     exclusive = ["abaz2.bcs", "drake.bcs"]
     depends = ["ascension"]
 
-    [stratagems.properties.4093]
-    path = ["Skills", "Reputation"]
-
-    [stratagems.properties.2110]
+    [stratagems.components.2110]
     exclusive = ["spcl231.spl"]
 
-    [stratagems.properties.8180]
-    exclusive = ["bazliz03.cre", "bazliz04.cre", "bazmonk.cre", "eyesek01.cre", "eyesnt01.bcs", "gorsal.bcs"]
-
-    [stratagems.properties.7050]
-    exclusive = ["ichary.cre"]
-
-    [stratagems.properties.3021]
+    [stratagems.components.3021]
     path = ["Items", "Magic weapons"]
 
-    [stratagems.properties.6550]
-    exclusive = ["behdir01.bcs", "beheld01.cre", "behold01.bcs", "gauth01.bcs", "hlhive.cre", "hlvaxal.cre", "udelder.cre"]
-
-    [stratagems.properties.3552]
-    path = ["Spells", "Healing"]
-
-    [stratagems.properties.8110]
-    exclusive = ["sahamb01.bcs", "sahamb01.cre", "sahamb02.bcs", "sahbar01.cre", "sahkng01.cre", "sahpr2.cre", "sahpri01.cre"]
-
-    [stratagems.properties.3020]
+    [stratagems.components.3020]
     path = ["Items", "Magic weapons"]
 
-    [stratagems.properties.6570]
+    [stratagems.components.6570]
     exclusive = ["gith01.bcs", "gith01.cre", "gorgit.cre"]
 
-    [stratagems.properties.7090]
+    [stratagems.components.7090]
     exclusive = ["amaran.cre", "corsone.cre", "izefia.cre", "osmadi.cre", "takiyah.cre"]
 
-    [stratagems.properties.8060]
-    exclusive = ["ar1300.are", "ar1301.are", "ar1302.are", "ar1303.are", "pptroll1.cre", "torgal.cre", "torgal3.cre", "trolsi01.cre", "trolsp01.cre"]
-
-    [stratagems.properties.6590]
-    exclusive = ["finmel.bcs", "meliss01.bcs"]
-
-    [stratagems.properties.8190]
-    exclusive = ["ar1900.are", "bhguard2.cre", "druear01.cre", "elair01.cre", "elear01.cre", "elearg01.cre", "smound01.cre", "spmugg.cre", "spmugg2.cre", "talkni01.cre", "talmiss.cre", "udelda.cre", "udelde.cre", "udelf.cre"]
-
-    [stratagems.properties.7250]
-    exclusive = ["diarmid.cre", "galdor.cre", "sarevo.cre", "semaj.cre", "tazok2.cre"]
-
-    [stratagems.properties.4030]
+    [stratagems.components.4030]
     exclusive = ["spcl611.spl", "spcl612.spl", "spcl643.spl", "spcl644.spl"]
     path = ["Skills", "Shapeshifting"]
 
-    [stratagems.properties.7010]
-    exclusive = ["irongu.cre", "ronelit.cre", "ronguar.cre"]
-
-    [stratagems.properties.7150]
-    exclusive = ["carsa.cre", "kahrk.cre"]
-
-    [stratagems.properties.6200]
+    [stratagems.components.6200]
     exclusive = ["spidhu.cre", "spidph.cre", "spidsw.cre"]
 
-    [stratagems.properties.6320]
-    exclusive = ["gbasilsk.bcs", "lbasilsk.bcs"]
-
-    [stratagems.properties.6510]
+    [stratagems.components.6510]
     exclusive = ["cornugon.bcs", "dembal01.bcs", "dembal01.cre", "dembal02.cre", "demfig01.cre", "demfig02.cre", "demglab.bcs", "demglab.cre", "demglab2.cre", "demsuc.cre", "erinyes.bcs", "glabrez.cre", "marilith.cre", "pwarden.cre", "smarter_demons", "tanari.bcs", "tanari.cre", "tanari2.cre"]
 
-    [stratagems.properties.7000]
+    [stratagems.components.7000]
     exclusive = ["doppss.bcs", "noblpa.bcs", "sardopp.bcs", "zorl.bcs"]
 
-    [stratagems.properties.8080]
+    [stratagems.components.8080]
     exclusive = ["bodfgt01.cre", "bodfgt02.cre", "bodhi2.bcs", "bodhi2.cre", "chevil08.cre", "ppbodhi4.cre"]
 
-    [stratagems.properties.""]
+    [stratagems.components.8160]
+    exclusive = ["elemimix.bcs", "giafir01.cre", "golbur01.bcs", "gorsku01.bcs", "hgwar01.cre", "ysfire01.cre", "ysguar01.cre"]
+
+    [stratagems.components.1510]
+    path = ["Spells", "New spells"]
+
+    [stratagems.components.6560]
+    exclusive = ["flayer01.bcs", "flayer02.bcs", "flayun.bcs", "udmaster.cre"]
+
+    [stratagems.components.7040]
+    exclusive = ["grema_d.cre", "ogrema.cre"]
+
+    [stratagems.components.8050]
+    exclusive = ["reband01.cre"]
+
+    [stratagems.components.8140]
+    exclusive = ["dagmag01.cre", "daqilue.cre", "drow01.cre", "drow06.cre", "jael01.cre", "uddrow01.cre"]
+
+    [stratagems.components.5900]
+    exclusive = ["AI"]
+
+    [stratagems.components.6520]
+    exclusive = ["efreet01.bcs"]
+
+    [stratagems.components.7210]
+    exclusive = ["ardeno.cre", "bandit.bcs", "credus.cre", "taugos.cre"]
+
+    [stratagems.components.4051]
+    path = ["Skills", "Reputation"]
+
+    [stratagems.components.7140]
+    exclusive = ["haseo.cre", "rahvin.cre", "shaldr.cre", "wudei.cre"]
+
+    [stratagems.components.8100]
+    exclusive = ["ppjon.cre", "ppmur.cre"]
+
+    [stratagems.components.7030]
+    exclusive = ["kobold.cre", "kobolda.cre"]
+
+    [stratagems.components.7900]
+    exclusive = ["gnarl.cre", "hairto.cre", "jenkal.cre", "slythe.cre", "sunin.cre", "tamoko.cre", "telka.cre"]
+
+    [stratagems.components.6300]
+    exclusive = ["hama.bcs", "sirspell.bcs"]
+
+    [stratagems.components.8170]
+    exclusive = ["drofod02.cre", "elemogre.cre", "senlich.cre"]
+
+    [stratagems.components.2111]
+    exclusive = ["spcl231.spl"]
+
+    [stratagems.components.8120]
+    exclusive = ["ar2101.are"]
+
+    [stratagems.components.6800]
+    exclusive = ["illasera.bcs"]
+    depends = ["ascension"]
+
+    [stratagems.components.4115]
+    path = ["Skills", "Thieving"]
+
+    [stratagems.components.7020]
+    exclusive = ["drakar.bcs", "drakar.cre", "halaca.bcs", "halaca.cre", "lamalh.bcs", "lamalh.cre", "maneir.bcs", "maneir.cre", "molkar.bcs", "molkar.cre", "morvin.bcs", "morvin.cre", "telka.cre", "zeela.cre"]
+
+    [stratagems.components.4099]
+    path = ["NPC"]
+
+    [stratagems.components.7080]
+    exclusive = ["cultt1.cre", "tanar.cre", "tracea.cre"]
+
+    [stratagems.components.3580]
+    path = ["Spells", "Healing"]
+
+    [stratagems.components.3551]
+    path = ["Spells", "Healing"]
+
+    [stratagems.components.6500]
+    exclusive = ["golbra01.cre", "golcly01.cre", "golice01.cre", "goliro01.cre", "golsto01.cre"]
+
+    [stratagems.components.4093]
+    path = ["Skills", "Reputation"]
+
+    [stratagems.components.8180]
+    exclusive = ["bazliz03.cre", "bazliz04.cre", "bazmonk.cre", "eyesek01.cre", "eyesnt01.bcs", "gorsal.bcs"]
+
+    [stratagems.components.7050]
+    exclusive = ["ichary.cre"]
+
+    [stratagems.components.6550]
+    exclusive = ["behdir01.bcs", "beheld01.cre", "behold01.bcs", "gauth01.bcs", "hlhive.cre", "hlvaxal.cre", "udelder.cre"]
+
+    [stratagems.components.3552]
+    path = ["Spells", "Healing"]
+
+    [stratagems.components.8110]
+    exclusive = ["sahamb01.bcs", "sahamb01.cre", "sahamb02.bcs", "sahbar01.cre", "sahkng01.cre", "sahpr2.cre", "sahpri01.cre"]
+
+    [stratagems.components.8060]
+    exclusive = ["ar1300.are", "ar1301.are", "ar1302.are", "ar1303.are", "pptroll1.cre", "torgal.cre", "torgal3.cre", "trolsi01.cre", "trolsp01.cre"]
+
+    [stratagems.components.6590]
+    exclusive = ["finmel.bcs", "meliss01.bcs"]
+
+    [stratagems.components.8190]
+    exclusive = ["ar1900.are", "bhguard2.cre", "druear01.cre", "elair01.cre", "elear01.cre", "elearg01.cre", "smound01.cre", "spmugg.cre", "spmugg2.cre", "talkni01.cre", "talmiss.cre", "udelda.cre", "udelde.cre", "udelf.cre"]
+
+    [stratagems.components.7250]
+    exclusive = ["diarmid.cre", "galdor.cre", "sarevo.cre", "semaj.cre", "tazok2.cre"]
+
+    [stratagems.components.7010]
+    exclusive = ["irongu.cre", "ronelit.cre", "ronguar.cre"]
+
+    [stratagems.components.7150]
+    exclusive = ["carsa.cre", "kahrk.cre"]
+
+    [stratagems.components.6320]
+    exclusive = ["gbasilsk.bcs", "lbasilsk.bcs"]
+
+    [stratagems.components.""]
     after = ["ascension", "d0questpack", "eetact2", "item_rev", "refinements", "spell_rev", "tactics", "wheels"]
     before = ["cdtweaks"]
 
-    [stratagems.properties.8090]
+    [stratagems.components.8090]
     exclusive = ["ar1512.are", "ar1515.are"]
 
-    [stratagems.properties.1510]
-    path = ["Spells", "New spells"]
+    [stratagems.components.7220]
+    exclusive = ["battho.cre"]
 
 ["mur'neth"]
 lastupdate = 1970-01-01
@@ -1214,505 +1235,505 @@ url = "https://github.com/Gibberlings3/Tweaks-Anthology/releases/download/v15/li
 description = "Tweaks Anthology"
 archive = "lin-cdtweaks-v15.tar.gz"
 
-    [cdtweaks.properties.3090]
+    [cdtweaks.components.3090]
     exclusive = ["gem_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.1040]
+    [cdtweaks.components.1040]
     exclusive = ["amncen1.cre", "amng1.cre"]
 
-    [cdtweaks.properties.3093]
+    [cdtweaks.components.3093]
     exclusive = ["gem_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.3200]
+    [cdtweaks.components.3200]
     exclusive = ["sellable_items"]
 
-    [cdtweaks.properties.2430]
+    [cdtweaks.components.2430]
     exclusive = ["multiclass_druid_weapons"]
 
-    [cdtweaks.properties.2160]
+    [cdtweaks.components.2160]
     exclusive = ["weapprof.2da/types"]
     path = ["Fighting", "Proficiencies"]
 
-    [cdtweaks.properties.3100]
+    [cdtweaks.components.3100]
     exclusive = ["potion_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.3031]
+    [cdtweaks.components.3031]
     exclusive = ["spell_learning"]
 
-    [cdtweaks.properties.3101]
+    [cdtweaks.components.3101]
     exclusive = ["potion_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.3000]
+    [cdtweaks.components.3000]
     exclusive = ["hpclass.2da"]
     path = ["Tables", "HP"]
 
-    [cdtweaks.properties.4130]
+    [cdtweaks.components.4130]
     path = ["NPC", "Xan"]
 
-    [cdtweaks.properties.50]
+    [cdtweaks.components.50]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2163]
+    [cdtweaks.components.2163]
     exclusive = ["weapprof.2da/types"]
     path = ["Fighting", "Proficiencies"]
 
-    [cdtweaks.properties.2291]
+    [cdtweaks.components.2291]
     exclusive = ["mxspldrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.2211]
+    [cdtweaks.components.2211]
     exclusive = ["wspecial.2da/speed"]
     path = ["Fighting", "Proficiencies"]
 
-    [cdtweaks.properties.2294]
+    [cdtweaks.components.2294]
     exclusive = ["mxspldrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.2312]
+    [cdtweaks.components.2312]
     exclusive = ["spell_save_penalties"]
 
-    [cdtweaks.properties.190]
+    [cdtweaks.components.190]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.3150]
+    [cdtweaks.components.3150]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.1101]
+    [cdtweaks.components.1101]
     path = ["Cosmetic", "Maps"]
 
-    [cdtweaks.properties.1150]
+    [cdtweaks.components.1150]
     exclusive = ["anisum04.2da", "anisum05.2da", "spcl643.spl", "spcl644.spl", "sppr604.spl", "wwbear.cre", "wwbearwe.cre"]
     path = ["Skills", "Shapeshifting"]
 
-    [cdtweaks.properties.2040]
+    [cdtweaks.components.2040]
     exclusive = ["universal_clubs"]
     path = ["Fighting", "Proficiencies"]
 
-    [cdtweaks.properties.2092]
+    [cdtweaks.components.2092]
     exclusive = ["xplevel.2da"]
     path = ["Tables", "XP"]
 
-    [cdtweaks.properties.2310]
+    [cdtweaks.components.2310]
     exclusive = ["spell_save_penalties"]
 
-    [cdtweaks.properties.3008]
+    [cdtweaks.components.3008]
     exclusive = ["hpclass.2da"]
     path = ["Tables", "HP"]
 
-    [cdtweaks.properties.3072]
+    [cdtweaks.components.3072]
     exclusive = ["store_prices"]
     path = ["Items", "Stores"]
 
-    [cdtweaks.properties.4071]
+    [cdtweaks.components.4071]
     path = ["NPC", "Viconia"]
 
-    [cdtweaks.properties.4120]
+    [cdtweaks.components.4120]
     exclusive = ["coran.cre"]
     path = ["NPC", "Coran"]
 
-    [cdtweaks.properties.3001]
+    [cdtweaks.components.3001]
     exclusive = ["hpclass.2da"]
     path = ["Tables", "HP"]
 
-    [cdtweaks.properties.10]
+    [cdtweaks.components.10]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2400]
+    [cdtweaks.components.2400]
     exclusive = ["mxsplran.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.2580]
+    [cdtweaks.components.2580]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.3110]
+    [cdtweaks.components.3110]
     exclusive = ["scroll_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.1130]
+    [cdtweaks.components.1130]
     exclusive = ["reputation_reset"]
     path = ["Skills", "Reputation"]
 
-    [cdtweaks.properties.2311]
+    [cdtweaks.components.2311]
     exclusive = ["spell_save_penalties"]
 
-    [cdtweaks.properties.160]
+    [cdtweaks.components.160]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2581]
+    [cdtweaks.components.2581]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.2372]
+    [cdtweaks.components.2372]
     exclusive = ["clsrcreq.2da"]
 
-    [cdtweaks.properties.2290]
+    [cdtweaks.components.2290]
     exclusive = ["mxspldrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.4050]
+    [cdtweaks.components.4050]
     path = ["NPC", "Jaheira"]
 
-    [cdtweaks.properties.2152]
+    [cdtweaks.components.2152]
     exclusive = ["protection_items"]
 
-    [cdtweaks.properties.3112]
+    [cdtweaks.components.3112]
     exclusive = ["scroll_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.3030]
+    [cdtweaks.components.3030]
     exclusive = ["spell_learning"]
 
-    [cdtweaks.properties.4100]
+    [cdtweaks.components.4100]
     path = ["NPC", "Korgan"]
 
-    [cdtweaks.properties.182]
+    [cdtweaks.components.182]
     path = ["Items", "Containers"]
 
-    [cdtweaks.properties.90]
+    [cdtweaks.components.90]
     path = ["Cosmetic", "Portraits"]
 
-    [cdtweaks.properties.2270]
+    [cdtweaks.components.2270]
     exclusive = ["mxsplbrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.2297]
+    [cdtweaks.components.2297]
     exclusive = ["mxspldrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.2420]
+    [cdtweaks.components.2420]
     exclusive = ["multiclass_cleric_weapons"]
 
-    [cdtweaks.properties.2370]
+    [cdtweaks.components.2370]
     exclusive = ["clsrcreq.2da"]
 
-    [cdtweaks.properties.3103]
+    [cdtweaks.components.3103]
     exclusive = ["potion_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.3102]
+    [cdtweaks.components.3102]
     exclusive = ["potion_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.4080]
+    [cdtweaks.components.4080]
     path = ["NPC", "Khalid"]
 
-    [cdtweaks.properties.195]
+    [cdtweaks.components.195]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.3080]
+    [cdtweaks.components.3080]
     exclusive = ["ammo_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.4030]
+    [cdtweaks.components.4030]
     path = ["NPC", "Edwin"]
 
-    [cdtweaks.properties.2162]
+    [cdtweaks.components.2162]
     exclusive = ["weapprof.2da/types"]
     path = ["Fighting", "Proficiencies"]
 
-    [cdtweaks.properties.3111]
+    [cdtweaks.components.3111]
     exclusive = ["scroll_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.3071]
+    [cdtweaks.components.3071]
     exclusive = ["store_prices"]
     path = ["Items", "Stores"]
 
-    [cdtweaks.properties.1227]
+    [cdtweaks.components.1227]
     path = ["Items", "Upgrades"]
 
-    [cdtweaks.properties.3040]
+    [cdtweaks.components.3040]
     exclusive = ["container_capacity"]
     path = ["Items", "Containers"]
 
-    [cdtweaks.properties.3081]
+    [cdtweaks.components.3081]
     exclusive = ["ammo_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.4110]
+    [cdtweaks.components.4110]
     exclusive = ["kagain.cre"]
     path = ["NPC", "Kagain"]
 
-    [cdtweaks.properties.4132]
+    [cdtweaks.components.4132]
     path = ["NPC", "Xzar"]
 
-    [cdtweaks.properties.1230]
+    [cdtweaks.components.1230]
     path = ["Items", "Upgrades"]
 
-    [cdtweaks.properties.4040]
+    [cdtweaks.components.4040]
     path = ["NPC", "Jaheira"]
 
-    [cdtweaks.properties.1220]
+    [cdtweaks.components.1220]
     path = ["Items", "Upgrades"]
 
-    [cdtweaks.properties.192]
+    [cdtweaks.components.192]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2300]
+    [cdtweaks.components.2300]
     exclusive = ["lufmc.2da", "lufmt.2da"]
     path = ["Tables", "HLA"]
 
-    [cdtweaks.properties.20]
+    [cdtweaks.components.20]
     path = ["NPC", "Imoen", "Appearance"]
 
-    [cdtweaks.properties.2080]
+    [cdtweaks.components.2080]
     exclusive = ["lunumab.2da"]
     path = ["Tables", "HLA"]
 
-    [cdtweaks.properties.4031]
+    [cdtweaks.components.4031]
     path = ["NPC", "Edwin"]
 
-    [cdtweaks.properties.1100]
+    [cdtweaks.components.1100]
     path = ["Cosmetic", "Maps"]
 
-    [cdtweaks.properties.2261]
+    [cdtweaks.components.2261]
     exclusive = ["mxsplwiz.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.4061]
+    [cdtweaks.components.4061]
     path = ["NPC", "Minsc"]
 
-    [cdtweaks.properties.3070]
+    [cdtweaks.components.3070]
     exclusive = ["store_prices"]
     path = ["Items", "Stores"]
 
-    [cdtweaks.properties.4060]
+    [cdtweaks.components.4060]
     path = ["NPC", "Minsc"]
 
-    [cdtweaks.properties.2440]
+    [cdtweaks.components.2440]
     exclusive = ["clswpbon.2da"]
     path = ["Fighting", "Proficiencies"]
 
-    [cdtweaks.properties.1080]
+    [cdtweaks.components.1080]
     path = ["Items", "Containers"]
 
-    [cdtweaks.properties.2296]
+    [cdtweaks.components.2296]
     exclusive = ["mxspldrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.110]
+    [cdtweaks.components.110]
     path = ["Cosmetic", "Icons"]
 
-    [cdtweaks.properties.1180]
+    [cdtweaks.components.1180]
     path = ["NPC", "Edwin"]
 
-    [cdtweaks.properties.70]
+    [cdtweaks.components.70]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.4170]
+    [cdtweaks.components.4170]
     path = ["NPC", "Shar-Teel"]
 
-    [cdtweaks.properties.4070]
+    [cdtweaks.components.4070]
     path = ["NPC", "Viconia"]
 
-    [cdtweaks.properties.2100]
+    [cdtweaks.components.2100]
     exclusive = ["armored_thieving"]
     path = ["Skills", "Thieving"]
 
-    [cdtweaks.properties.3073]
+    [cdtweaks.components.3073]
     exclusive = ["store_prices"]
     path = ["Items", "Stores"]
 
-    [cdtweaks.properties.1110]
+    [cdtweaks.components.1110]
     path = ["Cosmetic", "Maps"]
 
-    [cdtweaks.properties.2410]
+    [cdtweaks.components.2410]
     exclusive = ["druid_alignment"]
 
-    [cdtweaks.properties.191]
+    [cdtweaks.components.191]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.3120]
+    [cdtweaks.components.3120]
     exclusive = ["happy_patch"]
 
-    [cdtweaks.properties.194]
+    [cdtweaks.components.194]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2271]
+    [cdtweaks.components.2271]
     exclusive = ["mxsplbrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.3151]
+    [cdtweaks.components.3151]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2292]
+    [cdtweaks.components.2292]
     exclusive = ["mxspldrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.2391]
+    [cdtweaks.components.2391]
     exclusive = ["mxsplpal.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.140]
+    [cdtweaks.components.140]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2401]
+    [cdtweaks.components.2401]
     exclusive = ["mxsplran.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.3082]
+    [cdtweaks.components.3082]
     exclusive = ["ammo_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.3091]
+    [cdtweaks.components.3091]
     exclusive = ["gem_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.1120]
+    [cdtweaks.components.1120]
     path = ["Items", "Stores"]
 
-    [cdtweaks.properties.2060]
+    [cdtweaks.components.2060]
     exclusive = ["universal_fighting_styles"]
     path = ["Fighting", "Fighting styles"]
 
-    [cdtweaks.properties.2240]
+    [cdtweaks.components.2240]
     exclusive = ["thac0.2da"]
     path = ["Tables", "THAC0"]
 
-    [cdtweaks.properties.3002]
+    [cdtweaks.components.3002]
     exclusive = ["hpclass.2da"]
     path = ["Tables", "HP"]
 
-    [cdtweaks.properties.3113]
+    [cdtweaks.components.3113]
     exclusive = ["scroll_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.200]
+    [cdtweaks.components.200]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.60]
+    [cdtweaks.components.60]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2161]
+    [cdtweaks.components.2161]
     exclusive = ["weapprof.2da/types"]
     path = ["Fighting", "Proficiencies"]
 
-    [cdtweaks.properties.2210]
+    [cdtweaks.components.2210]
     exclusive = ["wspecial.2da/speed"]
     path = ["Fighting", "Proficiencies"]
 
-    [cdtweaks.properties.2010]
+    [cdtweaks.components.2010]
     path = ["Cosmetic", "Portraits"]
 
-    [cdtweaks.properties.3083]
+    [cdtweaks.components.3083]
     exclusive = ["ammo_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.1200]
+    [cdtweaks.components.1200]
     path = ["NPC", "Imoen"]
 
-    [cdtweaks.properties.2293]
+    [cdtweaks.components.2293]
     exclusive = ["mxspldrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.2151]
+    [cdtweaks.components.2151]
     exclusive = ["protection_items"]
 
-    [cdtweaks.properties.1225]
+    [cdtweaks.components.1225]
     path = ["Items", "Upgrades"]
 
-    [cdtweaks.properties.2090]
+    [cdtweaks.components.2090]
     exclusive = ["hpclass.2da", "xplevel.2da"]
     path = ["Tables", "XP"]
 
-    [cdtweaks.properties.2120]
+    [cdtweaks.components.2120]
     exclusive = ["armored_spellcasting"]
     path = ["Skills", "Casting"]
 
-    [cdtweaks.properties.193]
+    [cdtweaks.components.193]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2260]
+    [cdtweaks.components.2260]
     exclusive = ["mxsplwiz.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.2164]
+    [cdtweaks.components.2164]
     exclusive = ["weapprof.2da/types"]
     path = ["Fighting", "Proficiencies"]
 
-    [cdtweaks.properties.2280]
+    [cdtweaks.components.2280]
     exclusive = ["mxsplclr.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.3092]
+    [cdtweaks.components.3092]
     exclusive = ["gem_stacking"]
     path = ["Items", "Stacking"]
 
-    [cdtweaks.properties.100]
+    [cdtweaks.components.100]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.2281]
+    [cdtweaks.components.2281]
     exclusive = ["mxsplclr.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.4133]
+    [cdtweaks.components.4133]
     path = ["NPC", "Edwin"]
 
-    [cdtweaks.properties.2250]
+    [cdtweaks.components.2250]
     exclusive = ["mxsplsrc.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.40]
+    [cdtweaks.components.40]
     path = ["NPC", "Viconia", "Appearance"]
 
-    [cdtweaks.properties.72]
+    [cdtweaks.components.72]
     path = ["Cosmetic", "Sprites"]
 
-    [cdtweaks.properties.4041]
+    [cdtweaks.components.4041]
     path = ["NPC", "Jaheira"]
 
-    [cdtweaks.properties.2530]
+    [cdtweaks.components.2530]
     exclusive = ["lightning_bolt"]
 
-    [cdtweaks.properties.2340]
+    [cdtweaks.components.2340]
     exclusive = ["summlimt.2da/celestial"]
 
-    [cdtweaks.properties.2091]
+    [cdtweaks.components.2091]
     exclusive = ["xplevel.2da"]
     path = ["Tables", "XP"]
 
-    [cdtweaks.properties.4131]
+    [cdtweaks.components.4131]
     path = ["NPC", "Dynaheir"]
 
-    [cdtweaks.properties.1226]
+    [cdtweaks.components.1226]
     path = ["Items", "Upgrades"]
 
-    [cdtweaks.properties.181]
+    [cdtweaks.components.181]
     path = ["Items", "Containers"]
 
-    [cdtweaks.properties.2150]
+    [cdtweaks.components.2150]
     exclusive = ["protection_items"]
 
-    [cdtweaks.properties.4010]
+    [cdtweaks.components.4010]
     exclusive = ["improved_fate_spirit"]
 
-    [cdtweaks.properties.2431]
+    [cdtweaks.components.2431]
     exclusive = ["multiclass_druid_weapons"]
 
-    [cdtweaks.properties.2390]
+    [cdtweaks.components.2390]
     exclusive = ["mxsplpal.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.180]
+    [cdtweaks.components.180]
     path = ["Items", "Containers"]
 
-    [cdtweaks.properties.""]
+    [cdtweaks.components.""]
     after = ["bg1npc", "divine_remix", "item_rev", "thecalling", "tomeandblood"]
 
-    [cdtweaks.properties.2295]
+    [cdtweaks.components.2295]
     exclusive = ["mxspldrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [cdtweaks.properties.4090]
+    [cdtweaks.components.4090]
     path = ["NPC", "Montaron"]
 
-    [cdtweaks.properties.4160]
+    [cdtweaks.components.4160]
     path = ["NPC", "Yeslick"]
 
-    [cdtweaks.properties.30]
+    [cdtweaks.components.30]
     path = ["NPC", "Nalia", "Appearance"]
 
 [shadowadept]
@@ -1868,65 +1889,65 @@ url = "github:UnearthedArcana/Scales_of_Balance"
 description = "Scales of Balance"
 archive = "scales_of_balance.tar.gz"
 
-    [scales_of_balance.properties.172]
+    [scales_of_balance.components.172]
     exclusive = ["clabth01.2da"]
     path = ["Skills", "Evasion"]
 
-    [scales_of_balance.properties.201]
-    exclusive = ["mxsplwiz.2da", "splprot.2da"]
-    path = ["Tables", "Spell slots"]
-
-    [scales_of_balance.properties.101]
+    [scales_of_balance.components.101]
     exclusive = ["masterwork_weapons"]
 
-    [scales_of_balance.properties.210]
+    [scales_of_balance.components.210]
     exclusive = ["lunumab.2da", "mxspldru.2da", "xplevel.2da"]
     path = ["Tables", "XP"]
 
-    [scales_of_balance.properties.160]
+    [scales_of_balance.components.160]
     exclusive = ["savemonk.2da", "saveprs.2da", "saverog.2da", "savewar.2da", "savewiz.2da"]
     path = ["Tables", "Saving throws"]
 
-    [scales_of_balance.properties.208]
-    exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
-    path = ["Tables", "HP"]
-
-    [scales_of_balance.properties.124]
+    [scales_of_balance.components.124]
     exclusive = ["weapprof.2da/styles"]
     path = ["Fighting", "Fighting styles"]
 
-    [scales_of_balance.properties.125]
+    [scales_of_balance.components.125]
     path = ["Fighting", "Proficiencies"]
 
-    [scales_of_balance.properties.207]
+    [scales_of_balance.components.206]
     exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
     path = ["Tables", "HP"]
 
-    [scales_of_balance.properties.206]
-    exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
-    path = ["Tables", "HP"]
-
-    [scales_of_balance.properties.122]
+    [scales_of_balance.components.122]
     conflicts = ["rr"]
     exclusive = ["thac0.2da", "universal_clubs", "weapprof.2da"]
     path = ["Fighting", "Proficiencies"]
 
-    [scales_of_balance.properties.""]
-    conflicts = ["kit_rev", "kitpack"]
-    after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "tomeandblood"]
-
-    [scales_of_balance.properties.100]
+    [scales_of_balance.components.100]
     exclusive = ["dexmod.2da", "skilldex.2da"]
     path = ["Fighting", "Armor"]
 
-    [scales_of_balance.properties.102]
+    [scales_of_balance.components.201]
+    exclusive = ["mxsplwiz.2da", "splprot.2da"]
+    path = ["Tables", "Spell slots"]
+
+    [scales_of_balance.components.208]
+    exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
+    path = ["Tables", "HP"]
+
+    [scales_of_balance.components.207]
+    exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
+    path = ["Tables", "HP"]
+
+    [scales_of_balance.components.""]
+    conflicts = ["kit_rev", "kitpack"]
+    after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "tomeandblood"]
+
+    [scales_of_balance.components.102]
     path = ["Fighting", "Tweaks"]
 
-    [scales_of_balance.properties.200]
+    [scales_of_balance.components.200]
     exclusive = ["intmod.2da", "savecndh.2da", "savecng.2da", "strmod.2da", "strmodex.2da"]
     path = ["Tables", "Stat bonuses"]
 
-    [scales_of_balance.properties.171]
+    [scales_of_balance.components.171]
     exclusive = ["clabth01.2da"]
     path = ["Skills", "Evasion"]
 
@@ -2013,73 +2034,73 @@ url = "github:UnearthedArcana/refinements"
 description = "Refinements"
 archive = "refinements.tar.gz"
 
-    [refinements.properties.109]
+    [refinements.components.109]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.101]
+    [refinements.components.101]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.20]
+    [refinements.components.20]
     path = ["NPC", "Imoen"]
 
-    [refinements.properties.74]
+    [refinements.components.74]
     path = ["Fighting", "Armor"]
 
-    [refinements.properties.22]
+    [refinements.components.22]
     path = ["NPC", "Imoen"]
 
-    [refinements.properties.11]
+    [refinements.components.11]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.104]
+    [refinements.components.104]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.106]
+    [refinements.components.106]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.31]
+    [refinements.components.31]
     path = ["Skills", "Shapeshifting"]
 
-    [refinements.properties.75]
+    [refinements.components.75]
     path = ["Fighting", "Armor"]
 
-    [refinements.properties.110]
+    [refinements.components.110]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.108]
+    [refinements.components.108]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.70]
+    [refinements.components.70]
     path = ["Fighting", "Armor"]
 
-    [refinements.properties.21]
+    [refinements.components.21]
     path = ["NPC", "Imoen"]
 
-    [refinements.properties.72]
+    [refinements.components.72]
     path = ["Fighting", "Armor"]
 
-    [refinements.properties.10]
+    [refinements.components.10]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.71]
+    [refinements.components.71]
     path = ["Fighting", "Armor"]
 
-    [refinements.properties.107]
+    [refinements.components.107]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.102]
+    [refinements.components.102]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.103]
+    [refinements.components.103]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.73]
+    [refinements.components.73]
     path = ["Fighting", "Armor"]
 
-    [refinements.properties.105]
+    [refinements.components.105]
     path = ["Tables", "HLA"]
 
-    [refinements.properties.30]
+    [refinements.components.30]
     path = ["Skills", "Shapeshifting"]
 
 [sod2bg2_iu]
@@ -2241,7 +2262,7 @@ url = "github:Gibberlings3/WheelsOfProphecy"
 description = "Wheels of Prophecy"
 archive = "wheels.tar.gz"
 
-    [wheels.properties.""]
+    [wheels.components.""]
     before = ["stratagems"]
 
 [faiths_and_powers]
@@ -2252,43 +2273,43 @@ url = "github:UnearthedArcana/Faiths_and_Powers"
 description = "Faiths and Powers"
 archive = "faiths_and_powers.tar.gz"
 
-    [faiths_and_powers.properties.24]
+    [faiths_and_powers.components.24]
     path = ["Spells", "Sphere system"]
 
-    [faiths_and_powers.properties.21]
+    [faiths_and_powers.components.25]
     path = ["Spells", "Sphere system"]
 
-    [faiths_and_powers.properties.25]
+    [faiths_and_powers.components.23]
     path = ["Spells", "Sphere system"]
 
-    [faiths_and_powers.properties.23]
+    [faiths_and_powers.components.22]
     path = ["Spells", "Sphere system"]
 
-    [faiths_and_powers.properties.22]
-    path = ["Spells", "Sphere system"]
-
-    [faiths_and_powers.properties.35]
+    [faiths_and_powers.components.35]
     path = ["Classes", "Paladin"]
 
-    [faiths_and_powers.properties.80]
+    [faiths_and_powers.components.80]
     path = ["Spells", "Sphere system"]
 
-    [faiths_and_powers.properties.31]
+    [faiths_and_powers.components.31]
     path = ["Classes", "Cleric"]
 
-    [faiths_and_powers.properties.75]
+    [faiths_and_powers.components.75]
     path = ["Classes", "Cleric"]
 
-    [faiths_and_powers.properties.85]
-    path = ["NPC"]
-
-    [faiths_and_powers.properties.33]
+    [faiths_and_powers.components.33]
     path = ["Classes", "Druid"]
 
-    [faiths_and_powers.properties.37]
+    [faiths_and_powers.components.21]
+    path = ["Spells", "Sphere system"]
+
+    [faiths_and_powers.components.85]
+    path = ["NPC"]
+
+    [faiths_and_powers.components.37]
     path = ["Classes", "Ranger"]
 
-    [faiths_and_powers.properties.""]
+    [faiths_and_powers.components.""]
     after = ["divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood"]
     before = ["cdtweaks", "fnp_multiclass", "might_and_guile", "scales_of_balance", "stratagems"]
 
@@ -2345,74 +2366,74 @@ url = "https://github.com/Gibberlings3/ItemRevisions/releases/download/v3.0.17/l
 description = "Item Revisions"
 archive = "lin-item_rev-v3.0.17.tar.gz"
 
-    [item_rev.properties.4]
+    [item_rev.components.4]
     path = ["Skills", "Casting"]
 
-    [item_rev.properties.20]
+    [item_rev.components.20]
     path = ["Skills", "Backstab"]
 
-    [item_rev.properties.2]
+    [item_rev.components.2]
     path = ["Skills", "Casting"]
 
-    [item_rev.properties.1030]
+    [item_rev.components.1030]
     exclusive = ["chrmodst.2da", "repmodst.2da"]
     path = ["Items", "Stores"]
 
-    [item_rev.properties.6]
+    [item_rev.components.6]
     path = ["Fighting", "Armor"]
 
-    [item_rev.properties.1041]
+    [item_rev.components.1041]
     path = ["Fighting", "Armor"]
 
-    [item_rev.properties.1050]
+    [item_rev.components.1050]
     path = ["Fighting", "Armor"]
 
-    [item_rev.properties.11]
+    [item_rev.components.11]
     path = ["Fighting", "Fighting styles"]
 
-    [item_rev.properties.1060]
+    [item_rev.components.1060]
     path = ["Classes", "Fighter"]
 
-    [item_rev.properties.5]
+    [item_rev.components.5]
     path = ["Skills", "Casting"]
 
-    [item_rev.properties.15]
+    [item_rev.components.15]
     path = ["Classes", "Druid"]
 
-    [item_rev.properties.1042]
+    [item_rev.components.1042]
     path = ["Fighting", "Armor"]
 
-    [item_rev.properties.16]
+    [item_rev.components.16]
     path = ["Classes", "Druid"]
 
-    [item_rev.properties.1070]
+    [item_rev.components.1070]
     path = ["Classes", "Thief"]
 
-    [item_rev.properties.1101]
+    [item_rev.components.1101]
     path = ["Skills", "Thieving"]
 
-    [item_rev.properties.7]
+    [item_rev.components.7]
     path = ["Fighting", "Armor"]
 
-    [item_rev.properties.8]
+    [item_rev.components.8]
     path = ["Fighting", "Armor"]
 
-    [item_rev.properties.10]
+    [item_rev.components.10]
     path = ["Fighting", "Armor"]
 
-    [item_rev.properties.0]
+    [item_rev.components.0]
     exclusive = ["aegis.itm", "amsoul01.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "bersersu.cre", "bleat01.itm", "blun01.itm", "bolt01.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bruenaxe.itm", "bruenpla.itm", "bsw1h01.itm", "bull01.itm", "catliowp.cre", "cattibow.itm", "chan01.itm", "clck01.itm", "clolth.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "figlion.itm", "figspid.itm", "finsarev.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "hlolth.itm", "keldorn.spl", "korax01.itm", "kuobolt.itm", "leat01.itm", "miscbc.itm", "nebdag.itm", "nparm.itm", "npbelt.itm", "npbow.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npplat.itm", "npring01.itm", "npshld.itm", "npstaf.itm", "npsw01.itm", "plat01.itm", "quiver01.itm", "reaver.itm", "rods01.itm", "rods01.spl", "sahbolt.itm", "shld01.itm", "slng01.itm", "smoundsu.cre", "smoundsu.itm", "sper01.itm", "spidfgsu.cre", "staf01.itm", "sw1h01.itm", "waflail.itm", "wawak.itm", "xbow01.itm"]
 
-    [item_rev.properties.19]
+    [item_rev.components.19]
     path = ["Skills", "Backstab"]
 
-    [item_rev.properties.9]
+    [item_rev.components.9]
     path = ["Skills", "Thieving"]
 
-    [item_rev.properties.18]
+    [item_rev.components.18]
     path = ["Skills", "Backstab"]
 
-    [item_rev.properties.3]
+    [item_rev.components.3]
     path = ["Skills", "Casting"]
 
 [garrick-tt]
@@ -2453,81 +2474,81 @@ url = "github:K4thos/EET_Tweaks"
 description = "EET (Enhanced Edition Trilogy) Tweaks"
 archive = "eet_tweaks.tar.gz"
 
-    [eet_tweaks.properties.1040]
+    [eet_tweaks.components.1040]
     path = ["NPC", "Viconia", "Appearance"]
 
-    [eet_tweaks.properties.1030]
+    [eet_tweaks.components.1030]
     path = ["NPC", "Minsc", "Appearance"]
 
-    [eet_tweaks.properties.1041]
+    [eet_tweaks.components.1041]
     path = ["NPC", "Viconia", "Appearance"]
 
-    [eet_tweaks.properties.2002]
+    [eet_tweaks.components.2002]
     exclusive = ["xplevel.2da"]
     path = ["Tables", "XP"]
 
-    [eet_tweaks.properties.2043]
+    [eet_tweaks.components.2043]
     exclusive = ["xpbonus.2da"]
     path = ["Tables", "Bonus XP"]
 
-    [eet_tweaks.properties.1011]
+    [eet_tweaks.components.1011]
     path = ["NPC", "Imoen", "Appearance", "NPC", "Imoen", "Appearance"]
 
-    [eet_tweaks.properties.2044]
+    [eet_tweaks.components.2044]
     exclusive = ["xpbonus.2da"]
     path = ["Tables", "Bonus XP"]
 
-    [eet_tweaks.properties.3021]
+    [eet_tweaks.components.3021]
     path = ["Skills", "Familiar"]
 
-    [eet_tweaks.properties.1042]
+    [eet_tweaks.components.1042]
     path = ["NPC", "Viconia", "Appearance"]
 
-    [eet_tweaks.properties.3020]
+    [eet_tweaks.components.3020]
     path = ["Skills", "Familiar"]
 
-    [eet_tweaks.properties.2041]
+    [eet_tweaks.components.2041]
     exclusive = ["xpbonus.2da"]
     path = ["Tables", "Bonus XP"]
 
-    [eet_tweaks.properties.1001]
+    [eet_tweaks.components.1001]
     path = ["NPC", "Edwin", "Appearance"]
 
-    [eet_tweaks.properties.1031]
+    [eet_tweaks.components.1031]
     path = ["NPC", "Minsc", "Appearance"]
 
-    [eet_tweaks.properties.2000]
+    [eet_tweaks.components.2000]
     exclusive = ["xplevel.2da"]
     path = ["Tables", "XP"]
 
-    [eet_tweaks.properties.2040]
+    [eet_tweaks.components.2040]
     exclusive = ["xpbonus.2da"]
     path = ["Tables", "Bonus XP"]
 
-    [eet_tweaks.properties.1010]
+    [eet_tweaks.components.1010]
     path = ["NPC", "Imoen", "Appearance"]
 
-    [eet_tweaks.properties.2042]
+    [eet_tweaks.components.2042]
     exclusive = ["xpbonus.2da"]
     path = ["Tables", "Bonus XP"]
 
-    [eet_tweaks.properties.2001]
+    [eet_tweaks.components.2001]
     exclusive = ["xplevel.2da"]
     path = ["Tables", "XP"]
 
-    [eet_tweaks.properties.3022]
+    [eet_tweaks.components.3022]
     path = ["Skills", "Familiar"]
 
-    [eet_tweaks.properties.1000]
+    [eet_tweaks.components.1000]
     path = ["NPC", "Edwin", "Appearance"]
 
-    [eet_tweaks.properties.1021]
+    [eet_tweaks.components.1021]
     path = ["NPC", "Jaheira", "Appearance"]
 
-    [eet_tweaks.properties.1020]
+    [eet_tweaks.components.1020]
     path = ["NPC", "Jaheira", "Appearance"]
 
-    [eet_tweaks.properties.2003]
+    [eet_tweaks.components.2003]
     exclusive = ["xplevel.2da"]
     path = ["Tables", "XP"]
 
@@ -2557,106 +2578,106 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
 description = "Tactics EE"
 archive = "Tactics2_for_EE.zip"
 
-    [eetact2.properties.310]
+    [eetact2.components.310]
     exclusive = ["dhadra01.bcs", "dragblac.bcs", "dragred.bcs", "spin691.spl", "spin693.spl", "udsilver.itm"]
 
-    [eetact2.properties.320]
+    [eetact2.components.320]
     exclusive = ["behdir01.bcs", "behhiv01.bcs", "behold.itm", "behold01.bcs", "elderorb.bcs", "gauth01.bcs"]
 
-    [eetact2.properties.350]
+    [eetact2.components.350]
     exclusive = ["golada01.cre", "goliro.itm", "goliro01.cre", "golsto.itm", "golsto01.cre"]
 
-    [eetact2.properties.400]
+    [eetact2.components.400]
     exclusive = ["ar1800.are", "ar18arch.cre", "ar18dwaf.cre", "ar18fig.cre", "ar18mage.cre", "ar18prie.cre", "ar18skel.cre", "ar18thif.cre"]
 
-    [eetact2.properties.130]
+    [eetact2.components.130]
     exclusive = ["sahamb01.bcs", "sahcpt01.cre", "sahgrd01.cre"]
 
-    [eetact2.properties.260]
+    [eetact2.components.260]
     exclusive = ["spwnbeh.bcs", "spwndead.bcs", "spwndrow.bcs", "spwngol.bcs", "spwnmind.bcs", "spwnmon.bcs", "spwnorc.bcs", "spwnrak.bcs", "spwntoa.bcs", "spwntrol.bcs", "spwnvamp.bcs", "spwnwolf.bcs"]
 
-    [eetact2.properties.420]
+    [eetact2.components.420]
     exclusive = ["demglab.bcs", "dempit.bcs", "dempit01.cre", "mage20c.bcs", "tanari.bcs", "telpit1.cre"]
 
-    [eetact2.properties.210]
+    [eetact2.components.210]
     exclusive = ["ar0318.are", "ar0318.bcs"]
 
-    [eetact2.properties.160]
+    [eetact2.components.160]
     exclusive = ["ar0907.bcs", "hlketta.bcs", "hlketta.cre", "hlkoshi.cre", "hlmafer.cre", "hlolaf.cre", "hlsion.cre", "hlstal.cre"]
 
-    [eetact2.properties.240]
+    [eetact2.components.240]
     exclusive = ["ar0326.bcs"]
 
-    [eetact2.properties.360]
+    [eetact2.components.360]
     exclusive = ["nymph.bcs"]
 
-    [eetact2.properties.432]
+    [eetact2.components.432]
     exclusive = ["ar1900.bcs", "impshad.bcs"]
 
-    [eetact2.properties.410]
+    [eetact2.components.410]
     exclusive = ["ar5200.are"]
 
-    [eetact2.properties.370]
+    [eetact2.components.370]
     exclusive = ["ar0406.bcs"]
 
-    [eetact2.properties.280]
+    [eetact2.components.280]
     exclusive = ["ar0042.bcs", "ar0043.bcs", "ar0044.bcs"]
 
-    [eetact2.properties.100]
+    [eetact2.components.100]
     exclusive = ["ar0601.are", "ily1.cre", "ilyhamm.itm"]
 
-    [eetact2.properties.431]
+    [eetact2.components.431]
     exclusive = ["ar1900.bcs", "impshad.bcs"]
 
-    [eetact2.properties.270]
+    [eetact2.components.270]
     exclusive = ["amncen1.cre", "ar0041.bcs", "ar0045.bcs", "ar0046.bcs"]
 
-    [eetact2.properties.390]
+    [eetact2.components.390]
     exclusive = ["ar1700.are"]
 
-    [eetact2.properties.170]
+    [eetact2.components.170]
     exclusive = ["ar1008.bcs", "hllayen.cre", "hlrevan.cre", "hlshang.cre"]
 
-    [eetact2.properties.290]
+    [eetact2.components.290]
     exclusive = ["undead"]
 
-    [eetact2.properties.231]
+    [eetact2.components.231]
     exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
 
-    [eetact2.properties.150]
+    [eetact2.components.150]
     exclusive = ["ar2900.bcs", "helljon.dlg"]
 
-    [eetact2.properties.380]
+    [eetact2.components.380]
     exclusive = ["Oasis", "amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtmag01.cre", "amtpik01.cre"]
 
-    [eetact2.properties.430]
+    [eetact2.components.430]
     exclusive = ["ar1900.bcs", "impshad.bcs"]
 
-    [eetact2.properties.140]
+    [eetact2.components.140]
     exclusive = ["bodhi2.cre", "bodtan.cre"]
 
-    [eetact2.properties.300]
+    [eetact2.components.300]
     exclusive = ["flayer01.bcs", "gormind.bcs", "mindal01.bcs"]
 
-    [eetact2.properties.340]
+    [eetact2.components.340]
     exclusive = ["bodtan.cre", "lavok01.cre", "lich01.cre", "mage10a.bcs"]
 
-    [eetact2.properties.440]
+    [eetact2.components.440]
     exclusive = ["giafir.itm", "ysfire01.cre", "ysg2.cre", "ysguar01.cre"]
 
-    [eetact2.properties.120]
+    [eetact2.components.120]
     exclusive = ["torgal.cre"]
 
-    [eetact2.properties.330]
+    [eetact2.components.330]
     exclusive = ["vamemi01.bcs", "vampir01.bcs"]
 
-    [eetact2.properties.200]
+    [eetact2.components.200]
     exclusive = ["ar9391.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "tsmaepet.cre"]
 
-    [eetact2.properties.230]
+    [eetact2.components.230]
     exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
 
-    [eetact2.properties.232]
+    [eetact2.components.232]
     exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
 
 [bgeearwe]
@@ -2834,218 +2855,218 @@ url = "github:subtledoctor/d5_Random_Tweaks"
 description = "SD's Random Tweaks"
 archive = "d5_random_tweaks.tar.gz"
 
-    [d5_random_tweaks.properties.4031]
-    path = ["Creatures", "Dragons"]
-
-    [d5_random_tweaks.properties.1202]
-    exclusive = ["sppr202.spl"]
-    path = ["Spells", "Alteration"]
-
-    [d5_random_tweaks.properties.3093]
+    [d5_random_tweaks.components.3093]
     exclusive = ["misc89.itm"]
     path = ["NPC", "Edwin"]
 
-    [d5_random_tweaks.properties.2915]
-    exclusive = ["spwi806.spl"]
-    path = ["Spells", "Conjuration"]
-
-    [d5_random_tweaks.properties.1323]
-    exclusive = ["sppr350.spl"]
-    path = ["Spells", "New spells"]
-
-    [d5_random_tweaks.properties.3070]
-    exclusive = ["hamm06.itm", "hamm06a.itm", "hamm06b.itm"]
-    path = ["Items"]
-
-    [d5_random_tweaks.properties.2923]
+    [d5_random_tweaks.components.2923]
     exclusive = ["plangood.cre"]
     path = ["Creatures"]
 
-    [d5_random_tweaks.properties.1212]
-    exclusive = ["sppr212.spl"]
-    path = ["Spells", "Healing"]
-
-    [d5_random_tweaks.properties.3100]
+    [d5_random_tweaks.components.3100]
     exclusive = ["clck15.itm"]
     path = ["Items"]
 
-    [d5_random_tweaks.properties.2914]
-    exclusive = ["spwi806.spl", "spwi914.spl"]
-    path = ["Spells", "Necromancy"]
-
-    [d5_random_tweaks.properties.3010]
+    [d5_random_tweaks.components.3010]
     exclusive = ["ring36.itm"]
     path = ["Items"]
 
-    [d5_random_tweaks.properties.1207]
+    [d5_random_tweaks.components.1207]
     exclusive = ["sppr207.spl"]
 
-    [d5_random_tweaks.properties.1611]
-    exclusive = ["sppr611.spl"]
-
-    [d5_random_tweaks.properties.1710]
+    [d5_random_tweaks.components.1710]
     exclusive = ["sppr710.spl"]
     path = ["Spells", "Conjuration"]
 
-    [d5_random_tweaks.properties.2201]
+    [d5_random_tweaks.components.2201]
     exclusive = ["7eyes.2da"]
     path = ["Spells", "Illusion"]
 
-    [d5_random_tweaks.properties.3091]
-    exclusive = ["misc89.itm"]
-    path = ["NPC", "Edwin"]
-
-    [d5_random_tweaks.properties.1251]
-    exclusive = ["sppr251.spl"]
-    path = ["Spells", "New spells"]
-
-    [d5_random_tweaks.properties.2217]
-    exclusive = ["spwi217.spl"]
-    path = ["Spells", "Evocation"]
-
-    [d5_random_tweaks.properties.1351]
+    [d5_random_tweaks.components.1351]
     exclusive = ["moonbla.itm"]
     path = ["Items", "Magic weapons"]
 
-    [d5_random_tweaks.properties.2916]
+    [d5_random_tweaks.components.2916]
     exclusive = ["spwi916.spl"]
     path = ["Spells", "Alteration"]
 
-    [d5_random_tweaks.properties.2518]
+    [d5_random_tweaks.components.2518]
     exclusive = ["spwi518.spl"]
     path = ["Items", "Magic weapons"]
 
-    [d5_random_tweaks.properties.2224]
+    [d5_random_tweaks.components.2224]
     exclusive = ["spwi224.spl"]
     path = ["Spells", "Conjuration"]
 
-    [d5_random_tweaks.properties.1505]
-    path = ["Spells", "Divination"]
-
-    [d5_random_tweaks.properties.1609]
-    path = ["Spells", "Evocation"]
-
-    [d5_random_tweaks.properties.2811]
-    exclusive = ["scrl9f.itm", "spwi811.spl"]
-    path = ["Spells", "Conjuration"]
-
-    [d5_random_tweaks.properties.4032]
-    path = ["Creatures", "Dragons"]
-
-    [d5_random_tweaks.properties.2808]
+    [d5_random_tweaks.components.2808]
     exclusive = ["sppr603.spl"]
 
-    [d5_random_tweaks.properties.2714]
+    [d5_random_tweaks.components.2714]
     path = ["Spells", "Evocation"]
 
-    [d5_random_tweaks.properties.2305]
+    [d5_random_tweaks.components.2305]
     exclusive = ["msectype.2da", "potn14.spl", "spwi305.spl", "spwi312.spl"]
     path = ["Spells", "Alteration"]
 
-    [d5_random_tweaks.properties.3030]
+    [d5_random_tweaks.components.3030]
     exclusive = ["pfirea.bam", "pfirex.bam"]
     path = ["Items"]
 
-    [d5_random_tweaks.properties.2212]
+    [d5_random_tweaks.components.2212]
     exclusive = ["spwi212.spl"]
     path = ["Spells", "Illusion"]
 
-    [d5_random_tweaks.properties.3060]
-    exclusive = ["boot12.spl"]
-    path = ["Items"]
-
-    [d5_random_tweaks.properties.2251]
-    exclusive = ["cdideca.itm"]
-    path = ["Items", "Magic weapons"]
-
-    [d5_random_tweaks.properties.1707]
+    [d5_random_tweaks.components.1707]
     path = ["Spells", "Evocation"]
 
-    [d5_random_tweaks.properties.2413]
+    [d5_random_tweaks.components.2413]
     exclusive = ["spwi413a.spl", "spwi413d.spl"]
     path = ["Spells", "Alteration"]
 
-    [d5_random_tweaks.properties.2708]
-    exclusive = ["spwi708.spl"]
-    path = ["Spells", "Abjuration"]
-
-    [d5_random_tweaks.properties.3092]
-    exclusive = ["misc89.itm"]
-    path = ["NPC", "Edwin"]
-
-    [d5_random_tweaks.properties.2108]
+    [d5_random_tweaks.components.2108]
     exclusive = ["spwi108.spl"]
     path = ["Spells", "Abjuration"]
 
-    [d5_random_tweaks.properties.3020]
+    [d5_random_tweaks.components.3020]
     exclusive = ["7eyes.2da", "brac18.itm"]
     path = ["Items"]
 
-    [d5_random_tweaks.properties.1404]
+    [d5_random_tweaks.components.1404]
     exclusive = ["sppr404.spl"]
     path = ["Spells", "Healing"]
 
-    [d5_random_tweaks.properties.2116]
-    path = ["Spells", "Enchantment"]
-
-    [d5_random_tweaks.properties.1603]
-    exclusive = ["sppr603.spl"]
-    path = ["Spells", "Evocation"]
-
-    [d5_random_tweaks.properties.3080]
+    [d5_random_tweaks.components.3080]
     exclusive = ["misc3n.itm", "misc3o.itm"]
     path = ["Items"]
 
-    [d5_random_tweaks.properties.2215]
+    [d5_random_tweaks.components.2215]
     exclusive = ["spwi215.spl"]
     path = ["Spells", "Conjuration"]
 
-    [d5_random_tweaks.properties.2523]
-    exclusive = ["spwi523.spl"]
-    path = ["Spells", "Evocation"]
-
-    [d5_random_tweaks.properties.2324]
+    [d5_random_tweaks.components.2324]
     exclusive = ["spwi234d.spl", "spwi324.spl", "spwi720.spl"]
     path = ["Spells", "Necromancy"]
 
-    [d5_random_tweaks.properties.4010]
-    path = ["Spells", "Necromancy"]
-
-    [d5_random_tweaks.properties.2209]
+    [d5_random_tweaks.components.2209]
     exclusive = ["spwi209.spl"]
     path = ["Spells", "Enchantment"]
 
-    [d5_random_tweaks.properties.2418]
+    [d5_random_tweaks.components.2418]
     exclusive = ["spwi403.spl", "spwi418.spl"]
     path = ["Spells", "Abjuration"]
 
-    [d5_random_tweaks.properties.3040]
+    [d5_random_tweaks.components.3040]
     exclusive = ["eff_e02.wav", "leat14.itm"]
     path = ["Items"]
 
-    [d5_random_tweaks.properties.4033]
-    path = ["Creatures", "Dragons"]
-
-    [d5_random_tweaks.properties.1614]
-    exclusive = ["sorb.itm"]
-
-    [d5_random_tweaks.properties.2213]
+    [d5_random_tweaks.components.2213]
     exclusive = ["spwi213.spl"]
     path = ["Spells", "Conjuration"]
 
-    [d5_random_tweaks.properties.1613]
+    [d5_random_tweaks.components.1613]
     path = ["Spells", "Abjuration"]
 
-    [d5_random_tweaks.properties.2451]
+    [d5_random_tweaks.components.2451]
     exclusive = ["shades.2da"]
 
-    [d5_random_tweaks.properties.""]
-    after = ["item_rev", "spell_rev"]
-
-    [d5_random_tweaks.properties.5010]
+    [d5_random_tweaks.components.5010]
     path = ["Spells", "Healing"]
 
-    [d5_random_tweaks.properties.2711]
+    [d5_random_tweaks.components.4031]
+    path = ["Creatures", "Dragons"]
+
+    [d5_random_tweaks.components.1202]
+    exclusive = ["sppr202.spl"]
+    path = ["Spells", "Alteration"]
+
+    [d5_random_tweaks.components.2915]
+    exclusive = ["spwi806.spl"]
+    path = ["Spells", "Conjuration"]
+
+    [d5_random_tweaks.components.1323]
+    exclusive = ["sppr350.spl"]
+    path = ["Spells", "New spells"]
+
+    [d5_random_tweaks.components.3070]
+    exclusive = ["hamm06.itm", "hamm06a.itm", "hamm06b.itm"]
+    path = ["Items"]
+
+    [d5_random_tweaks.components.1212]
+    exclusive = ["sppr212.spl"]
+    path = ["Spells", "Healing"]
+
+    [d5_random_tweaks.components.2914]
+    exclusive = ["spwi806.spl", "spwi914.spl"]
+    path = ["Spells", "Necromancy"]
+
+    [d5_random_tweaks.components.1611]
+    exclusive = ["sppr611.spl"]
+
+    [d5_random_tweaks.components.3091]
+    exclusive = ["misc89.itm"]
+    path = ["NPC", "Edwin"]
+
+    [d5_random_tweaks.components.1251]
+    exclusive = ["sppr251.spl"]
+    path = ["Spells", "New spells"]
+
+    [d5_random_tweaks.components.2217]
+    exclusive = ["spwi217.spl"]
+    path = ["Spells", "Evocation"]
+
+    [d5_random_tweaks.components.1505]
+    path = ["Spells", "Divination"]
+
+    [d5_random_tweaks.components.1609]
+    path = ["Spells", "Evocation"]
+
+    [d5_random_tweaks.components.2811]
+    exclusive = ["scrl9f.itm", "spwi811.spl"]
+    path = ["Spells", "Conjuration"]
+
+    [d5_random_tweaks.components.4032]
+    path = ["Creatures", "Dragons"]
+
+    [d5_random_tweaks.components.3060]
+    exclusive = ["boot12.spl"]
+    path = ["Items"]
+
+    [d5_random_tweaks.components.2251]
+    exclusive = ["cdideca.itm"]
+    path = ["Items", "Magic weapons"]
+
+    [d5_random_tweaks.components.2708]
+    exclusive = ["spwi708.spl"]
+    path = ["Spells", "Abjuration"]
+
+    [d5_random_tweaks.components.3092]
+    exclusive = ["misc89.itm"]
+    path = ["NPC", "Edwin"]
+
+    [d5_random_tweaks.components.2116]
+    path = ["Spells", "Enchantment"]
+
+    [d5_random_tweaks.components.1603]
+    exclusive = ["sppr603.spl"]
+    path = ["Spells", "Evocation"]
+
+    [d5_random_tweaks.components.2523]
+    exclusive = ["spwi523.spl"]
+    path = ["Spells", "Evocation"]
+
+    [d5_random_tweaks.components.4010]
+    path = ["Spells", "Necromancy"]
+
+    [d5_random_tweaks.components.4033]
+    path = ["Creatures", "Dragons"]
+
+    [d5_random_tweaks.components.1614]
+    exclusive = ["sorb.itm"]
+
+    [d5_random_tweaks.components.""]
+    after = ["item_rev", "spell_rev"]
+
+    [d5_random_tweaks.components.2711]
     path = ["Spells", "Enchantment"]
 
 [isnf]
@@ -3192,63 +3213,63 @@ url = "github:OlvynChuru/METweaks"
 description = "Olvyn Tweaks"
 archive = "metweaks.tar.gz"
 
-    [metweaks.properties.400]
+    [metweaks.components.400]
     path = ["Fighting", "Proficiencies"]
 
-    [metweaks.properties.3210]
+    [metweaks.components.3210]
     path = ["Skills", "Infravision"]
 
-    [metweaks.properties.2000]
-    exclusive = ["scrl11.itm", "scrl12.itm", "scrl13.itm", "scrl14.itm", "scrl15.itm", "scrl16.itm", "scrl17.itm"]
-
-    [metweaks.properties.3150]
-    exclusive = ["bdbelhif.cre"]
-
-    [metweaks.properties.4000]
-    exclusive = ["weapprof.2da/styles"]
-    path = ["Fighting", "Fighting styles"]
-
-    [metweaks.properties.1200]
+    [metweaks.components.1200]
     exclusive = ["spcl922.spl"]
     path = ["Skills", "Tracking"]
 
-    [metweaks.properties.3200]
+    [metweaks.components.3200]
     path = ["Skills", "Infravision"]
 
-    [metweaks.properties.1500]
-    exclusive = ["spcl212.spl"]
-    path = ["Skills", "Detect evil"]
-
-    [metweaks.properties.510]
-    path = ["Fighting", "Proficiencies"]
-
-    [metweaks.properties.1400]
+    [metweaks.components.1400]
     exclusive = ["spcl311.spl"]
     path = ["Skills", "Charm animal"]
 
-    [metweaks.properties.1000]
+    [metweaks.components.505]
+    path = ["Fighting", "Proficiencies"]
+
+    [metweaks.components.600]
+    path = ["Skills", "Dancing"]
+
+    [metweaks.components.500]
+    path = ["Fighting", "Proficiencies"]
+
+    [metweaks.components.2000]
+    exclusive = ["scrl11.itm", "scrl12.itm", "scrl13.itm", "scrl14.itm", "scrl15.itm", "scrl16.itm", "scrl17.itm"]
+
+    [metweaks.components.3150]
+    exclusive = ["bdbelhif.cre"]
+
+    [metweaks.components.4000]
+    exclusive = ["weapprof.2da/styles"]
+    path = ["Fighting", "Fighting styles"]
+
+    [metweaks.components.1500]
+    exclusive = ["spcl212.spl"]
+    path = ["Skills", "Detect evil"]
+
+    [metweaks.components.510]
+    path = ["Fighting", "Proficiencies"]
+
+    [metweaks.components.1000]
     exclusive = ["7eyes.2da"]
     path = ["Skills", "Deflect missile"]
 
-    [metweaks.properties.1600]
+    [metweaks.components.1600]
     exclusive = ["spcl131.spl"]
     path = ["Skills", "Magic resistance"]
 
-    [metweaks.properties.505]
-    path = ["Fighting", "Proficiencies"]
-
-    [metweaks.properties.600]
-    path = ["Skills", "Dancing"]
-
-    [metweaks.properties.1800]
+    [metweaks.components.1800]
     exclusive = ["backstab.2da"]
     path = ["Skills", "Backstab"]
 
-    [metweaks.properties.3205]
+    [metweaks.components.3205]
     path = ["Skills", "Infravision"]
-
-    [metweaks.properties.500]
-    path = ["Fighting", "Proficiencies"]
 
 [artaport]
 lastupdate = 1970-01-01
@@ -3364,102 +3385,102 @@ url = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/releases/download/v8.
 description = "Tweaks and Tricks"
 archive = "tweaks-and-tricks-v8.19.zip"
 
-    [tnt.properties.24]
+    [tnt.components.24]
     path = ["Items", "Ammunition"]
 
-    [tnt.properties.4]
+    [tnt.components.4]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.1]
+    [tnt.components.1]
     path = ["Skills", "Familiar"]
 
-    [tnt.properties.12]
+    [tnt.components.12]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.54]
+    [tnt.components.54]
     path = ["Items", "Stores"]
 
-    [tnt.properties.2]
+    [tnt.components.2]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.6]
+    [tnt.components.6]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.11]
+    [tnt.components.11]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.13]
+    [tnt.components.13]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.51]
+    [tnt.components.51]
     exclusive = ["spwi607.spl"]
     path = ["Spells", "Illusion"]
 
-    [tnt.properties.53]
+    [tnt.components.53]
     exclusive = ["store_prices"]
     path = ["Items", "Stores"]
 
-    [tnt.properties.5]
+    [tnt.components.5]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.15]
+    [tnt.components.15]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.50]
+    [tnt.components.50]
     exclusive = ["spwi703.spl"]
     path = ["Spells", "Illusion"]
 
-    [tnt.properties.52]
+    [tnt.components.52]
     path = ["Skills", "Blade spin"]
 
-    [tnt.properties.14]
+    [tnt.components.14]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.46]
+    [tnt.components.46]
     exclusive = ["spwi413a.spl", "spwi413d.spl"]
     path = ["Spells", "Otiluke"]
 
-    [tnt.properties.7]
+    [tnt.components.7]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.45]
+    [tnt.components.45]
     exclusive = ["spwi609.spl"]
     path = ["Spells", "Divination"]
 
-    [tnt.properties.57]
+    [tnt.components.57]
     path = ["Items", "Stores"]
 
-    [tnt.properties.56]
+    [tnt.components.56]
     exclusive = ["taerom_ankhegs"]
     path = ["Items", "Upgrades"]
 
-    [tnt.properties.68]
+    [tnt.components.68]
     path = ["Cosmetic", "Maps"]
 
-    [tnt.properties.8]
+    [tnt.components.8]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.55]
+    [tnt.components.55]
     path = ["Items", "Stores"]
 
-    [tnt.properties.10]
+    [tnt.components.10]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.0]
+    [tnt.components.0]
     exclusive = ["famps.cre", "fmcat.cre", "fmfae.cre", "fmfer.cre", "fmimp.cre", "fmmep.cre", "fmqua.cre", "fmrab.cre", "fmspd.cre"]
     path = ["Skills", "Familiar"]
 
-    [tnt.properties.""]
+    [tnt.components.""]
     after = ["ctb"]
 
-    [tnt.properties.9]
+    [tnt.components.9]
     path = ["Skills", "Thieving"]
 
-    [tnt.properties.48]
+    [tnt.components.48]
     exclusive = ["spcl505.spl", "spwi515.spl", "spwi609.spl"]
     path = ["Spells", "Illusion"]
 
-    [tnt.properties.3]
+    [tnt.components.3]
     path = ["Skills", "Thieving"]
 
 [animus]
@@ -3488,45 +3509,45 @@ url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 description = "Rogue Rebalancing"
 archive = "rr-493.zip"
 
-    [rr.properties.4]
+    [rr.components.4]
     exclusive = ["clabba01.2da", "clabba03.2da", "clabba04.2da"]
     path = ["Classes", "Bard"]
 
-    [rr.properties.1]
+    [rr.components.1]
     exclusive = ["clabth02.2da", "clabth03.2da", "clabth04.2da"]
     path = ["Classes", "Thief"]
 
-    [rr.properties.12]
+    [rr.components.12]
     exclusive = ["ar0300.bcs", "aran.cre", "arkanisg.cre", "booter.cre", "c6arkan.bcs", "c6arkan.cre", "c6arkan3.cre", "c6kach.cre", "c6yean.cre", "gaelan.cre", "mook.cre", "mook02.cre", "mookft01.cre", "palern.cre", "stguard1.bcs", "stguard1.cre"]
 
-    [rr.properties.2]
+    [rr.components.2]
     exclusive = ["luct0.2da", "luft0.2da", "lumt0.2da", "luth0.2da", "luth1.2da"]
     path = ["Tables", "HLA"]
 
-    [rr.properties.6]
+    [rr.components.6]
     exclusive = ["mxsplbrd.2da"]
     path = ["Tables", "Spell slots"]
 
-    [rr.properties.5]
+    [rr.components.5]
     exclusive = ["luba0.2da", "luba2.2da", "luba3.2da"]
     path = ["Tables", "HLA"]
 
-    [rr.properties.10]
+    [rr.components.10]
     exclusive = ["potn36.itm", "potn39.itm"]
 
-    [rr.properties.0]
+    [rr.components.0]
     exclusive = ["weapprof.2da"]
     path = ["Fighting", "Proficiencies"]
 
-    [rr.properties.""]
+    [rr.components.""]
     conflicts = ["iispellsystemadjustments"]
     after = ["beyond_the_law", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "refinements", "song_and_silence", "spell_rev", "tod"]
     before = ["atweaks", "eet_tweaks", "stratagems", "virtue"]
 
-    [rr.properties.9]
+    [rr.components.9]
     exclusive = ["potn36.itm", "potn39.itm"]
 
-    [rr.properties.3]
+    [rr.components.3]
     exclusive = ["skillrac.2da"]
     path = ["Skills", "Thieving"]
 
@@ -3574,25 +3595,25 @@ url = "https://www.dropbox.com/s/b58zr6nuehrluff/spstuff-v11.zip?dl=1"
 description = "Sorcerer's Place Collection (New)"
 archive = "spstuff-v11.zip"
 
-    [spstuff.properties.4]
+    [spstuff.components.4]
     path = ["Items"]
 
-    [spstuff.properties.1]
+    [spstuff.components.1]
     path = ["Classes", "Fighter"]
 
-    [spstuff.properties.5]
+    [spstuff.components.5]
     path = ["Classes", "Druid"]
 
-    [spstuff.properties.0]
+    [spstuff.components.0]
     path = ["Classes", "Ranger"]
 
-    [spstuff.properties.2]
+    [spstuff.components.2]
     path = ["Classes", "Fighter"]
 
-    [spstuff.properties.6]
+    [spstuff.components.6]
     path = ["Classes", "Bard"]
 
-    [spstuff.properties.3]
+    [spstuff.components.3]
     path = ["Classes", "Thief"]
 
 [isandir]
@@ -3609,7 +3630,7 @@ url = "github:Maltodaxtrin/CowledMenace"
 description = "Cowled Menace"
 archive = "cowledmenace.tar.gz"
 
-    [cowledmenace.properties.""]
+    [cowledmenace.components.""]
     after = ["eet"]
     depends = ["eet"]
 
@@ -3626,55 +3647,55 @@ url = "http://mods.pocketplane.net/win-questpack-v34.zip"
 description = "Ding0's Quest Pack"
 archive = "Win-QuestPack-v34.zip"
 
-    [d0questpack.properties.12]
+    [d0questpack.components.12]
     exclusive = ["Oasis", "ar6300.are"]
 
-    [d0questpack.properties.21]
-    exclusive = ["ar0530.are", "ar0530.bcs"]
-
-    [d0questpack.properties.20]
+    [d0questpack.components.20]
     exclusive = ["spin671.spl"]
 
-    [d0questpack.properties.6]
+    [d0questpack.components.6]
     exclusive = ["sw1h50.itm"]
 
-    [d0questpack.properties.11]
+    [d0questpack.components.11]
     exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"]
 
-    [d0questpack.properties.13]
+    [d0questpack.components.13]
     exclusive = ["pirmur02.cre", "pirmur05.cre", "ppsanik.cre"]
 
-    [d0questpack.properties.8]
-    exclusive = ["ar0812.are", "ar1515.bcs", "thumb.cre"]
-
-    [d0questpack.properties.17]
-    exclusive = ["kamir.cre"]
-
-    [d0questpack.properties.5]
+    [d0questpack.components.5]
     exclusive = ["ar0300.are", "ar0300.bcs", "aran.cre", "aran02.cre", "arnfgt03.cre", "arnfgt04.cre", "c6kach.cre", "c6tanov.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "renal.cre", "tassa.cre", "thief1.cre", "vvtanov.cre"]
 
-    [d0questpack.properties.15]
+    [d0questpack.components.15]
     exclusive = ["sudryad.cre", "sufake.bam", "sufake.itm", "suinvis.cre", "sumound.cre", "sutear.bam", "sutear.itm"]
 
-    [d0questpack.properties.401]
+    [d0questpack.components.401]
     exclusive = ["reddeath.bcs", "sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre"]
 
-    [d0questpack.properties.10]
-    exclusive = ["cutc7g.bcs", "hellgen2.cre", "hellself.cre", "hellself.eff", "sphl001.spl", "sphl002.spl", "sphl003.spl", "sphl004.spl", "sphl005.spl", "spin747.spl", "spin749.spl", "spin751.spl", "spin753.spl", "spin755.spl"]
-
-    [d0questpack.properties.0]
-    exclusive = ["AI"]
-
-    [d0questpack.properties.19]
-    exclusive = ["ar2402.are"]
-
-    [d0questpack.properties.16]
+    [d0questpack.components.16]
     exclusive = ["baisera.cre", "besamen.cre"]
 
-    [d0questpack.properties.""]
+    [d0questpack.components.21]
+    exclusive = ["ar0530.are", "ar0530.bcs"]
+
+    [d0questpack.components.8]
+    exclusive = ["ar0812.are", "ar1515.bcs", "thumb.cre"]
+
+    [d0questpack.components.17]
+    exclusive = ["kamir.cre"]
+
+    [d0questpack.components.10]
+    exclusive = ["cutc7g.bcs", "hellgen2.cre", "hellself.cre", "hellself.eff", "sphl001.spl", "sphl002.spl", "sphl003.spl", "sphl004.spl", "sphl005.spl", "spin747.spl", "spin749.spl", "spin751.spl", "spin753.spl", "spin755.spl"]
+
+    [d0questpack.components.0]
+    exclusive = ["AI"]
+
+    [d0questpack.components.19]
+    exclusive = ["ar2402.are"]
+
+    [d0questpack.components.""]
     after = ["kelsey", "keto", "ub"]
 
-    [d0questpack.properties.9]
+    [d0questpack.components.9]
     exclusive = ["potn33.itm", "potn38.itm", "spwi106.spl", "spwi815.spl"]
 
 [d0tweak]
@@ -3683,7 +3704,7 @@ class = "Tweaks"
 url = "github:Pocket-Plane-Group/D0Tweak"
 description = "Ding0 Tweak Pack"
 
-    [d0tweak.properties.11]
+    [d0tweak.components.11]
     after = ["rr"]
 
 [eetgbthfkp]
@@ -4024,101 +4045,101 @@ url = "github:Gibberlings3/Divine_Remix"
 description = "Divine Remix"
 archive = "divine_remix.tar.gz"
 
-    [divine_remix.properties.109]
+    [divine_remix.components.109]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.406]
+    [divine_remix.components.406]
     path = ["Classes", "Ranger"]
 
-    [divine_remix.properties.54]
+    [divine_remix.components.54]
     path = ["Classes", "Paladin"]
 
-    [divine_remix.properties.130]
+    [divine_remix.components.130]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.11]
+    [divine_remix.components.11]
     path = ["Spells", "New spells"]
 
-    [divine_remix.properties.51]
+    [divine_remix.components.51]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.53]
+    [divine_remix.components.53]
     path = ["Classes", "Druid"]
 
-    [divine_remix.properties.203]
+    [divine_remix.components.203]
     path = ["Classes", "Druid"]
 
-    [divine_remix.properties.106]
+    [divine_remix.components.106]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.124]
+    [divine_remix.components.124]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.600]
+    [divine_remix.components.600]
     path = ["NPC", "Branwen"]
 
-    [divine_remix.properties.118]
+    [divine_remix.components.118]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.100]
+    [divine_remix.components.100]
     exclusive = ["mxsplprs.2da"]
     path = ["Tables", "Spell slots"]
 
-    [divine_remix.properties.50]
+    [divine_remix.components.50]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.52]
+    [divine_remix.components.52]
     path = ["Classes", "Druid"]
 
-    [divine_remix.properties.403]
+    [divine_remix.components.403]
     path = ["Classes", "Ranger"]
 
-    [divine_remix.properties.415]
+    [divine_remix.components.415]
     path = ["Classes", "Ranger"]
 
-    [divine_remix.properties.127]
+    [divine_remix.components.127]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.112]
+    [divine_remix.components.112]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.121]
+    [divine_remix.components.121]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.412]
+    [divine_remix.components.412]
     path = ["Classes", "Ranger"]
 
-    [divine_remix.properties.115]
+    [divine_remix.components.115]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.57]
+    [divine_remix.components.57]
     path = ["Classes", "Ranger"]
 
-    [divine_remix.properties.56]
+    [divine_remix.components.56]
     path = ["Classes", "Ranger"]
 
-    [divine_remix.properties.409]
+    [divine_remix.components.409]
     path = ["Classes", "Ranger"]
 
-    [divine_remix.properties.610]
+    [divine_remix.components.610]
     path = ["NPC", "Viconia"]
 
-    [divine_remix.properties.55]
+    [divine_remix.components.55]
     path = ["Classes", "Paladin"]
 
-    [divine_remix.properties.605]
+    [divine_remix.components.605]
     path = ["NPC", "Jaheira"]
 
-    [divine_remix.properties.10]
+    [divine_remix.components.10]
     path = ["Spells", "New spells"]
 
-    [divine_remix.properties.107]
+    [divine_remix.components.107]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.103]
+    [divine_remix.components.103]
     path = ["Classes", "Cleric"]
 
-    [divine_remix.properties.200]
+    [divine_remix.components.200]
     path = ["Tables", "Spell slots"]
 
 [iispellsystemadjustments]
@@ -4234,73 +4255,73 @@ url = "github:subtledoctor/TomeAndBlood"
 description = "Tome and Blood"
 archive = "tomeandblood.tar.gz"
 
-    [tomeandblood.properties.69]
-    exclusive = ["familiar_penalty"]
-    path = ["Skills", "Familiar"]
-
-    [tomeandblood.properties.40]
-    path = ["Classes", "Wizard"]
-
-    [tomeandblood.properties.""]
-    after = ["spell_rev"]
-
-    [tomeandblood.properties.54]
+    [tomeandblood.components.54]
     path = ["Spells", "Metamagic"]
 
-    [tomeandblood.properties.20]
+    [tomeandblood.components.20]
     path = ["Classes", "Sorcerer"]
 
-    [tomeandblood.properties.25]
+    [tomeandblood.components.25]
     path = ["Classes", "Sorcerer"]
 
-    [tomeandblood.properties.11]
+    [tomeandblood.components.11]
     exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
     path = ["Spells", "Schools"]
 
-    [tomeandblood.properties.35]
+    [tomeandblood.components.35]
     path = ["Classes", "Sorcerer"]
 
-    [tomeandblood.properties.51]
+    [tomeandblood.components.51]
     path = ["Spells", "Metamagic"]
 
-    [tomeandblood.properties.53]
+    [tomeandblood.components.53]
     path = ["Spells", "Metamagic"]
 
-    [tomeandblood.properties.66]
-    exclusive = ["scrl77.itm"]
-    path = ["Skills", "Familiar"]
-
-    [tomeandblood.properties.31]
+    [tomeandblood.components.31]
     path = ["Classes", "Sorcerer"]
 
-    [tomeandblood.properties.67]
+    [tomeandblood.components.67]
     exclusive = ["select_familiar"]
     path = ["Skills", "Familiar"]
 
-    [tomeandblood.properties.71]
-    exclusive = ["spell_switching"]
-    path = ["Skills", "Familiar"]
-
-    [tomeandblood.properties.33]
+    [tomeandblood.components.33]
     path = ["Classes", "Sorcerer"]
 
-    [tomeandblood.properties.37]
-    path = ["Classes", "Sorcerer"]
-
-    [tomeandblood.properties.16]
+    [tomeandblood.components.16]
     exclusive = ["spwi110.spl"]
     path = ["Spells", "Identify"]
 
-    [tomeandblood.properties.52]
+    [tomeandblood.components.52]
     path = ["Spells", "Metamagic"]
 
-    [tomeandblood.properties.48]
+    [tomeandblood.components.14]
+    exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
+    path = ["Spells", "Illusion"]
+
+    [tomeandblood.components.40]
+    path = ["Classes", "Wizard"]
+
+    [tomeandblood.components.66]
+    exclusive = ["scrl77.itm"]
+    path = ["Skills", "Familiar"]
+
+    [tomeandblood.components.71]
+    exclusive = ["spell_switching"]
+    path = ["Skills", "Familiar"]
+
+    [tomeandblood.components.37]
+    path = ["Classes", "Sorcerer"]
+
+    [tomeandblood.components.48]
     exclusive = ["armored_spellcasting"]
     path = ["Skills", "Casting"]
 
-    [tomeandblood.properties.14]
-    exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
-    path = ["Spells", "Illusion"]
+    [tomeandblood.components.69]
+    exclusive = ["familiar_penalty"]
+    path = ["Skills", "Familiar"]
+
+    [tomeandblood.components.""]
+    after = ["spell_rev"]
 
 [foundling]
 lastupdate = 1970-01-01
@@ -4521,7 +4542,7 @@ url = "manual"
 description = "Faith and Powers Multiclass Clerics"
 archive = "manual"
 
-    [fnp_multiclass.properties.""]
+    [fnp_multiclass.components.""]
     after = ["deities-of-faerun", "divine_remix", "fnp", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood"]
     before = ["cdtweaks", "scales_of_balance", "stratagems"]
 

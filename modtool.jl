@@ -83,7 +83,55 @@ end#»»
 
 @inline printlog(s...) = println(s...)
 
-# Mod classes for install order
+# Data structures ««1
+
+mutable struct ModComponent#««
+	id::String
+	name::String
+	group::String
+	subgroup::String
+	# compatibility properties:
+	after::Vector{String}
+	before::Vector{String}
+	conflicts::Vector{String}
+	depends::Vector{String}
+	exclusive::Vector{String}
+	path::Vector{String} # e.g. ["Weapons&Armor", "Proficiencies"]
+	@inline ModComponent(i, t, g="", s="") =
+		new(string(i), t, g, s, [], [], [], [], [], [])
+	@inline ModComponent(i, d::AbstractDict) =
+		new(i, (get(d, k,"") for k in ("name", "group", "subgroup"))...,
+		 (get(d,k,[]) for k in ("after", "before", "conflicts", "depends", "exclusive", "path"))...)
+end#»»
+@inline db_prop(c::ModComponent) = Dict(string(s) => getfield(c,  s)
+	for s in (:after, :before, :conflicts, :depends, :exclusive, :path)
+	if !isempty(getfield(c, s)))
+@inline description(c::ModComponent) =
+	isempty(c.subgroup) ? c.name : c.subgroup*'/'*c.name
+mutable struct Mod#««
+	# data stored in moddb file:
+	id::String
+	url::String
+	description::String
+	archive::String
+	class::String # install rank
+	lastupdate::Date
+# 	properties::Dict{String,ComponentProperties}
+	# this data exists only once the mod is extracted:
+	readme::String # can exceptionally be hardcoded
+	tp2::String
+	languages::Vector{String}
+	sel_lang::Int # starts at zero (WeiDU indexing)
+	components::Dict{String,ModComponent}
+
+	@inline Mod(;id, url, description, class, archive="", lastupdate=1970,
+		tp2 = "", languages = String[], readme="", components=Dict()) = begin
+		new(lowercase(id), url, description, archive, class, Date(lastupdate),
+			readme, tp2, languages, 0,
+			Dict(k => ModComponent(k, v) for (k, v) in components))
+		end
+end#»»
+# Mod classes for install order#««
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
 # (this is somewhat different from EE Mod Setup's ordering)
 const MOD_CLASSES = split(replace("""
@@ -107,72 +155,16 @@ const MOD_CLASSES = split(replace("""
 	Late
 	Final
 	BADCLASS
-""", r"#[^\n]*\n" =>"\n"))
-
-struct ComponentProperties#««
-	after::Vector{String}
-	before::Vector{String}
-	conflicts::Vector{String}
-	depends::Vector{String}
-	exclusive::Vector{String}
-	path::Vector{String} # e.g. ["Weapons&Armor", "Proficiencies"]
-end#»»
-# we must not overqualify the type of `d`; passing `Dict()` is fine:
-@inline ComponentProperties(d::Dict) = ComponentProperties((get(d, s, String[])
-	for s in string.(fieldnames(ComponentProperties)))...)
-@inline ComponentProperties() = ComponentProperties(Dict())
-@inline Base.Dict(prop::ComponentProperties) =
-	Dict(string(fieldname(ComponentProperties, i)) => getfield(prop, i)
-		for i in 1:fieldcount(ComponentProperties)
-		if !isempty(getfield(prop, i)))
-
-struct ModComponent
-	id::String
-	name::String
-	group::String
-	subgroup::String
-	@inline ModComponent(i, t, g="", s="") = new(string(i), t, g, s)
-end
-@inline Base.iterate(c::ModComponent, args...) =
-	Base.iterate((c.id, c.name, c.group, c.subgroup), args...)
-@inline description(c::ModComponent) =
-	isempty(c.subgroup) ? c.name : c.subgroup*'/'*c.name
-
-mutable struct Mod#««
-	# data stored in moddb file:
-	id::String
-	url::String
-	description::String
-	archive::String
-	class::String # install rank
-	lastupdate::Date
-	properties::Dict{String,ComponentProperties}
-	# this data exists only once the mod is extracted:
-	readme::String # can exceptionally be hardcoded
-	tp2::String
-	languages::Vector{String}
-	sel_lang::Int # starts at zero (WeiDU indexing)
-	components::Vector{ModComponent}
-	# components["1"] = Dict(
-	# 	"depends" => [ dependencies...],
-	# 	"exclusive" => [ list of symbols... ],
-	# each symbol (e.g. tac0 table) is owned at most once
-	#	)
-
-	@inline Mod(;id, url, description, class, archive="", lastupdate=1970,
-		properties = Dict(), tp2 = "", languages = String[], readme="") = begin
-		new(lowercase(id), url, description, archive, class, Date(lastupdate),
-			Dict(k=>ComponentProperties(v) for (k,v) in pairs(properties)),
-			readme, tp2, languages, 0, [])
-		end
-end#»»
-@inline sortkey(a::Mod) = (modclass(a.class), a.lastupdate)
+""", r"#[^\n]*\n" =>"\n"))# »»
 @inline Base.isless(a::Mod, b::Mod) = sortkey(a) < sortkey(b)
 @inline modclass(class::Integer) = class
 @inline modclass(class::AbstractString) = (findfirst(==(class), MOD_CLASSES))
+@inline sortkey(a::Mod) = (modclass(a.class), a.lastupdate)
 @inline modarchive(m::Mod) = m.id*match(r"\.[^.]*$", m.url).match
 const EET_class = modclass("EET")
 @inline modgame(m::Mod) = modclass(m.class) < EET_class ? :bg1 : :bg2
+@inline modcomponents(m::Mod) = (m.components[k]
+ for k in sort([filter(!isempty, keys(m.components))...]; by=x->parse(Int,x)))
 
 # Mod DB handling ««1
 function read_moddb(io::IO)#««
@@ -183,8 +175,8 @@ function read_moddb(io::IO)#««
 			class=d["class"],
 			archive=get(d, "archive", ""),
 			lastupdate=get(d, "lastupdate", "1970"),
-			properties=get(d, "properties", Dict()),
-			readme=get(d, "readme", "")
+			readme=get(d, "readme", ""),
+			components=get(d, "components", Dict()),
 		) for (id, d) in dict)
 end#»»
 function write_moddb(io::IO; moddb=global_moddb)#««
@@ -193,8 +185,8 @@ function write_moddb(io::IO; moddb=global_moddb)#««
 		"description" => m.description, "class" => m.class)
 		isempty(m.archive) || (d["archive"] = m.archive)
 		startswith(m.readme, "https://") && (d["readme"] = m.readme)
-		isempty(m.properties) ||
-			(d["properties"] = Dict(k=>Dict(v) for (k,v) in m.properties))
+		isempty(m.components) ||
+			(d["components"] = Dict(k=>db_prop(v) for (k,v) in m.components))
 		d
 	end
 end#»»
@@ -212,7 +204,8 @@ end
 @inline findmod(pattern::Regex; moddb = global_moddb) =
 	[ id for id in keys(moddb) if occursin(pattern, id) ]
 @inline function findcomponent(mod, k)
-	for c in mod.components; c.id == lowercase(string(k)) && return c; end
+	v = get(mod.components, lowercase(string(k)), nothing)
+	isnothing(v) || return v
 	error("mod '$(mod.id)': component '$k' not found")
 end
 
@@ -390,13 +383,16 @@ function extract(m)#««
 		isempty(m.languages) ||
 			(m.sel_lang = argmin([lang_score(l, PREF_LANG) for l in m.languages]) - 1)
 	end#»»
-	if isempty(m.components)#««
+	if all(isempty, c.name for c in values(m.components))#««
 		printlog("reading components for '$id'")
 		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-components-json $(m.tp2) $(m.sel_lang)`)
 			startswith(line, "[{") || continue
-			v = JSON.parse(line)
-			m.components = [ ModComponent(x["number"], x["name"], 
-				get(x["group"], 1, ""), get(x, "subgroup", "")) for x in v ]
+			for x in JSON.parse(line)
+				k = string(x["number"])
+				c = get!(m.components, k, ModComponent(k, ""))
+				c.name, c.group, c.subgroup =
+					x["name"], get(x["group"], 1, ""), get(x,"subgroup","")
+			end
 		end
 	end#»»
 	if isempty(m.readme) # no hardcoded readme provided««
@@ -531,6 +527,23 @@ function modstatus(tp2file, dir)#««
 end#»»
 # @inline modstatus(db, tp2file) = get(db, tp2file, Int[])
 # @inline componentstatus(db, tp2file, c) = (c ∈ modstatus(db, tp2file))
+function printcomp(io::IO, m, c::ModComponent; selection, installed)
+	@printf(io, "%c%c%c `%s:%s` %s\n",
+		c.id ∈ get(selection, m.id, []) ? 's' : '.',
+		c.id ∉ get(installed, m.tp2, []) ? '.' : modgame(m) == :bg1 ? '1' : '2',
+		isempty(c.path) ? '.' : 'p',
+		m.id, c.id, description(c))
+end
+@inline component_editor(filename) =#««
+	run(`vim -c 'se ft= fdm=marker fmr=««,»»|
+sy match modComp /\`[^\`]*\`/|hi link modComp Constant|
+sy match modAdd /^s\.[.p] .*$/ contains=modComp |hi link modAdd DiffAdd|
+sy match modDel /^\.[12][.p] .*$/ contains=modComp |hi link modDel DiffDelete|
+sy match modSel /^s[12][.p] .*$/|hi link modSel DiffChange|
+sy match modGrp /^# .*$/|hi link modGrp ModeMsg|
+sy match modSub /^## .*$/|hi link modSub Title|
+	nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>'
+	$filename`)#»»
 function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 		less=true)
 	extract(mod) || return
@@ -539,23 +552,9 @@ function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
 	sel = get!(selection, mod.id, String[])
 	@printf("\e[1m%-30s %s\e[m\n", mod.id, mod.description)
 	open(less ? `view - ` : `cat`, "w", stdout) do io
-	for c in mod.components
-		s = c.id ∈ sel ? 's' : '.'
-		i = c.id ∉ ins ? '.' : g == :bg1 ? '1' : '2'
-		@printf(io, "%c%c % 4s %s\n", s, i, c.id, description(c))
-	end
+	for c in modcomponents(mod); printcomp(io, mod, c; sel, ins); end
 	end
 end#»»
-@inline component_editor(filename) =
-	run(`vim -c 'se ft= fdm=marker fmr=««,»»|
-	sy match modComp /\`[^\`]*\`/|hi link modComp Constant|
-	sy match modAdd /^s\. .*$/ contains=modComp |hi link modAdd DiffAdd|
-	sy match modDel /^\.[12] .*$/ contains=modComp |hi link modDel DiffDelete|
-	sy match modSel /^s[12] .*$/|hi link modSel DiffChange|
-	sy match modGrp /^# .*$/|hi link modGrp ModeMsg|
-	sy match modSub /^## .*$/|hi link modSub Title|
-	nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>'
-	$filename`)
 function components!(mod::Mod; selection=global_selection,#««
 		gamedir = GAMEDIR[modgame(mod)], cols=80)
 	extract(mod) || return
@@ -564,13 +563,14 @@ function components!(mod::Mod; selection=global_selection,#««
 	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
 	open(filename, "w") do io
 		g = ""; h = ""
-		for c in mod.components
+		for c in modcomponents(mod)
 			g ≠ c.group && (g = c.group; println(io, "# ", g, "«"*"«1"))
 			h ≠ c.subgroup &&
 				(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
-			s = c.id ∈ sel ? 's' : '.'
-			i = isempty(ins) ? '.' : modgame(mod) == :bg1 ? '1' : '2'
-			@printf(io, "%c%c % 4s %s\n", s, i, c.id, description(c))
+			printcomp(io, mod, c; sel, ins)
+# 			s = c.id ∈ sel ? 's' : '.'
+# 			i = isempty(ins) ? '.' : modgame(mod) == :bg1 ? '1' : '2'
+# 			@printf(io, "%c%c % 4s %s\n", s, i, c.id, description(c))
 		end
 	end
 	# vim will be better than whiptail: we have syntax highlight + folding
@@ -616,8 +616,7 @@ function dependencies(list ;moddb=global_moddb)#««
 # 	@inline connect((b, a),) =
 # 		(push!(get!(dep.arrowsfrom, b, Set{String}()), a); dep.arrowsto[a]+= 1)
 	for id in list
-		c = findmod(id; moddb).properties
-		for (k, v) in pairs(c)
+		for (k, v) in findmod(id;moddb).components
 			# special: empty key indicates a dependency for the whole mod
 			isempty(k) || continue
 			isempty(v.after) && isempty(v.before) && continue
@@ -663,7 +662,7 @@ function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
 	# check exclusivity
 	for (id, clist) in selection
 		mod = findmod(id; moddb)
-		for (c, v) in mod.properties
+		for (c, v) in mod.components
 			c ∈ clist || continue
 			for e in v.exclusive
 				push!(get!(owners, e, valtype(owners)([])), (id, c))
@@ -682,7 +681,7 @@ function install(mod; simulate=false, uninstall=false, #««
 	selected = uninstall ? Int[] : get!(selection, id, Int[])
 
 	gamedir = gamedirs[modgame(mod)]
-	status = weidu_status(join(gamedir, "weidu.log"))
+	installed = weidu_status(join(gamedir, "weidu.log"))
 	current = Set(modstatus(status, mod.tp2))
 
 	to_add = string.(setdiff(selected, current))
@@ -754,38 +753,34 @@ findbranch(root::ComponentTree, path) = isempty(path) ? root :
 	findbranch(get!(root.children, first(path), ComponentTree()), path[2:end])
 function build_tree(;moddb=global_moddb)#««
 	root = ComponentTree()
-	for (id, m) in moddb, (k, v) in m.properties
+	for (id, m) in moddb, (k, v) in m.components
 		isempty(v.path) && continue
 		push!(findbranch(root, v.path).alternatives, (id, k))
 	end
 	root
 end#»»
 function display_tree(io::IO, root, level=1;#««
-		moddb=global_moddb, selection=global_selection, status, order)
+		moddb=global_moddb, selection=global_selection, installed, order)
 	for (id, k) in sort(collect(root.alternatives);
 			lt=(x,y)->comp_isless(x,y,order))
 		m = findmod(id; moddb); extract(m)
-		c = findcomponent(m, k); t = description(c)
-		ins = get(status, m.tp2, String[])
-		sel = get(selection, m.id, String[])
-		s = c.id ∈ sel ? 's' : '.'
-		i = c.id ∉ ins ? '.' : modgame(m) == :bg1 ? '1' : '2'
-		println(io, "$s$i `$id:$k` $t")
+		c = findcomponent(m, k)
+		printcomp(io, m, m.components[k]; selection, installed)
 	end
 	for (s, c) in sort(collect(root.children); by=first)
 		println(io, '#'^level, ' ', s, " «",'«', level)
-		display_tree(io, c, level+1; selection, moddb, status, order)
+		display_tree(io, c, level+1; selection, moddb, installed, order)
 	end
 end#»»
-function config(;selection=global_selection,moddb=global_moddb)
-	status = weidu_status((joinpath(d, "weidu.log") for d in GAMEDIR)...)
+function config(;selection=global_selection,moddb=global_moddb)#««
+	installed = weidu_status((joinpath(d, "weidu.log") for d in GAMEDIR)...)
 	order = installorder(keys(moddb); moddb)
 	f = joinpath(TEMP, "config")
 	open(f, "w") do io
-		display_tree(io, build_tree(;moddb); selection, moddb, status, order)
+		display_tree(io, build_tree(;moddb); selection, moddb, installed, order)
 	end
 	component_editor(f)
-end
+end#»»
 
 # BWS mod db handling ««1
 function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
@@ -951,8 +946,8 @@ function mod_exclusives(mod::Mod; except = String[])#««
 	extract(mod)
 	ret = Pair{Int, Vector{String}}[]
 	cd(MODS) do
-		for c in mod.components
-			printlog("Computing exclusivity for $(mod.id):$(c.id)=$(description(c))")
+		for (k, c) in mod.components
+			printlog("Computing exclusivity for $(mod.id):$k=$(description(c))")
 			excl = String[]
 			for line in eachline(ignorestatus(`weidu --game $gamedir --skip-at-view --no-exit-pause --noautoupdate --list-actions --language $(mod.sel_lang) $(mod.tp2) --force-install $(c.id)`))
 				m = match(r"SIMULATE\s+(\S.*\S)\s+(\S.*)$", line); 
@@ -1033,7 +1028,7 @@ function complete_db!(moddb) #««
 	function setmod!(id, list...; kwargs...)#««
 		m = findmod(id; moddb)
 		for (i, kv) in list
-			p = get!(m.properties, string(i), ComponentProperties())
+			p = get!(m.components, string(i), ModComponent(string(i), ""))
 			for (k, v) in pairs(kv)
 				k == :path && !isempty(p.path) && printlog("warning, '$i:$k'.path is not empty")
 				k != :path && (v = unique!(sort!([v;])))

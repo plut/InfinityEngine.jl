@@ -498,9 +498,9 @@ function update_selection(selection=global_selection, filename=SELECTION)#««
 	run(ignorestatus(`diff --color=always $(filename*'~') $filename`))
 end#»»
 # Mod components ««1
-function weidu_status(weidu_logs...)#««
+function weidu_status(dirs...)#««
 	status = Dict{String, Vector{String}}()
-	for f in weidu_logs
+	for d in dirs; f = joinpath(d, "weidu.log")
 		ispath(f) || continue
 		for line in eachline(f)
 			line = replace(line, r"\s*//.*" => "")
@@ -558,8 +558,7 @@ end#»»
 function components!(mod::Mod; selection=global_selection,#««
 		gamedir = GAMEDIR[modgame(mod)], cols=80)
 	extract(mod) || return
-	ins = modstatus(mod.tp2, gamedir)
-	sel = get!(selection, mod.id, Int[])
+	installed = weidu_status(gamedir)
 	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
 	open(filename, "w") do io
 		g = ""; h = ""
@@ -567,7 +566,7 @@ function components!(mod::Mod; selection=global_selection,#««
 			g ≠ c.group && (g = c.group; println(io, "# ", g, "«"*"«1"))
 			h ≠ c.subgroup &&
 				(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
-			printcomp(io, mod, c; sel, ins)
+			printcomp(io, mod, c; selection, installed)
 # 			s = c.id ∈ sel ? 's' : '.'
 # 			i = isempty(ins) ? '.' : modgame(mod) == :bg1 ? '1' : '2'
 # 			@printf(io, "%c%c % 4s %s\n", s, i, c.id, description(c))
@@ -681,7 +680,7 @@ function install(mod; simulate=false, uninstall=false, #««
 	selected = uninstall ? Int[] : get!(selection, id, Int[])
 
 	gamedir = gamedirs[modgame(mod)]
-	installed = weidu_status(join(gamedir, "weidu.log"))
+	installed = weidu_status(gamedir)
 	current = Set(modstatus(status, mod.tp2))
 
 	to_add = string.(setdiff(selected, current))
@@ -773,7 +772,7 @@ function display_tree(io::IO, root, level=1;#««
 	end
 end#»»
 function config(;selection=global_selection,moddb=global_moddb)#««
-	installed = weidu_status((joinpath(d, "weidu.log") for d in GAMEDIR)...)
+	installed = weidu_status(GAMEDIR...)
 	order = installorder(keys(moddb); moddb)
 	f = joinpath(TEMP, "config")
 	open(f, "w") do io

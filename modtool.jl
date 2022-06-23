@@ -41,6 +41,8 @@ module ModTool
 # - try and guess readme for individual components (IMPOSSIBLE)
 # + organize (some) components in a tree-like structure and edit choices
 #  + review sorting: (install-order × numeric)
+# - separate mod db generation
+#  - write a `init()` function
 using Printf
 using Dates
 using TOML
@@ -420,9 +422,9 @@ function lastupdate!(mod::Mod; mods=MODS)
 	printlog("$(mod.id): recomputed last update to $d")
 	return true
 end
-function status(mod::Mod; selection=global_selection, selected=false)#««
+function status(mod::Mod; selection=global_selection, selected=nothing)#««
 	sel = !isempty(get(selection, mod.id, Int[]))
-	!selected || sel || return
+	selected ∈ (sel, nothing) || return
 	@printf("%c%c%c %7s %-22s %s\n",
 		isfile(joinpath(DOWN, mod.archive)) ? 'd' : '.',
 		ispath(joinpath(MODS, mod.id)) ? 'x' : '.',
@@ -486,14 +488,16 @@ function extract(m)#««
 		end
 	end#»»
 	if isempty(m.readme) # try and guess...««
-		readmes = [ f for f in readdir(joinpath(MODS, id))
-			if occursin(r"readme"i, f) && isfile(joinpath(MODS, id, f)) ]
+		readmes = [ joinpath(root, f)
+			for (root, _, files) in walkdir(joinpath(MODS, id))
+			for f in files if occursin(r"readme"i, f) ]
 		!isempty(readmes) && 
 			(m.readme = joinpath(MODS, id, 
 				readmes[argmin([ lang_score(f, PREF_LANG) for f in readmes ])]))
 	end#»»
-	if isempty(m.readme) && startswith(m.url, "github:")#««
-		m.readme = "https://github.com/"*m.url[8:end]
+	if isempty(m.readme) && startswith(m.url, "https://github.com")#««
+		x = match(r"https://github.com/[^/]*/[^/]*", m.url)
+		m.readme = x.match
 	end#»»
 	end # cd(mods)
 	true
@@ -773,7 +777,8 @@ end#»»
 @inline uninstall(mod; kwargs...) = install(mod; uninstall=true, kwargs...)
 # Global routines««1
 function do_all(f; class=nothing, pause=false, limit=typemax(Int),
-		selected = (f ≠ status), selection = global_selection, moddb=global_moddb,
+		selected = (f == status ? nothing : true),
+		selection = global_selection, moddb=global_moddb,
 		kwargs...)
 	i = 0; c = ""
 	l = installorder(f == status ? keys(moddb) :
@@ -794,7 +799,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		else
 			printlog("\e[1m($n/$(length(global_selection)) $id)\e[m")
 		end
-		f(mod; kwargs...)
+		f(mod; selected, kwargs...)
 	end
 end
 list1 = (:download, :extract, :install, :uninstall, :show_components, :status)
@@ -1038,6 +1043,8 @@ function complete_db!(moddb) #««
 	mkmod("monasticorders", "github:aquadrizzt/MonasticOrders", "Monastic Orders", "Kits"),
 	mkmod("deitiesoffaerun", "github:Raduziel/Deities-Of-Faerun", "Deities of Faerun", "Kits"),
 	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweaks"),
+	mkmod("mih_sp", "github:AngelGryph/MadeInHeaven_SpellPack", "Made In Heaven: Spell Pack", "Tweaks"),
+	mkmod("mih_eq", "github:AngelGryph/MadeInHeaven_EncountersAndQuests", "Made In Heaven: Encounters and Quests", "Quests"),
 	# Weasel mods ««3
 	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPCs"),
 	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPCs"),

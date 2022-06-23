@@ -12,8 +12,7 @@ ModTool.install(all)
 module ModTool
 # Generic installation order
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
-# FIXME:
-# http://www.shsforums.net/topic/53558-arcane-archer/
+# FIXME: readme metweaks
 # + fix updating selection file
 # + allow # on right side of =
 # + mod subcomponents
@@ -41,7 +40,7 @@ module ModTool
 # - complete dependency & conflict checking
 # - try and guess readme for individual components (IMPOSSIBLE)
 # + organize (some) components in a tree-like structure and edit choices
-#  - review sorting: (install-order × numeric)
+#  + review sorting: (install-order × numeric)
 using Printf
 using Dates
 using TOML
@@ -55,7 +54,7 @@ using LibGit2
 const HOME=ENV["HOME"]
 const PREF_LANG=(r"fran.*ais"i, r"french"i, r"english"i, r"american"i)
 const PREFIX="$HOME/jeux/ciopfs/modtool"
-const MODDB="$PREFIX/moddb"
+const MODDB="$PREFIX/moddb.toml"
 const MODDB_SEPARATOR="\t"
 const SELECTION="$PREFIX/selection"
 const DOWN="$PREFIX/down" # should be in a ciopfs
@@ -64,7 +63,7 @@ const TEMP="$PREFIX/temp" # should be in a ciopfs
 const INI="$PREFIX/ini" # should be in a ciopfs
 
 const GAMEDIR =
-	(bg1="$HOME/jeux/ciopfs/bg1/game", bg2="$HOME/jeux/ciopfs/bg2/game")
+	(bg1="$HOME/jeux/ciopfs/bg1/game", bg2="$HOME/jeux/ciopfs/bg2ee/game")
 const GAME_LIST = keys(GAMEDIR)
 	
 const BWS_ROOT="$HOME/jeux/ciopfs/EE-Mod-Setup-Master"
@@ -83,6 +82,8 @@ function __init__()# setup global variables and filesystem ««
 end#»»
 
 @inline printlog(s...) = println(s...)
+@inline printsim(s...) = println("\e[35;1m", s..., "\e[m")
+@inline printerr(s...) = println("\e[31;1m", s..., "\e[m")
 
 # Data structures ««1
 
@@ -123,13 +124,13 @@ mutable struct Mod#««
 	tp2::String
 	languages::Vector{String}
 	sel_lang::Int # starts at zero (WeiDU indexing)
-	components::Dict{String,ModComponent}
+	components::Vector{ModComponent} # sorted as in tp2 file
 
 	@inline Mod(;id, url, description, class, archive="", lastupdate=1970,
-		tp2 = "", languages = String[], readme="", components=Dict()) = begin
+		tp2 = "", languages = String[], readme="", components=[]) = begin
 		new(lowercase(id), url, description, archive, class, Date(lastupdate),
 			readme, tp2, languages, 0,
-			Dict(k => ModComponent(k, v) for (k, v) in components))
+			[ ModComponent(k,v) for (k,v) in pairs(components)])
 		end
 end#»»
 # Mod classes for install order#««
@@ -164,8 +165,79 @@ const MOD_CLASSES = split(replace("""
 @inline modarchive(m::Mod) = m.id*match(r"\.[^.]*$", m.url).match
 const EET_class = modclass("EET")
 @inline modgame(m::Mod) = modclass(m.class) < EET_class ? :bg1 : :bg2
-@inline modcomponents(m::Mod) = (m.components[k]
- for k in sort([filter(!isempty, keys(m.components))...]; by=x->parse(Int,x)))
+@inline modcomponents(m::Mod) = (m.components)
+
+"Returns the dependency matrix for these mods, encoded as
+(arrowsfrom = dict(mod1 => mod2, ...), arrowsto = dict(mod1 => n1, ...))
+(only the *number* of incoming arrows is needed for topological sorting)"
+function dependencies(list ;moddb=global_moddb)#««
+	dep = (arrowsfrom = Dict{String,Set{String}}(),
+		arrowsto = Dict(id => 0 for id in list))
+	function connect((b, a),)
+		fb = get!(dep.arrowsfrom, b, Set{String}())
+		a ∉ fb && (push!(fb, a); dep.arrowsto[a]+= 1)
+	end
+# 	@inline connect((b, a),) =
+# 		(push!(get!(dep.arrowsfrom, b, Set{String}()), a); dep.arrowsto[a]+= 1)
+	for id in list
+		for c in modcomponents(findmod(id;moddb))
+			# special: empty key indicates a dependency for the whole mod
+			isempty(c.id) || continue
+			isempty(c.after) && isempty(c.before) && continue
+			for a in c.after; a ∈ list && connect(a => id); end
+			for b in c.before; b ∈ list && connect(id => b); end
+		end
+	end
+	return dep
+end#»»
+function comp_isless((id1, k1), (id2, k2), order)#««
+	id1 == id2 && return isless(parse(Int, k1), parse(Int, k2))
+	return isless(findfirst(==(id1), order), findfirst(==(id2), order))
+end#»»
+"Returns a list of mod IDs in install order, given all dependencies"
+function installorder(list; moddb=global_moddb)#««
+	# use Kahn's algorithm for topological sorting
+	# (this should be average-time quasi-linear with the use of a heap)
+	ret = sizehint!(String[], length(list))
+	todo = Set(collect(list))
+	dep = dependencies(list;moddb)
+	ord = Base.Order.By(id -> sortkey(findmod(id;moddb)))
+	available = [ id for id in list if iszero(dep.arrowsto[id]) ]
+	heapify!(available, ord)
+	function check_arrows(y)
+		s = [ x for x ∈ todo if y ∈ get(dep.arrowsfrom, x, String[])]
+		n = count(y ∈ get(dep.arrowsfrom, x, String[]) for x ∈ todo)
+	end
+			
+	while !isempty(todo)
+		# loop invariant: arrowsfrom[y] = count of x ∈ todo such that x->y
+		@assert !isempty(available) "Circular dependency found: $(todo)"
+		x = heappop!(available, ord)
+		push!(ret, x); delete!(todo, x)
+		for y in get(dep.arrowsfrom, x, String[])
+			dep.arrowsto[y]-= 1
+			iszero(dep.arrowsto[y]) && heappush!(available, y, ord)
+		end
+	end
+	return ret
+end #»»
+function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
+	owners = Dict{String, Vector{Tuple{String, String}}}()
+	# check exclusivity
+	for (id, clist) in selection
+		mod = findmod(id; moddb)
+		for c in modcomponents(mod)
+			c.id ∈ clist || continue
+			for e in c.exclusive
+				push!(get!(owners, e, valtype(owners)([])), (id, c.id))
+			end
+		end
+	end
+	for (x, v) in owners; length(v) ≤ 1 && continue
+		println("tag \"$x\" is owned by the following components:")
+		for (id, c) in v; println("  ", id, ":", c); end
+	end
+end#»»
 
 # Mod DB handling ««1
 function read_moddb(io::IO)#««
@@ -187,7 +259,7 @@ function write_moddb(io::IO; moddb=global_moddb)#««
 		isempty(m.archive) || (d["archive"] = m.archive)
 		startswith(m.readme, "https://") && (d["readme"] = m.readme)
 		isempty(m.components) ||
-			(d["components"] = Dict(k=>db_prop(v) for (k,v) in m.components))
+			(d["components"] = Dict(c.id=>db_prop(c) for c in m.components))
 		d
 	end
 end#»»
@@ -205,15 +277,14 @@ end
 @inline findmod(pattern::Regex; moddb = global_moddb) =
 	[ id for id in keys(moddb) if occursin(pattern, id) ]
 @inline function findcomponent(mod, k)
-	v = get(mod.components, lowercase(string(k)), nothing)
-	isnothing(v) || return v
-	error("mod '$(mod.id)': component '$k' not found")
+	k = lowercase(string(k)); for c in mod.components; c.id == k && return c; end
+# 	error("mod '$(mod.id)': component '$k' not found")
 end
 
 
 # Pre-TP2 functions: download, extract, status ««1
 function updateurl(mod::Mod)#««
-	printlog("get latest release for github file $(mod.url)")
+	printlog("get latest release for $(mod.url)")
 	repo = mod.url[8:end]
 	req = HTTP.get("https://api.github.com/repos/$repo/releases/latest";
 		status_exception=false)
@@ -261,7 +332,7 @@ function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 	else
 		archive = joinpath(down, mod.archive)
 		while !isfile(archive) || iszero(filesize(archive))
-			printlog("download $url to $archive")
+			printsim("download $url to $archive")
 			simulate && return true
 			req = HTTP.get(url; status_exception = false)
 			req.status == 200 &&
@@ -290,8 +361,8 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 	lowercase(mod.archive) == "manual" && return true
 	download(mod; down=DOWN) || return false
 	archive = joinpath(down, mod.archive)
-	isdir(joinpath(mods, mod.id)) || mktempdir(TEMP) do(dir); cd(dir) do
-		printlog("extract $archive to $dir")
+	isdir(joinpath(mods, mod.id)) || try mktempdir(TEMP) do(dir); cd(dir) do
+		printsim("extract $archive to $dir")
 		simulate && return true
 		# extract archive in tmp directory««
 		if endswith(mod.archive, ".zip")
@@ -332,6 +403,10 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 		# move extracted files to mods directory
 		for file in readdir(); mv(file,  joinpath(mods, file); force=true); end
 	end end
+	catch e
+		if e isa SystemError; printerr(e)
+		else; rethrow(e); end
+	end
 	lastupdate!(mod; mods) && write_moddb()
 	return true
 end#»»
@@ -384,16 +459,24 @@ function extract(m)#««
 		isempty(m.languages) ||
 			(m.sel_lang = argmin([lang_score(l, PREF_LANG) for l in m.languages]) - 1)
 	end#»»
-	if all(isempty, c.name for c in values(m.components))#««
+	if all(isempty, c.name for c in m.components)#««
 		printlog("reading components for '$id'")
+		prop = Dict(c.id => c for c in m.components) # store properties
+		empty!(m.components) # we will store them in WeiDU-order
 		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-components-json $(m.tp2) $(m.sel_lang)`)
 			startswith(line, "[{") || continue
 			for x in JSON.parse(line)
 				k = string(x["number"])
-				c = get!(m.components, k, ModComponent(k, ""))
+				c = get(prop, k, ModComponent(k, ""))
 				c.name, c.group, c.subgroup =
 					x["name"], get(x["group"], 1, ""), get(x,"subgroup","")
+				push!(m.components, c)
 			end
+		end
+		for k in keys(prop); isempty(k) && continue
+			found = false
+			for c in m.components; c.id == k && (found=true; break); end
+			found || println("\e[31;1m '$(m.id):$k' not found\e[m")
 		end
 	end#»»
 	if isempty(m.readme) # no hardcoded readme provided««
@@ -408,6 +491,9 @@ function extract(m)#««
 		!isempty(readmes) && 
 			(m.readme = joinpath(MODS, id, 
 				readmes[argmin([ lang_score(f, PREF_LANG) for f in readmes ])]))
+	end#»»
+	if isempty(m.readme) && startswith(m.url, "github:")#««
+		m.readme = "https://github.com/"*m.url[8:end]
 	end#»»
 	end # cd(mods)
 	true
@@ -424,7 +510,7 @@ function readme(mod::Mod)#««
 		if occursin('#', mod.readme)
 		# cannot call w3m directly, it fails with mesh sign in filename
 		# don't run -dump — there might be links to supplemental info
-			cd(basename(mod.readme)) do
+			cd(dirname(mod.readme)) do
 				run(pipeline(`cat $(mod.readme)`, `w3m -T text/html`))
 			end
 		else # to preserve links etc., run interactive w3m:
@@ -490,7 +576,7 @@ function update_selection(selection=global_selection, filename=SELECTION)#««
 		end
 		text*= line*'\n'
 	end
-	for id in todo
+	for id in todo; isempty(selection[id]) && continue
 		text*= id*'='*join(selection[id], ' ')*'\n'
 	end
 	printlog("modified $nchanged lines, added $(length(todo)) lines")
@@ -526,8 +612,6 @@ function modstatus(tp2file, dir)#««
 	end
 	return status
 end#»»
-# @inline modstatus(db, tp2file) = get(db, tp2file, Int[])
-# @inline componentstatus(db, tp2file, c) = (c ∈ modstatus(db, tp2file))
 function printcomp(io::IO, m, c::ModComponent; selection, installed)#««
 	@printf(io, "%c%c%c `%s:%s` %s\n",
 		c.id ∈ get(selection, m.id, []) ? 's' : '.',
@@ -601,7 +685,6 @@ function components!(mod::Mod; selection=global_selection,#««
 	end
 	component_editor(filename; selection)
 end#»»
-# Configuration editor««2
 struct ComponentTree#««
 	alternatives::Vector{NTuple{2,String}}
 	children::Dict{String,ComponentTree}
@@ -611,9 +694,9 @@ findbranch(root::ComponentTree, path) = isempty(path) ? root :
 	findbranch(get!(root.children, first(path), ComponentTree()), path[2:end])
 function build_tree(;moddb=global_moddb)#««
 	root = ComponentTree()
-	for (id, m) in moddb, (k, v) in m.components
-		isempty(v.path) && continue
-		push!(findbranch(root, v.path).alternatives, (id, k))
+	for (id, m) in moddb, c in modcomponents(m)
+		isempty(c.path) && continue
+		push!(findbranch(root, c.path).alternatives, (id, c.id))
 	end
 	root
 end#»»
@@ -621,9 +704,9 @@ function display_tree(io::IO, root, level=1;#««
 		moddb=global_moddb, selection=global_selection, installed, order)
 	for (id, k) in sort(collect(root.alternatives);
 			lt=(x,y)->comp_isless(x,y,order))
-		m = findmod(id; moddb); extract(m)
-		c = findcomponent(m, k)
-		printcomp(io, m, m.components[k]; selection, installed)
+		m = findmod(id; moddb); extract(m); c = findcomponent(m, k)
+		isnothing(c) && (printerr("'$id:$k' not found"); continue)
+		printcomp(io, m, c; selection, installed)
 	end
 	for (s, c) in sort(collect(root.children); by=first)
 		println(io, '#'^level, ' ', s, " «",'«', level)
@@ -636,13 +719,18 @@ function components!(;selection=global_selection,moddb=global_moddb)#««
 	f = joinpath(TEMP, "config")
 	open(f, "w") do io
 		display_tree(io, build_tree(;moddb); selection, moddb, installed, order)
-		lastid = ""
 		println(io, "# Individual, unsorted components «"*"«1")
+		lastid = ""
 		for id in order
 			m = moddb[id]
+			g = ""; h = ""
+			!isempty(get(selection, id, [])) && extract(m)
 			for c in modcomponents(m)
 				isempty(c.path) || continue
 				id ≠ lastid && (extract(m); lastid=id; println(io, "## $id «"*"«2"))
+				g ≠ c.group && (g = c.group; println(io, "### ", g, "«"*"«3"))
+				h ≠ c.subgroup &&
+					(h=c.subgroup; println(io,"#### ",h,isempty(h) ? "»"*"»4" : "«"*"«4"))
 				printcomp(io, m, c; selection, installed)
 			end
 		end
@@ -651,76 +739,6 @@ function components!(;selection=global_selection,moddb=global_moddb)#««
 end#»»
 
 # Mod installation ««1
-"Returns the dependency matrix for these mods, encoded as
-(after = dict(mod1 => mod2, ...), before = dict(mod1 => mod2, ...))"
-function dependencies(list ;moddb=global_moddb)#««
-	dep = (arrowsfrom = Dict{String,Set{String}}(),
-		arrowsto = Dict(id => 0 for id in list))
-	function connect((b, a),)
-		fb = get!(dep.arrowsfrom, b, Set{String}())
-		a ∉ fb && (push!(fb, a); dep.arrowsto[a]+= 1)
-	end
-# 	@inline connect((b, a),) =
-# 		(push!(get!(dep.arrowsfrom, b, Set{String}()), a); dep.arrowsto[a]+= 1)
-	for id in list
-		for (k, v) in findmod(id;moddb).components
-			# special: empty key indicates a dependency for the whole mod
-			isempty(k) || continue
-			isempty(v.after) && isempty(v.before) && continue
-			for a in v.after; a ∈ list && connect(a => id); end
-			for b in v.before; b ∈ list && connect(id => b); end
-		end
-	end
-	return dep
-end#»»
-"Returns a list of mod IDs in install order, given all dependencies"
-function installorder(list; moddb=global_moddb)#««
-	# use Kahn's algorithm for topological sorting
-	# (this should be average-time quasi-linear with the use of a heap)
-	ret = sizehint!(String[], length(list))
-	todo = Set(collect(list))
-	dep = dependencies(list;moddb)
-	ord = Base.Order.By(id -> sortkey(findmod(id;moddb)))
-	available = [ id for id in list if iszero(dep.arrowsto[id]) ]
-	heapify!(available, ord)
-	function check_arrows(y)
-		s = [ x for x ∈ todo if y ∈ get(dep.arrowsfrom, x, String[])]
-		n = count(y ∈ get(dep.arrowsfrom, x, String[]) for x ∈ todo)
-	end
-			
-	while !isempty(todo)
-		# loop invariant: arrowsfrom[y] = count of x ∈ todo such that x->y
-		@assert !isempty(available) "Circular dependency found: $(todo)"
-		x = heappop!(available, ord)
-		push!(ret, x); delete!(todo, x)
-		for y in get(dep.arrowsfrom, x, String[])
-			dep.arrowsto[y]-= 1
-			iszero(dep.arrowsto[y]) && heappush!(available, y, ord)
-		end
-	end
-	return ret
-end #»»
-function comp_isless((id1, k1), (id2, k2), order)#««
-	id1 == id2 && return isless(parse(Int, k1), parse(Int, k2))
-	return isless(findfirst(==(id1), order), findfirst(==(id2), order))
-end#»»
-function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
-	owners = Dict{String, Vector{Tuple{String, String}}}()
-	# check exclusivity
-	for (id, clist) in selection
-		mod = findmod(id; moddb)
-		for (c, v) in mod.components
-			c ∈ clist || continue
-			for e in v.exclusive
-				push!(get!(owners, e, valtype(owners)([])), (id, c))
-			end
-		end
-	end
-	for (x, v) in owners; length(v) ≤ 1 && continue
-		println("tag \"$x\" is owned by the following components:")
-		for (id, c) in v; println("  ", id, ":", c); end
-	end
-end#»»
 function install(mod; simulate=false, uninstall=false, #««
 		selection=global_selection, gamedirs=GAMEDIR)
 	extract(mod) || return
@@ -734,21 +752,20 @@ function install(mod; simulate=false, uninstall=false, #««
 	to_add = string.(setdiff(selected, current))
 	to_del = string.(setdiff(current, selected))
 	isempty(to_add) && isempty(to_del) && (printlog("nothing to do"); return)
-	if !uninstall
-		# create symlink
-		for file in ("$id.tp2", "setup-$id.tp2", "$id")#««
+	if !uninstall # create symlink««
+		for file in ("$id.tp2", "setup-$id.tp2", "$id")
 			target = joinpath(MODS, file); ispath(target) || continue
 			link = joinpath(gamedir, file); ispath(link) && continue
 			if simulate
-				printlog("create $link -> $(relpath(link, target))")
+				printsim("create $link -> $(relpath(link, target))")
 			else
 				symlink(relpath(target, gamedir), link)
 			end
-		end#»»
-	end
+		end
+	end#»»
 	cd(gamedir) do#««
 		cmd = `weinstall $(mod.id) --language $(mod.sel_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $to_add --force-uninstall-list $to_del`
-		printlog(cmd)
+		printsim(cmd)
 		simulate && return
 		run(cmd)
 	end#»»
@@ -954,8 +971,8 @@ function mod_exclusives(mod::Mod; except = String[])#««
 	extract(mod)
 	ret = Pair{Int, Vector{String}}[]
 	cd(MODS) do
-		for (k, c) in mod.components
-			printlog("Computing exclusivity for $(mod.id):$k=$(description(c))")
+		for c in modcomponents(mod)
+			printlog("Computing exclusivity for $(mod.id):$(c.id)=$(description(c))")
 			excl = String[]
 			for line in eachline(ignorestatus(`weidu --game $gamedir --skip-at-view --no-exit-pause --noautoupdate --list-actions --language $(mod.sel_lang) $(mod.tp2) --force-install $(c.id)`))
 				m = match(r"SIMULATE\s+(\S.*\S)\s+(\S.*)$", line); 
@@ -975,6 +992,7 @@ end#»»
 # 	setcomp!(mod.components, mod_exclusives(mod; except)...)
 # end
 function complete_db!(moddb) #««
+	printlog("adding new mods")
 	addmods!(moddb,
 	# Argent77 ««3
 	mkmod("a7-convenienteenpcs", "github:Argent77/A7-NoEENPCs",
@@ -1018,7 +1036,7 @@ function complete_db!(moddb) #««
 	mkmod("iwditempack", "github:GwendolyneFreddy/IWD_Item_Pack", "IWD item pack", "Items"),
 	mkmod("aurora", "github:Sampsca/Auroras-Shoes-and-Boots", "Aurora's shoes and boots", "Items"),
 	mkmod("monasticorders", "github:aquadrizzt/MonasticOrders", "Monastic Orders", "Kits"),
-	mkmod("deities-of-faerun", "github:Raduziel/Deities-Of-Faerun", "Deities of Faerun", "Kits"),
+	mkmod("deitiesoffaerun", "github:Raduziel/Deities-Of-Faerun", "Deities of Faerun", "Kits"),
 	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweaks"),
 	# Weasel mods ««3
 	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPCs"),
@@ -1034,14 +1052,43 @@ function complete_db!(moddb) #««
 	mkmod("arcanearcher", "www.shsforums.net/files/download/994-arcane-archer/", "Arcane Archer", "Kits"),
 	#»»3
 	)
+	# Modify a few mod classes ««
+	printlog("modifying mod classes")
+	moddb["dlcmerger"].class="DlcMerger"
+	moddb["eetact2"].class="Quests"
+	moddb["azengaard"].class="Quests"
+	moddb["impasylum"].class="Quests"
+	moddb["imnesvale"].class="Quests"
+	moddb["the_horde"].class="Quests"
+	moddb["butchery"].class="Quests"
+	moddb["turnabout"].class="Quests"
+	moddb["eet_end"].class="Final"
+# 		setmod!("might_and_guile"; class="Tweaks")
+	# »»
+		# hardcode online readme urls««
+	printlog("hardcoding mod readme")
+	moddb["faiths_and_powers"].readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
+	moddb["tnt"].readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
+	moddb["epicthieving"].readme = "https://forums.beamdog.com/discussion/74158/v3-5-epic-thieving-more-benefits-from-high-thieving-skills"
+	moddb["3ed"].readme = "https://github.com/Holic75/Baldurs-gate-dnd-3.5#readme"
+	moddb["wildmage"].readme = "https://github.com/BGforgeNet/bg2-wildmage"
+	moddb["artisanskitpack"].readme = "https://artisans-corner.com/the-artisans-kitpack/"
+	moddb["monasticorders"].readme = "https://forums.beamdog.com/discussion/18620/mod-beta-monastic-orders-of-faerun"
+	moddb["mercenary"].readme = "https://forums.beamdog.com/discussion/68151/fighter-kit-mercenary-v3-1-iwdee-eet-bgee-bg2ee"
+	#»»
+	moddb["arcanearcher"].archive = "arcanearcher.zip"
+	printlog("setting mod component properties")
 	function setmod!(id, list...; kwargs...)#««
 		m = findmod(id; moddb)
-		for (i, kv) in list
-			p = get!(m.components, string(i), ModComponent(string(i), ""))
+		for (i, kv) in list; i = string(i)
+			j = findfirst(c->c.id == i, m.components)
+			isnothing(j) &&
+				(push!(m.components, ModComponent(i, "")); j=length(m.components))
+			c = m.components[j]
 			for (k, v) in pairs(kv)
-				k == :path && !isempty(p.path) && printlog("warning, '$i:$k'.path is not empty")
+				k == :path && !isempty(c.path) && printlog("warning, '$i:$k'.path is not empty")
 				k != :path && (v = unique!(sort!([v;])))
-				push!(getfield(p, Symbol(k)), v...)
+				push!(getfield(c, Symbol(k)), v...)
 			end
 		end
 		for (k, v) in kwargs
@@ -1049,6 +1096,72 @@ function complete_db!(moddb) #««
 			error("unknown keyword: $k")
 		end
 	end#»»
+	setmod!("a7#improvedarcher",#««
+		0 => (path=["Classes", "Ranger"],),
+		10 => (path=["Classes", "Fighter"],),
+		20 => (path=["Classes", "Fighter"],),
+		30 => (path=["Classes", "Fighter"],),
+		100 => (path=["Items", "Ammunition"],),
+	)#»»
+	setmod!("animalcompanions",#««
+		0 => (path=["Classes", "Ranger"],),
+	)#»»
+	setmod!("artisanskitpack",#««
+		"" => (after=["Emily"],),
+		1 => (path=["Classes", "Restrictions"],),
+		2 => (path=["Classes", "Restrictions"],),
+		3 => (path=["Classes", "Restrictions"],),
+		1100 => (path=["Classes", "Fighter"],),
+		1003 => (path=["Classes", "Fighter"],),
+		1006 => (path=["Classes", "Fighter"],),
+		1004 => (path=["Classes", "Fighter"],),
+		1005 => (path=["Classes", "Fighter"],),
+		1007 => (path=["Classes", "Fighter"],),
+		1002 => (path=["Classes", "Fighter"],),
+		1000 => (path=["Classes", "Fighter"],),
+		1001 => (path=["Classes", "Fighter"],),
+		1102 => (path=["New NPC"],),
+		1103 => (path=["New NPC"],),
+		1104 => (path=["New NPC"],),
+		1105 => (path=["New NPC"],),
+		1101 => (path=["NPC", "Khalid"],),
+		2000 => (path=["Classes", "Ranger"],),
+		2010 => (path=["Classes", "Ranger"],),
+		2011 => (path=["Classes", "Ranger"],),
+		2012 => (path=["Classes", "Ranger"],),
+		2001 => (path=["NPC", "Minsc"],),
+		2002 => (path=["Classes", "Ranger"],),
+		3000 => (path=["Classes", "Paladin"],),
+		3010 => (path=["Classes", "Paladin"],),
+		3003 => (path=["Classes", "Paladin"],),
+		3011 => (path=["Classes", "Paladin"],),
+		3004 => (path=["Classes", "Paladin"],),
+		3001 => (path=["Classes", "Paladin"],),
+		3101 => (path=["NPC", "Ajantis"],),
+		3002 => (path=["Classes", "Paladin"],),
+		3005 => (path=["Classes", "Paladin"],),
+		5001 => (path=["Classes", "Druid"],),
+		5101 => (path=["NPC", "Cernd"],),
+		5002 => (path=["Classes", "Druid"],),
+		5003 => (path=["Classes", "Mage"],),
+		7001 => (path=["Classes", "Thief"],),
+		7101 => (path=["NPC", "Imoen"],),
+		7002 => (path=["Classes", "Thief"],),
+		7003 => (path=["Classes", "Thief"],),
+		7203 => (path=["Classes", "Thief"],),
+		7102 => (path=["NPC", "Imoen"],),
+		7004 => (path=["Classes", "Thief"],),
+		7103 => (path=["NPC", "Montaron"],),
+		7005 => (path=["Classes", "Thief"],),
+		8001 => (path=["Classes", "Sorcerer"],),
+		8002 => (path=["Classes", "Sorcerer"],),
+		8003 => (path=["Classes", "Sorcerer"],),
+		9001 => (path=["Classes", "Shaman"],),
+		9101 => (path=["NPC", "M'khiin"],),
+		10001 => (path=["Classes", "Monk"],),
+		20000 => (path=["Classes", "Multiclass"],),
+		20001 => (path=["Classes", "Multiclass"],),
+	)#»»
 	setmod!("atweaks",#««
 		"" => (after = ["rr", "stratagems"],),
 		100 => (path = ["Skills", "Infravision"],),
@@ -1068,7 +1181,7 @@ function complete_db!(moddb) #««
  120 => (path = ["Classes", "Paladin"],),
  125 => (path = ["Skills", "Charm animal"],),
  130 => (path = ["Tables", "Races"],),
- 135 => (path = ["Tables", "Races"],),
+#  135 => (path = ["Tables", "Races"],),
  140 => (path = ["Tables", "Races"],),
  150 => (path = ["Creatures", "Fiends"],),
  152 => (path = ["Creatures", "Fiends"],),
@@ -1127,7 +1240,7 @@ function complete_db!(moddb) #««
 		90 => (path = ["Cosmetic", "Portraits"],),
 		100 => (path = ["Cosmetic", "Sprites"],),
 		110 => (path = ["Cosmetic", "Icons"],),
-		140 => (path = ["Cosmetic", "Sprites"],),
+		140 => (path = ["Cosmetic", "Sound"],),
 		160 => (path = ["Cosmetic", "Sprites"],),
 		170 => (path = ["Cosmetic", "Icons"],),
 		171 => (path = ["Cosmetic", "Icons"],),
@@ -1150,6 +1263,8 @@ function complete_db!(moddb) #««
 		1035 => (path = ["Story", "BG1"],),
 		1036 => (path = ["Story", "BG1"],),
 		1040 => (exclusive = ["amncen1.cre", "amng1.cre" ], path=["Creatures"],), #(Etc.) Amn guards
+		1050 => (path = ["Items"],),
+		1060 => (path = ["Items"],),
 		1075 => (path = ["NPC"],),
 		1080 => (path = ["Items", "Containers"],),
 		1100 => (path = ["Cosmetic", "Maps"],),
@@ -1177,6 +1292,9 @@ function complete_db!(moddb) #««
 		1345 => (path = ["Story", "BG2", "Stronghold"],),
 		1346 => (path = ["Story", "BG2", "Stronghold"],),
 		1347 => (path = ["Story", "BG2", "Stronghold"],),
+		2020 => (path = ["Items", "Weapons"],),
+		2030 => (path = ["Items", "Weapons"],),
+		2035 => (path = ["Items", "Weapons"],),
 		2040 => (exclusive = "universal_clubs", path=["Fighting", "Proficiencies"]),
 		2060 => (exclusive = "universal_fighting_styles",
 			path=["Fighting", "Fighting styles"]),
@@ -1196,6 +1314,9 @@ function complete_db!(moddb) #««
 		2163 => (exclusive="weapprof.2da/types", path=["Fighting", "Proficiencies"]),
 		2164 => (exclusive="weapprof.2da/types", path=["Fighting", "Proficiencies"]),
 		2170 => (path = ["Items", "Scrolls"],),
+		2190 => (path = ["Items", "Stores"],),
+		2191 => (path = ["Items", "Stores"],),
+		2192 => (path = ["Items", "Stores"],),
 		2200 => (path = ["Fighting", "Proficiencies"],),
 		2210 => (exclusive="wspecial.2da/speed", path=["Fighting", "Proficiencies"]),
 		2211 => (exclusive="wspecial.2da/speed", path=["Fighting", "Proficiencies"]),
@@ -1233,6 +1354,7 @@ function complete_db!(moddb) #««
 		2370 => (exclusive = "clsrcreq.2da", path=["Classes", "Restrictions"],),
 		2371 => (exclusive = "clsrcreq.2da", path=["Classes", "Restrictions"],),
 		2372 => (exclusive = "clsrcreq.2da", path=["Classes", "Restrictions"],),
+		2380 => (path = ["Classes", "Restrictions"],),
 		2390 => (exclusive = "mxsplpal.2da", path=["Tables", "Spell slots"]),
 		2391 => (exclusive = "mxsplpal.2da", path=["Tables", "Spell slots"]),
 		2400 => (exclusive = "mxsplran.2da", path=["Tables", "Spell slots"]),
@@ -1321,6 +1443,16 @@ function complete_db!(moddb) #««
 		4160 => (path = ["NPC", "Yeslick"],),
 		4170 => (path = ["NPC", "Shar-Teel"],),
 		4180 => (path = ["Items"],),
+	)#»»
+	setmod!("cdlore",#««
+		10 => (path=["Skills", "Lore"],),
+		20 => (path=["Skills", "Lore"],),
+		30 => (path=["Skills", "Lore"],),
+		40 => (path=["Skills", "Lore"],),
+	)#»»
+	setmod!("charlatan",#««
+		0 => (path=["Classes", "Bard"],),
+		1 => (path=["NPC", "Eldoth"],),
 	)#»»
 	setmod!("cowledmenace",#««
 		"" => (after = "eet", depends = "eet",),
@@ -1431,6 +1563,10 @@ function complete_db!(moddb) #««
 		4032 => (path = ["Creatures", "Dragons"],),
 		4033 => (path = ["Creatures", "Dragons"],),
 	) #»»
+	setmod!("deitiesoffaerun",#««
+		"" => (conflicts=["faiths_and_powers", "spell_rev",],
+			after=["eet"], before=["eet_end"],),
+	)#»»
 	setmod!("divine_remix",#««
 		10 => (path = ["Spells", "New spells"],),
 		11 => (path = ["Spells", "New spells"],),
@@ -1467,6 +1603,13 @@ function complete_db!(moddb) #««
 		1000 => (path = ["Spells", "Sphere system"],),
 	)#»»
 	setmod!("epicthieving",#««
+		0 => (path = ["Skills", "Thieving"],),
+		100 => (path = ["Skills", "Thieving"],),
+		200 => (path = ["Skills", "Thieving"],),
+		300 => (path = ["Skills", "Thieving"],),
+		400 => (path = ["Skills", "Thieving"],),
+		500 => (path = ["Items", "Potions"],),
+		600 => (path = ["Skills", "Thieving"],),
 	)#»»
 	setmod!("faiths_and_powers",#««
 		"" => (after = ["divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
@@ -1485,7 +1628,7 @@ function complete_db!(moddb) #««
 			85 => (path = ["NPC"],),
 	; class="Kits")#»»
 	setmod!("fnp_multiclass",#««
-		"" => (after = ["fnp", "divine_remix", "deities-of-faerun", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
+		"" => (after = ["fnp", "divine_remix", "deitiesoffaerun", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
 			before = ["scales_of_balance", "stratagems", "cdtweaks"],),
 	; class="Tweaks")#»»
 	setmod!("eet_tweaks",#««
@@ -1502,6 +1645,7 @@ function complete_db!(moddb) #««
 		1041 => (path = ["NPC", "Viconia", "Appearance"],),
 		1042 => (path = ["NPC", "Viconia", "Appearance"],),
 		1050 => (path = ["NPC"],),
+		1060 => (path = ["Cosmetic", "Sound"],),
 		2000 => (exclusive = "xplevel.2da", path=["Tables", "XP"],),
 		2001 => (exclusive = "xplevel.2da", path=["Tables", "XP"],),
 		2002 => (exclusive = "xplevel.2da", path=["Tables", "XP"],),
@@ -1523,9 +1667,27 @@ function complete_db!(moddb) #««
 		2042 => (exclusive = "xpbonus.2da", path=["Tables", "Bonus XP"]),
 		2043 => (exclusive = "xpbonus.2da", path=["Tables", "Bonus XP"]),
 		2044 => (exclusive = "xpbonus.2da", path=["Tables", "Bonus XP"]),
+		2050 => (path = ["Tables", "XP", "Quests"],),
+		2051 => (path = ["Tables", "XP", "Quests"],),
+		2052 => (path = ["Tables", "XP", "Quests"],),
+		2053 => (path = ["Tables", "XP", "Quests"],),
+		2054 => (path = ["Tables", "XP", "Quests"],),
+		2055 => (path = ["Tables", "XP", "Quests"],),
+		2056 => (path = ["Tables", "XP", "Quests"],),
+		2060 => (path = ["Tables", "XP", "Quests"],),
+		2061 => (path = ["Tables", "XP", "Quests"],),
+		2062 => (path = ["Tables", "XP", "Quests"],),
+		2063 => (path = ["Tables", "XP", "Quests"],),
+		2064 => (path = ["Tables", "XP", "Quests"],),
+		2065 => (path = ["Tables", "XP", "Quests"],),
+		2066 => (path = ["Tables", "XP", "Quests"],),
+		2070 => (path = ["Tables", "XP", "Quests"],),
+		2080 => (path = ["Tables", "XP", "Quests"],),
+		3010 => (path = ["Items", "Scrolls"],),
 		3020 => (path = ["Skills", "Familiar"],),
 		3021 => (path = ["Skills", "Familiar"],),
 		3022 => (path = ["Skills", "Familiar"],),
+		4050 => (path = ["Items",],),
 		4040 => (path = ["Story", "BG2"],),
 		4060 => (path = ["Items"],),
 		4070 => (path = ["Items"],),
@@ -1603,6 +1765,25 @@ function complete_db!(moddb) #««
  1092 => (path = ["Classes", "Cleric"],),
  1093 => (path = ["Classes", "Cleric"],),
 	; class = "Early")#»»
+	setmod!("iwdification",#««
+		10 => (path=["Cosmetic", "Spells"],),
+		20 => (path=["Cosmetic", "Sprites"],),
+		60 => (path=["Items", "Weapons"],),
+		90 => (path=["Spells", "Alteration"],),
+		130 => (path=["Cosmetic", "Sprites"],),
+		50 => (path=["Classes", "Bard"],),
+		180 => (path=["Classes", "Bard"],),
+		150 => (path=["Classes", "Bard"],),
+		70 => (path=["Classes", "Druid"],),
+		71 => (path=["Classes", "Druid"],),
+		100 => (path=["Classes", "Paladin"],),
+		160 => (path=["Tables", "Spell slots"],),
+		170 => (path=["Tables", "Spell slots"],),
+		120 => (path=["Skills", "Evaion"],),
+		30 => (path=["Spells", "New spells"],),
+		40 => (path=["Spells", "New spells"],),
+		80 => (path=["Cosmetic", "Icons"],),
+	)#»»
 	setmod!("klatu",#««
 		1000 => (path=["Items"],),
 		1010 => (path=["Items"],),
@@ -1613,7 +1794,7 @@ function complete_db!(moddb) #««
 		2010 => (path=["Tables", "Spell slots"],),
 		2020 => (path=["Items", "Stores"],),
 		2030 => (path=["Items", "Stores"],),
-		2040 => (path=["Classes", "Wizard"],),
+		2040 => (path=["Classes", "Mage"],),
 		2050 => (path=["Spells", "Conjuration"],),
 		2060 => (path=["Spells", "Alteration"],), # for haste
 		2110 => (path=["Skills"],),
@@ -1625,6 +1806,11 @@ function complete_db!(moddb) #««
 		2180 => (path=["Items", "Stores"],),
 		2200 => (path=["Skills", "Familiar"],),
 		3070 => (path=["Cosmetic", "Icons"],),
+	)#»»
+	setmod!("mercenary",#««
+		0 => (path=["Classes", "Fighter"],),
+		1 => (path=["NPC", "Kagain"],),
+		1 => (path=["NPC", "Korgan"],),
 	)#»»
 	setmod!("metweaks",#««
 		200 => (path=["Tables", "XP", "Quest"],),
@@ -1658,7 +1844,10 @@ function complete_db!(moddb) #««
 	)#»»
 	setmod!("might_and_guile",#««
 		"" => (before = ["refinements", "stratagems"],),
+		200 => (path = ["Tables", "HLA"],),
+		205 => (path = ["Classes", "Ranger"],),
 		210 => (path = ["Classes", "Bard"],),
+		220 => (path = ["Classes", "Restrictions"],),
 		230 => (path = ["Classes", "Ranger"],),
 		235 => (path = ["Classes", "Ranger"],),
 		240 => (path = ["Classes", "Ranger"],),
@@ -1679,7 +1868,15 @@ function complete_db!(moddb) #««
 		470 => (path = ["Classes", "Bard"],),
 		480 => (path = ["Classes", "Bard"],),
 		490 => (path = ["Classes", "Bard"],),
+		499 => (path = ["Classes", "Bard"],),
 	),#»»
+	setmod!("monasticorders",#««
+		0 => (path=["Classes", "Monk"],),
+		1 => (path=["Classes", "Monk"],),
+		2 => (path=["Classes", "Monk"],),
+		3 => (path=["Classes", "Monk"],),
+		4 => (path=["Classes", "Monk"],),
+	)#»»
 	setmod!("npckit",#««
 	)#»»
 	setmod!("rr",#««
@@ -1735,8 +1932,9 @@ function complete_db!(moddb) #««
 				"might_and_guile", "atweaks"],),
 		100 => (exclusive = ["dexmod.2da", "skilldex.2da"],
 			path = ["Fighting", "Armor"],),
-		101 => (exclusive = "masterwork_weapons",),
+		101 => (exclusive = "masterwork_weapons", path=["Items", "Weapons"],),
 		102 => (path = ["Fighting", "Tweaks"],),
+		109 => (path = ["Items", "Potions"],),
 		121 => (path = ["Items", "Weapons"],),
 		122 => (conflicts = ["rr"],
 			exclusive=["universal_clubs", "weapprof.2da", "thac0.2da"],
@@ -1750,7 +1948,7 @@ function complete_db!(moddb) #««
 		171 => (exclusive = ["clabth01.2da"], path = ["Skills", "Evasion"],),
 		172 => (exclusive = ["clabth01.2da"], path = ["Skills", "Evasion"],),
 		200 => (exclusive = ["strmod.2da", "strmodex.2da", "intmod.2da", "savecndh.2da", "savecng.2da"],
-			path = ["Tables", "Stat bonuses"],),
+			path = ["Tables", "Abilities"],),
 		201 => (exclusive = ["splprot.2da","mxsplwiz.2da"],
 			path = ["Tables", "Spell slots"],),
 		202 => (path = ["Items", "Weapons"],),
@@ -1760,6 +1958,22 @@ function complete_db!(moddb) #««
 		210 => (exclusive = ["xplevel.2da", "lunumab.2da", "mxspldru.2da",],
 			path = ["Tables", "XP"],),
 		1012 => (path=["Items", "Magic weapons"],),
+		2121 => (path=["Tables", "XP", "Quests"],),
+		2122 => (path=["Tables", "XP", "Quests"],),
+		2123 => (path=["Tables", "XP", "Quests"],),
+	)#»»
+	setmod!("song_and_silence",#««
+		0 => (path=["Classes"],),
+		1 => (path=["Items", "Stores"],),
+		2 => (path=["Classes", "Bard"],),
+		3 => (path=["Classes", "Bard"],),
+		4 => (path=["Classes", "Bard"],),
+		5 => (path=["Classes", "Bard"],),
+		6 => (path=["Classes", "Thief"],),
+		7 => (path=["Classes", "Thief"],),
+		8 => (path=["Classes", "Thief"],),
+		9 => (path=["Classes", "Thief"],),
+		10 => (path=["Classes", "Thief"],),
 	)#»»
 	setmod!("spell_rev",#««
 		"" => (after = ["ub",],),
@@ -1769,7 +1983,7 @@ function complete_db!(moddb) #««
 		30 => (path = ["Spells", "Abjuration"],),
 		40 => (path = ["Spells", "Enchantment"],),
 		50 => (path = ["Spells"],),
-		65 => (exclusive = ["spcl900.spl","spcl901.spl","spcl907.spl","spwish12.spl"],),
+# 		65 => (exclusive = ["spcl900.spl","spcl901.spl","spcl907.spl","spwish12.spl"],),
 	; class = "Early")#»»
 	setmod!("spstuff",#««
 		0 => (path = ["Classes", "Ranger"],),
@@ -1786,8 +2000,8 @@ function complete_db!(moddb) #««
 			before = ["cdtweaks"],),
 		1500 => (path = ["Spells", "New spells"],),
 		1510 => (path = ["Spells", "New spells"],),
-		2110 => (exclusive = "spcl231.spl", path=["Classes", "Paladin"],), # inquisitor dispel
-		2111 => (exclusive = "spcl231.spl", path=["Classes", "Paladin"],), # inquisitor dispel
+# 		2110 => (exclusive = "spcl231.spl", path=["Classes", "Paladin"],), # inquisitor dispel
+# 		2111 => (exclusive = "spcl231.spl", path=["Classes", "Paladin"],), # inquisitor dispel
 		2900 => (path = ["Items"],),
 		3010 => (path = ["Items", "Magic weapons"],),
 		3020 => (path = ["Items", "Magic weapons"],),
@@ -1813,7 +2027,7 @@ function complete_db!(moddb) #««
 		4099 => (path = ["NPC"],),
 		4100 => (path = ["NPC"],),
 		4115 => (path = ["Skills", "Thieving"],),
-		4120 => (exclusive = "NPC_at_inn",),
+# 		4120 => (exclusive = "NPC_at_inn",),
 		4230 => (exclusive = ["wmart1.cre", "wmart2.cre"], path=["Items", "Stores"],), # Joluv, Deidre
 		4145 => (path = ["Story", "BG1"],),
 		4146 => (path = ["Story", "BG1"],),
@@ -1883,6 +2097,14 @@ function complete_db!(moddb) #««
 		8180 => (exclusive = ["bazliz03.cre", "bazliz04.cre", "eyesek01.cre", "eyesnt01.bcs", "bazmonk.cre", "gorsal.bcs"],),
 		8190 => (exclusive = ["smound01.cre", "ar1900.are", "bhguard2.cre", "talkni01.cre", "talmiss.cre", "druear01.cre", "elear01.cre", "elearg01.cre", "udelda.cre", "elair01.cre", "udelf.cre", "udelde.cre", "spmugg2.cre", "spmugg.cre",],),
 	)#»»
+	setmod!("sword_and_fist",#««
+		1 => (path=["Classes", "Monk"],),
+		30 => (path=["Classes", "Fighter"],),
+		31 => (path=["Classes", "Fighter"],),
+		32 => (path=["Classes", "Fighter"],),
+		33 => (path=["Classes", "Fighter"],),
+		34 => (path=["Classes", "Fighter"],),
+	)#»»
 	setmod!("therune",#««
 		"" => (after = "cowledmenace",),
 	)#»»
@@ -1909,20 +2131,24 @@ function complete_db!(moddb) #««
 		26 => (path=["Items", "Ammunition"],),
 		27 => (path=["Items", "Ammunition"],),
 		28 => (path=["Cosmetic", "Sprites"],),
+		29 => (path=["Items"],),
+		30 => (path=["Items", "Potions"],),
 		31 => (path=["Items", "Wands"],),
 		32 => (path=["Items", "Wands"],),
 		33 => (path=["Items", "Potions"],),
+		34 => (path=["Items", "Stacking"],),
 		35 => (path=["Items"],),
 		36 => (path=["Items"],),
 		37 => (path=["Items", "Weapons"],),
 		38 => (path=["Items"],),
+		39 => (path=["Items"],),
 		40 => (path=["Items", "Protection"],),
 		41 => (path=["Skills", "Shapeshifting"],),
 		42 => (path=["Skills", "Bhaalspawn"],),
 		43 => (path=["Skills", "Bhaalspawn"],),
 		44 => (path=["Skills", "Bhaalspawn"],),
 		45 => (exclusive = "spwi609.spl", path=["Spells", "Divination"]),
-		46 => (exclusive = ["spwi413a.spl","spwi413d.spl"], path=["Spells", "Otiluke"],),
+		46 => (exclusive = ["spwi413a.spl","spwi413d.spl"], path=["Spells", "Alteration"],),
 		47 => (path=["Spells", "Enchantment"],),
 		48 => (exclusive = ["spwi515.spl", "spwi609.spl", "spcl505.spl"], path=["Spells", "Illusion"],),
 		49 => (path=["Spells", "Enchantment"],),
@@ -1934,6 +2160,8 @@ function complete_db!(moddb) #««
 		54 => (path=["Items", "Stores"],),
 		55 => (path=["Items", "Stores"],),
 		57 => (path=["Items", "Stores"],),
+		60 => (path=["Tables", "XP"],),
+		61 => (path=["Items"],),
 		62 => (path=["Fighting", "Proficiencies"],),
 		63 => (path=["Classes", "Restrictions"],),
 		65 => (path=["Story", "BG2", "Stronghold"],),
@@ -1953,7 +2181,7 @@ function complete_db!(moddb) #««
 		33 => (path=["Classes", "Sorcerer"],),
 		35 => (path=["Classes", "Sorcerer"],),
 		37 => (path=["Classes", "Sorcerer"],),
-		40 => (path=["Classes", "Wizard"],),
+		40 => (path=["Classes", "Mage"],),
 		48 => (exclusive = "armored_spellcasting", path=["Skills", "Casting"]),
 		51 => (path=["Spells", "Metamagic"],),
 		52 => (path=["Spells", "Metamagic"],),
@@ -1966,35 +2194,28 @@ function complete_db!(moddb) #««
 		67 => (exclusive = "select_familiar", path=["Skills", "Familiar"],),
 		68 => (path=["Skills", "Familiar"],),
 		69 => (exclusive = "familiar_penalty", path=["Skills", "Familiar"],),
-		71 => (exclusive = "spell_switching", path=["Skills", "Familiar"],),
+		71 => (exclusive = "spell_switching", path=["Classes", "Sorcerer"],),
 		72 => (path=["Classes", "Sorcerer"],),
 		80 => (path=["Classes", "Sorcerer"],),
 		82 => (path=["Classes", "Mage"],),
 		85 => (path=["Classes", "Sorcerer"],),
 		92 => (path=["Classes", "Mage"],),
 		93 => (path=["Classes", "Mage"],),
-		1201 => (path=["Spells", "Spell schools"],),
-		1202 => (path=["Spells", "Spell schools"],),
-		1203 => (path=["Spells", "Spell schools"],),
+		1201 => (path=["Spells", "Schools"],),
+		1202 => (path=["Spells", "Schools"],),
+		1203 => (path=["Spells", "Schools"],),
 	)#»»
 	setmod!("wheels",#««
 		"" => (before = "stratagems",),
 	),#»»
-	# Modify a few mod classes ««
-		setmod!("dlcmerger"; class="DlcMerger")
-		setmod!("eetact2"; class="Quests")
-		setmod!("azengaard"; class="Quests")
-		setmod!("impasylum"; class="Quests")
-		setmod!("imnesvale"; class="Quests")
-		setmod!("the_horde"; class="Quests")
-		setmod!("butchery"; class="Quests")
-		setmod!("turnabout"; class="Quests")
-		setmod!("eet_end"; class="Final")
-# 		setmod!("might_and_guile"; class="Tweaks")
-		# »»
-		findmod("faiths_and_powers"; moddb).readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
-		findmod("tnt"; moddb).readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
-		findmod("arcanearcher";moddb).archive = "arcanearcher.zip"
+	setmod!("wildmage",#««
+		0 => (path=["Spells", "New spells"],),
+		1 => (path=["Spells", "New spells"],),
+		2 => (path=["Items"],),
+		3 => (path=["Classes", "Mage"],),
+		4 => (path=["Classes", "Mage"],),
+		5 => (path=["Spells", "Alteration"],),
+	)#»»
 		# update `lastupdate` field««
 		for (id, mod) in moddb
 			isdir(joinpath(MODS, id)) && lastupdate!(mod)

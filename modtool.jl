@@ -36,11 +36,10 @@ module ModTool
 # + add the following characteristics at a component-level:
 #  + before/after: declare install order
 #  - depends/conflicts: declare relations
-#  + exclusive: owns a symbol
 # - complete dependency & conflict checking
 # - try and guess readme for individual components (IMPOSSIBLE)
 # + organize (some) components in a tree-like structure and edit choices
-#  + review sorting: (install-order × numeric)
+#  - review sorting: (install-order × weidu-order))
 # - separate mod db generation
 #  - write a `init()` function
 using Printf
@@ -793,7 +792,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		# selected:
 		# FIXME: we should act if mod is selected OR installed
 		s = !isempty(get(selection, mod.id, Int[]))
-		!selected || s || continue 
+		selected ∈ (s, nothing) || continue 
 		if f == status
 			(mod.class ≠ c) && (c = mod.class; println("\e[1m$c\e[m"))
 		else
@@ -945,6 +944,7 @@ function mkmod(id, url, description, class, archive = "")#««
 	"nathaniel" => "http://dl.spellholdstudios.net/nathaniel",
 	"faren" => "http://dl.spellholdstudios.net/faren",
 	"npckit" => "https://www.gibberlings3.net/files/file/793-npc-kitpack",
+	"sagaman" => "http://www.blackwyrmlair.net/~rabain/SagaMaster/Ulrien-SagaMaster.zip",
 	), id, url)#»»
 	if startswith(url, "github:")
 		archive = ""
@@ -1024,7 +1024,7 @@ function complete_db!(moddb) #««
 	mkmod("forgotten-armament", "github:Gibberlings3/Forgotten-Armament", "Forgotten Armament", "Items"),
 	mkmod("skills-and-abilities", "github:Gibberlings3/Skills-and-Abilities", "Skills and Abilities", "Kits"),
 	mkmod("c#sodboabri", "github:Gibberlings3/The_Boareskyr_Bridge_Scene", "The Boareskyr Bridge Scene", "Quests"),
-	mkmod("sodtrtd", "github:Gibberlings3/Road_To_Discovery_for_SoD", "Road to Discovery", "Quests"),
+	mkmod("sodrtd", "github:Gibberlings3/Road_To_Discovery_for_SoD", "Road to Discovery", "Quests"),
 	mkmod("c#endlessbg1", "github:Gibberlings3/EndlessBG1", "Endless BG1", "Quests"),
 	mkmod("dw_lanthorn", "github:Gibberlings3/Restored-Rhynn-Lanthorn", "Restored Rhynn Lanthorn quest", "Quests"),
 	mkmod("druidsor", "github:Gibberlings3/Geomantic_Sorcerer", "Geomantic Sorcerer", "Kits"),
@@ -1069,6 +1069,7 @@ function complete_db!(moddb) #««
 	moddb["the_horde"].class="Quests"
 	moddb["butchery"].class="Quests"
 	moddb["turnabout"].class="Quests"
+	moddb["hammers"].class="Items"
 	moddb["eet_end"].class="Final"
 # 		setmod!("might_and_guile"; class="Tweaks")
 	# »»
@@ -1791,6 +1792,7 @@ function complete_db!(moddb) #««
 		40 => (path=["Spells", "New spells"],),
 		80 => (path=["Cosmetic", "Icons"],),
 	)#»»
+	setmod!("keto", "" => (after = ["kelsey"],),)
 	setmod!("klatu",#««
 		1000 => (path=["Items"],),
 		1010 => (path=["Items"],),
@@ -1877,6 +1879,9 @@ function complete_db!(moddb) #««
 		490 => (path = ["Classes", "Bard"],),
 		499 => (path = ["Classes", "Bard"],),
 	),#»»
+	setmod!("mih_eq",#««
+		"" => (before = ["stratagems"],),
+	)#»»
 	setmod!("monasticorders",#««
 		0 => (path=["Classes", "Monk"],),
 		1 => (path=["Classes", "Monk"],),

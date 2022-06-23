@@ -18,6 +18,8 @@ module ModTool
 # + mod subcomponents
 # + better detection of mod components
 # + include a “date” field
+# - add a "release" field for github mods
+# - add a new database for computed properties (readme/release/etc.)
 # - use WeiDU's --list-* options
 #  + list-languages
 #  + list-components
@@ -42,6 +44,7 @@ module ModTool
 #  - review sorting: (install-order × weidu-order))
 # - separate mod db generation
 #  - write a `init()` function
+# - don't write empty components in moddb
 using Printf
 using Dates
 using TOML
@@ -64,7 +67,7 @@ const TEMP="$PREFIX/temp" # should be in a ciopfs
 const INI="$PREFIX/ini" # should be in a ciopfs
 
 const GAMEDIR =
-	(bg1="$HOME/jeux/ciopfs/bg1/game", bg2="$HOME/jeux/ciopfs/bg2ee/game")
+	(bg1="$HOME/jeux/ciopfs/bg1/game", bg2="$HOME/jeux/ciopfs/bg2/game")
 const GAME_LIST = keys(GAMEDIR)
 	
 const BWS_ROOT="$HOME/jeux/ciopfs/EE-Mod-Setup-Master"
@@ -85,6 +88,7 @@ end#»»
 @inline printlog(s...) = println(s...)
 @inline printsim(s...) = println("\e[35;1m", s..., "\e[m")
 @inline printerr(s...) = println("\e[31;1m", s..., "\e[m")
+@inline printwarn(s...) = println("\e[33;1m", s..., "\e[m")
 
 # Data structures ««1
 
@@ -161,7 +165,10 @@ const MOD_CLASSES = split(replace("""
 """, r"#[^\n]*\n" =>"\n"))# »»
 @inline Base.isless(a::Mod, b::Mod) = sortkey(a) < sortkey(b)
 @inline modclass(class::Integer) = class
-@inline modclass(class::AbstractString) = (findfirst(==(class), MOD_CLASSES))
+@inline modclass(class::AbstractString) =
+	let k = (findfirst(==(class), MOD_CLASSES))
+	isnothing(k) && error("bad mod class \"$class\"")
+	k; end
 @inline sortkey(a::Mod) = (modclass(a.class), a.lastupdate)
 @inline modarchive(m::Mod) = m.id*match(r"\.[^.]*$", m.url).match
 const EET_class = modclass("EET")
@@ -593,11 +600,13 @@ function weidu_status(dirs...)#««
 	for d in dirs; f = joinpath(d, "weidu.log")
 		ispath(f) || continue
 		for line in eachline(f)
-			line = replace(line, r"\s*//.*" => "")
-			isempty(line) && continue
-			(tp2, lang, comp, rest...) = split(line, ' ')
-			tp2 = lowercase(tp2[2:prevind(tp2, length(tp2))])
-			push!(get!(status, tp2, String[]), comp[2:end])
+			m = match(r"^~(.*)~\s+#(\d+)\s+#(\d+)\s*", line)
+			isnothing(m) && continue
+			(tp2, lang, comp) = m.captures
+			id = lowercase(tp2[1:end-4])
+			k = findlast('/', id); !isnothing(k) && (id = id[k+1:end])
+			startswith(id, "setup-") && (id = id[7:end])
+			push!(get!(status, id, String[]), comp)
 		end
 	end
 	status
@@ -618,7 +627,7 @@ end#»»
 function printcomp(io::IO, m, c::ModComponent; selection, installed)#««
 	@printf(io, "%c%c%c `%s:%s` %s\n",
 		c.id ∈ get(selection, m.id, []) ? 's' : '.',
-		c.id ∉ get(installed, m.tp2, []) ? '.' : modgame(m) == :bg1 ? '1' : '2',
+		c.id ∉ get(installed, m.id, []) ? '.' : modgame(m) == :bg1 ? '1' : '2',
 		isempty(c.path) ? '.' : 'p',
 		m.id, c.id, description(c))
 end#»»
@@ -662,32 +671,22 @@ sy match modSub /^## .*$/|hi link modSub Title|
 	$filename`)
 	open(filename, "r") do io; readcomp(io; selection); end
 end#»»
-function components(mod::Mod; selection=global_selection, gamedirs=GAMEDIR,#««
-		less=true)
-	extract(mod) || return
-	g = modgame(mod); gamedir = gamedirs[g]
-	installed = weidu_status(gamedirs...)
-	@printf("\e[1m%-30s %s\e[m\n", mod.id, mod.description)
-	open(less ? `view - ` : `cat`, "w", stdout) do io
-	for c in modcomponents(mod); printcomp(io, mod, c; selection, installed); end
-	end
-end#»»
 function components!(mod::Mod; selection=global_selection,#««
-		gamedir = GAMEDIR[modgame(mod)], cols=80)
+		gamedir = GAMEDIR[modgame(mod)], edit=true)
 	extract(mod) || return
 	installed = weidu_status(gamedir)
 	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
-	open(filename, "w") do io
-		g = ""; h = ""
-		for c in modcomponents(mod)
-			g ≠ c.group && (g = c.group; println(io, "# ", g, "«"*"«1"))
-			h ≠ c.subgroup &&
-				(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
-			printcomp(io, mod, c; selection, installed)
-		end
+	io = edit ? open(filename, "w") : stdout
+	g = ""; h = ""
+	for c in modcomponents(mod)
+		g ≠ c.group && (g = c.group; println(io, "# ", g, "«"*"«1"))
+		h ≠ c.subgroup &&
+			(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
+		printcomp(io, mod, c; selection, installed)
 	end
-	component_editor(filename; selection)
+	edit && (close(io); component_editor(filename; selection))
 end#»»
+@inline components(mod::Mod; kwargs...)= components!(mod; edit=false, kwargs...)
 struct ComponentTree#««
 	alternatives::Vector{NTuple{2,String}}
 	children::Dict{String,ComponentTree}
@@ -742,15 +741,27 @@ function components!(;selection=global_selection,moddb=global_moddb)#««
 end#»»
 
 # Mod installation ««1
-function install(mod; simulate=false, uninstall=false, #««
+function install(mod; simulate=false, uninstall=false, #««««
 		selection=global_selection, gamedirs=GAMEDIR)
 	extract(mod) || return
 	id = mod.id
-	selected = uninstall ? Int[] : get!(selection, id, Int[])
 
 	gamedir = gamedirs[modgame(mod)]
-	installed = weidu_status(gamedir)
-	current = Set(modstatus(status, mod.tp2))
+	current = get(weidu_status(gamedir), mod.id, String[])
+	order = installorder(keys(selection))
+	installed = weidu_status(gamedirs...)
+	warned = false
+	for k in order; k == id && break
+		isempty(symdiff(get(installed, k, []), get(selection, k, []))) && continue
+		println("$k: $(get(installed, k, [])) => $(get(selection, k, []))")
+		printwarn("warning: mod '$k' should probably be installed before '$id'")
+		warned = true
+	end
+	if warned
+		printwarn("proceed anyway? (yn)"); r = readline()
+		lowercase(first(r)) == 'y' || return
+	end
+	selected = uninstall ? Int[] : get!(selection, id, Int[])
 
 	to_add = string.(setdiff(selected, current))
 	to_del = string.(setdiff(current, selected))
@@ -772,10 +783,14 @@ function install(mod; simulate=false, uninstall=false, #««
 		simulate && return
 		run(cmd)
 	end#»»
-end#»»
-@inline uninstall(mod; kwargs...) = install(mod; uninstall=true, kwargs...)
+end#»»»»
+function uninstall(mod; selection = global_selection, kwargs...)
+	delete!(selection, mod.id)
+	install(mod)
+	update_selection()
+end
 # Global routines««1
-function do_all(f; class=nothing, pause=false, limit=typemax(Int),
+function do_all(f; class=nothing, pause=false, limit=typemax(Int),#««
 		selected = (f == status ? nothing : true),
 		selection = global_selection, moddb=global_moddb,
 		kwargs...)
@@ -784,7 +799,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		[id for (id,l) in selection if !isempty(l)]; moddb)
 	for id in l
 		mod = findmod(id; moddb)
-		pause && (println("(paused)"); readline())
+		pause && (printlog("-- paused before: $f $id--"); readline())
 		i+= 1; (i > limit) && break
 		# do nothing if this is the wrong mod class:
 		mod.class ≠ class ≠ nothing && continue
@@ -800,10 +815,25 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		end
 		f(mod; selected, kwargs...)
 	end
-end
+end#»»
+"returns the first mod (in install order) with non-installed component"
+function nextmod(; selection=global_selection, moddb=global_moddb,#««
+		installed = weidu_status(GAMEDIR...))
+	order = installorder(keys(filter(!isempty, global_selection)))
+	k = findfirst(x->!isempty(symdiff(selection[x], get(installed, x, []))),
+		order)
+	isnothing(k) ? k : order[k]
+end#»»
+function do_first(f; moddb=global_moddb, kwargs...)#««
+	id = nextmod(; moddb)
+	println("call function $f($id) ? (yn)"); r = readline()
+	lowercase(r[1]) == 'y' || return
+	f(moddb[id]; kwargs...)
+end#»»
 list1 = (:download, :extract, :install, :uninstall, :show_components, :status)
 for f in list1; @eval begin
 	@inline $f(; kwargs...) = do_all($f; kwargs...)
+	@inline $f(::typeof(first); kwargs...) = do_first($f; kwargs...)
 end end
 # interactive commands are allowed only *one* mod (but can be a symbol)
 list2 = (list1..., :readme, :tp2, :components!, :components, :status)
@@ -1062,6 +1092,7 @@ function complete_db!(moddb) #««
 	# Modify a few mod classes ««
 	printlog("modifying mod classes")
 	moddb["dlcmerger"].class="DlcMerger"
+	moddb["bg2eetrans"].class="Initial"
 	moddb["eetact2"].class="Quests"
 	moddb["azengaard"].class="Quests"
 	moddb["impasylum"].class="Quests"
@@ -1071,6 +1102,8 @@ function complete_db!(moddb) #««
 	moddb["turnabout"].class="Quests"
 	moddb["hammers"].class="Items"
 	moddb["eet_end"].class="Final"
+	moddb["vienxay"].class="NPCs"
+	moddb["stratagems"].class="Final"
 # 		setmod!("might_and_guile"; class="Tweaks")
 	# »»
 		# hardcode online readme urls««
@@ -1083,6 +1116,8 @@ function complete_db!(moddb) #««
 	moddb["artisanskitpack"].readme = "https://artisans-corner.com/the-artisans-kitpack/"
 	moddb["monasticorders"].readme = "https://forums.beamdog.com/discussion/18620/mod-beta-monastic-orders-of-faerun"
 	moddb["mercenary"].readme = "https://forums.beamdog.com/discussion/68151/fighter-kit-mercenary-v3-1-iwdee-eet-bgee-bg2ee"
+	moddb["karatur"].readme = "https://forums.beamdog.com/discussion/15959/mod-twas-a-slow-boat-from-kara-tur-queststorenew-items-release-90/p1"
+	moddb["verrsza"].readme = "https://forums.beamdog.com/discussion/60614/mod-verrsza-npc-for-bgee-and-sod"
 	#»»
 	moddb["arcanearcher"].archive = "arcanearcher.zip"
 	printlog("setting mod component properties")
@@ -1235,6 +1270,11 @@ function complete_db!(moddb) #««
  510 => (path = ["Items", "Stores"],),
  999 => (path = ["Cosmetic", "Icons"],),
 	)#»»
+	setmod!("bg2eetrans",#««
+		"" => (after=["eet"],),
+	)#»»
+	setmod!("bgeear", "" => (after = ["eet"],),)
+	setmod!("bgeew", "" => (after = ["eet"],),)
 	setmod!("cdtweaks",#««
 		"" => (after = ["tomeandblood", "bg1npc", "thecalling", "item_rev", "divine_remix"],),
 		10 => (path = ["Cosmetic", "Sprites"],),
@@ -1610,6 +1650,12 @@ function complete_db!(moddb) #««
 		610 => (path = ["NPC", "Viconia"],),
 		1000 => (path = ["Spells", "Sphere system"],),
 	)#»»
+	setmod!("eet", "" => (after = [#««
+	# https://k4thos.github.io/EET-Compatibility-List/EET-Compatibility-List.html
+	"bg1aerie", "bg1ub", "darkhorizonsbgee", "drake", "drizztsaga", "garrick-tt", 
+	"saradas_magic", "sirene", "tenyathermidor", "soa", "karatur", "k9roughworld",
+	"verrsza", "white", "k9sharteelnpc", "dlcmerger", "bgeetextpack", "sodrus",
+	], before = ["bg2eetrans", "bg2ee_ga", "bg2eer"],),)#»»
 	setmod!("epicthieving",#««
 		0 => (path = ["Skills", "Thieving"],),
 		100 => (path = ["Skills", "Thieving"],),
@@ -2009,7 +2055,7 @@ function complete_db!(moddb) #««
 	setmod!("stratagems",#««
 		"" => (after = ["item_rev", "d0questpack", "ascension", "refinements",
 			"spell_rev", "tactics", "wheels", "eetact2"],
-			before = ["cdtweaks"],),
+			before = ["cdtweaks", "eet_end"],),
 		1500 => (path = ["Spells", "New spells"],),
 		1510 => (path = ["Spells", "New spells"],),
 # 		2110 => (exclusive = "spcl231.spl", path=["Classes", "Paladin"],), # inquisitor dispel

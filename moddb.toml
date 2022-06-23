@@ -45,17 +45,20 @@ description = "Silver Star"
 
 [hammers]
 lastupdate = 2019-08-09
-class = "GUI"
+class = "Items"
 url = "http://lynxlynx.info/ie/modhub.php?Sampsca/ThrownHammers&pre"
 description = "Thrown Hammers"
 archive = "Sampsca-ThrownHammers-v6.1.1-0-g5e933fc.zip"
 
 [bg2eetrans]
 lastupdate = 1970-01-01
-class = "PreEET"
+class = "Initial"
 url = "http://lynxlynx.info/ie/modhub.php?Isaya/bg2eetrans"
 description = "Traduction Francais"
 archive = "Isaya-bg2eetrans-v0.7.16.6-0-gd316d0c.zip"
+
+    [bg2eetrans.components.""]
+    after = ["eet"]
 
 [dreamwalker]
 lastupdate = 1970-01-01
@@ -168,20 +171,6 @@ url = "github:RoxanneSHS/TyrisEE"
 description = "Tyris Flare NPC"
 archive = "tyrisflare.tar.gz"
 
-    [tyrisflare.components.104]
-
-    [tyrisflare.components.106]
-
-    [tyrisflare.components.101]
-
-    [tyrisflare.components.0]
-
-    [tyrisflare.components.102]
-
-    [tyrisflare.components.103]
-
-    [tyrisflare.components.105]
-
 [tod]
 lastupdate = 2022-06-23
 class = "Quests"
@@ -199,13 +188,8 @@ archive = "Manual"
 [saradas_magic_2]
 lastupdate = 2021-07-23
 class = "Spells"
-url = "https://github.com/SpellholdStudios/Saradas_Magic_for_BG2/releases/download/v2.0.0/saradas-magic-for-bg2-v2.0.0.zip"
+url = "github:SpellholdStudios/Saradas_Magic_for_BG2"
 description = "Saradas BG2"
-archive = "saradas-magic-for-bg2-v2.0.0.zip"
-
-    [saradas_magic_2.components.1]
-
-    [saradas_magic_2.components.0]
 
 [jkits]
 lastupdate = 1970-01-01
@@ -217,8 +201,79 @@ archive = "JKits V7.zip"
 [bg1ub]
 lastupdate = 2021-05-26
 class = "PreEET"
-url = "github:Pocket-Plane-Group/bg1ub"
+url = "https://github.com/Pocket-Plane-Group/bg1ub/releases/download/v16.4/bg1-unfinished-business-v16.4.zip"
 description = "BG1 Unfinished Business"
+archive = "bg1-unfinished-business-v16.4.zip"
+
+    [bg1ub.components.24]
+
+    [bg1ub.components.4]
+
+    [bg1ub.components.1]
+
+    [bg1ub.components.12]
+
+    [bg1ub.components.29]
+
+    [bg1ub.components.20]
+
+    [bg1ub.components.32]
+
+    [bg1ub.components.2]
+
+    [bg1ub.components.6]
+
+    [bg1ub.components.25]
+
+    [bg1ub.components.23]
+
+    [bg1ub.components.22]
+
+    [bg1ub.components.11]
+
+    [bg1ub.components.13]
+
+    [bg1ub.components.5]
+
+    [bg1ub.components.15]
+
+    [bg1ub.components.27]
+
+    [bg1ub.components.31]
+
+    [bg1ub.components.33]
+
+    [bg1ub.components.28]
+
+    [bg1ub.components.16]
+
+    [bg1ub.components.14]
+
+    [bg1ub.components.21]
+
+    [bg1ub.components.7]
+
+    [bg1ub.components.34]
+
+    [bg1ub.components.8]
+
+    [bg1ub.components.26]
+
+    [bg1ub.components.17]
+
+    [bg1ub.components.10]
+
+    [bg1ub.components.0]
+
+    [bg1ub.components.19]
+
+    [bg1ub.components.9]
+
+    [bg1ub.components.18]
+
+    [bg1ub.components.30]
+
+    [bg1ub.components.3]
 
 [arestorationp]
 lastupdate = 1970-01-01
@@ -244,25 +299,8 @@ archive = "c0warlock.tar.gz"
 [kelsey]
 lastupdate = 2020-01-12
 class = "NPCs"
-url = "https://github.com/Pocket-Plane-Group/Kelsey/releases/download/v6/KelseyV6.zip"
+url = "github:Pocket-Plane-Group/Kelsey"
 description = "Kelsey NPC"
-archive = "KelseyV6.zip"
-
-    [kelsey.components.4]
-
-    [kelsey.components.1]
-
-    [kelsey.components.21]
-
-    [kelsey.components.20]
-
-    [kelsey.components.0]
-
-    [kelsey.components.2]
-
-    [kelsey.components.23]
-
-    [kelsey.components.22]
 
 [framed]
 lastupdate = 1970-01-01
@@ -273,15 +311,8 @@ description = "Framed"
 [fade]
 lastupdate = 2020-08-03
 class = "NPCs"
-url = "https://github.com/SpellholdStudios/Fade_NPC/releases/download/v5.6/Fade_v5-6.zip"
+url = "github:SpellholdStudios/Fade_NPC"
 description = "Fade NPC"
-archive = "Fade_v5-6.zip"
-
-    [fade.components.1]
-
-    [fade.components.0]
-
-    [fade.components.2]
 
 [toa]
 lastupdate = 2022-06-23
@@ -303,10 +334,8 @@ url = "https://www.dropbox.com/s/lnwu2b90ymdp6ro/Nehtaniel_V7.zip?dl=1"
 description = "Neh'taniel"
 archive = "Nehtaniel_V7.zip"
 
-    ["neh'taniel".components.0]
-
 [fr_rov]
-lastupdate = 1970-01-01
+lastupdate = 2019-04-14
 class = "Items"
 url = "https://www.dropbox.com/s/j88fh19lb2b0xyp/FR_ROV_V9.zip?dl=1"
 description = "Freedom's Reign & Reign of Virtue"
@@ -351,8 +380,9 @@ url = "github:SpellholdStudios/CerndFriendship"
 description = "Cernd Friendship"
 
 [karatur]
-lastupdate = 1970-01-01
+lastupdate = 2013-02-11
 class = "PreEET"
+readme = "https://forums.beamdog.com/discussion/15959/mod-twas-a-slow-boat-from-kara-tur-queststorenew-items-release-90/p1"
 url = "https://www.dropbox.com/s/cse9995k76knitr/KaraTur.rar?dl=1"
 description = "T'was a Slow Boat from Kara-Tur"
 archive = "karatur.rar"
@@ -791,27 +821,9 @@ archive = "BG2eeAR102.rar"
 [sirene_bg2]
 lastupdate = 2022-06-23
 class = "NPCs"
-url = "https://api.github.com/repos/ArtemiusI/Sirene-NPC-for-BG2-EE/tarball/v2.02"
+url = "github:ArtemiusI/Sirene-NPC-for-BG2-EE"
 description = "Sirene NPC for BG2:EE"
 archive = "sirene_bg2.tar.gz"
-
-    [sirene_bg2.components.8]
-
-    [sirene_bg2.components.4]
-
-    [sirene_bg2.components.1]
-
-    [sirene_bg2.components.5]
-
-    [sirene_bg2.components.0]
-
-    [sirene_bg2.components.2]
-
-    [sirene_bg2.components.6]
-
-    [sirene_bg2.components.7]
-
-    [sirene_bg2.components.3]
 
 [rttitempack]
 lastupdate = 1970-01-01
@@ -872,14 +884,20 @@ url = "github:Skitia/Emily-BG1"
 description = "Emily"
 archive = "emily.tar.gz"
 
+    [emily.components.1]
+
+    [emily.components.0]
+
+    [emily.components.2]
+
+    [emily.components.3]
+
 [alora]
 lastupdate = 2020-08-06
 class = "NPCs"
 url = "https://www.dropbox.com/s/kt9u12x8qagq8lu/AloraEE.zip?dl=1"
 description = "Alora NPC"
 archive = "AloraEE.zip"
-
-    [alora.components.0]
 
 [isra_bg2]
 lastupdate = 1970-01-01
@@ -969,8 +987,6 @@ class = "Items"
 url = "https://us.v-cdn.net/5019558/uploads/FileUpload/e9/036111ebc68d2a7a81d91441d2c799.7z"
 description = "Upgradable Dak'kon's Blade"
 archive = "dakkon.7z"
-
-    [dakkon.components.0]
 
 [atweaks]
 lastupdate = 2018-05-19
@@ -1220,8 +1236,6 @@ url = "https://downloads.weaselmods.net/download/wilson-chronicles/?wpdmdl=118"
 description = "Wilson Chronicles"
 archive = "wilsonchronicles.zip"
 
-    [wilsonchronicles.components.0]
-
 [mortis]
 lastupdate = 2019-08-03
 class = "Items"
@@ -1257,8 +1271,6 @@ url = "https://downloads.weaselmods.net/download/oozes-lounge/?wpdmdl=59"
 description = "Oozes Lounge"
 archive = "ooze.zip"
 
-    [ooze.components.0]
-
 [wtpfamiliars]
 lastupdate = 1970-01-01
 class = "SmallNPCs"
@@ -1280,7 +1292,7 @@ archive = "SentrizealAvatarPack.zip"
 
 [stratagems]
 lastupdate = 2021-09-20
-class = "Tweaks"
+class = "Final"
 url = "github:Gibberlings3/SwordCoastStratagems"
 description = "Sword Coast Stratagems"
 
@@ -1588,7 +1600,7 @@ description = "Sword Coast Stratagems"
 
     [stratagems.components.""]
     after = ["ascension", "d0questpack", "eetact2", "item_rev", "refinements", "spell_rev", "tactics", "wheels"]
-    before = ["cdtweaks"]
+    before = ["cdtweaks", "eet_end"]
 
     [stratagems.components.7220]
     exclusive = ["battho.cre"]
@@ -1624,19 +1636,13 @@ archive = "RGenie_30.zip"
 [shardsofice]
 lastupdate = 2022-06-23
 class = "SmallQuests"
-url = "https://github.com/Gibberlings3/Shards_of_Ice/releases/download/v7/lin-shardsofice-v7.tar.gz"
+url = "github:Gibberlings3/Shards_of_Ice"
 description = "Shards of Ice"
-archive = "lin-shardsofice-v7.tar.gz"
-
-    [shardsofice.components.1]
-
-    [shardsofice.components.0]
-
-    [shardsofice.components.2]
 
 [verrsza]
 lastupdate = 1970-01-01
 class = "PreEET"
+readme = "https://forums.beamdog.com/discussion/60614/mod-verrsza-npc-for-bgee-and-sod"
 url = "https://downloads.weaselmods.net/download/verrsza-bg1ee/?wpdmdl=120"
 description = "Verr'Sza NPC"
 archive = "verrsza.zip"
@@ -1662,7 +1668,7 @@ description = "Faren NPC"
 archive = "Faren_V4.zip"
 
 [bgqe]
-lastupdate = 1970-01-01
+lastupdate = 2022-06-15
 class = "PreEET"
 url = "github:Gibberlings3/BG_Quests_And_Encounters"
 description = "BG1 Mini Quests and Encounters"
@@ -2424,8 +2430,11 @@ description = "Shadow Magic (Pauses installation for manual input)"
 [valerie]
 lastupdate = 2020-08-18
 class = "PreEET"
-url = "github:SpellholdStudios/Valerie_NPC"
+url = "https://github.com/SpellholdStudios/Valerie_NPC/releases/download/v1.2/valerie-npc-for-bg-v1.2.zip"
 description = "Valerie NPC"
+archive = "valerie-npc-for-bg-v1.2.zip"
+
+    [valerie.components.0]
 
 [adrian]
 lastupdate = 1970-01-01
@@ -2603,16 +2612,12 @@ url = "github:RoxanneSHS/Indira"
 description = "Indira NPC"
 archive = "indinpc.tar.gz"
 
-    [indinpc.components.0]
-
 [ofheirloomsandclasses]
 lastupdate = 2022-04-17
 class = "Items"
 url = "https://downloads.weaselmods.net/download/of-heirlooms-and-classes/?wpdmdl=541"
 description = "Of Heirlooms and Classes"
 archive = "ofheirloomsandclasses.zip"
-
-    [ofheirloomsandclasses.components.0]
 
 [amber]
 lastupdate = 2022-06-23
@@ -2726,11 +2731,8 @@ archive = "scales_of_balance.tar.gz"
 [swordap]
 lastupdate = 2020-08-30
 class = "Items"
-url = "https://github.com/SpellholdStudios/HaerDalis_Swords/releases/download/v3.1.0/improved-haerdalis-swords-v3.1.0.zip"
+url = "github:SpellholdStudios/HaerDalis_Swords"
 description = "Haer'Dalis' Swords"
-archive = "improved-haerdalis-swords-v3.1.0.zip"
-
-    [swordap.components.0]
 
 [7c-yoshi]
 lastupdate = 1970-01-01
@@ -2752,24 +2754,6 @@ url = "github:ArtemiusI/Sirene-NPC"
 description = "Sirene NPC for BG1:EE"
 archive = "sirene.tar.gz"
 
-    [sirene.components.8]
-
-    [sirene.components.4]
-
-    [sirene.components.1]
-
-    [sirene.components.5]
-
-    [sirene.components.0]
-
-    [sirene.components.2]
-
-    [sirene.components.6]
-
-    [sirene.components.7]
-
-    [sirene.components.3]
-
 [celestials]
 lastupdate = 2022-06-23
 class = "Tweaks"
@@ -2782,12 +2766,6 @@ class = "NPCs"
 url = "https://www.dropbox.com/s/gan64pocpqrphn3/Tashia_V17.zip?dl=1"
 description = "Tashia NPC"
 archive = "Tashia_V17.zip"
-
-    [tashia.components.1]
-
-    [tashia.components.0]
-
-    [tashia.components.2]
 
 [imoenromance]
 lastupdate = 1970-01-01
@@ -2802,10 +2780,6 @@ class = "Quests"
 url = "https://downloads.weaselmods.net/download/eilistraees-song/?wpdmdl=89"
 description = "Eilistraee's Song"
 archive = "eilistraee.zip"
-
-    [eilistraee.components.1]
-
-    [eilistraee.components.0]
 
 [dorn]
 lastupdate = 1970-01-01
@@ -2957,10 +2931,6 @@ url = "https://downloads.weaselmods.net/download/innershade/?wpdmdl=73"
 description = "Innershade"
 archive = "innershade.zip"
 
-    [innershade.components.1]
-
-    [innershade.components.0]
-
 [varshoon]
 lastupdate = 1970-01-01
 class = "NPCs"
@@ -2982,7 +2952,7 @@ url = "github:Pocket-Plane-Group/Coran_for_BGII"
 description = "Coran NPC for BG2"
 
 [dlcmerger]
-lastupdate = 1970-01-01
+lastupdate = 2018-08-12
 class = "DlcMerger"
 url = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
 description = "DLC Merger"
@@ -3000,8 +2970,6 @@ class = "Quests"
 url = "github:RoxanneSHS/ImnesvaleEE"
 description = "Imnesvale Invasion"
 archive = "imnesvale.tar.gz"
-
-    [imnesvale.components.0]
 
 [hiddengameplayoptions]
 lastupdate = 1970-01-01
@@ -3087,7 +3055,8 @@ url = "github:Gibberlings3/WheelsOfProphecy"
 description = "Wheels of Prophecy"
 archive = "wheels.tar.gz"
 
-    [wheels.components.0]
+    [wheels.components.""]
+    before = ["stratagems"]
 
 [faiths_and_powers]
 lastupdate = 2022-06-21
@@ -3156,20 +3125,12 @@ url = "https://downloads.weaselmods.net/download/tangled-oak-isle/?wpdmdl=317"
 description = "Tangled Oak Isle"
 archive = "tangledisle.zip"
 
-    [tangledisle.components.1]
-
-    [tangledisle.components.0]
-
 [petsy]
 lastupdate = 2022-02-05
 class = "NPCs"
 url = "https://downloads.weaselmods.net/download/petsy/?wpdmdl=113"
 description = "Petsy Chattertone NPC"
 archive = "petsy.zip"
-
-    [petsy.components.1]
-
-    [petsy.components.0]
 
 [acbre]
 lastupdate = 1970-01-01
@@ -3542,56 +3503,14 @@ description = "Ascension"
 [mih_sp]
 lastupdate = 2022-06-23
 class = "Tweaks"
-url = "https://github.com/AngelGryph/MadeInHeaven_SpellPack/releases/download/v5/lin-mih_sp-v5.tar.gz"
+url = "github:AngelGryph/MadeInHeaven_SpellPack"
 description = "Made In Heaven: Spell Pack"
-archive = "lin-mih_sp-v5.tar.gz"
-
-    [mih_sp.components.4]
-
-    [mih_sp.components.1]
-
-    [mih_sp.components.12]
-
-    [mih_sp.components.2]
-
-    [mih_sp.components.6]
-
-    [mih_sp.components.11]
-
-    [mih_sp.components.13]
-
-    [mih_sp.components.5]
-
-    [mih_sp.components.15]
-
-    [mih_sp.components.16]
-
-    [mih_sp.components.14]
-
-    [mih_sp.components.7]
-
-    [mih_sp.components.8]
-
-    [mih_sp.components.17]
-
-    [mih_sp.components.10]
-
-    [mih_sp.components.0]
-
-    [mih_sp.components.9]
-
-    [mih_sp.components.3]
 
 [dw_lanthorn]
 lastupdate = 2021-07-13
 class = "Quests"
-url = "https://github.com/Gibberlings3/Restored-Rhynn-Lanthorn/releases/download/v-beta-2/lin-dw_lanthorn-beta-2.zip"
+url = "github:Gibberlings3/Restored-Rhynn-Lanthorn"
 description = "Restored Rhynn Lanthorn quest"
-archive = "lin-dw_lanthorn-beta-2.zip"
-
-    [dw_lanthorn.components.20]
-
-    [dw_lanthorn.components.10]
 
 [anishai]
 lastupdate = 1970-01-01
@@ -3718,7 +3637,7 @@ description = "TeamBG's Armours and Weapons for EET"
 archive = "TeamBGAeWe.zip"
 
 [darkhorizonsbgee]
-lastupdate = 1970-01-01
+lastupdate = 2013-06-15
 class = "PreEET"
 url = "https://www.dropbox.com/s/28i6ycnp9jmhk8t/DarkHorizonsBGee213.zip?dl=1"
 description = "Dark Horizons BGEE"
@@ -3740,129 +3659,9 @@ description = "Made In Heaven Item Pack"
 [aurora]
 lastupdate = 2022-06-23
 class = "Items"
-url = "https://api.github.com/repos/Sampsca/Auroras-Shoes-and-Boots/tarball/v5.2.2"
+url = "github:Sampsca/Auroras-Shoes-and-Boots"
 description = "Aurora's shoes and boots"
 archive = "aurora.tar.gz"
-
-    [aurora.components.400]
-
-    [aurora.components.470]
-
-    [aurora.components.477]
-
-    [aurora.components.480]
-
-    [aurora.components.475]
-
-    [aurora.components.155]
-
-    [aurora.components.50]
-
-    [aurora.components.460]
-
-    [aurora.components.190]
-
-    [aurora.components.9000]
-
-    [aurora.components.115]
-
-    [aurora.components.467]
-
-    [aurora.components.10]
-
-    [aurora.components.120]
-
-    [aurora.components.230]
-
-    [aurora.components.215]
-
-    [aurora.components.160]
-
-    [aurora.components.450]
-
-    [aurora.components.253]
-
-    [aurora.components.175]
-
-    [aurora.components.225]
-
-    [aurora.components.205]
-
-    [aurora.components.249]
-
-    [aurora.components.150]
-
-    [aurora.components.485]
-
-    [aurora.components.430]
-
-    [aurora.components.243]
-
-    [aurora.components.245]
-
-    [aurora.components.20]
-
-    [aurora.components.465]
-
-    [aurora.components.125]
-
-    [aurora.components.473]
-
-    [aurora.components.410]
-
-    [aurora.components.110]
-
-    [aurora.components.185]
-
-    [aurora.components.70]
-
-    [aurora.components.520]
-
-    [aurora.components.165]
-
-    [aurora.components.140]
-
-    [aurora.components.257]
-
-    [aurora.components.0]
-
-    [aurora.components.200]
-
-    [aurora.components.60]
-
-    [aurora.components.235]
-
-    [aurora.components.130]
-
-    [aurora.components.420]
-
-    [aurora.components.220]
-
-    [aurora.components.210]
-
-    [aurora.components.240]
-
-    [aurora.components.247]
-
-    [aurora.components.100]
-
-    [aurora.components.490]
-
-    [aurora.components.500]
-
-    [aurora.components.40]
-
-    [aurora.components.170]
-
-    [aurora.components.440]
-
-    [aurora.components.241]
-
-    [aurora.components.180]
-
-    [aurora.components.135]
-
-    [aurora.components.105]
 
 [xanbg1voice]
 lastupdate = 1970-01-01
@@ -3878,10 +3677,6 @@ url = "https://downloads.weaselmods.net/download/tales-of-the-deep-gardens/?wpdm
 description = "Tales of the Deep Gardens"
 archive = "totdg.zip"
 
-    [totdg.components.1]
-
-    [totdg.components.0]
-
 [coranbgfriend]
 lastupdate = 1970-01-01
 class = "NPCTweaks"
@@ -3891,108 +3686,14 @@ description = "Coran's BG Extended Friendship Talks"
 [mih_eq]
 lastupdate = 2022-06-23
 class = "Quests"
-url = "https://github.com/AngelGryph/MadeInHeaven_EncountersAndQuests/releases/download/v5/lin-mih_eq-v5.1.tar.gz"
+url = "github:AngelGryph/MadeInHeaven_EncountersAndQuests"
 description = "Made In Heaven: Encounters and Quests"
-archive = "lin-mih_eq-v5.1.tar.gz"
 
-    [mih_eq.components.32]
-
-    [mih_eq.components.29]
-
-    [mih_eq.components.1]
-
-    [mih_eq.components.2]
-
-    [mih_eq.components.41]
-
-    [mih_eq.components.27]
-
-    [mih_eq.components.42]
-
-    [mih_eq.components.33]
-
-    [mih_eq.components.28]
-
-    [mih_eq.components.26]
-
-    [mih_eq.components.10]
-
-    [mih_eq.components.24]
-
-    [mih_eq.components.25]
-
-    [mih_eq.components.23]
-
-    [mih_eq.components.5]
-
-    [mih_eq.components.31]
-
-    [mih_eq.components.43]
-
-    [mih_eq.components.39]
-
-    [mih_eq.components.34]
-
-    [mih_eq.components.44]
-
-    [mih_eq.components.17]
-
-    [mih_eq.components.37]
-
-    [mih_eq.components.47]
-
-    [mih_eq.components.9]
-
-    [mih_eq.components.12]
-
-    [mih_eq.components.20]
-
-    [mih_eq.components.6]
-
-    [mih_eq.components.14]
-
-    [mih_eq.components.7]
-
-    [mih_eq.components.8]
-
-    [mih_eq.components.19]
-
-    [mih_eq.components.0]
-
-    [mih_eq.components.4]
-
-    [mih_eq.components.22]
-
-    [mih_eq.components.11]
-
-    [mih_eq.components.35]
-
-    [mih_eq.components.13]
-
-    [mih_eq.components.15]
-
-    [mih_eq.components.16]
-
-    [mih_eq.components.40]
-
-    [mih_eq.components.21]
-
-    [mih_eq.components.38]
-
-    [mih_eq.components.46]
-
-    [mih_eq.components.45]
-
-    [mih_eq.components.36]
-
-    [mih_eq.components.18]
-
-    [mih_eq.components.30]
-
-    [mih_eq.components.3]
+    [mih_eq.components.""]
+    before = ["stratagems"]
 
 [saradas_magic]
-lastupdate = 1970-01-01
+lastupdate = 2013-11-14
 class = "PreEET"
 url = "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip"
 description = "Saradas Magic"
@@ -4005,11 +3706,14 @@ url = "github:Gibberlings3/bg1npcmusic"
 description = "BG1 NPC Project Music Pack"
 
 [bgeear]
-lastupdate = 1970-01-01
+lastupdate = 2013-01-08
 class = "PreEET"
 url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=182"
 description = "TeamBG Armor Pack for BG1"
 archive = "BGeeARv105.rar"
+
+    [bgeear.components.""]
+    after = ["eet"]
 
 [gahesh]
 lastupdate = 2020-09-25
@@ -4017,8 +3721,6 @@ class = "NPCs"
 url = "https://downloads.weaselmods.net/download/gahesh/?wpdmdl=131"
 description = "Gahesh (LG half-orc sorcerer)"
 archive = "gahesh.zip"
-
-    [gahesh.components.0]
 
 [msfm]
 lastupdate = 2022-06-23
@@ -4064,17 +3766,8 @@ description = "Endless BG1"
 [angelo]
 lastupdate = 2021-09-28
 class = "NPCs"
-url = "https://github.com/Gibberlings3/Angelo/releases/download/v9/lin-angelo-v9.zip"
+url = "github:Gibberlings3/Angelo"
 description = "Angelo NPC"
-archive = "lin-angelo-v9.zip"
-
-    [angelo.components.1]
-
-    [angelo.components.0]
-
-    [angelo.components.2]
-
-    [angelo.components.3]
 
 [itemupgrade]
 lastupdate = 2022-06-23
@@ -4093,11 +3786,9 @@ archive = "AstroBryGuy-NeeraBanters-v0.9.1-0-g7124366.zip"
 [xulaye_eet]
 lastupdate = 2022-06-23
 class = "NPCs"
-url = "https://api.github.com/repos/RoxanneSHS/XulayeEet/tarball/V2.3"
+url = "github:RoxanneSHS/XulayeEet"
 description = "Xulaye"
 archive = "xulaye_eet.tar.gz"
-
-    [xulaye_eet.components.0]
 
 [k9roughworld]
 lastupdate = 1970-01-01
@@ -4382,8 +4073,6 @@ url = "https://downloads.weaselmods.net/download/i-shall-never-forget/?wpdmdl=77
 description = "I Shall Never Forget"
 archive = "isnf.zip"
 
-    [isnf.components.0]
-
 [magestronghold_eet]
 lastupdate = 2022-06-23
 class = "Quests"
@@ -4408,8 +4097,9 @@ archive = "ub.tar.gz"
 [gavin]
 lastupdate = 2022-06-23
 class = "PreEET"
-url = "github:Gibberlings3/Gavin_BG"
+url = "https://github.com/Gibberlings3/Gavin_BG/releases/download/v14/Gavin_v14.zip"
 description = "Gavin NPC"
+archive = "Gavin_v14.zip"
 
 [bggoeet]
 lastupdate = 1970-01-01
@@ -4435,8 +4125,6 @@ class = "NPCs"
 url = "github:RoxanneSHS/Finch"
 description = "Finch NPC"
 archive = "finchnpc.tar.gz"
-
-    [finchnpc.components.0]
 
 [militiaofficer]
 lastupdate = 2022-06-23
@@ -4499,8 +4187,9 @@ description = "NPC Generator (New)"
 [bg1npc]
 lastupdate = 2022-06-21
 class = "PreEET"
-url = "github:Gibberlings3/BG1NPC"
+url = "https://github.com/Gibberlings3/BG1NPC/releases/download/v29/the-bg1npc-project-v29.zip"
 description = "BG1 NPC Project"
+archive = "the-bg1npc-project-v29.zip"
 
 [kimpirate]
 lastupdate = 2022-06-23
@@ -4508,8 +4197,6 @@ class = "NPCs"
 url = "github:RoxanneSHS/Kim_Pirate"
 description = "Kim the Pirate"
 archive = "kimpirate.tar.gz"
-
-    [kimpirate.components.0]
 
 [eet_swo]
 lastupdate = 1970-01-01
@@ -4688,18 +4375,12 @@ url = "https://downloads.weaselmods.net/download/yvette-romance/?wpdmdl=79"
 description = "Yvette Romance"
 archive = "yvette.zip"
 
-    [yvette.components.1]
-
-    [yvette.components.0]
-
 ["weasels!"]
 lastupdate = 2022-02-23
 class = "SmallQuests"
 url = "https://downloads.weaselmods.net/download/weasels/?wpdmdl=141"
 description = "Weasels"
 archive = "weasels!.zip"
-
-    ["weasels!".components.0]
 
 ["c#brage"]
 lastupdate = 1970-01-01
@@ -4963,8 +4644,9 @@ description = "Tweaks and Tricks"
 [animus]
 lastupdate = 2013-12-10
 class = "PreEET"
-url = "github:BartVanBeurden/bgee-animus"
+url = "https://github.com/BartVanBeurden/bgee-animus/releases/download/1.1/Animus.1.1.zip"
 description = "Animus: Sentient Weapon"
+archive = "Animus.1.1.zip"
 
 [eternalimoen]
 lastupdate = 1970-01-01
@@ -5043,22 +4725,11 @@ url = "https://downloads.weaselmods.net/download/hephernaan-bg2/?wpdmdl=281"
 description = "Hephernaan NPC"
 archive = "hephernaanbg2.zip"
 
-    [hephernaanbg2.components.1]
-
-    [hephernaanbg2.components.0]
-
 [thecalling]
 lastupdate = 2022-06-23
 class = "SmallQuests"
-url = "https://github.com/Gibberlings3/The_Calling/releases/download/v3/lin-thecalling-v3.tar.gz"
+url = "github:Gibberlings3/The_Calling"
 description = "The Calling"
-archive = "lin-thecalling-v3.tar.gz"
-
-    [thecalling.components.40]
-
-    [thecalling.components.20]
-
-    [thecalling.components.0]
 
 [g3anniversary]
 lastupdate = 2022-06-23
@@ -5075,17 +4746,8 @@ description = "Chloe NPC"
 [hubelpot]
 lastupdate = 2021-02-21
 class = "SmallNPCs"
-url = "https://github.com/SpellholdStudios/Hubelpot_the_Vegetable_Merchant_NPC/releases/download/v2.1.0/hubelpot-the-vegetable-merchant-npc-v2.1.0.zip"
+url = "github:SpellholdStudios/Hubelpot_the_Vegetable_Merchant_NPC"
 description = "Hubelpot the Vegetable Merchant NPC"
-archive = "hubelpot-the-vegetable-merchant-npc-v2.1.0.zip"
-
-    [hubelpot.components.1]
-
-    [hubelpot.components.10]
-
-    [hubelpot.components.0]
-
-    [hubelpot.components.2]
 
 [nosodsound]
 lastupdate = 1970-01-01
@@ -5261,8 +4923,6 @@ url = "https://downloads.weaselmods.net/download/shades-of-the-sword-coast/?wpdm
 description = "Shades of the Sword Coast"
 archive = "sotsc.zip"
 
-    [sotsc.components.0]
-
 [tipun_gui]
 lastupdate = 1970-01-01
 class = "GUI"
@@ -5292,38 +4952,26 @@ archive = "viconiarevamped.zip"
 [yasraena]
 lastupdate = 2022-06-23
 class = "NPCs"
-url = "https://api.github.com/repos/RoxanneSHS/YasraenaEET/tarball/V19"
+url = "github:RoxanneSHS/YasraenaEET"
 description = "Yasraena NPC"
 archive = "yasraena.tar.gz"
 
-    [yasraena.components.0]
-
 [eet]
-lastupdate = 1970-01-01
+lastupdate = 2021-09-13
 class = "Initial"
 url = "github:Gibberlings3/EET"
 description = "Enhanced Edition Trilogy"
+archive = "EET-master.zip"
+
+    [eet.components.""]
+    after = ["bg1aerie", "bg1ub", "bgeetextpack", "darkhorizonsbgee", "dlcmerger", "drake", "drizztsaga", "garrick-tt", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white", "k9roughworld", "k9sharteelnpc"]
+    before = ["bg2ee_ga", "bg2eer", "bg2eetrans"]
 
 [xan]
 lastupdate = 2020-08-04
 class = "NPCTweaks"
-url = "https://github.com/Pocket-Plane-Group/Xan_for_BGII/releases/download/v19/Xan_v19.zip"
+url = "github:Pocket-Plane-Group/Xan_for_BGII"
 description = "Xan NPC"
-archive = "Xan_v19.zip"
-
-    [xan.components.4]
-
-    [xan.components.1]
-
-    [xan.components.5]
-
-    [xan.components.0]
-
-    [xan.components.2]
-
-    [xan.components.6]
-
-    [xan.components.3]
 
 [sos]
 lastupdate = 1970-01-01
@@ -5347,27 +4995,8 @@ archive = "Chantelame v6.zip"
 [sodrtd]
 lastupdate = 2022-06-01
 class = "Quests"
-url = "https://github.com/Gibberlings3/Road_To_Discovery_for_SoD/releases/download/v0.7Beta/sodrtd-0.7-.beta.zip"
+url = "github:Gibberlings3/Road_To_Discovery_for_SoD"
 description = "Road to Discovery"
-archive = "sodrtd-0.7-.beta.zip"
-
-    [sodrtd.components.40]
-
-    [sodrtd.components.80]
-
-    [sodrtd.components.20]
-
-    [sodrtd.components.10]
-
-    [sodrtd.components.0]
-
-    [sodrtd.components.70]
-
-    [sodrtd.components.50]
-
-    [sodrtd.components.30]
-
-    [sodrtd.components.60]
 
 [simenpc]
 lastupdate = 2022-06-23
@@ -5375,8 +5004,6 @@ class = "NPCs"
 url = "github:RoxanneSHS/Sime"
 description = "Sime"
 archive = "simenpc.tar.gz"
-
-    [simenpc.components.0]
 
 [sandrahtot]
 lastupdate = 1970-01-01
@@ -5391,8 +5018,6 @@ class = "NPCs"
 url = "https://downloads.weaselmods.net/download/bristlelick/?wpdmdl=406"
 description = "Bristlelick (gnoll NPC)"
 archive = "bristlelick.zip"
-
-    [bristlelick.components.0]
 
 [monasticorders]
 lastupdate = 2022-06-23
@@ -5422,6 +5047,7 @@ lastupdate = 1970-01-01
 class = "Items"
 url = "github:GwendolyneFreddy/Nanstein"
 description = "Nanstein item upgrade"
+archive = "nanstein.tar.gz"
 
 [a7-totlm-bg2ee]
 lastupdate = 2021-08-24
@@ -5457,8 +5083,6 @@ url = "github:PaulaMigrate/Saerileth"
 description = "Saerileth NPC"
 archive = "saerileth.tar.gz"
 
-    [saerileth.components.0]
-
 [housetweaks]
 lastupdate = 1970-01-01
 class = "Tweaks"
@@ -5473,16 +5097,14 @@ url = "https://www.dropbox.com/s/oj3fj1fpar1imzw/Drake-master.zip?dl=1"
 description = "Drake NPC"
 archive = "Drake-master.zip"
 
+    [drake.components.0]
+
 [longerroadee]
 lastupdate = 2022-06-23
 class = "NPCs"
-url = "https://api.github.com/repos/RoxanneSHS/LongerRoadEE/tarball/1.9"
+url = "github:RoxanneSHS/LongerRoadEE"
 description = "Longer Road EET"
 archive = "longerroadee.tar.gz"
-
-    [longerroadee.components.1]
-
-    [longerroadee.components.0]
 
 [glamnpcpack]
 lastupdate = 2021-08-26
@@ -5526,11 +5148,8 @@ archive = "manual"
 [heartwood]
 lastupdate = 2020-06-04
 class = "Items"
-url = "https://github.com/SpellholdStudios/HeartOfTheWood/releases/download/v7.0.0/heart-of-the-wood-7.0.0.zip"
+url = "github:SpellholdStudios/HeartOfTheWood"
 description = "Heart of the Wood"
-archive = "heart-of-the-wood-7.0.0.zip"
-
-    [heartwood.components.0]
 
 [korganfriendship]
 lastupdate = 2020-05-31
@@ -5621,8 +5240,6 @@ url = "github:RoxanneSHS/Tsujatha"
 description = "Tsujatha NPC"
 archive = "tsujatha.tar.gz"
 
-    [tsujatha.components.0]
-
 [ntotsc]
 lastupdate = 2022-06-21
 class = "BigQuests"
@@ -5645,15 +5262,11 @@ description = "Check the Bodies Of Elves and Artefacts"
 [keto]
 lastupdate = 2020-08-03
 class = "NPCs"
-url = "https://github.com/Pocket-Plane-Group/Keto/releases/download/v6/Keto-SoAv6.zip"
+url = "github:Pocket-Plane-Group/Keto"
 description = "Keto NPC (SoA)"
-archive = "Keto-SoAv6.zip"
 
-    [keto.components.1]
-
-    [keto.components.0]
-
-    [keto.components.2]
+    [keto.components.""]
+    after = ["kelsey"]
 
 ["a7#improvedshamanicdance"]
 lastupdate = 2022-06-23
@@ -5692,17 +5305,8 @@ archive = "SoDGerman.zip"
 ["c#sodboabri"]
 lastupdate = 2022-06-02
 class = "Quests"
-url = "https://github.com/Gibberlings3/The_Boareskyr_Bridge_Scene/releases/download/v2/the-boareskyr-bridge-scene-v2.zip"
+url = "github:Gibberlings3/The_Boareskyr_Bridge_Scene"
 description = "The Boareskyr Bridge Scene"
-archive = "the-boareskyr-bridge-scene-v2.zip"
-
-    ["c#sodboabri".components.1]
-
-    ["c#sodboabri".components.0]
-
-    ["c#sodboabri".components.2]
-
-    ["c#sodboabri".components.3]
 
 [dsotsc]
 lastupdate = 2022-06-23
@@ -5870,6 +5474,10 @@ url = "http://www.users.totalise.co.uk/~bluerift/tsoaV2_2.zip"
 description = "The Stone of Askavar"
 archive = "tsoaV2_2.zip"
 
+    [soa.components.1]
+
+    [soa.components.0]
+
 [faldornbg2]
 lastupdate = 1970-01-01
 class = "NPCs"
@@ -5919,7 +5527,7 @@ description = "Convenient EE NPCs"
 archive = "a7-convenienteenpcs.zip"
 
 [ua]
-lastupdate = 1970-01-01
+lastupdate = 2021-11-07
 class = "Items"
 url = "github:BGforgeNet/bg2-uniqueartifacts"
 description = "Unique Artifacts (New)"
@@ -5946,9 +5554,8 @@ description = "Tiax NPC"
 [aurenaseph]
 lastupdate = 2021-09-28
 class = "NPCs"
-url = "https://github.com/Gibberlings3/AurenAseph/releases/download/v12/lin-aurenaseph-v12.zip"
+url = "github:Gibberlings3/AurenAseph"
 description = "Auren Aseph NPC"
-archive = "lin-aurenaseph-v12.zip"
 
 [tomeandblood]
 lastupdate = 2022-06-22
@@ -6246,7 +5853,7 @@ url = "github:Gibberlings3/Romantic_Encounters_BG2"
 description = "Romantic Encounters"
 
 [bg_travel]
-lastupdate = 1970-01-01
+lastupdate = 2016-01-24
 class = "Tweaks"
 url = "http://athkatla.cob-bg.pl/download.php?id=1595"
 description = "BG Travel"
@@ -6309,8 +5916,6 @@ class = "NPCs"
 url = "https://downloads.weaselmods.net/download/walahnan-bg1ee/?wpdmdl=428"
 description = "Walahnan (gnome chronomancer)"
 archive = "walahnan.zip"
-
-    [walahnan.components.0]
 
 [janquest]
 lastupdate = 2019-08-18
@@ -6399,19 +6004,8 @@ archive = "SandrahPortrait.zip"
 [kivan]
 lastupdate = 2022-06-23
 class = "NPCs"
-url = "https://github.com/Gibberlings3/Kivan_and_Deheriana/releases/download/v17/lin-kivan-v17.tar.gz"
+url = "github:Gibberlings3/Kivan_and_Deheriana"
 description = "Kivan and Deheriana Companions (Bugged)"
-archive = "lin-kivan-v17.tar.gz"
-
-    [kivan.components.300]
-
-    [kivan.components.201]
-
-    [kivan.components.202]
-
-    [kivan.components.100]
-
-    [kivan.components.200]
 
 [bridgesblock]
 lastupdate = 2022-05-10
@@ -6419,8 +6013,6 @@ class = "SmallQuests"
 url = "https://downloads.weaselmods.net/download/bridges-block/?wpdmdl=478"
 description = "Bridge's Block"
 archive = "bridgesblock.zip"
-
-    [bridgesblock.components.0]
 
 [crossmodbg2]
 lastupdate = 2022-06-23
@@ -6443,19 +6035,8 @@ description = "Assassinations"
 ["c#solaufein"]
 lastupdate = 2022-04-02
 class = "NPCs"
-url = "https://github.com/Gitjas/Solaufeins_Rescue_NPC/releases/download/v3.2/solaufeins-rescue-jasteys-solaufein-npc-mod-for-bgii-3.2.zip"
+url = "github:Gitjas/Solaufeins_Rescue_NPC"
 description = "Solaufein's Rescue"
-archive = "solaufeins-rescue-jasteys-solaufein-npc-mod-for-bgii-3.2.zip"
-
-    ["c#solaufein".components.4]
-
-    ["c#solaufein".components.1]
-
-    ["c#solaufein".components.0]
-
-    ["c#solaufein".components.2]
-
-    ["c#solaufein".components.3]
 
 [sarahtob]
 lastupdate = 1970-01-01
@@ -6464,11 +6045,14 @@ url = "github:Gibberlings3/Sarah"
 description = "Sarah NPC"
 
 [bgeew]
-lastupdate = 1970-01-01
+lastupdate = 2013-01-08
 class = "PreEET"
 url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=186"
 description = "TeamBG Weapon Pack for BG1"
 archive = "BGeeWv105.rar"
+
+    [bgeew.components.""]
+    after = ["eet"]
 
 [cdlore]
 lastupdate = 2022-06-23
@@ -6494,18 +6078,6 @@ class = "Items"
 url = "github:Gibberlings3/Forgotten-Armament"
 description = "Forgotten Armament"
 archive = "forgotten-armament.tar.gz"
-
-    [forgotten-armament.components.4]
-
-    [forgotten-armament.components.17]
-
-    [forgotten-armament.components.10]
-
-    [forgotten-armament.components.18]
-
-    [forgotten-armament.components.11]
-
-    [forgotten-armament.components.8]
 
 [ac_quest]
 lastupdate = 2022-06-03
@@ -6588,11 +6160,9 @@ archive = "icewind_eet.zip"
 [sagaman]
 lastupdate = 2007-09-22
 class = "SmallQuests"
-url = "https://www.dropbox.com/s/kmg5tvtcus95eh5/Ulrien-SagaMaster.zip?dl=1"
+url = "http://www.blackwyrmlair.net/~rabain/SagaMaster/Ulrien-SagaMaster.zip"
 description = "Ulrien Of Cormyr, Saga Master"
 archive = "Ulrien-SagaMaster.zip"
-
-    [sagaman.components.0]
 
 [yeslicknpc]
 lastupdate = 1970-01-01
@@ -6614,7 +6184,7 @@ description = "Bank of Baldurs Gate"
 
 [vienxay]
 lastupdate = 2022-06-23
-class = "PreEET"
+class = "NPCs"
 url = "github:Skitia/Vienxay-BG1"
 description = "Vienxay"
 archive = "vienxay.tar.gz"
@@ -6684,6 +6254,8 @@ class = "PreEET"
 url = "https://www.dropbox.com/s/7obd7oopktkl5jv/BG1AerieV12.zip?dl=1"
 description = "Aerie in BG:EE"
 archive = "BG1AerieV12.zip"
+
+    [bg1aerie.components.0]
 
 [southernedge]
 lastupdate = 2022-05-15

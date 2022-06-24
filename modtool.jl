@@ -20,6 +20,8 @@ module ModTool
 # + include a “date” field
 # - add a "release" field for github mods
 # - add a new database for computed properties (readme/release/etc.)
+# - use ProjectInfinity's *.ini files if available
+#  - needs extracting mods before (re)computing install order
 # - use WeiDU's --list-* options
 #  + list-languages
 #  + list-components
@@ -148,17 +150,21 @@ const MOD_CLASSES = split(replace("""
 	Initial
 	Early
 	Fixes
-	GUI
 	BigQuests
 	Quests
+	Quest
 	SmallQuests
-	NPCs
-	SmallNPCs
-	NPCTweaks
+	NPC
+	SmallNPC
+	NPC-Related
 	Spells
 	Items
 	Kits
-	Tweaks # merges “tactical”, “rules” and “AI”
+	Tweak # merges “tactical”, “rules” and “AI”
+	Tweaks
+	AI
+	Sound
+	UI
 	Late
 	Final
 	BADCLASS
@@ -270,8 +276,10 @@ function write_moddb(io::IO; moddb=global_moddb)#««
 		"description" => m.description, "class" => m.class)
 		isempty(m.archive) || (d["archive"] = m.archive)
 		startswith(m.readme, "https://") && (d["readme"] = m.readme)
-		isempty(m.components) ||
-			(d["components"] = Dict(c.id=>db_prop(c) for c in m.components))
+		if !isempty(m.components)
+			d1 = Dict(c.id => db_prop(c) for c in m.components)
+			any(!isempty, values(d1)) && (d["components"] = d1)
+		end
 		d
 	end
 end#»»
@@ -429,7 +437,7 @@ function lastupdate!(mod::Mod; mods=MODS)
 		for f in files if endswith(f, r"\.tp[2ah]"i); init=0)))
 	d == mod.lastupdate && return false
 	mod.lastupdate = d
-	printlog("$(mod.id): recomputed last update to $d")
+# 	printlog("$(mod.id): recomputed last update to $d")
 	return true
 end
 function status(mod::Mod; selection=global_selection, selected=nothing)#««
@@ -556,12 +564,12 @@ function read_selection_line(line)#««
 end#»»
 function read_selection(filename=SELECTION)#««««
 # 	selection = Tuple{Symbol,Vector{Int}}[]
-	selection = Dict{String, Vector{String}}()
+	selection = Dict{String, Set{String}}()
 	for line in eachline(filename)
 		cap = read_selection_line(line); isnothing(cap.lhs) && continue
 		id = lowercase(cap.lhs)
 		@assert !haskey(selection, id)
-		selection[id] = split(cap.rhs)
+		selection[id] = Set(split(cap.rhs))
 	end
 	return selection
 end#»»»»
@@ -585,7 +593,7 @@ function update_selection(selection=global_selection, filename=SELECTION)#««
 		cap = read_selection_line(line)
 		if !isnothing(cap.lhs)
 			id, components = lowercase(cap.lhs), split(cap.rhs)
-			s = get(selection, id, Int[])
+			s = get(selection, id, Set(String[]))
 			line = cap.indent*cap.lhs*cap.eq* join(s, ' ')*cap.comment
 			Set(s) ≠ Set(components) && (nchanged+= 1)
 			delete!(todo, id)
@@ -767,12 +775,15 @@ function install(mod; simulate=false, uninstall=false, #««««
 		printwarn("proceed anyway? (yn)"); r = readline()
 		lowercase(first(r)) == 'y' || return
 	end
-	selected = uninstall ? Int[] : get!(selection, id, Int[])
+	selected = uninstall ? Set(String[]) : get!(selection, id, Set(String[]))
 
-	to_add = string.(setdiff(selected, current))
-	to_del = string.(setdiff(current, selected))
+	to_add, to_del = String[], String[] # compute set difference in weidu order:
+	for c in mod.components; k = c.id#««
+		if k ∈ selected; k ∉ current && push!(to_add, k)
+		else; k ∈ current && push!(to_del, k); end
+	end#»»
 	isempty(to_add) && isempty(to_del) && (printlog("nothing to do"); return)
-	if !uninstall # create symlink««
+	if !isempty(to_add) # create symlink««
 		for file in ("$id.tp2", "setup-$id.tp2", "$id")
 			target = joinpath(MODS, file); ispath(target) || continue
 			link = joinpath(gamedir, file); ispath(link) && continue
@@ -785,10 +796,22 @@ function install(mod; simulate=false, uninstall=false, #««««
 	end#»»
 	cd(gamedir) do#««
 		cmd = `weinstall $(mod.id) --language $(mod.sel_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $to_add --force-uninstall-list $to_del`
+# 		id == "eet" && (cmd = `weinstall eet --skip-at-view --noautoupdate --no-exit-pause --force-install-list 0 $(gamedirs.bg1)`)
 		printsim(cmd)
 		simulate && return
-		run(cmd)
+		run(ignorestatus(cmd))
 	end#»»
+	now_installed = get(weidu_status(gamedir), id, String[])
+	not_installed = setdiff(selected, now_installed)
+	if !isempty(not_installed)
+		printwarn("warning: the following components were not installed:\n",
+			join(not_installed, ' '), "\nUpdate selection accordingly?")
+		r = readline()
+		if lowercase(r[1]) == 'y'
+			selection[id] = Set(now_installed)
+			update_selection()
+		end
+	end
 end#»»»»
 function uninstall(mod; selection = global_selection, kwargs...)
 	delete!(selection, mod.id)
@@ -868,8 +891,8 @@ function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
 		id = lowercase(v[2]); m = get(moddb, id, nothing)
 		isnothing(m) && continue
 		m.class = ["Initial", "Fixes", "BigQuests", "Quests", "SmallQuests",
-			"NPCs", "SmallNPCs", "NPCTweaks", "Tweaks", "Tweaks", "Items",
-			"Tweaks", "Kits", "GUI"][1+parse(Int, v[4])]
+			"NPC", "NPC", "NPC-Related", "Tweak", "Tweak", "Items",
+			"Tweak", "Kits", "UI"][1+parse(Int, v[4])]
 	end
 	moddb
 end#»»
@@ -923,17 +946,17 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	addmods!(moddb,
 	# Argent77 ««3
 	mkmod("a7-convenienteenpcs", "github:Argent77/A7-NoEENPCs",
-		"Convenient EE NPCs", "NPCTweaks"),
+		"Convenient EE NPCs", "NPCTweak"),
 	mkmod("extraexpandedencounters", "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip", "Extra Expanded Encounters", "Quests"),
 	# ArtemiusI ««3
 	mkmod("housetweaks", "github:ArtemiusI/House-Rule-Tweaks",
-		"House Rule Tweaks", "Tweaks"),
+		"House Rule Tweaks", "Tweak"),
 	# Spellhold Studios ««3
 	mkmod("saradas_magic", "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip", "Saradas Magic", "Items"),
 	mkmod("saradas_magic_2", "github:SpellholdStudios/Saradas_Magic_for_BG2", "Saradas BG2", "Spells"),
-	mkmod("beyond_the_law", "github:SpellholdStudios/Beyond_the_Law", "Beyond the Law", "NPCs"),
-	mkmod("kiara-zaiya", "github:SpellholdStudios/Kiara_Zaiya", "Kiara Zaiya NPCs", "NPCs"),
-	mkmod("iylos", "github:SpellholdStudios/Iylos", "Iylos (ToB monk)", "NPCs"),
+	mkmod("beyond_the_law", "github:SpellholdStudios/Beyond_the_Law", "Beyond the Law", "NPC"),
+	mkmod("kiara-zaiya", "github:SpellholdStudios/Kiara_Zaiya", "Kiara Zaiya NPCs", "NPC"),
+	mkmod("iylos", "github:SpellholdStudios/Iylos", "Iylos (ToB monk)", "NPC"),
 	mkmod("firkraag", "github:SpellholdStudios/Super_Firkraag", "Super Firkraag", "Quests"),
 	mkmod("ruad", "github:SpellholdStudios/RuadRofhessaItemUpgrade", "Ruad Ro'fhessa Item Upgrade", "Items"),
 	mkmod("bolsa", "github:SpellholdStudios/Bolsa", "Bolsa (merchant)", "Items"),
@@ -954,28 +977,28 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	mkmod("valhorn", "github:Gibberlings3/Improved_Horns_of_Valhalla", "Improved Horn of Valhalla", "Items"),
 	mkmod("transitions", "github:Gibberlings3/transitions", "Transitions", "Fixes"),
 	# Gitjas ««3
-	mkmod("c#brandock", "github:Gitjas/Brandock_the_Mage", "Brandock the Mage", "NPCs"),
-	mkmod("c#solaufein", "github:Gitjas/Solaufeins_Rescue_NPC", "Solaufein's Rescue", "NPCs"),
-	mkmod("c#brage", "github:Gitjas/Brages_Redemption", "Brage's Redemption", "NPCs"),
+	mkmod("c#brandock", "github:Gitjas/Brandock_the_Mage", "Brandock the Mage", "NPC"),
+	mkmod("c#solaufein", "github:Gitjas/Solaufeins_Rescue_NPC", "Solaufein's Rescue", "NPC"),
+	mkmod("c#brage", "github:Gitjas/Brages_Redemption", "Brage's Redemption", "NPC"),
 	# Github misc. ««3
-	mkmod("d0tweak", "github:Pocket-Plane-Group/D0Tweak", "Ding0 Tweak Pack", "Tweaks"),
+	mkmod("d0tweak", "github:Pocket-Plane-Group/D0Tweak", "Ding0 Tweak Pack", "Tweak"),
 	mkmod("rttitempack", "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack",  "Return to Trademeet item pack", "Items"),
 	mkmod("nanstein", "github:GwendolyneFreddy/Nanstein", "Nanstein item upgrade", "Items"),
 	mkmod("iwditempack", "github:GwendolyneFreddy/IWD_Item_Pack", "IWD item pack", "Items"),
 	mkmod("aurora", "github:Sampsca/Auroras-Shoes-and-Boots", "Aurora's shoes and boots", "Items"),
 	mkmod("monasticorders", "github:aquadrizzt/MonasticOrders", "Monastic Orders", "Kits"),
 	mkmod("deitiesoffaerun", "github:Raduziel/Deities-Of-Faerun", "Deities of Faerun", "Kits"),
-	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweaks"),
+	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweak"),
 	mkmod("mih_sp", "github:AngelGryph/MadeInHeaven_SpellPack", "Made In Heaven: Spell Pack", "Spells"),
 	mkmod("mih_eq", "github:AngelGryph/MadeInHeaven_EncountersAndQuests", "Made In Heaven: Encounters and Quests", "Quests"),
 	# Weasel mods ««3
-	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPCs"),
-	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPCs"),
-	mkmod("walahnan", "weaselmods:walahnan", "Walahnan (gnome chronomancer)", "NPCs"),
+	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPC"),
+	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPC"),
+	mkmod("walahnan", "weaselmods:walahnan", "Walahnan (gnome chronomancer)", "NPC"),
 	mkmod("ofheirloomsandclasses", "weaselmods:of-heirlooms-and-classes", "Of Heirlooms and Classes", "Items"),
-	mkmod("faldornbg2", "weaselmods:faldorn-bg2ee", "Faldorn BG2", "NPCs"),
-	mkmod("khalidbg2", "weaselmods:khalid-bg2", "Khalid BG2", "NPCs"),
-	mkmod("gahesh", "weaselmods:gahesh", "Gahesh (LG half-orc sorcerer)", "NPCs"),
+	mkmod("faldornbg2", "weaselmods:faldorn-bg2ee", "Faldorn BG2", "NPC"),
+	mkmod("khalidbg2", "weaselmods:khalid-bg2", "Khalid BG2", "NPC"),
+	mkmod("gahesh", "weaselmods:gahesh", "Gahesh (LG half-orc sorcerer)", "NPC"),
 	# Misc. ««3
 	mkmod("mortis", "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip", "Mortis Mini Mod", "Items"),
 	mkmod("unique_items", "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip", "BGEE/SOD Item replacement fun pack", "Items"),
@@ -1056,26 +1079,26 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	moddb["ascension"].class="BigQuests"
 	moddb["azengaard"].class="Quests"
 	moddb["bg1aerie"].class="SmallNPCs"
-	moddb["bg2eetrans"].class="Initial"
 	moddb["butchery"].class="Quests"
 	moddb["bwfixpack"].class="Fixes"
 	moddb["d0questpack"].class="Quests"
 	moddb["eet_end"].class="Final"
 	moddb["eetact2"].class="Quests"
 	moddb["faiths_and_powers"].class="Kits"
-	moddb["fnp_multiclass"].class="Tweaks"
+	moddb["fnp_multiclass"].class="Tweak"
 	moddb["hammers"].class="Items"
 	moddb["imnesvale"].class="Quests"
 	moddb["impasylum"].class="Quests"
 	moddb["item_rev"].class="Items"
-	moddb["paintbg"].class="GUI"
-	moddb["rr"].class="Tweaks"
+	moddb["paintbg"].class="UI"
+	moddb["rr"].class="Tweak"
 	moddb["spell_rev"].class="Spells"
 	moddb["stratagems"].class="Final"
 	moddb["tdd"].class="BigQuests"
 	moddb["the_horde"].class="Quests"
 	moddb["turnabout"].class="Quests"
-	moddb["vienxay"].class="NPCs"
+	moddb["vienxay"].class="NPC"
+	moddb["kivan"].class="NPC-Related"
 	# »»
 		# Tweak mod readme««
 	printlog("hardcoding mod readme")
@@ -1236,9 +1259,6 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
  502 => (path = ["Items", "Containers"],),
  510 => (path = ["Items", "Stores"],),
  999 => (path = ["Cosmetic", "Icons"],),
-	)#»»
-	setmod!("bg2eetrans",#««
-		"" => (after=["eet"],),
 	)#»»
 	setmod!("cdtweaks",#««
 		"" => (after = ["tomeandblood", "bg1npc", "thecalling", "item_rev", "divine_remix"],),
@@ -1620,7 +1640,7 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	# better: EET/tbl/compatibility.tbl
 	"dlcmerger", "bgeetextpack", "sodrus", "bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "darkhorizonsbgee", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "saradas_magic", "k9sharteelnpc", "sirene", "tenyathermidor", "soa", "karatur", "verrsza", "white", "bgsodde",
 # "margarita",
-	], before = ["bg2eetrans", "bg2ee_ga", "bg2eer"],),)
+	], before = ["bg2ee_ga", "bg2eer"],),)
 	setmod!("dlcmerger", "" => (before = filter(≠("dlcmerger"),
 		moddb["eet"].components[1].after),))
 	#»»
@@ -1834,7 +1854,7 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	setmod!("mercenary",#««
 		0 => (path=["Classes", "Fighter"],),
 		1 => (path=["NPC", "Kagain"],),
-		1 => (path=["NPC", "Korgan"],),
+		2 => (path=["NPC", "Korgan"],),
 	)#»»
 	setmod!("metweaks",#««
 		200 => (path=["Tables", "XP", "Quest"],),

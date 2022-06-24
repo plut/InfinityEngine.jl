@@ -1,20 +1,20 @@
 ["7c#sartweak"]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "https://www.dropbox.com/s/ryw4tn3r1vuohkn/7c%23sartweak_v1.2.zip?dl=1"
 description = "Sarevok related tweaks"
 archive = "7c#sartweak_v1.2.zip"
 
 [kale]
 lastupdate = 2022-06-23
-class = "SmallNPCs"
+class = "NPC"
 url = "github:Skitia/Kale-BG1"
 description = "Kale"
 archive = "kale.tar.gz"
 
 [etamin_soundsets]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:Eltamin/etamin-soundsets"
 description = "Etamin's Extra Soundsets"
 
@@ -40,7 +40,7 @@ archive = "Kittomesv201.zip"
 
 [star]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Silver_Star_NPC"
 description = "Silver Star"
 archive = "Silverstar.zip"
@@ -59,7 +59,8 @@ url = "http://lynxlynx.info/ie/modhub.php?Isaya/bg2eetrans"
 description = "Traduction Francais"
 archive = "Isaya-bg2eetrans-v0.7.16.6-0-gd316d0c.zip"
 
-    [bg2eetrans.components.0]
+    [bg2eetrans.components.""]
+    after = ["eet"]
 
 [dreamwalker]
 lastupdate = 1970-01-01
@@ -69,14 +70,14 @@ description = "Dreamwalker Shaman Kit"
 
 [eseries]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/k91vhhek3892ed7/eseries_V3.zip?dl=1"
 description = "Cirerrek's AI Scripts - eseries"
 archive = "eseries_V3.zip"
 
 [haldamir]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:Gibberlings3/Haldamir"
 description = "Haldamir NPC"
 
@@ -159,15 +160,15 @@ archive = "might_and_guile.tar.gz"
     [might_and_guile.components.200]
     path = ["Tables", "HLA"]
 
-    [might_and_guile.components.265]
-    path = ["Classes", "Monk"]
-
     [might_and_guile.components.230]
     path = ["Classes", "Ranger"]
 
+    [might_and_guile.components.265]
+    path = ["Classes", "Monk"]
+
 [tyrisflare]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/TyrisEE"
 description = "Tyris Flare NPC"
 archive = "tyrisflare.tar.gz"
@@ -202,83 +203,12 @@ archive = "JKits V7.zip"
 [bg1ub]
 lastupdate = 2021-05-26
 class = "Quests"
-url = "https://github.com/Pocket-Plane-Group/bg1ub/releases/download/v16.4/bg1-unfinished-business-v16.4.zip"
+url = "github:Pocket-Plane-Group/bg1ub"
 description = "BG1 Unfinished Business"
-archive = "bg1-unfinished-business-v16.4.zip"
-
-    [bg1ub.components.24]
-
-    [bg1ub.components.4]
-
-    [bg1ub.components.1]
-
-    [bg1ub.components.12]
-
-    [bg1ub.components.29]
-
-    [bg1ub.components.20]
-
-    [bg1ub.components.32]
-
-    [bg1ub.components.2]
-
-    [bg1ub.components.6]
-
-    [bg1ub.components.25]
-
-    [bg1ub.components.23]
-
-    [bg1ub.components.22]
-
-    [bg1ub.components.11]
-
-    [bg1ub.components.13]
-
-    [bg1ub.components.5]
-
-    [bg1ub.components.15]
-
-    [bg1ub.components.27]
-
-    [bg1ub.components.31]
-
-    [bg1ub.components.33]
-
-    [bg1ub.components.28]
-
-    [bg1ub.components.16]
-
-    [bg1ub.components.14]
-
-    [bg1ub.components.21]
-
-    [bg1ub.components.7]
-
-    [bg1ub.components.34]
-
-    [bg1ub.components.8]
-
-    [bg1ub.components.26]
-
-    [bg1ub.components.17]
-
-    [bg1ub.components.10]
-
-    [bg1ub.components.0]
-
-    [bg1ub.components.19]
-
-    [bg1ub.components.9]
-
-    [bg1ub.components.18]
-
-    [bg1ub.components.30]
-
-    [bg1ub.components.3]
 
 [arestorationp]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/e532jdc6p01hpnv/ARPv8-4.zip?dl=1"
 description = "Almateria's Restoration Project"
 archive = "ARPv8-4.zip"
@@ -299,7 +229,7 @@ archive = "c0warlock.tar.gz"
 
 [kelsey]
 lastupdate = 2020-01-12
-class = "GUI"
+class = "UI"
 url = "github:Pocket-Plane-Group/Kelsey"
 description = "Kelsey NPC"
 archive = "KelseyV5.zip"
@@ -312,7 +242,7 @@ description = "Framed"
 
 [fade]
 lastupdate = 2020-08-03
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Fade_NPC"
 description = "Fade NPC"
 
@@ -325,13 +255,13 @@ archive = "toa.tar.gz"
 
 [vampiretales]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/Miriam"
 description = "Vampire Tales"
 
 ["neh'taniel"]
 lastupdate = 2019-04-24
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/lnwu2b90ymdp6ro/Nehtaniel_V7.zip?dl=1"
 description = "Neh'taniel"
 archive = "Nehtaniel_V7.zip"
@@ -351,14 +281,14 @@ description = "Check the Bodies Master Vampire"
 
 [verrbg2]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/sh/56dr4q8h2q7djri/AACD1-TgFkrb_KSUBXtqBeI4a/VERR%27SZA%20BG2EE%20NPC/VerrBG2%20v1.2.zip?dl=0"
 description = "Verr'Sza BG2"
 archive = "VerrBG2 v1.2.zip"
 
 ["dragonspear_ui++"]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:anongit/DragonspearUI"
 description = "DragonspearUI"
 
@@ -371,13 +301,13 @@ archive = "Vampire_world_mod_v.0.55_EET.zip"
 
 [cdportraits]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:Gibberlings3/Continuous_NPC_Portraits"
 description = "Continuous NPC Portraits"
 
 [cernd]
 lastupdate = 2019-12-14
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/CerndFriendship"
 description = "Cernd Friendship"
 
@@ -389,18 +319,16 @@ url = "https://www.dropbox.com/s/cse9995k76knitr/KaraTur.rar?dl=1"
 description = "T'was a Slow Boat from Kara-Tur"
 archive = "karatur.rar"
 
-    [karatur.components.0]
-
 [yoshimoromance]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "weaselmods:yoshimo-romance"
 description = "Yoshimo Romance"
 archive = "YoshimoRomance v6.0.zip"
 
 [ajantisbg1]
 lastupdate = 2022-06-23
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Gibberlings3/Ajantis_BG1_Expansion"
 description = "Ajantis BG1 Expansion"
 archive = "ajantisbg1.tar.gz"
@@ -464,13 +392,13 @@ archive = "ThOghma_v1.8.zip"
 
 [ariena]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/ArienaEE"
 description = "Ariena NPC"
 
 [tenyathermidor]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/Tenya"
 description = "Tenya Thermidor NPC"
 
@@ -483,19 +411,19 @@ archive = "w_packmule-v1.4b.zip"
 
 [leui-bg1ee]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:r-e-d/LeUI-BG1EE"
 description = "lefreut's enhanced UI BG1 skin (requires game version 2.6)"
 
 [sarevokfriendship]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/SarevokFriendship"
 description = "Sarevok Friendship"
 
 [viconia]
 lastupdate = 2019-12-14
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/ViconiaFriendship"
 description = "Viconia Friendship"
 
@@ -521,7 +449,7 @@ archive = "UnofficialItemPack_V2.7b.zip"
 
 [3ed]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 readme = "https://github.com/Holic75/Baldurs-gate-dnd-3.5#readme"
 url = "github:Holic75/Baldurs-gate-dnd-3.5"
 description = "Baldur`s Gate DnD 3.5 (New)"
@@ -529,7 +457,7 @@ archive = "3ed.tar.gz"
 
 [thebeaurinlegacy]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/cl4oj311z1gmib7/TheBeaurinLegacy.zip?dl=1"
 description = "The Beaurin Legacy"
 archive = "TheBeaurinLegacy.zip"
@@ -543,14 +471,14 @@ archive = "worldmap_iwdeet.zip"
 
 [protagonist_can_die]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/ar7egyefm39m8o2/Protagonist_Can_Die_V93.zip?dl=1"
 description = "Protagonist Can Die"
 archive = "Protagonist_Can_Die_V93.zip"
 
 [ajantisbg2]
 lastupdate = 2019-06-16
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "https://www.baldurs-gate.de/index.php?resources/jasteys-sir-ajantis-f%C3%BCr-bgii-npc.9/download"
 description = "Ajantis NPC for BG2"
 archive = "win-ajantisbg2-v20.zip"
@@ -564,26 +492,26 @@ archive = "underrep.tar.gz"
 
 [rjali]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/m7l76g4dbi1i202/Rjali%20Romance%20-%20v12.0.zip?dl=1"
 description = "Rjali Romance"
 archive = "Rjali Romance-v12.0.zip"
 
 [bp-bgt-worldmap]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:SpellholdStudios/BP-BGT-Worldmap"
 description = "Worldmap"
 
 [minscfriendship]
 lastupdate = 2021-07-20
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/MinscFriendship"
 description = "Minsc Friendship"
 
 [eeuitweaks]
 lastupdate = 2022-05-09
-class = "GUI"
+class = "UI"
 url = "github:r-e-d/EEUITweaks"
 description = "EEUITweaks"
 
@@ -599,7 +527,7 @@ archive = "therune.tar.gz"
 
 [hq_soundclips_bg2ee]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:Argent77/HQ-SoundClips-BG2EE"
 description = "High Quality soundclips for BG2EE extended content"
 archive = "HQ-SoundClips-BG2EE-master.zip"
@@ -776,7 +704,7 @@ archive = "artisanskitpack.tar.gz"
 
 [yoshimo]
 lastupdate = 2021-06-11
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/YoshimoFriendship"
 description = "Yoshimo Friendship"
 
@@ -811,7 +739,7 @@ description = "Spell Revisions v4 b18"
 
 [vynd]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/43era1wkgnm9eb4/vynd-v2.exe?dl=1"
 description = "Vynd NPC"
 archive = "Vynd-v2.exe"
@@ -825,7 +753,7 @@ archive = "BG2eeAR102.rar"
 
 [sirene_bg2]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:ArtemiusI/Sirene-NPC-for-BG2-EE"
 description = "Sirene NPC for BG2:EE"
 archive = "sirene_bg2.tar.gz"
@@ -839,7 +767,7 @@ archive = "rttitempack.tar.gz"
 
 [enhanced-powergaming-scripts]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "github:Gibberlings3/Enhanced-Powergaming-Scripts"
 description = "Enhanced Powergaming Scripts"
 
@@ -852,7 +780,7 @@ archive = "skills-and-abilities.tar.gz"
 
 [iylos]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Iylos"
 description = "Iylos (ToB monk)"
 
@@ -884,21 +812,21 @@ description = "BuTcHeRy"
 
 [emily]
 lastupdate = 2022-06-23
-class = "SmallNPCs"
+class = "NPC"
 url = "github:Skitia/Emily-BG1"
 description = "Emily"
 archive = "emily.tar.gz"
 
 [alora]
 lastupdate = 2020-08-06
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/kt9u12x8qagq8lu/AloraEE.zip?dl=1"
 description = "Alora NPC"
 archive = "AloraEE.zip"
 
 [animalcompanions]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 url = "github:thisisulb/AnimalCompanions"
 description = "Animal Companions"
 archive = "animalcompanions.tar.gz"
@@ -908,13 +836,13 @@ archive = "animalcompanions.tar.gz"
 
 [isra_bg2]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Isra_NPC_BG2"
 description = "Isra BG2 NPC"
 
 [arath_eet]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/ArathEET"
 description = "Arath (Rewired)"
 
@@ -926,7 +854,7 @@ description = "The Grey Clan Episode I: In Candlelight"
 
 ["c#brandock"]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:Gitjas/Brandock_the_Mage"
 description = "Brandock the Mage"
 
@@ -952,14 +880,14 @@ description = "Jan's Alchemy"
 
 [touched]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/eolau4r9cq60jjn/Touchstone.zip?dl=1"
 description = "Touchstone"
 archive = "Touchstone.zip"
 
 [yoshimosremorse]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "https://www.dropbox.com/s/0aie0iftr1dl7sg/YoshimosRemorse_v3.0.zip?dl=1"
 description = "Yoshimo's Remorse"
 archive = "YoshimosRemorse_v3.0.zip"
@@ -980,7 +908,7 @@ archive = "CrevsDaak-m7multikit-v0.27.11-0-gdaf5de8.zip"
 
 [atweaks]
 lastupdate = 2018-05-19
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/hs3besqzichlru0/atweaks-v453.zip?dl=1"
 description = "aTweaks"
 archive = "atweaks-v453.zip"
@@ -1177,26 +1105,26 @@ archive = "dakkon.7z"
 
 [asharnpc]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "http://www.shsforums.net/files/download/1203-ashar-npc/"
 description = "Ashar"
 archive = "AsharNPC_v131.rar"
 
 [dearnise]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:PaulaMigrate/NaliaEE"
 description = "de'Arnise Romance"
 
 [branwen]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:Pocket-Plane-Group/Branwen_for_BGII"
 description = "Branwen BG2 NPC"
 
 [npcflirt]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Pocket-Plane-Group/NPC_Flirt_Packs"
 description = "NPC Flirt Packs"
 archive = "NPCFlirtV105.zip"
@@ -1209,13 +1137,13 @@ description = "Check the Bodies Civil Disobedience"
 
 [valen]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/ValenEE"
 description = "Valen NPC"
 
 [kindrek]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/vrs3nf6dzumujyu/Kindrek_V28.zip?dl=1"
 description = "Kindrek NPC"
 archive = "Kindrek_V28.zip"
@@ -1229,7 +1157,7 @@ archive = "tnoober.tar.gz"
 
 [wilsonchronicles]
 lastupdate = 2022-05-06
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "weaselmods:wilson-chronicles"
 description = "Wilson Chronicles"
 archive = "wilsonchronicles.zip"
@@ -1243,21 +1171,21 @@ archive = "mortis.zip"
 
 [theundying]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=8"
 description = "The Undying"
 archive = "TheUndying2_53.rar"
 
 [bg1npcsoa]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "https://www.dropbox.com/s/mub3ozbrj1tiews/BG1NPC%20SoAToB_v13.5.rar?dl=1"
 description = "BG1 NPCs for SoA"
 archive = "BG1NPC SoAToB_v13.5.rar"
 
 [jaheirarecast]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "http://lynxlynx.info/ie/modhub.php?AstroBryGuy/JaheiraRecast"
 description = "Jaheira Recast"
 archive = "AstroBryGuy-JaheiraRecast-v3.0-0-g501290c.zip"
@@ -1271,19 +1199,19 @@ archive = "ooze.zip"
 
 [wtpfamiliars]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "github:flamewing/WTPFamiliars"
 description = "WTP Familiars"
 
 [safana]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:RoxanneSHS/SafanaBG2"
 description = "Safana in Amn"
 
 [sentrizeal_aa_pack]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "https://www.dropbox.com/s/9xi5ehosra6ptq1/SentrizealAvatarPack.zip?dl=1"
 description = "Sentrizeal's Alternate Avatar Pack"
 archive = "SentrizealAvatarPack.zip"
@@ -1608,19 +1536,19 @@ description = "Sword Coast Stratagems"
 
 ["mur'neth"]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/Murneth"
 description = "Mur'Neth NPC"
 
 [rosere]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "github:RoxanneSHS/RoseRE"
 description = "Rose NPC Resurrected for EET"
 
 [valygarfriendship]
 lastupdate = 2021-07-28
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/ValygarFriendship"
 description = "Valygar Friendship"
 
@@ -1639,7 +1567,7 @@ description = "Shards of Ice"
 
 [verrsza]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 readme = "https://forums.beamdog.com/discussion/60614/mod-verrsza-npc-for-bgee-and-sod"
 url = "weaselmods:verrsza-bg1ee"
 description = "Verr'Sza NPC"
@@ -1654,13 +1582,13 @@ archive = "BoM_V3EE.zip"
 
 [kitanya]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:PaulaMigrate/Kitanya-Resurrected"
 description = "Kitanya"
 
 [faren]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "http://dl.spellholdstudios.net/faren"
 description = "Faren NPC"
 archive = "Faren_V4.zip"
@@ -1687,7 +1615,7 @@ archive = "dr8_hotfix.zip"
 
 [khalidbg2]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "https://downloads.weaselmods.net/download/khalid-bg2/?wpdmdl=449"
 description = "Khalid BG2"
 archive = "khalidbg2.zip"
@@ -1701,7 +1629,7 @@ archive = "fishingfortrouble.tar.gz"
 
 [cdtweaks]
 lastupdate = 2022-06-19
-class = "Tweaks"
+class = "Tweak"
 url = "github:Gibberlings3/Tweaks-Anthology"
 description = "Tweaks Anthology"
 
@@ -2427,26 +2355,26 @@ description = "Shadow Magic (Pauses installation for manual input)"
 
 [valerie]
 lastupdate = 2020-08-18
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Valerie_NPC"
 description = "Valerie NPC"
 
 [adrian]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Adrian_NPC"
 description = "Adrian NPC"
 
 [calin]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/5h6f10aik02ygho/calin-v1.5.zip?dl=1"
 description = "Calin NPC"
 archive = "calin-v1.5.zip"
 
 [iwdification]
 lastupdate = 2022-06-21
-class = "Tweaks"
+class = "Tweak"
 url = "github:Gibberlings3/iwdification"
 description = "IWDification"
 
@@ -2503,7 +2431,7 @@ description = "IWDification"
 
 [isra]
 lastupdate = 2021-06-06
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Isra_NPC"
 description = "Isra NPC"
 
@@ -2516,7 +2444,7 @@ archive = "BG1RUS-EET-v19-fix5.zip"
 
 [uldar]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/lu3ymv2j8l1w2dh/UldarNPC.zip?dl=1"
 description = "Uldar the Barbarian"
 archive = "UldarNPC.zip"
@@ -2530,14 +2458,14 @@ archive = "SandrahEET-master.zip"
 
 [fullplate]
 lastupdate = 2015-07-18
-class = "Tweaks"
+class = "Tweak"
 url = "http://www.mediafire.com/download/726ji7jzgomi1vq/fullplate-v2.2.zip"
 description = "Full Plate and Packing Steel"
 archive = "fullplate-v2.2.zip"
 
 [edwinromance]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/Edwin_Romance"
 description = "Edwin Romance"
 
@@ -2556,22 +2484,22 @@ archive = "SwordSaint-v1.0.7z"
 
 [oldsound]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "https://www.dropbox.com/s/mogovd9x99niham/RestoreSound_V1.zip?dl=1"
 description = "Restore Original Casting Sounds"
 archive = "OldSound.zip"
 
-[solaufein]
-lastupdate = 1970-01-01
-class = "NPCs"
-url = "github:RoxanneSHS/Solaufein"
-description = "Solaufein NPC"
-
 [keldorn_rom]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Gibberlings3/Keldorn_Romance"
 description = "Keldorn Romance"
+
+[solaufein]
+lastupdate = 1970-01-01
+class = "NPC"
+url = "github:RoxanneSHS/Solaufein"
+description = "Solaufein NPC"
 
 [deepgnomes]
 lastupdate = 2022-06-23
@@ -2595,7 +2523,7 @@ archive = "impasylum.tar.gz"
 
 [indinpc]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/Indira"
 description = "Indira NPC"
 archive = "indinpc.tar.gz"
@@ -2609,7 +2537,7 @@ archive = "ofheirloomsandclasses.zip"
 
 [amber]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:MattyGroove/Amber"
 description = "Amber"
 archive = "amber.tar.gz"
@@ -2623,14 +2551,14 @@ archive = "stuffofthemagi.tar.gz"
 
 [paintbg]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "http://www.shsforums.net/files/getdownload/5035-paintbg-for-bgee/"
 description = "PaintBG for BG2:EE and EET"
 archive = "PaintBG(EE) v2.1.zip"
 
 [scales_of_balance]
 lastupdate = 2022-06-21
-class = "Tweaks"
+class = "Tweak"
 url = "github:UnearthedArcana/Scales_of_Balance"
 description = "Scales of Balance"
 archive = "scales_of_balance.tar.gz"
@@ -2709,7 +2637,7 @@ archive = "scales_of_balance.tar.gz"
     after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "tomeandblood"]
 
     [scales_of_balance.components.102]
-    path = ["Fighting", "Tweaks"]
+    path = ["Fighting", "Tweak"]
 
     [scales_of_balance.components.200]
     exclusive = ["intmod.2da", "savecndh.2da", "savecng.2da", "strmod.2da", "strmodex.2da"]
@@ -2727,7 +2655,7 @@ description = "Haer'Dalis' Swords"
 
 [7c-yoshi]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "http://lynxlynx.info/ie/modhub.php?CrevsDaak/7C-Yoshi&pre"
 description = "Keeping Yoshimo"
 archive = "7C-Yoshi-latest.zip"
@@ -2741,45 +2669,27 @@ archive = "DungeonCrawl_v11.zip"
 
 [sirene]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:ArtemiusI/Sirene-NPC"
 description = "Sirene NPC for BG1:EE"
 archive = "sirene.tar.gz"
 
-    [sirene.components.8]
-
-    [sirene.components.4]
-
-    [sirene.components.1]
-
-    [sirene.components.5]
-
-    [sirene.components.0]
-
-    [sirene.components.2]
-
-    [sirene.components.6]
-
-    [sirene.components.7]
-
-    [sirene.components.3]
-
 [celestials]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 url = "github:Gibberlings3/PnP_Celestials"
 description = "P&P Celestials"
 
 [tashia]
 lastupdate = 2022-01-16
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/gan64pocpqrphn3/Tashia_V17.zip?dl=1"
 description = "Tashia NPC"
 archive = "Tashia_V17.zip"
 
 [imoenromance]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "http://www.blindmonkey.org/imoen/files/Imoen%20Romance.zip"
 description = "Imoen Romance (Bugged)"
 archive = "Imoen Romance.zip"
@@ -2793,19 +2703,19 @@ archive = "eilistraee.zip"
 
 [dorn]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:trinit2/Bg2Dorn"
 description = "Dorn Romance Expansion"
 
 [dace_eet]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/DaceEET"
 description = "Dace Linton"
 
 [lena]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:gungorenu/bg2-npcmod-lena"
 description = "Lena"
 
@@ -2817,7 +2727,7 @@ description = "Slithering Menace"
 
 [refinements]
 lastupdate = 2022-06-21
-class = "Tweaks"
+class = "Tweak"
 url = "github:UnearthedArcana/refinements"
 description = "Refinements"
 archive = "refinements.tar.gz"
@@ -2925,13 +2835,13 @@ description = "Check the Bodies Melynda the Mute"
 
 [shineoncaelar]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:RoxanneSHS/Caelar"
 description = "Shine On Caelar"
 
 [xanbg1friend]
 lastupdate = 2020-08-03
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Pocket-Plane-Group/Xan_BG1_Friendship"
 description = "Xan's Friendship Path for BG1"
 archive = "XanBG1Friend_v10.zip"
@@ -2945,21 +2855,21 @@ archive = "innershade.zip"
 
 [varshoon]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "weaselmods:varshoon"
 description = "Varshoon an Illithid NPC"
 archive = "Varshoon v7.1.zip"
 
 [alcool]
 lastupdate = 2020-04-02
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "https://www.dropbox.com/s/bw66infn2czuelv/MCAlcool.zip?dl=1"
 description = "Alcool"
 archive = "MCAlcool.zip"
 
 [coran]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:Pocket-Plane-Group/Coran_for_BGII"
 description = "Coran NPC for BG2"
 archive = "Coran_v6.zip"
@@ -2971,11 +2881,8 @@ url = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
 description = "DLC Merger"
 archive = "A7-DlcMerger-master.zip"
 
-    [dlcmerger.components.1]
-
-    [dlcmerger.components.2]
-
-    [dlcmerger.components.3]
+    [dlcmerger.components.""]
+    before = ["bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "bgeetextpack", "bgsodde", "darkhorizonsbgee", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "k9sharteelnpc", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white"]
 
 [eet_fix]
 lastupdate = 1970-01-01
@@ -2992,7 +2899,7 @@ archive = "imnesvale.tar.gz"
 
 [hiddengameplayoptions]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:Argent77/A7-HiddenGameplayOptions"
 description = "Reveal Hidden Gameplay Options"
 archive = "A7-HiddenGameplayOptions-master.zip"
@@ -3013,39 +2920,39 @@ archive = "duskblade kit for bg2ee.zip"
 
 [jimfix]
 lastupdate = 2020-09-27
-class = "Tweaks"
+class = "Tweak"
 url = "github:Banananaut/Jimfix"
 description = "Jim's Fixes and Tweaks"
 
 [bg1re]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Gibberlings3/BG1_Romantic_Encounters"
 description = "Baldur's Gate Romantic Encounters"
 
 [orelios]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:PaulaMigrate/Orelios"
 description = "Orelios NPC"
 archive = "OreliosNPC.zip"
 
 [sarevokromance]
 lastupdate = 2019-09-13
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "https://www.dropbox.com/s/pifofoz21t15zph/Sarevok%20Romance%20v1.4.zip?dl=1"
 description = "Sarevok Romance"
 archive = "Sarevok Romance v1.4.zip"
 
 [thepicturestandard]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:MattyGroove/ThePictureStandard"
 description = "The Picture Standard"
 
 [nephele]
 lastupdate = 2020-08-02
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Nephele_NPC"
 description = "Nephele NPC"
 
@@ -3135,7 +3042,7 @@ description = "IWD item pack"
 
 [aura_bg1]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:ArtemiusI/Aura_BG1"
 description = "Aura"
 
@@ -3148,29 +3055,27 @@ archive = "tangledisle.zip"
 
 [petsy]
 lastupdate = 2022-02-05
-class = "NPCs"
+class = "NPC"
 url = "weaselmods:petsy"
 description = "Petsy Chattertone NPC"
 archive = "petsy.zip"
 
 [acbre]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:Gitjas/Ascalons_Breagar"
 description = "Ascalons Breagar"
 
 [k9sharteelnpc]
 lastupdate = 2020-08-24
-class = "SmallNPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/tjyghy37av8gw5a/k9SharteelNPC%20-%201.4.rar?dl=1"
 description = "Sharteel for SoD"
 archive = "k9SharteelNPC - 1.4.rar"
 
-    [k9sharteelnpc.components.0]
-
 [skiecost]
 lastupdate = 2022-06-07
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "weaselmods:skie-the-cost-of-one-girls-soul"
 description = "Skie, the Cost of One Girl's Soul"
 archive = "skiecost.zip"
@@ -3290,14 +3195,14 @@ description = "Item Revisions"
 
 [garrick-tt]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "https://www.dropbox.com/s/bbbbx5bsgseodu5/garrick-tt_v1.26.7z?dl=1"
 description = "Garrick - Tales of a Troubadour"
 archive = "garrick-tt_v1.26.7z"
 
 [skitianpcs]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "github:Skitia/SkitiaNPCs"
 description = "Skitia NPCs"
 
@@ -3310,10 +3215,13 @@ description = "Mercenary (Fighter Kit)"
 archive = "mercenary.tar.gz"
 
     [mercenary.components.1]
-    path = ["NPC", "Kagain", "NPC", "Korgan"]
+    path = ["NPC", "Kagain"]
 
     [mercenary.components.0]
     path = ["Classes", "Fighter"]
+
+    [mercenary.components.2]
+    path = ["NPC", "Korgan"]
 
 [hiddenadventure]
 lastupdate = 2021-07-14
@@ -3329,7 +3237,7 @@ description = "Check the Bodies Candlekeep Memories"
 
 [eet_tweaks]
 lastupdate = 2022-06-21
-class = "Tweaks"
+class = "Tweak"
 url = "github:K4thos/EET_Tweaks"
 description = "EET (Enhanced Edition Trilogy) Tweaks"
 archive = "eet_tweaks.tar.gz"
@@ -3540,7 +3448,7 @@ description = "Restored Rhynn Lanthorn quest"
 
 [anishai]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/Anishai"
 description = "Anishai"
 archive = "Gibberlings3-Anishai-v3-0-gc1368e4.zip"
@@ -3649,11 +3557,11 @@ archive = "Tactics2_for_EE.zip"
     [eetact2.components.200]
     exclusive = ["ar9391.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "tsmaepet.cre"]
 
-    [eetact2.components.232]
-    exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
-
     [eetact2.components.230]
     exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
+
+    [eetact2.components.232]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
 
 [bgeearwe]
 lastupdate = 2020-07-08
@@ -3671,7 +3579,7 @@ archive = "DarkHorizonsBGee213.zip"
 
 [jini]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/cui863b6rgesfe0/JiniRomancev3.0.zip?dl=1"
 description = "Jini Romance"
 archive = "JiniRomancev3.0.zip"
@@ -3691,7 +3599,7 @@ archive = "aurora.tar.gz"
 
 [xanbg1voice]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "http://mods.pocketplane.net/kulyok/XanBG1Voice_v2.zip"
 description = "Xan original soundset"
 archive = "XanBG1Voice_v2.zip"
@@ -3705,7 +3613,7 @@ archive = "totdg.zip"
 
 [coranbgfriend]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Gibberlings3/CoranBGFriend"
 description = "Coran's BG Extended Friendship Talks"
 
@@ -3727,7 +3635,7 @@ archive = "saradas_magic.zip"
 
 [bg1npcmusic]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Gibberlings3/bg1npcmusic"
 description = "BG1 NPC Project Music Pack"
 
@@ -3740,7 +3648,7 @@ archive = "BGeeARv105.rar"
 
 [gahesh]
 lastupdate = 2020-09-25
-class = "NPCs"
+class = "NPC"
 url = "https://downloads.weaselmods.net/download/gahesh/?wpdmdl=131"
 description = "Gahesh (LG half-orc sorcerer)"
 archive = "gahesh.zip"
@@ -3754,12 +3662,10 @@ archive = "msfm.tar.gz"
 
 [white]
 lastupdate = 2021-07-30
-class = "NPCs"
+class = "NPC"
 url = "weaselmods:white-npc"
 description = "White NPC"
 archive = "white.zip"
-
-    [white.components.0]
 
 [ryberg]
 lastupdate = 1970-01-01
@@ -3776,7 +3682,7 @@ archive = "Manual"
 
 [chattyimoen]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:AstroBryGuy/ChattyImoen"
 description = "Chatty Imoen"
 
@@ -3788,7 +3694,7 @@ description = "Endless BG1"
 
 [angelo]
 lastupdate = 2021-09-28
-class = "NPCs"
+class = "NPC"
 url = "github:Gibberlings3/Angelo"
 description = "Angelo NPC"
 
@@ -3801,28 +3707,28 @@ archive = "itemupgrade.tar.gz"
 
 [neerabanters]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "http://lynxlynx.info/ie/modhub.php?AstroBryGuy/NeeraBanters"
 description = "Neera Banters for BG:EE"
 archive = "AstroBryGuy-NeeraBanters-v0.9.1-0-g7124366.zip"
 
 [xulaye_eet]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/XulayeEet"
 description = "Xulaye"
 archive = "xulaye_eet.tar.gz"
 
 [k9roughworld]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/mpkyir50rm1nyzd/k9RoughWorld%201.4.rar?dl=1"
 description = "Rough World"
 archive = "k9roughworld.zip"
 
 [iylos_eet]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/IylosEET"
 description = "Iylos"
 
@@ -3850,14 +3756,14 @@ archive = "A7-ImprovedArcher-master.zip"
 
 [a7-golemconstruction]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 url = "github:Argent77/A7-GolemConstruction"
 description = "Golem Construction for Spellcasters"
 archive = "a7-golemconstruction.tar.gz"
 
 [d5_random_tweaks]
 lastupdate = 2022-06-21
-class = "Tweaks"
+class = "Tweak"
 url = "github:subtledoctor/d5_Random_Tweaks"
 description = "SD's Random Tweaks"
 archive = "d5_random_tweaks.tar.gz"
@@ -4113,39 +4019,39 @@ archive = "BGeeWmart3.7z"
 
 [ub]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 url = "github:AngelGryph/UnfinishedBusiness"
 description = "BG2 Unfinished Business"
 archive = "ub.tar.gz"
 
 [gavin]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:Gibberlings3/Gavin_BG"
 description = "Gavin NPC"
 
 [bggoeet]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:BigWorldProject/BGGOEET"
 description = "Baldur's Gate Graphics Overhaul for EET and BGT"
 
 [recoloredbuttons]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:Argent77/A7-recoloredbuttons"
 description = "Recolored Toolbar Buttons"
 archive = "A7-recoloredbuttons-master.zip"
 
 [ehlastra]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/Ehlastra"
 description = "Ehlastra"
 
 [finchnpc]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/Finch"
 description = "Finch NPC"
 archive = "finchnpc.tar.gz"
@@ -4159,7 +4065,7 @@ archive = "militiaofficer.tar.gz"
 
 [kido]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/KidoEE"
 description = "Kido NPC"
 
@@ -4179,7 +4085,7 @@ archive = "EENinja.zip"
 
 [randomiser]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "github:FredrikLindgren/randomiser"
 description = "Item Randomiser"
 
@@ -4192,53 +4098,52 @@ archive = "slandor.1.6.zip"
 
 [bgeeclassicmovies]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:Sampsca/BGEE-Classic-Movies"
 description = "BG:EE Classic Movies"
 
 [haerdalisromance]
 lastupdate = 2022-06-23
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:MattyGroove/haerdalisromance"
 description = "Haer'Dalis Romance"
 archive = "haerdalisromance.tar.gz"
 
 [a7-npcgenerator]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Argent77/A7-NPCGenerator"
 description = "NPC Generator (New)"
 
 [bg1npc]
 lastupdate = 2022-06-21
-class = "NPCTweaks"
-url = "https://github.com/Gibberlings3/BG1NPC/releases/download/v29/the-bg1npc-project-v29.zip"
+class = "NPC-Related"
+url = "github:Gibberlings3/BG1NPC"
 description = "BG1 NPC Project"
-archive = "the-bg1npc-project-v29.zip"
 
 [kimpirate]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/Kim_Pirate"
 description = "Kim the Pirate"
 archive = "kimpirate.tar.gz"
 
 [eet_swo]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:RoxanneSHS/Tamoko"
 description = "The Sword of Chaos (Tamoko)"
 
 [wsr]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/pt2gpnqi8dmp4ux/wsr_v114.zip?dl=1"
 description = "Wizard Slayer Rebalancing"
 archive = "wsr_v114.zip"
 
 [metweaks]
 lastupdate = 2022-06-22
-class = "Tweaks"
+class = "Tweak"
 url = "github:OlvynChuru/METweaks"
 description = "Olvyn Tweaks"
 archive = "metweaks.tar.gz"
@@ -4338,13 +4243,13 @@ archive = "metweaks.tar.gz"
 
 [artaport]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:Eltamin/artaport"
 description = "Artaport"
 
 [haerdalis_friendship]
 lastupdate = 2019-12-15
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/HaerdalisFriendship"
 description = "Haer'dalis Friendship"
 
@@ -4389,13 +4294,13 @@ description = "Song and Silence"
 
 [imoenfriendship]
 lastupdate = 2020-09-02
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/ImoenFriendship"
 description = "Imoen Friendship"
 
 [yvette]
 lastupdate = 2021-11-12
-class = "NPCs"
+class = "NPC"
 url = "weaselmods:yvette-romance"
 description = "Yvette Romance"
 archive = "yvette.zip"
@@ -4409,7 +4314,7 @@ archive = "weasels!.zip"
 
 ["c#brage"]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:Gitjas/Brages_Redemption"
 description = "Brage's Redemption"
 
@@ -4422,7 +4327,7 @@ archive = "Lucy4.1.zip"
 
 [ninde_eet]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/NindeEET"
 description = "Ninde"
 
@@ -4434,21 +4339,21 @@ description = "Darron"
 
 [bp-bgt_worldmap_russian_addon]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "https://www.dropbox.com/s/pdluvpg37olb2sg/worldmapRU.zip?dl=1"
 description = "Worldmap Russian background"
 archive = "worldmapRU.zip"
 
 [ppe]
 lastupdate = 2022-06-23
-class = "GUI"
+class = "UI"
 url = "github:DaftHunk/Portraits-Portraits-Everywhere"
 description = "Portraits Portraits Everywhere"
 archive = "ppe.tar.gz"
 
 [druidgrovemakeover]
 lastupdate = 2022-06-23
-class = "GUI"
+class = "UI"
 url = "github:thisisulb/DruidGroveMakeover"
 description = "Druid Grove Makeover"
 archive = "druidgrovemakeover.tar.gz"
@@ -4480,7 +4385,7 @@ archive = "ArcaneTreasury.zip"
 
 [tnt]
 lastupdate = 2022-03-27
-class = "Tweaks"
+class = "Tweak"
 readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
 url = "github:BGforgeNet/bg2-tweaks-and-tricks"
 description = "Tweaks and Tricks"
@@ -4675,27 +4580,27 @@ description = "Animus: Sentient Weapon"
 
 [eternalimoen]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/4rnre1nw386f47s/EternalImoen_v6.3.zip?dl=1"
 description = "Eternal Imoen"
 archive = "EternalImoen_v6.3.zip"
 
 [leui]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:r-e-d/LeUI"
 description = "lefreut's enhanced UI (requires game version 2.6)"
 
 [hephernaanbg2]
 lastupdate = 2022-01-30
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "weaselmods:hephernaan-bg2"
 description = "Hephernaan NPC"
 archive = "hephernaanbg2.zip"
 
 [rr]
 lastupdate = 2021-07-20
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 description = "Rogue Rebalancing"
 archive = "rr-493.zip"
@@ -4764,19 +4669,19 @@ description = "Anniversary"
 
 [chloe]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/ChloeEET"
 description = "Chloe NPC"
 
 [hubelpot]
 lastupdate = 2021-02-21
-class = "SmallNPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Hubelpot_the_Vegetable_Merchant_NPC"
 description = "Hubelpot the Vegetable Merchant NPC"
 
 [nosodsound]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:thisisulb/NoSoDSound"
 description = "BG1 Sounds in SoD"
 
@@ -4810,14 +4715,14 @@ archive = "spstuff-v11.zip"
 
 [isandir]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "https://www.dropbox.com/s/dqw52l3jl7nqvls/ISANDIRS_PORTRAIT_PACK.7z?dl=1"
 description = "Isandir's Portrait Pack"
 archive = "ISANDIRS_PORTRAIT_PACK.7z"
 
 [corwineet]
 lastupdate = 2022-06-23
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:RoxanneSHS/Corwin"
 description = "Corwin NPC for BG1"
 archive = "corwineet.tar.gz"
@@ -4907,7 +4812,7 @@ archive = "Win-QuestPack-v34.zip"
 
 [d0tweak]
 lastupdate = 2019-06-19
-class = "Tweaks"
+class = "Tweak"
 url = "github:Pocket-Plane-Group/D0Tweak"
 description = "Ding0 Tweak Pack"
 
@@ -4936,7 +4841,7 @@ archive = "eetgbthfkp.tar.gz"
 
 [djinnicompanion]
 lastupdate = 2021-06-05
-class = "NPCs"
+class = "NPC"
 url = "github:Argent77/DjinniCompanion"
 description = "Afaaq, the Djinni Companion"
 archive = "DjinniCompanion-master.zip"
@@ -4957,7 +4862,7 @@ archive = "sotsc.zip"
 
 [tipun_gui]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:tipun81/tipun_gui_mod"
 description = "Tipun's User Interface (New)"
 
@@ -4977,14 +4882,14 @@ archive = "iwd1_eet_alpha.zip"
 
 [viconiarevamped]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "weaselmods:viconia-revamped"
 description = "Viconia Revamped"
 archive = "ViconiaRevamped v7.0.zip"
 
 [yasraena]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/YasraenaEET"
 description = "Yasraena NPC"
 archive = "yasraena.tar.gz"
@@ -5002,7 +4907,7 @@ archive = "eet.zip"
 
 [xan]
 lastupdate = 2020-08-04
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Pocket-Plane-Group/Xan_for_BGII"
 description = "Xan NPC"
 
@@ -5033,7 +4938,7 @@ description = "Road to Discovery"
 
 [simenpc]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/Sime"
 description = "Sime"
 archive = "simenpc.tar.gz"
@@ -5047,7 +4952,7 @@ archive = "SandrahToT-master.zip"
 
 [bristlelick]
 lastupdate = 2021-12-15
-class = "NPCs"
+class = "NPC"
 url = "https://downloads.weaselmods.net/download/bristlelick/?wpdmdl=406"
 description = "Bristlelick (gnoll NPC)"
 archive = "bristlelick.zip"
@@ -5090,7 +4995,7 @@ description = "Trials of the Luremaster"
 
 [npc_strongholds]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.gibberlings3.net/files/file/959-npc-strongholds/"
 description = "NPC Strongholds"
 archive = "NPCStrongholds_V14.zip"
@@ -5111,44 +5016,42 @@ archive = "BG2EEWv101.rar"
 
 [saerileth]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:PaulaMigrate/Saerileth"
 description = "Saerileth NPC"
 archive = "saerileth.tar.gz"
 
 [housetweaks]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "github:ArtemiusI/House-Rule-Tweaks"
 description = "House Rule Tweaks"
 archive = "housetweaks.tar.gz"
 
 [drake]
 lastupdate = 2019-07-09
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/oj3fj1fpar1imzw/Drake-master.zip?dl=1"
 description = "Drake NPC"
 archive = "Drake-master.zip"
 
-    [drake.components.0]
-
 [longerroadee]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/LongerRoadEE"
 description = "Longer Road EET"
 archive = "longerroadee.tar.gz"
 
 [glamnpcpack]
 lastupdate = 2021-08-26
-class = "NPCs"
+class = "NPC"
 url = "https://www.dropbox.com/s/tauiizag44zz2vz/GlamNPCPack-v3.1.zip?dl=1"
 description = "Glam's NPC Pack"
 archive = "GlamNPCPack-v3.1.zip"
 
 [xpmod]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "github:Pocket-Plane-Group/D0XPmod"
 description = "Ding0's Experience Fixer"
 archive = "DEFJAM_v7.zip"
@@ -5175,7 +5078,7 @@ description = "Rolles Safyer"
 
 [zzzz]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "manual"
 description = "ZZZZ"
 archive = "manual"
@@ -5188,19 +5091,19 @@ description = "Heart of the Wood"
 
 [korganfriendship]
 lastupdate = 2020-05-31
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/KorganFriendship"
 description = "Korgan Friendship"
 
 [beyond_the_law]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Beyond_the_Law"
 description = "Beyond the Law"
 
 [klatu]
 lastupdate = 2016-10-07
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/7755znu08x690sa/klatu_Tweaks_and_Fixes_1.7.7z?dl=1"
 description = "klatu Tweaks and Fixes"
 archive = "klatu_Tweaks_and_Fixes_1.7.7z"
@@ -5270,14 +5173,14 @@ archive = "klatu_Tweaks_and_Fixes_1.7.7z"
 
 [tsujatha]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/Tsujatha"
 description = "Tsujatha NPC"
 archive = "tsujatha.tar.gz"
 
 [ntotsc]
 lastupdate = 2022-06-21
-class = "SmallNPCs"
+class = "NPC"
 url = "github:SpellholdStudios/NTotSC"
 description = "Northern Tales of the Sword Coast"
 
@@ -5296,7 +5199,7 @@ description = "Check the Bodies Of Elves and Artefacts"
 
 [keto]
 lastupdate = 2020-08-03
-class = "NPCs"
+class = "NPC"
 url = "github:Pocket-Plane-Group/Keto"
 description = "Keto NPC (SoA)"
 archive = "Keto-SOAv5.zip"
@@ -5359,20 +5262,20 @@ description = "Check the Bodies Holly the Elf"
 
 [wings]
 lastupdate = 2020-05-17
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "https://www.dropbox.com/s/4dqo1xl6bhhrq8j/Wings_EET.zip?dl=1"
 description = "Wings: Aerie expansion"
 archive = "Wings_EET.zip"
 
 [paina]
 lastupdate = 1970-01-01
-class = "SmallNPCs"
+class = "NPC"
 url = "github:ArtemiusI/Pai-Na-NPC-mod-for-BG2-EE"
 description = "Pai Na"
 
 [divine_remix]
 lastupdate = 2022-06-22
-class = "Tweaks"
+class = "Tweak"
 url = "github:Gibberlings3/Divine_Remix"
 description = "Divine Remix"
 archive = "divine_remix.tar.gz"
@@ -5479,7 +5382,7 @@ archive = "divine_remix.tar.gz"
 
 [iispellsystemadjustments]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/pbl4vy4j2lw8nk0/iispellsystemadjustmentsv7.1.zip?dl=1"
 description = "igi's Spell System Adjustments"
 archive = "iispellsystemadjustmentsv7.1.zip"
@@ -5498,7 +5401,7 @@ archive = "deitiesoffaerun.tar.gz"
 
 [lim_rest]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/xhox98i4vl9sklm/LimitedResting.zip?dl=1"
 description = "Limited Resting (New)"
 archive = "LimitedResting.zip"
@@ -5510,20 +5413,16 @@ url = "http://www.users.totalise.co.uk/~bluerift/tsoaV2_2.zip"
 description = "The Stone of Askavar"
 archive = "tsoaV2_2.zip"
 
-    [soa.components.1]
-
-    [soa.components.0]
-
 [faldornbg2]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "https://downloads.weaselmods.net/download/faldorn-bg2ee/?wpdmdl=480"
 description = "Faldorn BG2"
 archive = "faldornbg2.zip"
 
 [ajantisportraitpack]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "https://www.baldurs-gate.de/index.php?resources/jasteys-ajantis-portrait-pack.10/download&version=11"
 description = "Ajantis Portrait Pack"
 archive = "AjantisPortraitPack_v4.zip"
@@ -5557,7 +5456,7 @@ description = "Gorion's Dream Restored"
 
 [a7-convenienteenpcs]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Argent77/A7-NoEENPCs"
 description = "Convenient EE NPCs"
 archive = "a7-convenienteenpcs.zip"
@@ -5570,33 +5469,33 @@ description = "Unique Artifacts (New)"
 
 [luxleysoa]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/The_Luxley_Family"
 description = "Luxley Family"
 
 [quayle]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "weaselmods:quayle-bg2"
 description = "Quayle ReDone"
 archive = "Quayle BG2 v6.2.zip"
 
 [tiax]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:Pocket-Plane-Group/Tiax_for_BGII"
 description = "Tiax NPC"
 archive = "Tiax_v5.zip"
 
 [aurenaseph]
 lastupdate = 2021-09-28
-class = "NPCs"
+class = "NPC"
 url = "github:Gibberlings3/AurenAseph"
 description = "Auren Aseph NPC"
 
 [tomeandblood]
 lastupdate = 2022-06-22
-class = "Tweaks"
+class = "Tweak"
 url = "github:subtledoctor/TomeAndBlood"
 description = "Tome and Blood"
 archive = "tomeandblood.tar.gz"
@@ -5713,14 +5612,14 @@ archive = "tomeandblood.tar.gz"
 
 [foundling]
 lastupdate = 2022-01-06
-class = "NPCs"
+class = "NPC"
 url = "weaselmods:foundling-between-the-shades"
 description = "Foundling: Between the Shades"
 archive = "foundling.zip"
 
 [helga]
 lastupdate = 2022-06-23
-class = "SmallNPCs"
+class = "NPC"
 url = "github:Skitia/Helga-BG1"
 description = "Helga"
 archive = "helga.tar.gz"
@@ -5740,7 +5639,7 @@ description = "SoD Translation RU"
 
 [wildmage]
 lastupdate = 2021-10-07
-class = "Tweaks"
+class = "Tweak"
 readme = "https://github.com/BGforgeNet/bg2-wildmage"
 url = "github:BGforgeNet/bg2-wildmage"
 description = "Wild Mage Additions"
@@ -5772,21 +5671,21 @@ description = "Check the Bodies Velvetfoot"
 
 [lightingpack]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:Argent77/A7-LightingPackEE"
 description = "Lighting Pack: Shader Scripts"
 archive = "A7-LightingPackEE-master.zip"
 
 [com_encounters]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=53"
 description = "CoM Encounters"
 archive = "EncountersV110.zip"
 
 [garrick_flirt]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Gibberlings3/Garricks_Infatuation"
 description = "Garrick's Infatuation"
 
@@ -5813,21 +5712,21 @@ archive = "travellers.tar.gz"
 
 [a7-banteraccelerator]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "github:Argent77/A7-BanterAccelerator"
 description = "Banter Accelerator for Enhanced Edition games"
 archive = "A7-BanterAccelerator-master.zip"
 
 [recorder]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:Skitia/Recorder-BG1"
 description = "Recorder"
 archive = "recorder.tar.gz"
 
 [banterpack]
 lastupdate = 2021-09-17
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Pocket-Plane-Group/Banter_Pack"
 description = "Banter Packs"
 archive = "BanterPacksV16.zip"
@@ -5841,13 +5740,13 @@ archive = "SandrahRtF-master.zip"
 
 [aranw]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:cmorganbg/Aran-Whitehand"
 description = "Aran Whitehand NPC"
 
 [epicthieving]
 lastupdate = 2022-06-21
-class = "Tweaks"
+class = "Tweak"
 readme = "https://forums.beamdog.com/discussion/74158/v3-5-epic-thieving-more-benefits-from-high-thieving-skills"
 url = "github:OlvynChuru/Epic-Thieving"
 description = "Epic Thieving"
@@ -5882,20 +5781,20 @@ description = "TDDz (EE-compatible installer for The Darkest Day)"
 
 [eet_gui]
 lastupdate = 2021-09-13
-class = "GUI"
+class = "UI"
 url = "Manual"
 description = "EET Alternative GUI (SoD)"
 archive = "Manual"
 
 [re]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Gibberlings3/Romantic_Encounters_BG2"
 description = "Romantic Encounters"
 
 [bg_travel]
 lastupdate = 2016-01-24
-class = "Tweaks"
+class = "Tweak"
 url = "http://athkatla.cob-bg.pl/download.php?id=1595"
 description = "BG Travel"
 archive = "BG_Travel for BG1&BGEE&BGT&Tutu&EET v2,1.rar"
@@ -5927,20 +5826,20 @@ description = "Storm Caller Shaman Kit"
 
 [npc_tweak]
 lastupdate = 2016-09-17
-class = "Tweaks"
+class = "Tweak"
 url = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/NPCTweak&pre"
 description = "NPC Tweak"
 archive = "Gibberlings3-NPCTweak-v7-0-gc77817b.zip"
 
 [leui-sod]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:r-e-d/LeUI-SoD"
 description = "lefreut's enhanced UI SoD Skin (requires game version 2.6)"
 
 [portraitcolors]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "github:anongit/portraitcolors"
 description = "Custom Portraitcolours (New)"
 
@@ -5953,28 +5852,28 @@ archive = "emad_v11.zip"
 
 [walahnan]
 lastupdate = 2021-10-10
-class = "NPCs"
+class = "NPC"
 url = "https://downloads.weaselmods.net/download/walahnan-bg1ee/?wpdmdl=428"
 description = "Walahnan (gnome chronomancer)"
 archive = "walahnan.zip"
 
 [janquest]
 lastupdate = 2019-08-18
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "https://www.dropbox.com/s/u35zhecotxb42qx/JansQuest1.5.0.zip?dl=1"
 description = "Jan's Extended Quest"
 archive = "JansQuest1.5.0.zip"
 
 [difftweak]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "https://www.dropbox.com/s/an1hcwvfhzexm9u/Diff_Tweak.zip?dl=1"
 description = "Difficulty and Tweak mod"
 archive = "Diff_Tweak.zip"
 
 [fnp_multiclass]
 lastupdate = 2022-06-21
-class = "Tweaks"
+class = "Tweak"
 url = "manual"
 description = "Faith and Powers Multiclass Clerics"
 archive = "manual"
@@ -5999,7 +5898,7 @@ archive = "azengaard.tar.gz"
 
 [kiara-zaiya]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:SpellholdStudios/Kiara_Zaiya"
 description = "Kiara Zaiya NPCs"
 
@@ -6026,7 +5925,7 @@ archive = "bonehilleet.tar.gz"
 
 [iepbanters]
 lastupdate = 2021-07-18
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/IEP_Extended_Banter"
 description = "IEP Extended Banters"
 
@@ -6038,14 +5937,14 @@ description = "Check the Bodies Drow Library"
 
 [sandrahport]
 lastupdate = 1970-01-01
-class = "GUI"
+class = "UI"
 url = "https://www.dropbox.com/s/lhfhi7q44gnxmj4/SandrahPortrait.zip?dl=1"
 description = "Sandrah Alternative Portraits or Class"
 archive = "SandrahPortrait.zip"
 
 [kivan]
 lastupdate = 2022-06-23
-class = "GUI"
+class = "NPC-Related"
 url = "github:Gibberlings3/Kivan_and_Deheriana"
 description = "Kivan and Deheriana Companions (Bugged)"
 
@@ -6058,7 +5957,7 @@ archive = "bridgesblock.zip"
 
 [crossmodbg2]
 lastupdate = 2022-06-23
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Gibberlings3/Crossmod_Banter_Pack_for_Baldurs_Gate_II"
 description = "Crossmod Banter Pack"
 
@@ -6070,7 +5969,7 @@ description = "The Darkest Day"
 
 [bgeespawn]
 lastupdate = 1970-01-01
-class = "Tweaks"
+class = "Tweak"
 url = "github:AstroBryGuy/BGEESpawn"
 description = "BGEE Leveled Spawns"
 
@@ -6082,13 +5981,13 @@ description = "Assassinations"
 
 ["c#solaufein"]
 lastupdate = 2022-04-02
-class = "NPCs"
+class = "NPC"
 url = "github:Gitjas/Solaufeins_Rescue_NPC"
 description = "Solaufein's Rescue"
 
 [sarahtob]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:Gibberlings3/Sarah"
 description = "Sarah NPC"
 
@@ -6101,7 +6000,7 @@ archive = "BGeeWv105.rar"
 
 [cdlore]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 url = "github:Gibberlings3/Lore_From_Learning"
 description = "Lore From Learning"
 
@@ -6146,7 +6045,7 @@ archive = "BG2EE_GermanAP_Beta2.rar"
 
 [mazzy]
 lastupdate = 2020-02-15
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/MazzyFriendship"
 description = "Mazzy Friendship"
 
@@ -6186,7 +6085,7 @@ archive = "Fadingpromises-master.zip"
 
 [sheena]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:RoxanneSHS/SheenaHD"
 description = "Sheena, a Half Dragon"
 
@@ -6219,13 +6118,13 @@ archive = "Ulrien-SagaMaster.zip"
 
 [yeslicknpc]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/Yeslick_NPC"
 description = "Yeslick for SoA/ToB"
 
 [neera]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:SpellholdStudios/Neera_Expansion"
 description = "Neera Expansion for BG:EE"
 
@@ -6238,21 +6137,21 @@ archive = "Bank_of_Baldurs_Gate_v0.2.zip"
 
 [vienxay]
 lastupdate = 2022-06-23
-class = "NPCs"
+class = "NPC"
 url = "github:Skitia/Vienxay-BG1"
 description = "Vienxay"
 archive = "vienxay.tar.gz"
 
 [thevanishingofskiesilvershield]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "https://downloads.weaselmods.net/download/the-vanishing-of-skie-silvershield/?wpdmdl=402"
 description = "The vanishing of Skie Silvershield"
 archive = "thevanishingofskiesilvershield.zip"
 
 [raduzielsuniversalspells]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 url = "github:Raduziel/Raduziels-Universal-Wizard-Spells"
 description = "Universal Wizard Spells"
 archive = "raduzielsuniversalspells.tar.gz"
@@ -6265,47 +6164,47 @@ description = "Souls-inspired Weapon Pack"
 
 [gavin_bg2]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:Gibberlings3/Gavin_BG2"
 description = "Gavin NPC for BG2:ToB"
 
 [nathaniel]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "http://dl.spellholdstudios.net/nathaniel"
 description = "Nathaniel NPC"
 archive = "nathaniel_v5.zip"
 
 [corthalaromantique]
 lastupdate = 1970-01-01
-class = "NPCTweaks"
+class = "NPC-Related"
 url = "github:Gibberlings3/Corthala_Romantique"
 description = "Corthala Romantique"
 
 [sodbanter]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 url = "github:RoxanneSHS/SoDBanterEET"
 description = "SoD Banter Restoration"
 archive = "sodbanter.tar.gz"
 
 [evandra]
 lastupdate = 1970-01-01
-class = "NPCs"
+class = "NPC"
 url = "github:MattyGroove/Evandra"
 description = "Evandra"
 archive = "evandra-v2.2.zip"
 
 [bg1aerie]
 lastupdate = 2020-08-19
-class = "Items"
+class = "NPC"
 url = "https://www.dropbox.com/s/7obd7oopktkl5jv/BG1AerieV12.zip?dl=1"
 description = "Aerie in BG:EE"
 archive = "BG1AerieV12.zip"
 
 [m7tweaks]
 lastupdate = 2022-06-23
-class = "Tweaks"
+class = "Tweak"
 url = "github:flamewing/m7tweaks"
 description = "Flamewing's Tweaks"
 archive = "m7tweaks.tar.gz"

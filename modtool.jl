@@ -10,9 +10,9 @@ ModTool.update_selection()
 ModTool.install(all)
 """
 module ModTool
-# Generic installation order
+# TODO:««
+# - Generic installation order
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
-# FIXME: readme metweaks
 # + fix updating selection file
 # + allow # on right side of =
 # + mod subcomponents
@@ -22,6 +22,9 @@ module ModTool
 # - add a new database for computed properties (readme/release/etc.)
 # - use ProjectInfinity's *.ini files if available
 #  - needs extracting mods before (re)computing install order
+#  - including readme if needed (still prefer local readme)
+# + pass install-order to help install(first)
+# + install(n), installs a pack of mods
 # - use WeiDU's --list-* options
 #  + list-languages
 #  + list-components
@@ -46,7 +49,8 @@ module ModTool
 #  - review sorting: (install-order × weidu-order))
 # - separate mod db generation
 #  - write a `init()` function
-# - don't write empty components in moddb
+# + don't write empty components in moddb
+#»»
 using Printf
 using Dates
 using TOML
@@ -54,8 +58,6 @@ using JSON
 using DataStructures
 using HTTP
 using LibGit2
-# using REPL.TerminalMenus # whiptail is better
-# TODO: write a tree-menu
 
 const HOME=ENV["HOME"]
 const PREF_LANG=(r"fran.*ais"i, r"french"i, r"english"i, r"american"i)
@@ -72,13 +74,6 @@ const GAMEDIR =
 	(bg1="$HOME/jeux/ciopfs/bg1/game", bg2="$HOME/jeux/ciopfs/bg2/game")
 const GAME_LIST = keys(GAMEDIR)
 	
-const BWS_ROOT="$HOME/jeux/ciopfs/EE-Mod-Setup-Master"
-const BWS_MODDB="$BWS_ROOT/App/Config/BG2EE/Mod.ini"
-# const BWS_BG1IO="$BWS_ROOT/App/Config/BG1EE/InstallOrder.ini"
-const BWS_BG2IO="$BWS_ROOT/App/Config/BG2EE/InstallOrder.ini"
-const BWS_MODDB="$BWS_ROOT/App/Config/BG2EE/Mod.ini"
-const BWS_SELECT="$BWS_ROOT/App/Config/User.ini"
-
 function __init__()# setup global variables and filesystem ««
 	global global_moddb = read_moddb(MODDB)
 	printlog("read $(length(global_moddb)) mods in global database")
@@ -91,6 +86,7 @@ end#»»
 @inline printsim(s...) = println("\e[35;1m", s..., "\e[m")
 @inline printerr(s...) = println("\e[31;1m", s..., "\e[m")
 @inline printwarn(s...) = println("\e[33;1m", s..., "\e[m")
+@inline printask(s...) = println("\e[36;1m", s..., "\e[m")
 
 # Data structures ««1
 
@@ -145,8 +141,6 @@ end#»»
 # (this is somewhat different from EE Mod Setup's ordering)
 const MOD_CLASSES = split(replace("""
 	DlcMerger
-	PreEET
-	EET
 	Initial
 	Early
 	Fixes
@@ -180,9 +174,52 @@ const EET_class = modclass("EET")
 	m.id ∈ global_moddb["eet"].components[1].after ? :bg1 : :bg2
 @inline modcomponents(m::Mod) = (m.components)
 
+# Mod DB handling ««1
+@inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
+function read_moddb(io::IO)#««
+	dict = TOML.parse(io); return Dict(lowercase(id) =>
+		Mod(id=lowercase(id),
+			url=d["url"],
+			description=d["description"],
+			class=d["class"],
+			archive=get(d, "archive", ""),
+			lastupdate=get(d, "lastupdate", "1970"),
+			readme=get(d, "readme", ""),
+			components=get(d, "components", Dict()),
+		) for (id, d) in dict)
+end#»»
+function write_moddb(io::IO; moddb=global_moddb)#««
+	TOML.print(io, moddb) do m
+		d = Dict("url" => m.url, "lastupdate" => m.lastupdate,
+		"description" => m.description, "class" => m.class)
+		isempty(m.archive) || (d["archive"] = m.archive)
+		startswith(m.readme, "https://") && (d["readme"] = m.readme)
+		if !isempty(m.components)
+			d1 = Dict(c.id => db_prop(c) for c in m.components)
+			any(!isempty, values(d1)) && (d["components"] = d1)
+		end
+		d
+	end
+end#»»
+@inline write_moddb(filename::AbstractString = MODDB; kwargs...) =
+	open(filename, "w") do io write_moddb(io; kwargs...); end
+@inline read_moddb(filename::AbstractString = MODDB; kwargs...) =
+	open(filename, "r") do io read_moddb(io; kwargs...); end
+
+@inline function findmod(id::Union{Symbol,String}; moddb = global_moddb)
+	k = get(moddb, lowercase(string(id)), nothing)
+	isnothing(k) || return k
+	error("mod '$id' not found")
+end
+@inline findmod(pattern::Regex; moddb = global_moddb) =
+	[ id for id in keys(moddb) if occursin(pattern, id) ]
+@inline function findcomponent(mod, k)
+	k = lowercase(string(k)); for c in mod.components; c.id == k && return c; end
+# 	error("mod '$(mod.id)': component '$k' not found")
+end
+
 "Returns the dependency matrix for these mods, encoded as
 (arrowsfrom = dict(mod1 => mod2, ...), arrowsto = dict(mod1 => n1, ...))
-(only the *number* of incoming arrows is needed for topological sorting)"
 function dependencies(list ;moddb=global_moddb)#««
 	arrowsfrom = Dict{String,Set{String}}(); arrowsto = copy(arrowsfrom)
 	function connect((b, a),)
@@ -205,13 +242,13 @@ function comp_isless((id1, k1), (id2, k2), order)#««
 	id1 == id2 && return isless(parse(Int, k1), parse(Int, k2))
 	return isless(findfirst(==(id1), order), findfirst(==(id2), order))
 end#»»
-function sortkey1(id, moddb, dep)
+function sortkey1(id, moddb, dep)#««
 	# returns (class(id), max class(before id), date(id))
 	c0 = modclass(moddb[id].class)
 	prev = get(dep.arrowsto, id, [])
 	c1 = maximum(modclass(moddb[x].class) for x in prev; init = -1)
 	(c0, c1, moddb[id].lastupdate)
-end
+end#»»
 @inline sortkey1(moddb, dep) = id -> sortkey1(id, moddb, dep)
 "Returns a list of mod IDs in install order, given all dependencies"
 function installorder(list; moddb=global_moddb)#««
@@ -251,55 +288,10 @@ function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
 		end
 	end
 	for (x, v) in owners; length(v) ≤ 1 && continue
-		println("tag \"$x\" is owned by the following components:")
+		printwarn("tag \"$x\" is owned by the following components:")
 		for (id, c) in v; println("  ", id, ":", c); end
 	end
 end#»»
-
-# Mod DB handling ««1
-@inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
-function read_moddb(io::IO)#««
-	dict = TOML.parse(io); return Dict(lowercase(id) =>
-		Mod(id=lowercase(id),
-			url=d["url"],
-			description=d["description"],
-			class=d["class"],
-			archive=get(d, "archive", ""),
-			lastupdate=get(d, "lastupdate", "1970"),
-			readme=get(d, "readme", ""),
-			components=get(d, "components", Dict()),
-		) for (id, d) in dict)
-end#»»
-function write_moddb(io::IO; moddb=global_moddb)#««
-	TOML.print(io, moddb) do m
-		d = Dict("url" => m.url, "lastupdate" => m.lastupdate,
-		"description" => m.description, "class" => m.class)
-		isempty(m.archive) || (d["archive"] = m.archive)
-		startswith(m.readme, "https://") && (d["readme"] = m.readme)
-		if !isempty(m.components)
-			d1 = Dict(c.id => db_prop(c) for c in m.components)
-			any(!isempty, values(d1)) && (d["components"] = d1)
-		end
-		d
-	end
-end#»»
-@inline write_moddb(filename::AbstractString = MODDB; kwargs...) =
-	open(filename, "w") do io write_moddb(io; kwargs...); end
-@inline read_moddb(filename::AbstractString = MODDB; kwargs...) =
-	open(filename, "r") do io read_moddb(io; kwargs...); end
-
-@inline function findmod(id::Union{Symbol,String}; moddb = global_moddb)
-	k = get(moddb, lowercase(string(id)), nothing)
-	isnothing(k) || return k
-# 	for mod in moddb; mod.id == lowercase(string(id)) && return mod; end
-	error("mod '$id' not found")
-end
-@inline findmod(pattern::Regex; moddb = global_moddb) =
-	[ id for id in keys(moddb) if occursin(pattern, id) ]
-@inline function findcomponent(mod, k)
-	k = lowercase(string(k)); for c in mod.components; c.id == k && return c; end
-# 	error("mod '$(mod.id)': component '$k' not found")
-end
 
 
 # Pre-TP2 functions: download, extract, status ««1
@@ -357,7 +349,7 @@ function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 			req = HTTP.get(url; status_exception = false)
 			req.status == 200 &&
 				(open(archive, "w") do io; write(io, req.body); end; break)
-			println("Failed to download $url\n(o)ther address, (a)bort, local (f)ile")
+			printask("Failed to download $url\n(o)ther address, (a)bort, local (f)ile")
 			action = readline()
 			if action[1] == 'o' || startswith(action, r"https?://")
 				changed = true
@@ -498,7 +490,7 @@ function extract(m)#««
 		for k in keys(prop); isempty(k) && continue
 			found = false
 			for c in m.components; c.id == k && (found=true; break); end
-			found || println("\e[31;1m '$(m.id):$k' not found\e[m")
+			found || printwarn("\e[31;1m '$(m.id):$k' not found\e[m")
 		end
 	end#»»
 	if isempty(m.readme) # no hardcoded readme provided««
@@ -625,19 +617,6 @@ function weidu_status(dirs...)#««
 	end
 	status
 end#»»
-function modstatus(tp2file, dir)#««
-	weidu_log = joinpath(dir, "weidu.log")
-	status = String[]
-	ispath(weidu_log) || return status
-	for line in eachline(weidu_log)
-		line = replace(line, r"\s*//.*" => "")
-		isempty(line) && continue
-		(tp2, lang, comp, rest...) = split(line, ' ')
-		tp2 = lowercase(tp2[2:prevind(tp2, length(tp2))])
-		tp2 == tp2dir && push!(status, comp[2:end])
-	end
-	return status
-end#»»
 function printcomp(io::IO, m, c::ModComponent; selection, installed)#««
 	@printf(io, "%c%c%c `%s:%s` %s\n",
 		c.id ∈ get(selection, m.id, []) ? 's' : '.',
@@ -755,14 +734,14 @@ function components!(;selection=global_selection,moddb=global_moddb)#««
 end#»»
 
 # Mod installation ««1
-function install(mod; simulate=false, uninstall=false, #««««
-		selection=global_selection, gamedirs=GAMEDIR)
+function install(mod; simulate=false, uninstall=false, ««
+		selection=global_selection, gamedirs=GAMEDIR,
+		order = installorder(keys(selection)))
 	extract(mod) || return
 	id = mod.id
 
 	gamedir = gamedirs[modgame(mod)]
 	current = get(weidu_status(gamedir), mod.id, String[])
-	order = installorder(keys(selection))
 	installed = weidu_status(gamedirs...)
 	warned = false
 	for k in order; k == id && break
@@ -772,7 +751,7 @@ function install(mod; simulate=false, uninstall=false, #««««
 		warned = true
 	end
 	if warned
-		printwarn("proceed anyway? (yn)"); r = readline()
+		printask("proceed anyway? (yn)"); r = readline()
 		lowercase(first(r)) == 'y' || return
 	end
 	selected = uninstall ? Set(String[]) : get!(selection, id, Set(String[]))
@@ -812,12 +791,12 @@ function install(mod; simulate=false, uninstall=false, #««««
 			update_selection()
 		end
 	end
-end#»»»»
-function uninstall(mod; selection = global_selection, kwargs...)
+end»»
+function uninstall(mod; selection = global_selection, kwargs...)#««
 	delete!(selection, mod.id)
 	install(mod)
 	update_selection()
-end
+end#»»
 # Global routines««1
 function do_all(f; class=nothing, pause=false, limit=typemax(Int),#««
 		selected = (f == status ? nothing : true),
@@ -846,23 +825,36 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),#««
 	end
 end#»»
 "returns the first mod (in install order) with non-installed component"
-function nextmod(; selection=global_selection, moddb=global_moddb,#««
-		installed = weidu_status(GAMEDIR...))
-	order = installorder(keys(filter(!isempty, global_selection)))
-	k = findfirst(x->!isempty(symdiff(selection[x], get(installed, x, []))),
-		order)
-	isnothing(k) ? k : order[k]
+function nextmods(n; selection=global_selection, #««
+		installed = weidu_status(GAMEDIR...),
+		order = installorder(keys(filter(!isempty, global_selection))))
+	ret = []
+	for k in order
+		isempty(symdiff(selection[k], get(installed, k, []))) && continue
+		push!(ret, k)
+		length(ret) ≥ n && break
+	end
+	ret
 end#»»
-function do_first(f; moddb=global_moddb, kwargs...)#««
-	id = nextmod(; moddb)
-	println("call function $f($id) ? (yn)"); r = readline()
-	lowercase(r[1]) == 'y' || return
-	f(moddb[id]; kwargs...)
+function do_first(f, n=1; moddb=global_moddb, selection=global_selection,#««
+		kwargs...)
+	order = installorder(keys(filter(!isempty, selection)))
+	for id in nextmods(n; selection, order)
+		while true
+			printask("call function $f($id) ? (ynqrc)")
+			r = lowercase(readline()[1])
+			r == 'r' && (readme(moddb[id]); continue)
+			r == 'c' && (components!(moddb[id]); continue) 
+			r == 'q' && return
+			r == 'y' && f(moddb[id]; order, kwargs...)
+			break
+		end
+	end
 end#»»
 list1 = (:download, :extract, :install, :uninstall, :show_components, :status)
 for f in list1; @eval begin
 	@inline $f(; kwargs...) = do_all($f; kwargs...)
-	@inline $f(::typeof(first); kwargs...) = do_first($f; kwargs...)
+	@inline $f(n::Integer; kwargs...) = do_first($f, n; kwargs...)
 end end
 # interactive commands are allowed only *one* mod (but can be a symbol)
 list2 = (list1..., :readme, :tp2, :components!, :components, :status)
@@ -871,6 +863,14 @@ for f in list2; @eval begin
 end end
 
 # BWS mod db handling ««1
+
+const BWS_ROOT="$HOME/jeux/ciopfs/EE-Mod-Setup-Master"
+const BWS_MODDB="$BWS_ROOT/App/Config/BG2EE/Mod.ini"
+# const BWS_BG1IO="$BWS_ROOT/App/Config/BG1EE/InstallOrder.ini"
+const BWS_BG2IO="$BWS_ROOT/App/Config/BG2EE/InstallOrder.ini"
+const BWS_MODDB="$BWS_ROOT/App/Config/BG2EE/Mod.ini"
+const BWS_SELECT="$BWS_ROOT/App/Config/User.ini"
+
 function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
 	moddb = Dict{String,Mod}()
 	dict = Dict{String,String}()
@@ -1078,7 +1078,7 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	moddb["dlcmerger"].class="DlcMerger"
 	moddb["ascension"].class="BigQuests"
 	moddb["azengaard"].class="Quests"
-	moddb["bg1aerie"].class="SmallNPCs"
+	moddb["bg1aerie"].class="NPC-Related"
 	moddb["butchery"].class="Quests"
 	moddb["bwfixpack"].class="Fixes"
 	moddb["d0questpack"].class="Quests"
@@ -2280,6 +2280,13 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	return nothing
 end#»»
 # BWS selection handling ««1
+const BWS_ROOT="$HOME/jeux/ciopfs/EE-Mod-Setup-Master"
+const BWS_MODDB="$BWS_ROOT/App/Config/BG2EE/Mod.ini"
+# const BWS_BG1IO="$BWS_ROOT/App/Config/BG1EE/InstallOrder.ini"
+const BWS_BG2IO="$BWS_ROOT/App/Config/BG2EE/InstallOrder.ini"
+const BWS_MODDB="$BWS_ROOT/App/Config/BG2EE/Mod.ini"
+const BWS_SELECT="$BWS_ROOT/App/Config/User.ini"
+
 function bws_selection(source = BWS_SELECTION)#««
 	section = ""
 	selection = Tuple{String,Vector{Int}}[]

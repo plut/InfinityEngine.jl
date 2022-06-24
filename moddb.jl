@@ -1,5 +1,5 @@
 include("modtool.jl")
-using .ModTool: Mod, ModComponent, findmod, addmods!, lastupdate!,
+using .ModTool: Mod, ModComponent, findmod, addmods!,lastupdate!,
 	write_moddb, read_moddb, printlog, printwarn, MODDB, MODS, DOWN, TEMP
 using HTTP
 # Constants ««1
@@ -1418,12 +1418,11 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 		4 => (path=["Classes", "Mage"],),
 		5 => (path=["Spells", "Alteration"],),
 	)#»»
-		# update `lastupdate` field««
+		# extract data from downloaded/extracted mods ««
 		for (id, mod) in moddb
 			isdir(joinpath(MODS, id)) && lastupdate!(mod)
-			for e in (".tar.gz", ".zip", ".7z", ".rar")
-				a = id*e
-				isfile(joinpath(DOWN, a)) && (mod.archive = a; break)
+			for f in joinpath(DOWN, id).*(".tar.gz", ".zip", ".7z", ".rar")
+				isfile(f) && (mod.archive = f; break)
 			end
 		end#»»
 

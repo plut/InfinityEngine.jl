@@ -86,7 +86,6 @@ const GAME_LIST = keys(GAMEDIR)
 function init()# setup global variables and filesystem ««
 	global global_moddb = read_moddb(MODDB)
 	printlog("read $(length(global_moddb)) mods in global database")
-# 	global global_weidu_log = map(x->joinpath(x, "weidu.log"), GAMEDIR)
 	global global_selection = read_selection(SELECTION)
 	for d in (DOWN, MODS, TEMP) ispath(d) || mkdir(d); end
 end#»»
@@ -122,7 +121,7 @@ mutable struct ModComponent#««
 end#»»
 @inline db_prop(i, c::ModComponent) = Dict("index" => i,
 	(string(s) => getfield(c,  s)
-	for s in (:after, :before, :conflicts, :depends, :exclusive, :path)
+	for s in (:name, :after, :before, :conflicts, :depends, :exclusive, :path)
 	if !isempty(getfield(c, s)))...)
 @inline description(c::ModComponent) =
 	isempty(c.subgroup) ? c.name : c.subgroup*'/'*c.name
@@ -141,7 +140,7 @@ mutable struct Mod#««
 	languages::Vector{String}
 	components::Vector{ModComponent} # sorted as in tp2 file
 	game_lang::Int # starts at zero (WeiDU indexing)
-	tool_lang::Int # idem
+	tool_lang::Int
 
 	@inline Mod(;id, url="", description="", class="", archive="", tp2="",
 		lastupdate=1970, languages = String[], readme="", components=[]) = begin
@@ -199,7 +198,7 @@ function merge_moddb(filename = MODDB; moddb = global_moddb)#««
 	dict = TOML.parsefile(filename)
 	for (id, d) in dict
 		m = get!(moddb, id, Mod(;id))
-		for k in (:url, :description, :archive, :readme, :languages)
+		for k in (:url,:description,:archive,:readme,:languages,:tp2,:languages)
 			ifhaskey(d, string(k)) do x; setfield!(m, k, x); end
 		end
 		ifhaskey(d, "lastupdate") do x; m.lastupdate = Date(x); end
@@ -213,10 +212,11 @@ end#»»
 @inline read_moddb(filename) = merge_moddb(filename; moddb=Dict{String,Mod}())
 function write_moddb(io::IO; moddb=global_moddb)#««
 	TOML.print(io, moddb) do m
-		d = Dict("url" => m.url, "lastupdate" => m.lastupdate,
-		"description" => m.description, "class" => m.class)
-		isempty(m.archive) || (d["archive"] = m.archive)
-		startswith(m.readme, "https://") && (d["readme"] = m.readme)
+		d = Dict{String,Any}()
+		for k in (:url,:description,:archive,:readme,:languages,:tp2,:languages)
+			x = getfield(m, k); isempty(x) || (d[string(k)] = x)
+		end
+		d["lastupdate"] = m.lastupdate
 		if !isempty(m.components)
 			d1 = Dict(c.id => db_prop(i, c) for (i, c) in pairs(m.components))
 			any(!isempty, values(d1)) && (d["components"] = d1)
@@ -486,21 +486,23 @@ function extract(m)#««
 	end#»»
 	cd(MODS) do
 	if isempty(m.languages)#««
-		m.sel_lang = 0
+		m.game_lang = m.tool_lang = 0
 		# m.languages
 		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-languages $(m.tp2)`)
 			x = match(r"^(\d+):(.*)$", line); isnothing(x) && continue
 			@assert parse(Int, x.captures[1]) == length(m.languages)
 			push!(m.languages, x.captures[2])
 		end
-		isempty(m.languages) ||
-			(m.sel_lang = argmin([lang_score(l, PREF_LANG) for l in m.languages]) - 1)
+		if !isempty(m.languages)
+			m.game_lang = argmin([lang_score(l, GAME_LANG) for l in m.languages]) - 1
+			m.tool_lang = argmin([lang_score(l, TOOL_LANG) for l in m.languages]) - 1
+		end
 	end#»»
 	if all(isempty, c.name for c in m.components)#««
 		printlog("reading components for '$id'")
 		prop = Dict(c.id => c for c in m.components) # store properties
 		empty!(m.components) # we will store them in WeiDU-order
-		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-components-json $(m.tp2) $(m.sel_lang)`)
+		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-components-json $(m.tp2) $(m.tool_lang)`)
 			startswith(line, "[{") || continue
 			for x in JSON.parse(line)
 				k = string(x["number"])
@@ -517,7 +519,7 @@ function extract(m)#««
 		end
 	end#»»
 	if isempty(m.readme) # no hardcoded readme provided««
-		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-readme $(m.tp2) $(m.sel_lang)`)
+		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-readme $(m.tp2) $(m.tool_lang)`)
 			x = match(r"^R (.*)", line); isnothing(x) && continue
 			isfile(x.captures[1]) && (m.readme = joinpath(MODS, x.captures[1]); break)
 		end
@@ -624,7 +626,7 @@ function update_selection(selection=global_selection, filename=SELECTION)#««
 	run(ignorestatus(`diff --color=always $(filename*'~') $filename`))
 end#»»
 # Mod components ««1
-function weidu_status(dirs...)#««
+function weidu_installed(dirs...)#««
 	status = Dict{String, Vector{String}}()
 	for d in dirs; f = joinpath(d, "weidu.log")
 		ispath(f) || continue
@@ -690,7 +692,7 @@ end#»»
 function components!(mod::Mod; selection=global_selection,#««
 		gamedir = GAMEDIR[modgame(mod)], edit=true)
 	extract(mod) || return
-	installed = weidu_status(gamedir)
+	installed = weidu_installed(gamedir)
 	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
 	io = edit ? open(filename, "w") : stdout
 	g = ""; h = ""
@@ -732,7 +734,7 @@ function display_tree(io::IO, root, level=1;#««
 	end
 end#»»
 function components!(;selection=global_selection,moddb=global_moddb)#««
-	installed = weidu_status(GAMEDIR...)
+	installed = weidu_installed(GAMEDIR...)
 	order = installorder(keys(moddb); moddb)
 	f = joinpath(TEMP, "config")
 	open(f, "w") do io
@@ -764,8 +766,8 @@ function install(mod; simulate=false, uninstall=false, #««
 	id = mod.id
 
 	gamedir = gamedirs[modgame(mod)]
-	current = get(weidu_status(gamedir), mod.id, String[])
-	installed = weidu_status(gamedirs...)
+	current = get(weidu_installed(gamedir), mod.id, String[])
+	installed = weidu_installed(gamedirs...)
 	warned = false
 	for k in order; k == id && break
 		isempty(symdiff(get(installed, k, []), get(selection, k, []))) && continue
@@ -797,13 +799,13 @@ function install(mod; simulate=false, uninstall=false, #««
 		end
 	end#»»
 	cd(gamedir) do#««
-		cmd = `weinstall $(mod.id) --language $(mod.sel_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $to_add --force-uninstall-list $to_del`
+		cmd = `weinstall $(mod.id) --language $(mod.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $to_add --force-uninstall-list $to_del`
 # 		id == "eet" && (cmd = `weinstall eet --skip-at-view --noautoupdate --no-exit-pause --force-install-list 0 $(gamedirs.bg1)`)
 		printsim(cmd)
 		simulate && return
 		run(ignorestatus(cmd))
 	end#»»
-	now_installed = get(weidu_status(gamedir), id, String[])
+	now_installed = get(weidu_installed(gamedir), id, String[])
 	not_installed = setdiff(selected, now_installed)
 	if !isempty(not_installed)
 		printwarn("warning: the following components were not installed:")
@@ -850,7 +852,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),#««
 end#»»
 "returns the first mod (in install order) with non-installed component"
 function nextmods(n; selection=global_selection, #««
-		installed = weidu_status(GAMEDIR...),
+		installed = weidu_installed(GAMEDIR...),
 		order = installorder(keys(filter(!isempty, global_selection))))
 	ret = []
 	for k in order

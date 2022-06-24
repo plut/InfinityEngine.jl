@@ -163,30 +163,27 @@ const MOD_CLASSES = split(replace("""
 	Final
 	BADCLASS
 """, r"#[^\n]*\n" =>"\n"))# »»
-@inline Base.isless(a::Mod, b::Mod) = sortkey(a) < sortkey(b)
 @inline modclass(class::Integer) = class
 @inline modclass(class::AbstractString) =
 	let k = (findfirst(==(class), MOD_CLASSES))
 	isnothing(k) && error("bad mod class \"$class\"")
 	k; end
-@inline sortkey(a::Mod) = (modclass(a.class), a.lastupdate)
 @inline modarchive(m::Mod) = m.id*match(r"\.[^.]*$", m.url).match
 const EET_class = modclass("EET")
-@inline modgame(m::Mod) = modclass(m.class) < EET_class ? :bg1 : :bg2
+@inline modgame(m::Mod) =
+	m.id ∈ global_moddb["eet"].components[1].after ? :bg1 : :bg2
 @inline modcomponents(m::Mod) = (m.components)
 
 "Returns the dependency matrix for these mods, encoded as
 (arrowsfrom = dict(mod1 => mod2, ...), arrowsto = dict(mod1 => n1, ...))
 (only the *number* of incoming arrows is needed for topological sorting)"
 function dependencies(list ;moddb=global_moddb)#««
-	dep = (arrowsfrom = Dict{String,Set{String}}(),
-		arrowsto = Dict(id => 0 for id in list))
+	arrowsfrom = Dict{String,Set{String}}(); arrowsto = copy(arrowsfrom)
 	function connect((b, a),)
-		fb = get!(dep.arrowsfrom, b, Set{String}())
-		a ∉ fb && (push!(fb, a); dep.arrowsto[a]+= 1)
+		fb = get!(arrowsfrom, b, Set{String}())
+		a ∈ fb && return
+		push!(fb, a); push!(get!(arrowsto,a, Set{String}()), b)
 	end
-# 	@inline connect((b, a),) =
-# 		(push!(get!(dep.arrowsfrom, b, Set{String}()), a); dep.arrowsto[a]+= 1)
 	for id in list
 		for c in modcomponents(findmod(id;moddb))
 			# special: empty key indicates a dependency for the whole mod
@@ -196,38 +193,44 @@ function dependencies(list ;moddb=global_moddb)#««
 			for b in c.before; b ∈ list && connect(id => b); end
 		end
 	end
-	return dep
+	return (arrowsfrom = arrowsfrom, arrowsto = arrowsto)
 end#»»
 function comp_isless((id1, k1), (id2, k2), order)#««
 	id1 == id2 && return isless(parse(Int, k1), parse(Int, k2))
 	return isless(findfirst(==(id1), order), findfirst(==(id2), order))
 end#»»
+function sortkey1(id, moddb, dep)
+	# returns (class(id), max class(before id), date(id))
+	c0 = modclass(moddb[id].class)
+	prev = get(dep.arrowsto, id, [])
+	c1 = maximum(modclass(moddb[x].class) for x in prev; init = -1)
+	(c0, c1, moddb[id].lastupdate)
+end
+@inline sortkey1(moddb, dep) = id -> sortkey1(id, moddb, dep)
 "Returns a list of mod IDs in install order, given all dependencies"
 function installorder(list; moddb=global_moddb)#««
 	# use Kahn's algorithm for topological sorting
 	# (this should be average-time quasi-linear with the use of a heap)
+	#
+	# bias it to the right (most mods want to be installed late...)
 	ret = sizehint!(String[], length(list))
 	todo = Set(collect(list))
 	dep = dependencies(list;moddb)
-	ord = Base.Order.By(id -> sortkey(findmod(id;moddb)))
-	available = [ id for id in list if iszero(dep.arrowsto[id]) ]
+	ord = Base.Order.By(sortkey1(moddb, dep), Base.Order.Reverse)
+	available = [ id for id in list if isempty(get(dep.arrowsfrom, id, [])) ]
 	heapify!(available, ord)
-	function check_arrows(y)
-		s = [ x for x ∈ todo if y ∈ get(dep.arrowsfrom, x, String[])]
-		n = count(y ∈ get(dep.arrowsfrom, x, String[]) for x ∈ todo)
-	end
 			
 	while !isempty(todo)
 		# loop invariant: arrowsfrom[y] = count of x ∈ todo such that x->y
 		@assert !isempty(available) "Circular dependency found: $(todo)"
 		x = heappop!(available, ord)
 		push!(ret, x); delete!(todo, x)
-		for y in get(dep.arrowsfrom, x, String[])
-			dep.arrowsto[y]-= 1
-			iszero(dep.arrowsto[y]) && heappush!(available, y, ord)
+		for y in get(dep.arrowsto, x, String[])
+			delete!(dep.arrowsfrom[y], x)
+			isempty(dep.arrowsfrom[y]) && heappush!(available, y, ord)
 		end
 	end
-	return ret
+	reverse!(ret)
 end #»»
 function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
 	owners = Dict{String, Vector{Tuple{String, String}}}()
@@ -248,6 +251,7 @@ function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
 end#»»
 
 # Mod DB handling ««1
+@inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
 function read_moddb(io::IO)#««
 	dict = TOML.parse(io); return Dict(lowercase(id) =>
 		Mod(id=lowercase(id),
@@ -431,12 +435,14 @@ end
 function status(mod::Mod; selection=global_selection, selected=nothing)#««
 	sel = !isempty(get(selection, mod.id, Int[]))
 	selected ∈ (sel, nothing) || return
+	mod.id ∈ ("eet", "stratagems") && print("\e[34m")
 	@printf("%c%c%c %7s %-22s %s\n",
 		isfile(joinpath(DOWN, mod.archive)) ? 'd' : '.',
 		ispath(joinpath(MODS, mod.id)) ? 'x' : '.',
 		sel ? 's' : '.',
 		Dates.format(mod.lastupdate, "yyyy-mm"),
 		mod.id, mod.description)
+	print("\e[m")
 end#»»
 # TP2 data extraction ««1
 function lang_score(langname, pref_lang=PREF_LANG)#««
@@ -843,75 +849,141 @@ end end
 
 # BWS mod db handling ««1
 function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
-	thismod, url, name, arch = [ Dict{String,String}() for _ in 1:4 ]
-	id = ""
+	moddb = Dict{String,Mod}()
+	dict = Dict{String,String}()
 	for line in eachline(source)
-		if line[1] == '['
-			id = lowercase(line[2:end-1])
-		else
-			(k, v) = split(line, r"\s*=\s*"; limit=2)
-			thismod[k] = v
-			k == "Tra" || continue # last key:
-			url[id], name[id], arch[id] = (thismod["Down"], thismod["Name"], thismod["Save"])
-		end
+		startswith(line, '[') && (dict["id"] = lowercase(line[2:end-1]); continue)
+		(k, v) = split(line, r"\s*=\s*"; limit=2)
+		dict[k] = v
+		k == "Tra" || continue # this is the last key
+		id, url, description, archive =
+			dict["id"], dict["Down"], dict["Name"], dict["Save"]
+		m = match(r"github.com/(([^/])*/([^/]*))", url)
+		!isnothing(m) && ( url = "github:"*m.captures[1]; archive = "")
+		addmods!(moddb, Mod(;id, url, description, archive, class="noclass:$id"))
 	end
-	id_done = Set{String}()
-	class = Dict{String, String}()
-	current_game = 1
 	for line in eachline(orderfile)
-		occursin(r";EET;", line) && (current_game = 2)
 		v = split(line, ";")
 		first(v) ∈ ("MUC", "STD", "SUB") || continue
-		id = lowercase(v[2]); id ∈ id_done && continue
-		push!(id_done, id)
-		class[id]= current_game == 1 ? "PreEET" :
-			["Initial", "Fixes", "BigQuests", "Quests", "SmallQuests",
+		id = lowercase(v[2]); m = get(moddb, id, nothing)
+		isnothing(m) && continue
+		m.class = ["Initial", "Fixes", "BigQuests", "Quests", "SmallQuests",
 			"NPCs", "SmallNPCs", "NPCTweaks", "Tweaks", "Tweaks", "Items",
 			"Tweaks", "Kits", "GUI"][1+parse(Int, v[4])]
 	end
-	return Dict(id => mkmod(id, url[id], name[id], class[id], arch[id])
-		for id in id_done if haskey(url, id))
+	moddb
+end#»»
+function mod_exclusives(mod::Mod; except = String[])#««
+	g = modgame(mod); gamedir = GAMEDIR[g]
+	extract(mod)
+	ret = Pair{Int, Vector{String}}[]
+	cd(MODS) do
+		for c in modcomponents(mod)
+			printlog("Computing exclusivity for $(mod.id):$(c.id)=$(description(c))")
+			excl = String[]
+			for line in eachline(ignorestatus(`weidu --game $gamedir --skip-at-view --no-exit-pause --noautoupdate --list-actions --language $(mod.sel_lang) $(mod.tp2) --force-install $(c.id)`))
+				m = match(r"SIMULATE\s+(\S.*\S)\s+(\S.*)$", line); 
+				isnothing(m) && continue
+				if m.captures[1] == "COPY false"
+					s = replace(lowercase(m.captures[2]), "override/" => "")
+					any(occursin(p, s) for p in except) || push!(excl, s)
+				end
+			end
+			!isempty(excl) && push!(ret, parse(Int, c.id) => excl)
+		end
+	end
+	return [ id => (exclusive = excl,) for (id, excl) in ret ]
 end#»»
 function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 		orderfile = BWS_BG2IO)
-	file = joinpath(TEMP, "moddb")
-	db = bws_moddb(source, orderfile)
-	complete_db!(db)
-	write_moddb(file; moddb=db)
-	# we check that this produces a readable moddb before overwriting:
-	global_moddb = read_moddb(file)
-	mv(file, MODDB; force=true)
-	return nothing
-end#»»
-function bws_selection(source = BWS_SELECTION)#««
-	section = ""
-	selection = Tuple{String,Vector{Int}}[]
-	for line in eachline(source)
-		if line[1] == '[' && line[end] == ']'
-			section = line[2:end-1]
-			continue
+	printlog("reading BWS mod database")
+	moddb = bws_moddb(source, orderfile)
+	printlog("adding new mods")
+	function mkmod(id, url, description, class, archive = "")#««
+		m = match(r"github.com/(([^/])*/([^/]*))", url)
+		# use github urls whenever possible
+		if startswith(url, "github:")
+			archive = ""
+		elseif startswith(url, "weaselmods:")
+			req = HTTP.get("https://downloads.weaselmods.net/download/"*url[12:end];
+				status_exception=false)
+			for line in split(String(req.body), '\n')
+	# 		for line in eachline(`wget https://downloads.weaselmods.net/download/$(url[12:end]) -O -`)
+				x = match(r"https://[^\"]*\?wpdmdl=\d+", line)
+				x  == nothing && continue
+				url = x.match; break
+			end
+			@assert startswith(url, "https://")
+			archive = id*".zip"
+		elseif isempty(archive)
+			archive = id*match(r"\.[^.]*$", url).match
 		end
-		if section == "Save"
-			id, components = split(line, r"\s*=\s*"; limit=2)
-			push!(selection, (lowercase(id), split(components)))
-		end
-	end
-	return selection
-end#»»
-function import_bws_selection((source, dest) = BWS_SELECTION => SELECTION)#««
-	global global_selection = bws_selection(source)
-	write_selection(global_selection, dest)
-end#»»
-
-# Generating mod DB ««1
-function mkmod(id, url, description, class, archive = "")#««
-	m = match(r"github.com/(([^/])*/([^/]*))", url)
-	if m ≠ nothing
-		url = "github:"*m.captures[1]
-		archive = ""
-	end
-	# use github urls whenever possible
-	url = get(Dict(#««
+		return Mod(;id, url, description, class, archive)
+	end#»»
+	addmods!(moddb,
+	# Argent77 ««3
+	mkmod("a7-convenienteenpcs", "github:Argent77/A7-NoEENPCs",
+		"Convenient EE NPCs", "NPCTweaks"),
+	mkmod("extraexpandedencounters", "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip", "Extra Expanded Encounters", "Quests"),
+	# ArtemiusI ««3
+	mkmod("housetweaks", "github:ArtemiusI/House-Rule-Tweaks",
+		"House Rule Tweaks", "Tweaks"),
+	# Spellhold Studios ««3
+	mkmod("saradas_magic", "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip", "Saradas Magic", "Items"),
+	mkmod("saradas_magic_2", "github:SpellholdStudios/Saradas_Magic_for_BG2", "Saradas BG2", "Spells"),
+	mkmod("beyond_the_law", "github:SpellholdStudios/Beyond_the_Law", "Beyond the Law", "NPCs"),
+	mkmod("kiara-zaiya", "github:SpellholdStudios/Kiara_Zaiya", "Kiara Zaiya NPCs", "NPCs"),
+	mkmod("iylos", "github:SpellholdStudios/Iylos", "Iylos (ToB monk)", "NPCs"),
+	mkmod("firkraag", "github:SpellholdStudios/Super_Firkraag", "Super Firkraag", "Quests"),
+	mkmod("ruad", "github:SpellholdStudios/RuadRofhessaItemUpgrade", "Ruad Ro'fhessa Item Upgrade", "Items"),
+	mkmod("bolsa", "github:SpellholdStudios/Bolsa", "Bolsa (merchant)", "Items"),
+# 	next 2 mods are broken in EE games:
+# 	mkmod("RPG-KP", "github:SpellholdStudios/RPG_Dungeon_Kit_Pack",
+# 		"RPG Dungeon kit pack", "Kits"),
+# 	mkmod("RItemPack", "github:SpellholdStudios/RPG_Dungeon_Item_Pack",
+# 		"RPG Dungeon item pack", "Items"),
+	# Gibberlings3 ««3
+	mkmod("wheels", "github:Gibberlings3/WheelsOfProphecy", "Wheels of Prophecy", "Quests"),
+	mkmod("forgotten-armament", "github:Gibberlings3/Forgotten-Armament", "Forgotten Armament", "Items"),
+	mkmod("skills-and-abilities", "github:Gibberlings3/Skills-and-Abilities", "Skills and Abilities", "Kits"),
+	mkmod("c#sodboabri", "github:Gibberlings3/The_Boareskyr_Bridge_Scene", "The Boareskyr Bridge Scene", "Quests"),
+	mkmod("sodrtd", "github:Gibberlings3/Road_To_Discovery_for_SoD", "Road to Discovery", "Quests"),
+	mkmod("c#endlessbg1", "github:Gibberlings3/EndlessBG1", "Endless BG1", "Quests"),
+	mkmod("dw_lanthorn", "github:Gibberlings3/Restored-Rhynn-Lanthorn", "Restored Rhynn Lanthorn quest", "Quests"),
+	mkmod("druidsor", "github:Gibberlings3/Geomantic_Sorcerer", "Geomantic Sorcerer", "Kits"),
+	mkmod("valhorn", "github:Gibberlings3/Improved_Horns_of_Valhalla", "Improved Horn of Valhalla", "Items"),
+	mkmod("transitions", "github:Gibberlings3/transitions", "Transitions", "Fixes"),
+	# Gitjas ««3
+	mkmod("c#brandock", "github:Gitjas/Brandock_the_Mage", "Brandock the Mage", "NPCs"),
+	mkmod("c#solaufein", "github:Gitjas/Solaufeins_Rescue_NPC", "Solaufein's Rescue", "NPCs"),
+	mkmod("c#brage", "github:Gitjas/Brages_Redemption", "Brage's Redemption", "NPCs"),
+	# Github misc. ««3
+	mkmod("d0tweak", "github:Pocket-Plane-Group/D0Tweak", "Ding0 Tweak Pack", "Tweaks"),
+	mkmod("rttitempack", "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack",  "Return to Trademeet item pack", "Items"),
+	mkmod("nanstein", "github:GwendolyneFreddy/Nanstein", "Nanstein item upgrade", "Items"),
+	mkmod("iwditempack", "github:GwendolyneFreddy/IWD_Item_Pack", "IWD item pack", "Items"),
+	mkmod("aurora", "github:Sampsca/Auroras-Shoes-and-Boots", "Aurora's shoes and boots", "Items"),
+	mkmod("monasticorders", "github:aquadrizzt/MonasticOrders", "Monastic Orders", "Kits"),
+	mkmod("deitiesoffaerun", "github:Raduziel/Deities-Of-Faerun", "Deities of Faerun", "Kits"),
+	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweaks"),
+	mkmod("mih_sp", "github:AngelGryph/MadeInHeaven_SpellPack", "Made In Heaven: Spell Pack", "Spells"),
+	mkmod("mih_eq", "github:AngelGryph/MadeInHeaven_EncountersAndQuests", "Made In Heaven: Encounters and Quests", "Quests"),
+	# Weasel mods ««3
+	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPCs"),
+	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPCs"),
+	mkmod("walahnan", "weaselmods:walahnan", "Walahnan (gnome chronomancer)", "NPCs"),
+	mkmod("ofheirloomsandclasses", "weaselmods:of-heirlooms-and-classes", "Of Heirlooms and Classes", "Items"),
+	mkmod("faldornbg2", "weaselmods:faldorn-bg2ee", "Faldorn BG2", "NPCs"),
+	mkmod("khalidbg2", "weaselmods:khalid-bg2", "Khalid BG2", "NPCs"),
+	mkmod("gahesh", "weaselmods:gahesh", "Gahesh (LG half-orc sorcerer)", "NPCs"),
+	# Misc. ««3
+	mkmod("mortis", "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip", "Mortis Mini Mod", "Items"),
+	mkmod("unique_items", "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip", "BGEE/SOD Item replacement fun pack", "Items"),
+	mkmod("arcanearcher", "www.shsforums.net/files/download/994-arcane-archer/", "Arcane Archer", "Kits"),
+	#»»3
+	)
+	# Tweak mod urls ««
+	for (k, v) in (
 	"a7#improvedshamanicdance" => "github:Argent77/A7-ImprovedShamanicDance",
 	"a7#improvedarcher" => "github:Argent77/A7-ImprovedArcher",
 	"a7-chaossorcerer" => "github:Argent77/A7-ChaosSorcerer",
@@ -926,10 +998,9 @@ function mkmod(id, url, description, class, archive = "")#««
 	"slandor" => "github:SpellholdStudios/The_Minotaur_and_Lilacor", # SIC!
 	"bank_of_baldurs_gate" => "github:SpellholdStudios/Bank_of_Baldurs_Gate",
 	"star" => "github:SpellholdStudios/Silver_Star_NPC",
-	"bolsa" => "github:SpellholdStudios/Bolsa",
 	"fadingpromises" => "github:SpellholdStudios/Fading_Promises",
 	"lucy" => "github:SpellholdStudios/Lucy_the_Wyvern",
-	"bg1npcs" => "github:Gibberlings3/BG1NPC",
+	"bg1npc" => "github:Gibberlings3/BG1NPC",
 	"underrep" => "github:Pocket-Plane-Group/Under-Respresented_Items", #SIC!
 	"banterpack" => "github:Pocket-Plane-Group/Banter_Pack",
 	"dc" => "github:Pocket-Plane-Group/Dungeon_Crawl",
@@ -975,138 +1046,38 @@ function mkmod(id, url, description, class, archive = "")#««
 	"faren" => "http://dl.spellholdstudios.net/faren",
 	"npckit" => "https://www.gibberlings3.net/files/file/793-npc-kitpack",
 	"sagaman" => "http://www.blackwyrmlair.net/~rabain/SagaMaster/Ulrien-SagaMaster.zip",
-	), id, url)#»»
-	if startswith(url, "github:")
-		archive = ""
-	elseif startswith(url, "weaselmods:")
-		req = HTTP.get("https://downloads.weaselmods.net/download/"*url[12:end];
-			status_exception=false)
-		for line in split(String(req.body), '\n')
-# 		for line in eachline(`wget https://downloads.weaselmods.net/download/$(url[12:end]) -O -`)
-			x = match(r"https://[^\"]*\?wpdmdl=\d+", line)
-			x  == nothing && continue
-			url = x.match; break
-		end
-		@assert startswith(url, "https://")
-		archive = id*".zip"
-	elseif isempty(archive)
-		archive = id*match(r"\.[^.]*$", url).match
-	end
-	class = get(Dict("DlcMerger"=>"Initial",
-		"ascension"=>"BigQuests",
-		), id, class)
-# 	id ∈ (:bg1aerie, :bg1ub, :darkhorizonsbgee, :drake, :sirene, 
-# 		Symbol("garrick-tt"), :k9roughworld, :k9sharteelnpc, :tenyathermidor,
-# 		:soa, :karatur, :verrsza, :white) && (class = :PreEET)
-	return Mod(;id, url, description, class, archive)
-end#»»
-@inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
-function mod_exclusives(mod::Mod; except = String[])#««
-	g = modgame(mod); gamedir = GAMEDIR[g]
-	extract(mod)
-	ret = Pair{Int, Vector{String}}[]
-	cd(MODS) do
-		for c in modcomponents(mod)
-			printlog("Computing exclusivity for $(mod.id):$(c.id)=$(description(c))")
-			excl = String[]
-			for line in eachline(ignorestatus(`weidu --game $gamedir --skip-at-view --no-exit-pause --noautoupdate --list-actions --language $(mod.sel_lang) $(mod.tp2) --force-install $(c.id)`))
-				m = match(r"SIMULATE\s+(\S.*\S)\s+(\S.*)$", line); 
-				isnothing(m) && continue
-				if m.captures[1] == "COPY false"
-					s = replace(lowercase(m.captures[2]), "override/" => "")
-					any(occursin(p, s) for p in except) || push!(excl, s)
-				end
-			end
-			!isempty(excl) && push!(ret, parse(Int, c.id) => excl)
-		end
-	end
-	return [ id => (exclusive = excl,) for (id, excl) in ret ]
-end#»»
-# function exclusive!(id;moddb = global_moddb, except=String[])
-# 	mod = findmod(id;moddb)
-# 	setcomp!(mod.components, mod_exclusives(mod; except)...)
-# end
-function complete_db!(moddb) #««
-	printlog("adding new mods")
-	addmods!(moddb,
-	# Argent77 ««3
-	mkmod("a7-convenienteenpcs", "github:Argent77/A7-NoEENPCs",
-		"Convenient EE NPCs", "NPCTweaks"),
-	mkmod("extraexpandedencounters", "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip", "Extra Expanded Encounters", "Quests"),
-	# ArtemiusI ««3
-	mkmod("housetweaks", "github:ArtemiusI/House-Rule-Tweaks",
-		"House Rule Tweaks", "Tweaks"),
-	# Spellhold Studios ««3
-	mkmod("saradas_magic", "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip", "Saradas Magic", "PreEET"),
-	mkmod("saradas_magic_2", "github:SpellholdStudios/Saradas_Magic_for_BG2", "Saradas BG2", "Spells"),
-	mkmod("beyond_the_law", "github:SpellholdStudios/Beyond_the_Law", "Beyond the Law", "NPCs"),
-	mkmod("kiara-zaiya", "github:SpellholdStudios/Kiara_Zaiya", "Kiara Zaiya NPCs", "NPCs"),
-	mkmod("iylos", "github:SpellholdStudios/Iylos", "Iylos (ToB monk)", "NPCs"),
-	mkmod("firkraag", "github:SpellholdStudios/Super_Firkraag", "Super Firkraag", "Quests"),
-	mkmod("ruad", "github:SpellholdStudios/RuadRofhessaItemUpgrade", "Ruad Ro'fhessa Item Upgrade", "Items"),
-# 	next 2 mods are broken in EE games:
-# 	mkmod("RPG-KP", "github:SpellholdStudios/RPG_Dungeon_Kit_Pack",
-# 		"RPG Dungeon kit pack", "Kits"),
-# 	mkmod("RItemPack", "github:SpellholdStudios/RPG_Dungeon_Item_Pack",
-# 		"RPG Dungeon item pack", "Items"),
-	# Gibberlings3 ««3
-	mkmod("wheels", "github:Gibberlings3/WheelsOfProphecy", "Wheels of Prophecy", "Quests"),
-	mkmod("forgotten-armament", "github:Gibberlings3/Forgotten-Armament", "Forgotten Armament", "Items"),
-	mkmod("skills-and-abilities", "github:Gibberlings3/Skills-and-Abilities", "Skills and Abilities", "Kits"),
-	mkmod("c#sodboabri", "github:Gibberlings3/The_Boareskyr_Bridge_Scene", "The Boareskyr Bridge Scene", "Quests"),
-	mkmod("sodrtd", "github:Gibberlings3/Road_To_Discovery_for_SoD", "Road to Discovery", "Quests"),
-	mkmod("c#endlessbg1", "github:Gibberlings3/EndlessBG1", "Endless BG1", "Quests"),
-	mkmod("dw_lanthorn", "github:Gibberlings3/Restored-Rhynn-Lanthorn", "Restored Rhynn Lanthorn quest", "Quests"),
-	mkmod("druidsor", "github:Gibberlings3/Geomantic_Sorcerer", "Geomantic Sorcerer", "Kits"),
-	mkmod("valhorn", "github:Gibberlings3/Improved_Horns_of_Valhalla", "Improved Horn of Valhalla", "Items"),
-	mkmod("transitions", "github:Gibberlings3/transitions", "Transitions", "Fixes"),
-	# Gitjas ««3
-	mkmod("c#brandock", "github:Gitjas/Brandock_the_Mage", "Brandock the Mage", "NPCs"),
-	mkmod("c#solaufein", "github:Gitjas/Solaufeins_Rescue_NPC", "Solaufein's Rescue", "NPCs"),
-	mkmod("c#brage", "github:Gitjas/Brages_Redemption", "Brage's Redemption", "NPCs"),
-	# Github misc. ««3
-	mkmod("d0tweak", "github:Pocket-Plane-Group/D0Tweak", "Ding0 Tweak Pack", "Tweaks"),
-	mkmod("rttitempack", "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack",  "Return to Trademeet item pack", "Items"),
-	mkmod("nanstein", "github:GwendolyneFreddy/Nanstein", "Nanstein item upgrade", "Items"),
-	mkmod("iwditempack", "github:GwendolyneFreddy/IWD_Item_Pack", "IWD item pack", "Items"),
-	mkmod("aurora", "github:Sampsca/Auroras-Shoes-and-Boots", "Aurora's shoes and boots", "Items"),
-	mkmod("monasticorders", "github:aquadrizzt/MonasticOrders", "Monastic Orders", "Kits"),
-	mkmod("deitiesoffaerun", "github:Raduziel/Deities-Of-Faerun", "Deities of Faerun", "Kits"),
-	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweaks"),
-	mkmod("mih_sp", "github:AngelGryph/MadeInHeaven_SpellPack", "Made In Heaven: Spell Pack", "Tweaks"),
-	mkmod("mih_eq", "github:AngelGryph/MadeInHeaven_EncountersAndQuests", "Made In Heaven: Encounters and Quests", "Quests"),
-	# Weasel mods ««3
-	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPCs"),
-	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPCs"),
-	mkmod("walahnan", "weaselmods:walahnan", "Walahnan (gnome chronomancer)", "NPCs"),
-	mkmod("ofheirloomsandclasses", "weaselmods:of-heirlooms-and-classes", "Of Heirlooms and Classes", "Items"),
-	mkmod("faldornbg2", "weaselmods:faldorn-bg2ee", "Faldorn BG2", "NPCs"),
-	mkmod("khalidbg2", "weaselmods:khalid-bg2", "Khalid BG2", "NPCs"),
-	mkmod("gahesh", "weaselmods:gahesh", "Gahesh (LG half-orc sorcerer)", "NPCs"),
-	# Misc. ««3
-	mkmod("mortis", "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip", "Mortis Mini Mod", "Items"),
-	mkmod("unique_items", "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip", "BGEE/SOD Item replacement fun pack", "Items"),
-	mkmod("arcanearcher", "www.shsforums.net/files/download/994-arcane-archer/", "Arcane Archer", "Kits"),
-	#»»3
-	)
-	# Modify a few mod classes ««
+	); moddb[k].url = v; end
+	#»»
+	# Tweak mod classes ««
 	printlog("modifying mod classes")
+	delete!(moddb, "weidu")
+	delete!(moddb, "weidu64")
 	moddb["dlcmerger"].class="DlcMerger"
-	moddb["bg2eetrans"].class="Initial"
-	moddb["eetact2"].class="Quests"
+	moddb["ascension"].class="BigQuests"
 	moddb["azengaard"].class="Quests"
-	moddb["impasylum"].class="Quests"
-	moddb["imnesvale"].class="Quests"
-	moddb["the_horde"].class="Quests"
+	moddb["bg1aerie"].class="SmallNPCs"
+	moddb["bg2eetrans"].class="Initial"
 	moddb["butchery"].class="Quests"
-	moddb["turnabout"].class="Quests"
-	moddb["hammers"].class="Items"
+	moddb["bwfixpack"].class="Fixes"
+	moddb["d0questpack"].class="Quests"
 	moddb["eet_end"].class="Final"
-	moddb["vienxay"].class="NPCs"
+	moddb["eetact2"].class="Quests"
+	moddb["faiths_and_powers"].class="Kits"
+	moddb["fnp_multiclass"].class="Tweaks"
+	moddb["hammers"].class="Items"
+	moddb["imnesvale"].class="Quests"
+	moddb["impasylum"].class="Quests"
+	moddb["item_rev"].class="Items"
+	moddb["paintbg"].class="GUI"
+	moddb["rr"].class="Tweaks"
+	moddb["spell_rev"].class="Spells"
 	moddb["stratagems"].class="Final"
-# 		setmod!("might_and_guile"; class="Tweaks")
+	moddb["tdd"].class="BigQuests"
+	moddb["the_horde"].class="Quests"
+	moddb["turnabout"].class="Quests"
+	moddb["vienxay"].class="NPCs"
 	# »»
-		# hardcode online readme urls««
+		# Tweak mod readme««
 	printlog("hardcoding mod readme")
 	moddb["faiths_and_powers"].readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
 	moddb["tnt"].readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
@@ -1121,7 +1092,7 @@ function complete_db!(moddb) #««
 	#»»
 	moddb["arcanearcher"].archive = "arcanearcher.zip"
 	printlog("setting mod component properties")
-	function setmod!(id, list...; kwargs...)#««
+	function setmod!(id, list...)#««
 		m = findmod(id; moddb)
 		for (i, kv) in list; i = string(i)
 			j = findfirst(c->c.id == i, m.components)
@@ -1129,14 +1100,10 @@ function complete_db!(moddb) #««
 				(push!(m.components, ModComponent(i, "")); j=length(m.components))
 			c = m.components[j]
 			for (k, v) in pairs(kv)
-				k == :path && !isempty(c.path) && printlog("warning, '$i:$k'.path is not empty")
+				k == :path && !isempty(c.path) && printlog("warning, '$id:$i'.path is not empty")
 				k != :path && (v = unique!(sort!([v;])))
 				push!(getfield(c, Symbol(k)), v...)
 			end
-		end
-		for (k, v) in kwargs
-			k == :class && (m.class = v; break)
-			error("unknown keyword: $k")
 		end
 	end#»»
 	setmod!("a7#improvedarcher",#««
@@ -1273,8 +1240,6 @@ function complete_db!(moddb) #««
 	setmod!("bg2eetrans",#««
 		"" => (after=["eet"],),
 	)#»»
-	setmod!("bgeear", "" => (after = ["eet"],),)
-	setmod!("bgeew", "" => (after = ["eet"],),)
 	setmod!("cdtweaks",#««
 		"" => (after = ["tomeandblood", "bg1npc", "thecalling", "item_rev", "divine_remix"],),
 		10 => (path = ["Cosmetic", "Sprites"],),
@@ -1523,7 +1488,7 @@ function complete_db!(moddb) #««
   20 => (exclusive = ["spin671.spl"], path=["Quests", "BG2"],),
 		21 => (exclusive = ["ar0530.are", "ar0530.bcs",], path=["Quests", "BG2"],),
  401 => (exclusive = ["sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre", "reddeath.bcs",],),
-	; class = "Quests")#»»
+	)#»»
 	setmod!("d0tweak",#««
 		11 => (after = ["rr",], path=["Cosmetic", "Sprites"],), # ioun stones...
 		17 => (path = ["Skills", "Lore"],),
@@ -1652,10 +1617,13 @@ function complete_db!(moddb) #««
 	)#»»
 	setmod!("eet", "" => (after = [#««
 	# https://k4thos.github.io/EET-Compatibility-List/EET-Compatibility-List.html
-	"bg1aerie", "bg1ub", "darkhorizonsbgee", "drake", "drizztsaga", "garrick-tt", 
-	"saradas_magic", "sirene", "tenyathermidor", "soa", "karatur", "k9roughworld",
-	"verrsza", "white", "k9sharteelnpc", "dlcmerger", "bgeetextpack", "sodrus",
-	], before = ["bg2eetrans", "bg2ee_ga", "bg2eer"],),)#»»
+	# better: EET/tbl/compatibility.tbl
+	"dlcmerger", "bgeetextpack", "sodrus", "bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "darkhorizonsbgee", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "saradas_magic", "k9sharteelnpc", "sirene", "tenyathermidor", "soa", "karatur", "verrsza", "white", "bgsodde",
+# "margarita",
+	], before = ["bg2eetrans", "bg2ee_ga", "bg2eer"],),)
+	setmod!("dlcmerger", "" => (before = filter(≠("dlcmerger"),
+		moddb["eet"].components[1].after),))
+	#»»
 	setmod!("epicthieving",#««
 		0 => (path = ["Skills", "Thieving"],),
 		100 => (path = ["Skills", "Thieving"],),
@@ -1680,11 +1648,11 @@ function complete_db!(moddb) #««
 			75 => (path = ["Classes", "Cleric"],),
 			80 => (path = ["Spells", "Sphere system"],),
 			85 => (path = ["NPC"],),
-	; class="Kits")#»»
+	)#»»
 	setmod!("fnp_multiclass",#««
 		"" => (after = ["fnp", "divine_remix", "deitiesoffaerun", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
 			before = ["scales_of_balance", "stratagems", "cdtweaks"],),
-	; class="Tweaks")#»»
+	)#»»
 	setmod!("eet_tweaks",#««
 		1000 => (path = ["NPC", "Edwin", "Appearance"],),
 		1001 => (path = ["NPC", "Edwin", "Appearance"],),
@@ -1783,6 +1751,7 @@ function complete_db!(moddb) #««
 		440 => (exclusive = ["giafir.itm", "ysg2.cre", "ysfire01.cre", "ysguar01.cre"],),
 	)#»»
 	setmod!("item_rev",#««
+		"" => (after = ["eet"],),
 	0 => (exclusive = ["hlolth.itm", "clolth.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "blun01.itm", "bolt01.itm", "sahbolt.itm", "kuobolt.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bull01.itm", "chan01.itm", "clck01.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "amsoul01.itm", "leat01.itm", "aegis.itm", "bruenaxe.itm", "bruenpla.itm", "cattibow.itm", "catliowp.cre", "figlion.itm", "spidfgsu.cre", "figspid.itm", "bsw1h01.itm", "bersersu.cre", "bleat01.itm", "miscbc.itm", "nebdag.itm", "quiver01.itm", "reaver.itm", "korax01.itm", "nparm.itm", "npbow.itm", "npbelt.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npstaf.itm", "npplat.itm", "keldorn.spl", "npring01.itm", "npshld.itm", "npsw01.itm", "clolth.itm", "hlolth.itm", "finsarev.itm", "plat01.itm", "rods01.itm", "rods01.spl", "shld01.itm", "slng01.itm", "sper01.itm", "staf01.itm", "smoundsu.cre", "smoundsu.itm", "sw1h01.itm", "xbow01.itm", "waflail.itm", "wawak.itm"], path=["Items"],),
 	1 => (path = ["Items", "Magic weapons"],),
 	2 => (path = ["Skills", "Casting"],),
@@ -1818,7 +1787,7 @@ function complete_db!(moddb) #««
  1091 => (path = ["Classes", "Cleric"],),
  1092 => (path = ["Classes", "Cleric"],),
  1093 => (path = ["Classes", "Cleric"],),
-	; class = "Early")#»»
+	)#»»
 	setmod!("iwdification",#««
 		10 => (path=["Cosmetic", "Spells"],),
 		20 => (path=["Cosmetic", "Sprites"],),
@@ -1956,7 +1925,7 @@ function complete_db!(moddb) #««
 		9 => (exclusive = ["potn36.itm", "potn39.itm"], path=["Items", "Potions"],),
 		10 => (exclusive = ["potn36.itm", "potn39.itm"], path=["Items", "Potions"]),
 		12 => (exclusive = ["c6arkan.cre", "c6arkan3.cre", "c6kach.cre", "c6yean.cre", "c6arkan.bcs", "stguard1.cre", "mook02.cre", "arkanisg.cre", "mookft01.cre", "palern.cre", "ar0300.bcs", "stguard1.bcs", "aran.cre", "gaelan.cre", "mook.cre", "booter.cre"],),
-	; class="Kits")#»»
+	)#»»
 	setmod!("refinements",#««
 		10 => (path=["Tables", "HLA"],),
 		11 => (path=["Tables", "HLA"],),
@@ -2042,7 +2011,7 @@ function complete_db!(moddb) #««
 		40 => (path = ["Spells", "Enchantment"],),
 		50 => (path = ["Spells"],),
 # 		65 => (exclusive = ["spcl900.spl","spcl901.spl","spcl907.spl","spwish12.spl"],),
-	; class = "Early")#»»
+	)#»»
 	setmod!("spstuff",#««
 		0 => (path = ["Classes", "Ranger"],),
 		1 => (path = ["Classes", "Fighter"],),
@@ -2282,6 +2251,33 @@ function complete_db!(moddb) #««
 				isfile(joinpath(DOWN, a)) && (mod.archive = a; break)
 			end
 		end#»»
+
+	file = joinpath(TEMP, "moddb")
+	write_moddb(file; moddb)
+	# we check that this produces a readable moddb before overwriting:
+	global global_moddb = read_moddb(file)
+	mv(file, MODDB; force=true)
+	return nothing
+end#»»
+# BWS selection handling ««1
+function bws_selection(source = BWS_SELECTION)#««
+	section = ""
+	selection = Tuple{String,Vector{Int}}[]
+	for line in eachline(source)
+		if line[1] == '[' && line[end] == ']'
+			section = line[2:end-1]
+			continue
+		end
+		if section == "Save"
+			id, components = split(line, r"\s*=\s*"; limit=2)
+			push!(selection, (lowercase(id), split(components)))
+		end
+	end
+	return selection
+end#»»
+function import_bws_selection((source, dest) = BWS_SELECTION => SELECTION)#««
+	global global_selection = bws_selection(source)
+	write_selection(global_selection, dest)
 end#»»
 # ««1
 end

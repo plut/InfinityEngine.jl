@@ -1,20 +1,22 @@
 include("modtool.jl")
-using .ModTool: Mod, ModComponent, findmod, addmods!,lastupdate!,
-	write_moddb, read_moddb, printlog, printwarn, MODDB, MODS, DOWN, TEMP
+using .ModTool: Mod, ModComponent, findmod, addmods!,extract, isextracted,
+	update_mod, write_moddb, maybe_rewrite_moddb, read_moddb, write_selection,
+	printlog, printwarn, printsim, printerr,
+	MODDB, MODS, DOWN, TEMP, SELECTION
 using HTTP
-# Constants ««1
-
-const HOME=ENV["HOME"]
-const BWS_ROOT="$HOME/jeux/ciopfs/EE-Mod-Setup-Master"
+# Constants««
+const BWS_ROOT=ENV["HOME"]*"/jeux/ciopfs/EE-Mod-Setup-Master"
 const BWS_MODDB="$BWS_ROOT/App/Config/BG2EE/Mod.ini"
 # const BWS_BG1IO="$BWS_ROOT/App/Config/BG1EE/InstallOrder.ini"
 const BWS_BG2IO="$BWS_ROOT/App/Config/BG2EE/InstallOrder.ini"
 const BWS_MODDB="$BWS_ROOT/App/Config/BG2EE/Mod.ini"
-const BWS_SELECT="$BWS_ROOT/App/Config/User.ini"
+const BWS_USER="$BWS_ROOT/App/Config/User.ini"
+#»»
 
 function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
 	moddb = Dict{String,Mod}()
 	dict = Dict{String,String}()
+	printsim("reading BWS mod database $source")
 	for line in eachline(source)
 		startswith(line, '[') && (dict["id"] = lowercase(line[2:end-1]); continue)
 		(k, v) = split(line, r"\s*=\s*"; limit=2)
@@ -26,6 +28,7 @@ function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
 		!isnothing(m) && ( url = "github:"*m.captures[1]; archive = "")
 		addmods!(moddb, Mod(;id, url, description, archive, class="noclass:$id"))
 	end
+	printsim("reading order file $orderfile")
 	for line in eachline(orderfile)
 		v = split(line, ";")
 		first(v) ∈ ("MUC", "STD", "SUB") || continue
@@ -60,7 +63,6 @@ function mod_exclusives(mod::Mod; except = String[])#««
 end#»»
 function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 		orderfile = BWS_BG2IO)
-	printlog("reading BWS mod database")
 	moddb = bws_moddb(source, orderfile)
 	delete!(moddb, "weidu")
 	delete!(moddb, "weidu64")
@@ -126,7 +128,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 	mkmod("c#brage", "github:Gitjas/Brages_Redemption", "Brage's Redemption", "NPC"),
 	# Github misc. ««3
 	mkmod("d0tweak", "github:Pocket-Plane-Group/D0Tweak", "Ding0 Tweak Pack", "Tweak"),
-	mkmod("rttitempack", "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack",  "Return to Trademeet item pack", "Items"),
+# 	mkmod("rttitempack", "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack",  "Return to Trademeet item pack", "Items"), # no tp2...
 	mkmod("nanstein", "github:GwendolyneFreddy/Nanstein", "Nanstein item upgrade", "Items"),
 	mkmod("iwditempack", "github:GwendolyneFreddy/IWD_Item_Pack", "IWD item pack", "Items"),
 	mkmod("aurora", "github:Sampsca/Auroras-Shoes-and-Boots", "Aurora's shoes and boots", "Items"),
@@ -271,7 +273,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 				(push!(m.components, ModComponent(i, "")); j=length(m.components))
 			c = m.components[j]
 			for (k, v) in pairs(kv)
-				k == :path && !isempty(c.path) && printlog("warning, '$id:$i'.path is not empty")
+				k == :path && !isempty(c.path) && printwarn("warning, '$id:$i'.path is not empty")
 				k != :path && (v = unique!(sort!([v;])))
 				push!(getfield(c, Symbol(k)), v...)
 			end
@@ -1002,10 +1004,10 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 		2200 => (path=["Skills", "Familiar"],),
 		3070 => (path=["Cosmetic", "Icons"],),
 	)#»»
-	setmod!("leui",
+	setmod!("leui",#««
 		"" => (before = ["eeuitweaks", "might_and_guile", "stratagems",
 		"tomeandblood", "shadowadept", "deities-of-faerun", "faiths_and_powers"],),
-	)
+	)#»»
 	setmod!("mercenary",#««
 		0 => (path=["Classes", "Fighter"],),
 		1 => (path=["NPC", "Kagain"],),
@@ -1418,40 +1420,47 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 		4 => (path=["Classes", "Mage"],),
 		5 => (path=["Spells", "Alteration"],),
 	)#»»
-		# extract data from downloaded/extracted mods ««
+		# extract data from already downloaded/extracted mods ««
 		for (id, mod) in moddb
-			isdir(joinpath(MODS, id)) && lastupdate!(mod)
-			for f in joinpath(DOWN, id).*(".tar.gz", ".zip", ".7z", ".rar")
-				isfile(f) && (mod.archive = f; break)
+			isextracted(mod) && update_mod(mod)
+			for f in id.*(".tar.gz", ".zip", ".7z", ".rar")
+				isfile(joinpath(DOWN, f)) && (mod.archive = f; break)
 			end
 		end#»»
 
-	file = joinpath(TEMP, "moddb")
-	write_moddb(file; moddb)
-	# we check that this produces a readable moddb before overwriting:
-	global global_moddb = read_moddb(file)
-	mv(file, MODDB; force=true)
-	return nothing
+	global global_moddb = moddb
+	printsim("writing moddb $dest")
+	write_moddb(dest; moddb)
 end#»»
 
-function bws_selection(source = BWS_SELECTION)#««
+#««1 Selection handling
+function bws_selection(source = BWS_USER)#««
+	printsim("reading selection from $source")
 	section = ""
-	selection = Tuple{String,Vector{Int}}[]
+	selection = Dict{String,Set{String}}()
 	for line in eachline(source)
 		if line[1] == '[' && line[end] == ']'
 			section = line[2:end-1]
 			continue
 		end
-		if section == "Save"
+		if section == "Save" && occursin('=', line)
 			id, components = split(line, r"\s*=\s*"; limit=2)
-			push!(selection, (lowercase(id), split(components)))
+			push!(get(selection, lowercase(id), Set{String}()), split(components)...)
 		end
 	end
 	return selection
 end#»»
-function import_bws_selection((source, dest) = BWS_SELECTION => SELECTION)#««
+function import_bws_selection((source, dest) = BWS_USER => SELECTION)#««
 	global global_selection = bws_selection(source)
-	write_selection(global_selection, dest)
+	maybe_rewrite_moddb() do
+		for id in keys(global_selection)
+			m = global_moddb[id]
+			isextracted(m) || extract(m)
+		end
+	end
+	write_selection(dest; moddb=global_moddb, selection = global_selection)
 end#»»
 
 import_bws_moddb()
+# don't do this if selection is more recent than BWS config:
+# import_bws_selection()

@@ -157,11 +157,11 @@ archive = "might_and_guile.tar.gz"
     [might_and_guile.components.200]
     path = ["Tables", "HLA"]
 
-    [might_and_guile.components.265]
-    path = ["Classes", "Monk"]
-
     [might_and_guile.components.230]
     path = ["Classes", "Ranger"]
+
+    [might_and_guile.components.265]
+    path = ["Classes", "Monk"]
 
 [tyrisflare]
 lastupdate = 2022-06-23
@@ -187,8 +187,9 @@ archive = "Manual"
 [saradas_magic_2]
 lastupdate = 2021-07-23
 class = "Spells"
-url = "github:SpellholdStudios/Saradas_Magic_for_BG2"
+url = "https://github.com/SpellholdStudios/Saradas_Magic_for_BG2/releases/download/v2.0.0/saradas-magic-for-bg2-v2.0.0.zip"
 description = "Saradas BG2"
+archive = "saradas-magic-for-bg2-v2.0.0.zip"
 
 [jkits]
 lastupdate = 1970-01-01
@@ -821,6 +822,13 @@ url = "https://www.dropbox.com/s/kt9u12x8qagq8lu/AloraEE.zip?dl=1"
 description = "Alora NPC"
 archive = "AloraEE.zip"
 
+[themed_tweaks]
+lastupdate = 2022-05-17
+class = "Tweak"
+url = "https://github.com/lzenner/themed_tweaks/releases/download/v0.2/themed-tweaks-v2-v2-pre.zip"
+description = "Themed tweaks"
+archive = "themed-tweaks-v2-v2-pre.zip"
+
 [animalcompanions]
 lastupdate = 2022-06-23
 class = "Tweak"
@@ -1188,7 +1196,7 @@ description = "Jaheira Recast"
 archive = "AstroBryGuy-JaheiraRecast-v3.0-0-g501290c.zip"
 
 [ooze]
-lastupdate = 2022-05-13
+lastupdate = 2022-06-24
 class = "SmallQuests"
 url = "weaselmods:oozes-lounge"
 description = "Oozes Lounge"
@@ -2469,9 +2477,8 @@ description = "Edwin Romance"
 [herthimoney]
 lastupdate = 2022-05-10
 class = "Quests"
-url = "https://github.com/Austin-BG/HTaM/releases/download/v.4.2.6/heroes-thieves-and-moneylenders-4.2.6.zip"
+url = "github:Austin-BG/HTaM"
 description = "Heroes, Thieves and Moneylenders"
-archive = "heroes-thieves-and-moneylenders-4.2.6.zip"
 
 [swordsaint]
 lastupdate = 2018-11-02
@@ -2487,17 +2494,17 @@ url = "https://www.dropbox.com/s/mogovd9x99niham/RestoreSound_V1.zip?dl=1"
 description = "Restore Original Casting Sounds"
 archive = "OldSound.zip"
 
-[solaufein]
-lastupdate = 1970-01-01
-class = "NPC"
-url = "github:RoxanneSHS/Solaufein"
-description = "Solaufein NPC"
-
 [keldorn_rom]
 lastupdate = 1970-01-01
 class = "NPC-Related"
 url = "github:Gibberlings3/Keldorn_Romance"
 description = "Keldorn Romance"
+
+[solaufein]
+lastupdate = 1970-01-01
+class = "NPC"
+url = "github:RoxanneSHS/Solaufein"
+description = "Solaufein NPC"
 
 [deepgnomes]
 lastupdate = 2022-06-23
@@ -2635,7 +2642,7 @@ archive = "scales_of_balance.tar.gz"
     after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "tomeandblood"]
 
     [scales_of_balance.components.102]
-    path = ["Fighting", "Tweak"]
+    path = ["Fighting", "Tweaks"]
 
     [scales_of_balance.components.200]
     exclusive = ["intmod.2da", "savecndh.2da", "savecng.2da", "strmod.2da", "strmodex.2da"]
@@ -2980,6 +2987,9 @@ class = "Quests"
 url = "github:Gibberlings3/WheelsOfProphecy"
 description = "Wheels of Prophecy"
 archive = "wheels.tar.gz"
+
+    [wheels.components.""]
+    before = ["stratagems"]
 
 [faiths_and_powers]
 lastupdate = 2022-06-21
@@ -3426,22 +3436,21 @@ archive = "eet_tweaks.tar.gz"
 [ascension]
 lastupdate = 2022-02-19
 class = "BigQuests"
-url = "https://github.com/InfinityMods/Ascension/releases/download/2.0.23/ascension-2.0.23.zip"
+url = "github:InfinityMods/Ascension"
 description = "Ascension"
-archive = "ascension-2.0.23.zip"
 
 [mih_sp]
 lastupdate = 2022-06-23
 class = "Spells"
-url = "github:AngelGryph/MadeInHeaven_SpellPack"
+url = "https://github.com/AngelGryph/MadeInHeaven_SpellPack/releases/download/v5/lin-mih_sp-v5.tar.gz"
 description = "Made In Heaven: Spell Pack"
+archive = "lin-mih_sp-v5.tar.gz"
 
 [dw_lanthorn]
 lastupdate = 2021-07-13
 class = "Quests"
-url = "https://github.com/Gibberlings3/Restored-Rhynn-Lanthorn/releases/download/v-beta-2/lin-dw_lanthorn-beta-2.zip"
+url = "github:Gibberlings3/Restored-Rhynn-Lanthorn"
 description = "Restored Rhynn Lanthorn quest"
-archive = "lin-dw_lanthorn-beta-2.zip"
 
 [anishai]
 lastupdate = 1970-01-01
@@ -3457,39 +3466,44 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
 description = "Tactics EE"
 archive = "Tactics2_for_EE.zip"
 
+    [eetact2.components.310]
+    exclusive = ["dhadra01.bcs", "dragblac.bcs", "dragred.bcs", "spin691.spl", "spin693.spl", "udsilver.itm"]
+
     [eetact2.components.320]
     exclusive = ["behdir01.bcs", "behhiv01.bcs", "behold.itm", "behold01.bcs", "elderorb.bcs", "gauth01.bcs"]
+
+    [eetact2.components.350]
+    exclusive = ["golada01.cre", "goliro.itm", "goliro01.cre", "golsto.itm", "golsto01.cre"]
 
     [eetact2.components.400]
     exclusive = ["ar1800.are", "ar18arch.cre", "ar18dwaf.cre", "ar18fig.cre", "ar18mage.cre", "ar18prie.cre", "ar18skel.cre", "ar18thif.cre"]
 
-    [eetact2.components.470]
+    [eetact2.components.130]
+    exclusive = ["sahamb01.bcs", "sahcpt01.cre", "sahgrd01.cre"]
 
-    [eetact2.components.460]
+    [eetact2.components.260]
+    exclusive = ["spwnbeh.bcs", "spwndead.bcs", "spwndrow.bcs", "spwngol.bcs", "spwnmind.bcs", "spwnmon.bcs", "spwnorc.bcs", "spwnrak.bcs", "spwntoa.bcs", "spwntrol.bcs", "spwnvamp.bcs", "spwnwolf.bcs"]
 
-    [eetact2.components.190]
+    [eetact2.components.420]
+    exclusive = ["demglab.bcs", "dempit.bcs", "dempit01.cre", "mage20c.bcs", "tanari.bcs", "telpit1.cre"]
 
-    [eetact2.components.270]
-    exclusive = ["amncen1.cre", "ar0041.bcs", "ar0045.bcs", "ar0046.bcs"]
-
-    [eetact2.components.290]
-    exclusive = ["undead"]
-
-    [eetact2.components.340]
-    exclusive = ["bodtan.cre", "lavok01.cre", "lich01.cre", "mage10a.bcs"]
-
-    [eetact2.components.250]
-
-    [eetact2.components.120]
-    exclusive = ["torgal.cre"]
-
-    [eetact2.components.230]
-    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
+    [eetact2.components.210]
+    exclusive = ["ar0318.are", "ar0318.bcs"]
 
     [eetact2.components.160]
     exclusive = ["ar0907.bcs", "hlketta.bcs", "hlketta.cre", "hlkoshi.cre", "hlmafer.cre", "hlolaf.cre", "hlsion.cre", "hlstal.cre"]
 
-    [eetact2.components.450]
+    [eetact2.components.240]
+    exclusive = ["ar0326.bcs"]
+
+    [eetact2.components.360]
+    exclusive = ["nymph.bcs"]
+
+    [eetact2.components.432]
+    exclusive = ["ar1900.bcs", "impshad.bcs"]
+
+    [eetact2.components.410]
+    exclusive = ["ar5200.are"]
 
     [eetact2.components.370]
     exclusive = ["ar0406.bcs"]
@@ -3497,8 +3511,26 @@ archive = "Tactics2_for_EE.zip"
     [eetact2.components.280]
     exclusive = ["ar0042.bcs", "ar0043.bcs", "ar0044.bcs"]
 
+    [eetact2.components.100]
+    exclusive = ["ar0601.are", "ily1.cre", "ilyhamm.itm"]
+
+    [eetact2.components.431]
+    exclusive = ["ar1900.bcs", "impshad.bcs"]
+
+    [eetact2.components.270]
+    exclusive = ["amncen1.cre", "ar0041.bcs", "ar0045.bcs", "ar0046.bcs"]
+
     [eetact2.components.390]
     exclusive = ["ar1700.are"]
+
+    [eetact2.components.170]
+    exclusive = ["ar1008.bcs", "hllayen.cre", "hlrevan.cre", "hlshang.cre"]
+
+    [eetact2.components.290]
+    exclusive = ["undead"]
+
+    [eetact2.components.231]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
 
     [eetact2.components.150]
     exclusive = ["ar2900.bcs", "helljon.dlg"]
@@ -3510,70 +3542,29 @@ archive = "Tactics2_for_EE.zip"
     [eetact2.components.430]
     exclusive = ["ar1900.bcs", "impshad.bcs"]
 
-    [eetact2.components.330]
-    exclusive = ["vamemi01.bcs", "vampir01.bcs"]
-
-    [eetact2.components.310]
-    exclusive = ["dhadra01.bcs", "dragblac.bcs", "dragred.bcs", "spin691.spl", "spin693.spl", "udsilver.itm"]
-
-    [eetact2.components.350]
-    exclusive = ["golada01.cre", "goliro.itm", "goliro01.cre", "golsto.itm", "golsto01.cre"]
-
-    [eetact2.components.360]
-    exclusive = ["nymph.bcs"]
-
-    [eetact2.components.432]
-    exclusive = ["ar1900.bcs", "impshad.bcs"]
-
-    [eetact2.components.410]
-    exclusive = ["ar5200.are"]
-
-    [eetact2.components.110]
-
-    [eetact2.components.431]
-    exclusive = ["ar1900.bcs", "impshad.bcs"]
-
-    [eetact2.components.231]
-    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
-
     [eetact2.components.140]
     exclusive = ["bodhi2.cre", "bodtan.cre"]
 
     [eetact2.components.300]
     exclusive = ["flayer01.bcs", "gormind.bcs", "mindal01.bcs"]
 
-    [eetact2.components.0]
-
-    [eetact2.components.200]
-    exclusive = ["ar9391.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "tsmaepet.cre"]
-
-    [eetact2.components.130]
-    exclusive = ["sahamb01.bcs", "sahcpt01.cre", "sahgrd01.cre"]
-
-    [eetact2.components.260]
-    exclusive = ["spwnbeh.bcs", "spwndead.bcs", "spwndrow.bcs", "spwngol.bcs", "spwnmind.bcs", "spwnmon.bcs", "spwnorc.bcs", "spwnrak.bcs", "spwntoa.bcs", "spwntrol.bcs", "spwnvamp.bcs", "spwnwolf.bcs"]
-
-    [eetact2.components.220]
-
-    [eetact2.components.210]
-    exclusive = ["ar0318.are", "ar0318.bcs"]
-
-    [eetact2.components.420]
-    exclusive = ["demglab.bcs", "dempit.bcs", "dempit01.cre", "mage20c.bcs", "tanari.bcs", "telpit1.cre"]
-
-    [eetact2.components.240]
-    exclusive = ["ar0326.bcs"]
-
-    [eetact2.components.100]
-    exclusive = ["ar0601.are", "ily1.cre", "ilyhamm.itm"]
-
-    [eetact2.components.170]
-    exclusive = ["ar1008.bcs", "hllayen.cre", "hlrevan.cre", "hlshang.cre"]
+    [eetact2.components.340]
+    exclusive = ["bodtan.cre", "lavok01.cre", "lich01.cre", "mage10a.bcs"]
 
     [eetact2.components.440]
     exclusive = ["giafir.itm", "ysfire01.cre", "ysg2.cre", "ysguar01.cre"]
 
-    [eetact2.components.180]
+    [eetact2.components.120]
+    exclusive = ["torgal.cre"]
+
+    [eetact2.components.330]
+    exclusive = ["vamemi01.bcs", "vampir01.bcs"]
+
+    [eetact2.components.200]
+    exclusive = ["ar9391.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "tsmaepet.cre"]
+
+    [eetact2.components.230]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
 
     [eetact2.components.232]
     exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
@@ -3635,9 +3626,8 @@ description = "Coran's BG Extended Friendship Talks"
 [mih_eq]
 lastupdate = 2022-06-23
 class = "Quests"
-url = "https://github.com/AngelGryph/MadeInHeaven_EncountersAndQuests/releases/download/v5/lin-mih_eq-v5.1.tar.gz"
+url = "github:AngelGryph/MadeInHeaven_EncountersAndQuests"
 description = "Made In Heaven: Encounters and Quests"
-archive = "lin-mih_eq-v5.1.tar.gz"
 
     [mih_eq.components.""]
     before = ["stratagems"]
@@ -4870,7 +4860,7 @@ description = "The Broken Lanthorn"
 archive = "lenshunt.tar.gz"
 
 [sotsc]
-lastupdate = 2022-06-11
+lastupdate = 2022-06-24
 class = "Quests"
 url = "weaselmods:shades-of-the-sword-coast"
 description = "Shades of the Sword Coast"
@@ -4919,7 +4909,7 @@ archive = "eet.zip"
 
     [eet.components.""]
     after = ["bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "bgeetextpack", "bgsodde", "darkhorizonsbgee", "dlcmerger", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "k9sharteelnpc", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white"]
-    before = ["bg2ee_ga", "bg2eer", "bg2eetrans"]
+    before = ["bg2ee_ga", "bg2eer"]
 
 [xan]
 lastupdate = 2020-08-04
@@ -4949,9 +4939,8 @@ archive = "Chantelame v6.zip"
 [sodrtd]
 lastupdate = 2022-06-01
 class = "Quests"
-url = "https://github.com/Gibberlings3/Road_To_Discovery_for_SoD/releases/download/v0.7Beta/sodrtd-0.7-.beta.zip"
+url = "github:Gibberlings3/Road_To_Discovery_for_SoD"
 description = "Road to Discovery"
-archive = "sodrtd-0.7-.beta.zip"
 
 [simenpc]
 lastupdate = 2022-06-23
@@ -5007,9 +4996,8 @@ archive = "nanstein.tar.gz"
 [a7-totlm-bg2ee]
 lastupdate = 2021-08-24
 class = "Quests"
-url = "https://github.com/Argent77/A7-TotLM-BG2EE/releases/download/v3.0/lin-A7-TotLM-BG2EE-v3.0.zip"
+url = "github:Argent77/A7-TotLM-BG2EE"
 description = "Trials of the Luremaster"
-archive = "lin-A7-TotLM-BG2EE-v3.0.zip"
 
 [npc_strongholds]
 lastupdate = 2022-06-23
@@ -5262,9 +5250,8 @@ archive = "SoDGerman.zip"
 ["c#sodboabri"]
 lastupdate = 2022-06-02
 class = "Quests"
-url = "https://github.com/Gibberlings3/The_Boareskyr_Bridge_Scene/releases/download/v2/the-boareskyr-bridge-scene-v2.zip"
+url = "github:Gibberlings3/The_Boareskyr_Bridge_Scene"
 description = "The Boareskyr Bridge Scene"
-archive = "the-boareskyr-bridge-scene-v2.zip"
 
 [dsotsc]
 lastupdate = 2022-06-23
@@ -5834,9 +5821,8 @@ description = "Drizzt Saga"
 [a7-testyourmettle]
 lastupdate = 2021-07-09
 class = "Quests"
-url = "https://github.com/Argent77/A7-TestYourMettle/releases/download/v1.4/lin-A7-TestYourMettle-v1.4.zip"
+url = "github:Argent77/A7-TestYourMettle"
 description = "Test Your Mettle"
-archive = "lin-A7-TestYourMettle-v1.4.zip"
 
 [stormcaller]
 lastupdate = 1970-01-01
@@ -5981,6 +5967,9 @@ class = "NPC-Related"
 url = "github:Gibberlings3/Crossmod_Banter_Pack_for_Baldurs_Gate_II"
 description = "Crossmod Banter Pack"
 
+    [crossmodbg2.components.""]
+    after = ["adrian", "ajantisbg1", "ajantisbg2", "amber", "angelo", "aranw", "arath_eet", "aurenaseph", "branwen", "c#solaufein", "coran", "coranbgfriend", "dace_eet", "fade", "faren", "foundling", "gahesh", "gavin", "haerdalisromance", "haldamir", "hephernaanbg2", "hubelpot", "isra", "iylos", "kelsey", "keto", "khalidbg2", "kido", "kindrek", "kivan", "longerroadee", "luxleysoa", "neh'taniel", "ninde_eet", "petsy", "quayle", "saerileth", "sarahtob", "skiecost", "solaufein", "tashia", "thebeaurinlegacy", "tiax", "tsujatha", "varshoon", "verrsza", "willowisp", "xan", "xanbg1friend", "xulaye", "yasraena", "yoshimosremorse", "yvette"]
+
 [tdd]
 lastupdate = 1970-01-01
 class = "BigQuests"
@@ -5996,9 +5985,8 @@ description = "BGEE Leveled Spawns"
 [assassinations]
 lastupdate = 2021-05-15
 class = "Quests"
-url = "https://github.com/Pocket-Plane-Group/Assassinations/releases/download/v17/assassinations-v17.zip"
+url = "github:Pocket-Plane-Group/Assassinations"
 description = "Assassinations"
-archive = "assassinations-v17.zip"
 
 ["c#solaufein"]
 lastupdate = 2022-04-02
@@ -6047,9 +6035,8 @@ archive = "forgotten-armament.tar.gz"
 [ac_quest]
 lastupdate = 2022-06-03
 class = "Quests"
-url = "https://github.com/Gitjas/Ascalons_Questpack/releases/download/v4.3/ascalons-questpack-4.3.zip"
+url = "github:Gitjas/Ascalons_Questpack"
 description = "Ascalons Questpack"
-archive = "ascalons-questpack-4.3.zip"
 
 [eetmoveitemssoa]
 lastupdate = 1970-01-01
@@ -6074,9 +6061,8 @@ description = "Mazzy Friendship"
 [alternatives]
 lastupdate = 2021-03-28
 class = "Quests"
-url = "https://github.com/Gibberlings3/Alternatives/releases/download/v15/Alternatives_v15.zip"
+url = "github:Gibberlings3/Alternatives"
 description = "Alternatives"
-archive = "Alternatives_v15.zip"
 
 [whitequeen]
 lastupdate = 2022-05-08
@@ -6088,6 +6074,7 @@ archive = "whitequeen.zip"
 [vaulteet]
 lastupdate = 2022-06-23
 class = "Quests"
+readme = "https://www.angelfire.com/rpg2/azenmod/ReadMe-Vault.htm"
 url = "github:RoxanneSHS/VaultEE"
 description = "Vault"
 archive = "vaulteet.tar.gz"
@@ -6220,7 +6207,7 @@ archive = "evandra-v2.2.zip"
 
 [bg1aerie]
 lastupdate = 2020-08-19
-class = "NPC"
+class = "NPC-Related"
 url = "https://www.dropbox.com/s/7obd7oopktkl5jv/BG1AerieV12.zip?dl=1"
 description = "Aerie in BG:EE"
 archive = "BG1AerieV12.zip"

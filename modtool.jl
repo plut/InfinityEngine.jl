@@ -11,6 +11,7 @@ ModTool.install(all)
 """
 module ModTool
 # TODO:««
+# - replace `selection` file by something like `components!()`
 # - Generic installation order
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
 # + fix updating selection file
@@ -169,7 +170,6 @@ const MOD_CLASSES = split(replace("""
 	isnothing(k) && error("bad mod class \"$class\"")
 	k; end
 @inline modarchive(m::Mod) = m.id*match(r"\.[^.]*$", m.url).match
-const EET_class = modclass("EET")
 @inline modgame(m::Mod) =
 	m.id ∈ global_moddb["eet"].components[1].after ? :bg1 : :bg2
 @inline modcomponents(m::Mod) = (m.components)
@@ -219,7 +219,7 @@ end
 end
 
 "Returns the dependency matrix for these mods, encoded as
-(arrowsfrom = dict(mod1 => mod2, ...), arrowsto = dict(mod1 => n1, ...))
+(arrowsfrom = dict(mod1 => mod2, ...), arrowsto = dict(mod1 => n1, ...))"
 function dependencies(list ;moddb=global_moddb)#««
 	arrowsfrom = Dict{String,Set{String}}(); arrowsto = copy(arrowsfrom)
 	function connect((b, a),)
@@ -636,7 +636,7 @@ function readcomp(io::IO; selection=global_selection)#««
 	to_add = Dict{String,Vector{String}}()
 	to_del = Dict{String,Vector{String}}()
 	for (id, d) in newsel
-		old = get!(selection, id, String[])
+		old = get!(selection, id, Set(String[]))
 		for (k, v) in d
 			if v && (k ∉ old)
 				push!(get!(to_add, id, String[]), k)
@@ -647,9 +647,9 @@ function readcomp(io::IO; selection=global_selection)#««
 			end
 		end
 	end
-	printlog("Added:")
+	isempty(to_add) || printlog("Added:")
 	for (k, v) in to_add; printlog("\e[32m+", k, ": ", join(v, ", "), "\e[m");end
-	printlog("Removed:")
+	isempty(to_del) || printlog("Removed:")
 	for (k, v) in to_del; printlog("\e[31m-", k, ": ", join(v, ", "), "\e[m");end
 end#»»
 function component_editor(filename; selection)#««
@@ -734,7 +734,7 @@ function components!(;selection=global_selection,moddb=global_moddb)#««
 end#»»
 
 # Mod installation ««1
-function install(mod; simulate=false, uninstall=false, ««
+function install(mod; simulate=false, uninstall=false, #««
 		selection=global_selection, gamedirs=GAMEDIR,
 		order = installorder(keys(selection)))
 	extract(mod) || return
@@ -783,15 +783,19 @@ function install(mod; simulate=false, uninstall=false, ««
 	now_installed = get(weidu_status(gamedir), id, String[])
 	not_installed = setdiff(selected, now_installed)
 	if !isempty(not_installed)
-		printwarn("warning: the following components were not installed:\n",
-			join(not_installed, ' '), "\nUpdate selection accordingly?")
-		r = readline()
+		printwarn("warning: the following components were not installed:")
+		for k in not_installed
+			c = findcomponent(mod, k)
+			printwarn(isnothing(c) ? "$k (not found)" : "$k ($(description(c)))")
+		end
+		printask("update selection?")
+		r = readline()*'n'
 		if lowercase(r[1]) == 'y'
 			selection[id] = Set(now_installed)
 			update_selection()
 		end
 	end
-end»»
+end #»»
 function uninstall(mod; selection = global_selection, kwargs...)#««
 	delete!(selection, mod.id)
 	install(mod)
@@ -946,7 +950,7 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	addmods!(moddb,
 	# Argent77 ««3
 	mkmod("a7-convenienteenpcs", "github:Argent77/A7-NoEENPCs",
-		"Convenient EE NPCs", "NPCTweak"),
+		"Convenient EE NPCs", "NPC-Related"),
 	mkmod("extraexpandedencounters", "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip", "Extra Expanded Encounters", "Quests"),
 	# ArtemiusI ««3
 	mkmod("housetweaks", "github:ArtemiusI/House-Rule-Tweaks",
@@ -991,6 +995,7 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweak"),
 	mkmod("mih_sp", "github:AngelGryph/MadeInHeaven_SpellPack", "Made In Heaven: Spell Pack", "Spells"),
 	mkmod("mih_eq", "github:AngelGryph/MadeInHeaven_EncountersAndQuests", "Made In Heaven: Encounters and Quests", "Quests"),
+	mkmod("themed_tweaks", "github:lzenner/themed_tweaks", "Themed tweaks", "Tweak"),
 	# Weasel mods ««3
 	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPC"),
 	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPC"),
@@ -1102,6 +1107,7 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	# »»
 		# Tweak mod readme««
 	printlog("hardcoding mod readme")
+	moddb["bom"].readme = "https://sorcerers.net/Games/BG2/bomip-docs/index.html"
 	moddb["faiths_and_powers"].readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
 	moddb["tnt"].readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
 	moddb["epicthieving"].readme = "https://forums.beamdog.com/discussion/74158/v3-5-epic-thieving-more-benefits-from-high-thieving-skills"
@@ -1111,7 +1117,9 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	moddb["monasticorders"].readme = "https://forums.beamdog.com/discussion/18620/mod-beta-monastic-orders-of-faerun"
 	moddb["mercenary"].readme = "https://forums.beamdog.com/discussion/68151/fighter-kit-mercenary-v3-1-iwdee-eet-bgee-bg2ee"
 	moddb["karatur"].readme = "https://forums.beamdog.com/discussion/15959/mod-twas-a-slow-boat-from-kara-tur-queststorenew-items-release-90/p1"
+	moddb["vaulteet"].readme = "https://www.angelfire.com/rpg2/azenmod/ReadMe-Vault.htm"
 	moddb["verrsza"].readme = "https://forums.beamdog.com/discussion/60614/mod-verrsza-npc-for-bgee-and-sod"
+	moddb["unique_items"].readme = "https://forums.beamdog.com/discussion/47005/bgee-sod-item-replacement-fun-pack-v2-1-completed"
 	#»»
 	moddb["arcanearcher"].archive = "arcanearcher.zip"
 	printlog("setting mod component properties")
@@ -1489,6 +1497,9 @@ function import_bws_moddb((source, dest) = BWS_MODDB => MODDB,#««
 	)#»»
 	setmod!("cowledmenace",#««
 		"" => (after = "eet", depends = "eet",),
+	)#»»
+	setmod!("crossmodbg2",#««
+		"" => (after = [ "adrian", "ajantisbg1", "ajantisbg2", "amber", "angelo", "aranw", "arath_eet", "aurenaseph", "branwen", "c#solaufein", "coran", "coranbgfriend", "dace_eet", "fade", "faren", "foundling", "gahesh", "gavin", "haerdalisromance", "haldamir", "hephernaanbg2", "hubelpot", "isra", "iylos", "kelsey", "keto", "khalidbg2", "kido", "kindrek", "kivan", "longerroadee", "luxleysoa", "neh'taniel", "ninde_eet", "petsy", "quayle", "saerileth", "sarahtob", "skiecost", "solaufein", "tashia", "thebeaurinlegacy", "tiax", "tsujatha", "varshoon", "verrsza", "willowisp", "xan", "xanbg1friend", "xulaye", "yasraena", "yoshimosremorse", "yvette", ],),
 	)#»»
 	setmod!("d0questpack", #««
 		"" => (after = ["kelsey", "keto", "ub" ],),

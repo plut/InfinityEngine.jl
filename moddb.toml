@@ -187,9 +187,8 @@ archive = "Manual"
 [saradas_magic_2]
 lastupdate = 2021-07-23
 class = "Spells"
-url = "https://github.com/SpellholdStudios/Saradas_Magic_for_BG2/releases/download/v2.0.0/saradas-magic-for-bg2-v2.0.0.zip"
+url = "github:SpellholdStudios/Saradas_Magic_for_BG2"
 description = "Saradas BG2"
-archive = "saradas-magic-for-bg2-v2.0.0.zip"
 
 [jkits]
 lastupdate = 1970-01-01
@@ -686,7 +685,7 @@ archive = "artisanskitpack.tar.gz"
     path = ["Classes", "Fighter"]
 
     [artisanskitpack.components.""]
-    after = ["Emily"]
+    after = ["ajantisbg1", "ajantisbg2", "emily", "skitianpcs"]
 
     [artisanskitpack.components.7102]
     path = ["NPC", "Imoen"]
@@ -825,9 +824,8 @@ archive = "AloraEE.zip"
 [themed_tweaks]
 lastupdate = 2022-05-17
 class = "Tweak"
-url = "https://github.com/lzenner/themed_tweaks/releases/download/v0.2/themed-tweaks-v2-v2-pre.zip"
+url = "github:lzenner/themed_tweaks"
 description = "Themed tweaks"
-archive = "themed-tweaks-v2-v2-pre.zip"
 
 [animalcompanions]
 lastupdate = 2022-06-23
@@ -1581,6 +1579,7 @@ archive = "VerrSza (BG1EE) v5.4.zip"
 [bom]
 lastupdate = 2019-04-14
 class = "Items"
+readme = "https://sorcerers.net/Games/BG2/bomip-docs/index.html"
 url = "https://www.dropbox.com/s/gjj3dlc1k8muywv/BoM_V3EE.zip?dl=1"
 description = "Boards o' Magick Item Pack"
 archive = "BoM_V3EE.zip"
@@ -3206,10 +3205,11 @@ description = "Garrick - Tales of a Troubadour"
 archive = "garrick-tt_v1.26.7z"
 
 [skitianpcs]
-lastupdate = 1970-01-01
+lastupdate = 2022-06-24
 class = "NPC"
 url = "github:Skitia/SkitiaNPCs"
 description = "Skitia NPCs"
+archive = "skitianpcs.tar.gz"
 
 [mercenary]
 lastupdate = 2022-06-23
@@ -3442,9 +3442,8 @@ description = "Ascension"
 [mih_sp]
 lastupdate = 2022-06-23
 class = "Spells"
-url = "https://github.com/AngelGryph/MadeInHeaven_SpellPack/releases/download/v5/lin-mih_sp-v5.tar.gz"
+url = "github:AngelGryph/MadeInHeaven_SpellPack"
 description = "Made In Heaven: Spell Pack"
-archive = "lin-mih_sp-v5.tar.gz"
 
 [dw_lanthorn]
 lastupdate = 2021-07-13
@@ -3597,7 +3596,7 @@ url = "github:AngelGryph/MadeInHeaven_ItemPack"
 description = "Made In Heaven Item Pack"
 
 [aurora]
-lastupdate = 2022-06-23
+lastupdate = 2022-06-24
 class = "Items"
 url = "github:Sampsca/Auroras-Shoes-and-Boots"
 description = "Aurora's shoes and boots"
@@ -4592,10 +4591,13 @@ description = "Eternal Imoen"
 archive = "EternalImoen_v6.3.zip"
 
 [leui]
-lastupdate = 1970-01-01
+lastupdate = 2022-05-09
 class = "UI"
 url = "github:r-e-d/LeUI"
 description = "lefreut's enhanced UI (requires game version 2.6)"
+
+    [leui.components.""]
+    before = ["deities-of-faerun", "eeuitweaks", "faiths_and_powers", "might_and_guile", "shadowadept", "stratagems", "tomeandblood"]
 
 [hephernaanbg2]
 lastupdate = 2022-01-30
@@ -5002,6 +5004,7 @@ description = "Trials of the Luremaster"
 [npc_strongholds]
 lastupdate = 2022-06-23
 class = "Tweak"
+readme = "https://gibberlings3.github.io/Documentation/readmes/readme-npc_strongholds.html"
 url = "https://www.gibberlings3.net/files/file/959-npc-strongholds/"
 description = "NPC Strongholds"
 archive = "NPCStrongholds_V14.zip"
@@ -5808,6 +5811,7 @@ archive = "BG_Travel for BG1&BGEE&BGT&Tutu&EET v2,1.rar"
 [unique_items]
 lastupdate = 2017-02-13
 class = "Items"
+readme = "https://forums.beamdog.com/discussion/47005/bgee-sod-item-replacement-fun-pack-v2-1-completed"
 url = "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip"
 description = "BGEE/SOD Item replacement fun pack"
 archive = "unique_items.zip"

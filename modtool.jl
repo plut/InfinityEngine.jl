@@ -79,7 +79,8 @@ function maybe_rewrite_moddb(f; file=MODDB)
 	moddb_changed && write_moddb()
 end
 function __init__()
-	isinteractive() && init()
+	isdefined(Main, :modtool_no_init) || init()
+# 	isinteractive() && init()
 end
 
 @inline fixutf8(s::AbstractString)= isvalid(s) ? s : String(Char.(codeunits(s)))
@@ -105,16 +106,15 @@ mutable struct ModComponent
 	path::Vector{String} # e.g. ["Weapons&Armor", "Proficiencies"]
 	@inline ModComponent(i, t, g="", s="") =
 		new(string(i), t, g, s, [], [], [], [], [], [])
-	@inline ModComponent(i, d::AbstractDict) =
-		new(i, (get(d, k,"") for k in ("name", "group", "subgroup"))...,
+	@inline ModComponent(d::AbstractDict) =
+		new((get(d, k,"") for k in ("id", "name", "group", "subgroup"))...,
 		 (get(d,k,[]) for k in ("after", "before", "conflicts", "depends", "exclusive", "path"))...)
 end
 @inline Base.isempty(c::ModComponent) =
 	all(isempty(getfield(c, i)) for i in 1:fieldcount(ModComponent))
-@inline db_prop(c::ModComponent, pairs...) = Dict(pairs...,
-	(string(s) => getfield(c,  s)
-	for s in (:name, :after, :before, :conflicts, :depends, :exclusive, :path)
-	if !isempty(getfield(c, s)))...)
+@inline db_prop(c::ModComponent, pairs...) =
+	Dict(pairs..., (string(s) => getfield(c,  s)
+	for s in fieldnames(ModComponent) if !isempty(getfield(c, s)))...)
 @inline description(c::ModComponent) =
 	let n = isempty(c.name) ? "<unknown>" : c.name
 	isempty(c.subgroup) ? n : c.subgroup*'/'*n
@@ -166,14 +166,14 @@ const MOD_CLASSES = split(replace("""
 	Tweaks
 	AI
 	Sound
-	UI
 	Late
+	UI
 	Final
 	BADCLASS
 """, r"#[^\n]*\n" =>"\n"))# »»
 @inline modarchive(m::Mod) = m.id*match(r"\.[^.]*$", m.url).match
 @inline modgame(m::Mod; moddb=global_moddb) =
-	m.id ∈ moddb["eet"].components[1].after ? :bg1 : :bg2
+	m.id ∈ moddb["eet"].compat.after ? :bg1 : :bg2
 @inline modcomponents(m::Mod) = (m.components)
 @inline function modcomponent!(m::Mod, i, c)
 	i = something(i, length(m.components)+1)
@@ -184,18 +184,19 @@ end
 # Mod DB handling ««1
 @inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
 @inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
+const mod_fields=(:id,:url,:class,:description,:archive,:readme,:languages,:tp2)
 function merge_moddb(filename = MODDB; moddb = global_moddb)
 	dict = TOML.parsefile(filename)
 	for (id, d) in dict
 		m = get!(moddb, id, Mod(;id))
-		for k in (:url,:class,:description,:archive,:readme,:languages,:tp2,:languages)
+		for k in mod_fields
 			ifhaskey(d, string(k)) do x; setfield!(m, k, x); end
 		end
 		ifhaskey(d, "lastupdate") do x; m.lastupdate = Date(x); end
-		ifhaskey(d, "compat") do x; m.compat = ModComponent("", x); end
+		ifhaskey(d, "compat") do x; m.compat = ModComponent(x); end
 		ifhaskey(d, "components") do x; for (k,prop) in x
 			# using dict constructor for `ModComponent`:
-			modcomponent!(m, get(prop, "index", nothing), ModComponent(k, prop))
+			modcomponent!(m, parse(Int, k), ModComponent(prop))
 		end end
 	end
 	return moddb
@@ -204,15 +205,13 @@ end
 function write_moddb(io::IO; moddb=global_moddb)
 	TOML.print(io, moddb; sorted=true) do m
 		d = Dict{String,Any}()
-		for k in (:url,:class,:description,:archive,:readme,:languages,:tp2,:languages)
+		for k in mod_fields
 			x = getfield(m, k); isempty(x) || (d[string(k)] = x)
 		end
 		d["lastupdate"] = m.lastupdate
 		isempty(m.compat) || (d["compat"] = db_prop(m.compat))
-		if !isempty(m.components)
-			d1 = Dict(c.id=>db_prop(c, "index"=>i) for (i,c) in pairs(m.components))
-			any(!isempty, values(d1)) && (d["components"] = d1)
-		end
+		!isempty(m.components) && (d["components"] = Dict(
+			string(i)=>db_prop(c) for (i,c) in pairs(m.components) if !isempty(c)))
 		d
 	end
 end
@@ -649,6 +648,7 @@ nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>
 finish "»»5 """
 
 function component_editor(filename; selection)
+# 	run(`vim $filename`)
 	run(`vim -c 'so %' $filename`)
 	merge_selection(filename; selection)
 end
@@ -684,8 +684,9 @@ function edit(mod::Mod; selection=global_selection,
 	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
 	io = edit ? open(filename, "w") : stdout
 	edit && println(io, selection_preamble)
-	g = ""; h = ""
+	g = "\0"; h = ""
 	for c in modcomponents(mod)
+	println("c=$(c.id) g=$g h='$h'")
 		g ≠ c.group && (g = c.group; println(io, "# ", g, "«"*"«1"))
 		h ≠ c.subgroup &&
 			(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
@@ -889,7 +890,7 @@ function do_first(f, n=1; moddb=global_moddb, selection=global_selection,
 		end
 	end
 end
-list1 = (:download, :extract, :install, :uninstall, :status)
+list1 = (:download, :extract, :install, :uninstall, :status, :update)
 for f in list1; @eval begin
 	@inline $f(; kwargs...) = do_all($f; kwargs...)
 	@inline $f(n::Integer; kwargs...) = do_first($f, n; kwargs...)
@@ -904,4 +905,6 @@ end end
 end
 
 M=ModTool
+R=isdefined(M, :global_moddb) ? M.global_moddb["rr"] : nothing
+C=isnothing(R) ? R : R.components
 # vim: fdm=syntax fdl=1:

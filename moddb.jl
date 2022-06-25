@@ -1,3 +1,6 @@
+#! /usr/bin/env julia
+modtool_no_init = true
+module ModDB
 include("modtool.jl")
 using .ModTool: Mod, ModComponent, findmod, addmods!,extract, isextracted,
 	update, write_moddb, maybe_rewrite_moddb, read_moddb, write_selection,
@@ -13,7 +16,7 @@ const BWS_MODDB="$BWS_ROOT/App/Config/BG2EE/Mod.ini"
 const BWS_USER="$BWS_ROOT/App/Config/User.ini"
 #»»
 
-function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
+function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)
 	moddb = Dict{String,Mod}()
 	dict = Dict{String,String}()
 	printsim("reading BWS mod database $source")
@@ -27,6 +30,7 @@ function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
 		m = match(r"github.com/(([^/])*/([^/]*))", url)
 		!isnothing(m) && ( url = "github:"*m.captures[1]; archive = "")
 		addmods!(moddb, Mod(;id, url, description, archive, class="noclass:$id"))
+		println("$(length(moddb)) $id")
 	end
 	printsim("reading order file $orderfile")
 	for line in eachline(orderfile)
@@ -39,8 +43,8 @@ function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)#««
 			"Tweak", "Kits", "UI"][1+parse(Int, v[4])]
 	end
 	moddb
-end#»»
-function mod_exclusives(mod::Mod; except = String[])#««
+end
+function mod_exclusives(mod::Mod; except = String[])
 	g = modgame(mod); gamedir = GAMEDIR[g]
 	extract(mod)
 	ret = Pair{Int, Vector{String}}[]
@@ -60,7 +64,7 @@ function mod_exclusives(mod::Mod; except = String[])#««
 		end
 	end
 	return [ id => (exclusive = excl,) for (id, excl) in ret ]
-end#»»
+end
 function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		orderfile = BWS_BG2IO)
 	moddb = bws_moddb(source, orderfile)
@@ -225,6 +229,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	moddb["bg1aerie"].class="NPC-Related"
 	moddb["butchery"].class="Quests"
 	moddb["bwfixpack"].class="Fixes"
+	moddb["chattyimoen"].class="NPC-Related"
 	moddb["d0questpack"].class="Quests"
 	moddb["eet_end"].class="Final"
 	moddb["eetact2"].class="Quests"
@@ -237,7 +242,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	moddb["paintbg"].class="UI"
 	moddb["rr"].class="Tweak"
 	moddb["spell_rev"].class="Spells"
-	moddb["stratagems"].class="Final"
+	moddb["stratagems"].class="Late"
 	moddb["tdd"].class="BigQuests"
 	moddb["the_horde"].class="Quests"
 	moddb["turnabout"].class="Quests"
@@ -1425,6 +1430,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	)#»»
 		# extract data from already downloaded/extracted mods
 		for (id, mod) in moddb
+# 		for (id, mod) in Iterators.take(moddb, 20)
 			isextracted(mod) && update(mod)
 			for f in id.*(".tar.gz", ".zip", ".7z", ".rar")
 				isfile(joinpath(DOWN, f)) && (mod.archive = f; break)
@@ -1464,6 +1470,8 @@ function import_bws_selection((source, dest) = BWS_USER => SELECTION)#««
 	write_selection(dest; moddb=global_moddb, selection = global_selection)
 end#»»
 
-import_bws_moddb()
+end
+ModDB.import_bws_moddb()
+# TODO: make a command-line option for this:
 # don't do this if selection is more recent than BWS config:
 # import_bws_selection()

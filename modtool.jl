@@ -341,21 +341,19 @@ end
 function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 	mod.url ∈ ("Manual", "") && return true # do nothing
 	url = mod.url
-	println("\n\e[1mmod url is $url, archive $(mod.archive)\e[m")
+	printsim("downloading $(mod.id) from $url")
 	if startswith(mod.url, "github:")
 		if isempty(mod.archive)
 			url = updateurl(mod)
-			println("updated url to $url")
 		elseif isfile(mod.archive)
-			println("found")
 			return true
 		else
 			url = "https://github.com/$(mod.url[8:end])/releases/download/latest/$(mod.archive)"
-			println("computing new url: $url")
+			printlog("  $(mod.id): computing new url=$url")
 		end
 	end
 	if isnothing(url)
-		println("\e[32m still empty url... cloning from github\e[m")
+		printlog("  $(mod.id): release not found, cloning from github")
 		url = mod.url
 		mod.archive = mod.id*".tar.gz"
 		archive = joinpath(down, mod.archive)
@@ -369,7 +367,6 @@ function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 			for f in files; mv(f, joinpath(mods, f); force=true); end
 		end end
 	else
-		println("\e[36m url is non-empty ($(mod.url)), checking for archive\e[m")
 		archive = joinpath(down, mod.archive)
 		while !isfile(archive) || iszero(filesize(archive))
 			printsim("download $url to $archive")
@@ -466,7 +463,6 @@ function lang_score(langname, pref_lang=GAME_LANG)
 	return typemax(Int)
 end
 function extract(m)
-	println("extract $(m.id)")
 	do_extract(m) && update(m)
 end
 @inline extract(m::Mod) = do_extract(m) && update(m)
@@ -480,7 +476,7 @@ function update(m::Mod)
 	printsim("updating mod $id...")
 	cd(MODS) do
 	if isempty(m.tp2)
-		println("  $id: determine tp2")
+		printlog("  $id: determine tp2")
 		for path in ("$id.tp2", "$id/$id.tp2", "$id/setup-$id.tp2", "setup-$id.tp2",
 			"setup-$id.exe", "$id/setup-$id.exe")
 			ispath(path) && (m.tp2 = path; break)
@@ -488,7 +484,7 @@ function update(m::Mod)
 		isempty(m.tp2) && printerr("no TP2 file found")
 	end
 	if isempty(m.languages)
-		println("  $id: determine languages")
+		printlog("  $id: determine languages")
 		m.game_lang = m.tool_lang = 0
 		# m.languages
 		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-languages $(m.tp2)`)
@@ -686,7 +682,6 @@ function edit(mod::Mod; selection=global_selection,
 	edit && println(io, selection_preamble)
 	g = "\0"; h = ""
 	for c in modcomponents(mod)
-	println("c=$(c.id) g=$g h='$h'")
 		g ≠ c.group && (g = c.group; println(io, "# ", g, "«"*"«1"))
 		h ≠ c.subgroup &&
 			(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
@@ -723,7 +718,7 @@ function display_tree(io::IO, root, level=1;
 		printcomp(io, m, c; selection, installed, moddb)
 	end
 	for (s, c) in sort(collect(root.children); by=first)
-		println(io, '#'^level, ' ', s, " «",'«', level)
+		println(io, '#'^level, ' ', s, " ««", level)
 		display_tree(io, c, level+1; selection, moddb, installed, order)
 	end
 end
@@ -863,7 +858,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		f(mod; selected, kwargs...)
 	end
 end
-"returns the first mod (in install order) with non-installed component"
+"returns the first n mods (in install order) with non-installed components"
 function nextmods(n; selection=global_selection,
 		installed = weidu_installed(GAMEDIR...),
 		order = installorder(keys(filter(!isempty, global_selection))))

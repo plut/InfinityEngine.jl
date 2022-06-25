@@ -1,16 +1,16 @@
-"""
-ModTool - BG2 modding tool
+""" ModTool - BG2 modding tool
 
 Usage:
 
 ModTool.import_bws_moddb()
 ModTool.status(all)
-ModTool.components!(:stratagems)
+ModTool.edit(:stratagems)
 ModTool.update_selection()
 ModTool.install(all)
 """
 module ModTool
-# TODO:««
+# Preamble ««1
+# TODO ««
 # mod-specific fixes:
 #  - questpack is very badly named
 #  - mortis: tra/Francais -> tra/French
@@ -64,17 +64,20 @@ const GAMEDIR =
 	(bg1="$HOME/jeux/ciopfs/bg1/game", bg2="$HOME/jeux/ciopfs/bg2/game")
 const GAME_LIST = keys(GAMEDIR)
 	
-function init()# setup global variables and filesystem ««
+function init()# setup global variables and filesystem
 	global global_moddb = read_moddb(MODDB)
 	printlog("read $(length(global_moddb)) mods in global database")
-	global global_selection = read_selection_old(SELECTION)
+	global global_selection = read_selection(SELECTION; verbose=false)
+	printlog("read selection status for $(length(global_selection)) mods; "*
+	"$(sum(length.(values(global_selection)))) components selected")
 	for d in (DOWN, MODS, TEMP) ispath(d) || mkdir(d); end
-end#»»
-function maybe_rewrite_moddb(f; file=MODDB)#««
+end
+
+function maybe_rewrite_moddb(f; file=MODDB)
 	global moddb_changed = false
 	f()
 	moddb_changed && write_moddb()
-end#»»
+end
 function __init__()
 	isinteractive() && init()
 end
@@ -88,7 +91,7 @@ end
 
 # Data structures ««1
 
-mutable struct ModComponent#««
+mutable struct ModComponent
 	id::String
 	name::String
 	group::String
@@ -105,8 +108,10 @@ mutable struct ModComponent#««
 	@inline ModComponent(i, d::AbstractDict) =
 		new(i, (get(d, k,"") for k in ("name", "group", "subgroup"))...,
 		 (get(d,k,[]) for k in ("after", "before", "conflicts", "depends", "exclusive", "path"))...)
-end#»»
-@inline db_prop(i, c::ModComponent) = Dict("index" => i,
+end
+@inline Base.isempty(c::ModComponent) =
+	all(isempty(getfield(c, i)) for i in 1:fieldcount(ModComponent))
+@inline db_prop(c::ModComponent, pairs...) = Dict(pairs...,
 	(string(s) => getfield(c,  s)
 	for s in (:name, :after, :before, :conflicts, :depends, :exclusive, :path)
 	if !isempty(getfield(c, s)))...)
@@ -114,7 +119,7 @@ end#»»
 	let n = isempty(c.name) ? "<unknown>" : c.name
 	isempty(c.subgroup) ? n : c.subgroup*'/'*n
 	end
-mutable struct Mod#««
+mutable struct Mod
 	# data stored in moddb file:
 	id::String
 	url::String
@@ -127,6 +132,7 @@ mutable struct Mod#««
 	readme::String # can exceptionally be hardcoded
 	tp2::String
 	languages::Vector{String}
+	compat::ModComponent # holds compatibility (etc.) for whole mod
 	components::Vector{ModComponent} # sorted as in tp2 file
 	game_lang::Int # starts at zero (WeiDU indexing)
 	tool_lang::Int
@@ -134,10 +140,10 @@ mutable struct Mod#««
 	@inline Mod(;id, url="", description="", class="", archive="", tp2="",
 		lastupdate=1970, languages = String[], readme="", components=[]) = begin
 		new(lowercase(id), url, description, archive, class, Date(lastupdate),
-			readme, tp2, languages,
+			readme, tp2, languages, ModComponent("", ""),
 			[ ModComponent(k,v) for (k,v) in pairs(components)], 0, 0)
 		end
-end#»»
+end
 # Mod classes for install order#««
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
 # (this is somewhat different from EE Mod Setup's ordering)
@@ -178,7 +184,7 @@ end
 # Mod DB handling ««1
 @inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
 @inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
-function merge_moddb(filename = MODDB; moddb = global_moddb)#««
+function merge_moddb(filename = MODDB; moddb = global_moddb)
 	dict = TOML.parsefile(filename)
 	for (id, d) in dict
 		m = get!(moddb, id, Mod(;id))
@@ -186,36 +192,38 @@ function merge_moddb(filename = MODDB; moddb = global_moddb)#««
 			ifhaskey(d, string(k)) do x; setfield!(m, k, x); end
 		end
 		ifhaskey(d, "lastupdate") do x; m.lastupdate = Date(x); end
+		ifhaskey(d, "compat") do x; m.compat = ModComponent("", x); end
 		ifhaskey(d, "components") do x; for (k,prop) in x
 			# using dict constructor for `ModComponent`:
 			modcomponent!(m, get(prop, "index", nothing), ModComponent(k, prop))
 		end end
 	end
 	return moddb
-end#»»
+end
 @inline read_moddb(filename) = merge_moddb(filename; moddb=Dict{String,Mod}())
-function write_moddb(io::IO; moddb=global_moddb)#««
-	TOML.print(io, moddb) do m
+function write_moddb(io::IO; moddb=global_moddb)
+	TOML.print(io, moddb; sorted=true) do m
 		d = Dict{String,Any}()
 		for k in (:url,:class,:description,:archive,:readme,:languages,:tp2,:languages)
 			x = getfield(m, k); isempty(x) || (d[string(k)] = x)
 		end
 		d["lastupdate"] = m.lastupdate
+		isempty(m.compat) || (d["compat"] = db_prop(m.compat))
 		if !isempty(m.components)
-			d1 = Dict(c.id => db_prop(i, c) for (i, c) in pairs(m.components))
+			d1 = Dict(c.id=>db_prop(c, "index"=>i) for (i,c) in pairs(m.components))
 			any(!isempty, values(d1)) && (d["components"] = d1)
 		end
 		d
 	end
-end#»»
-function write_moddb(filename::AbstractString = MODDB; moddb=global_moddb)#««
+end
+function write_moddb(filename::AbstractString = MODDB; moddb=global_moddb)
 	printlog("writing moddb: $filename")
 	mktemp(TEMP) do path, io # try this in a temporary file first
 		write_moddb(io; moddb)
 		close(io); read_moddb(path) # catch errors...
 		mv(path, filename; force=true)
 	end
-end#»»
+end
 
 @inline function findmod(id::Union{Symbol,String}; moddb = global_moddb)
 	k = get(moddb, lowercase(string(id)), nothing)
@@ -237,7 +245,7 @@ end
 
 "Returns the dependency matrix for these mods, encoded as
 (arrowsfrom = dict(mod1 => mod2, ...), arrowsto = dict(mod1 => n1, ...))"
-function dependencies(list ;moddb=global_moddb)#««
+function dependencies(list ;moddb=global_moddb)
 	arrowsfrom = Dict{String,Set{String}}(); arrowsto = copy(arrowsfrom)
 	function connect((b, a),)
 		fb = get!(arrowsfrom, b, Set{String}())
@@ -254,25 +262,25 @@ function dependencies(list ;moddb=global_moddb)#««
 		end
 	end
 	return (arrowsfrom = arrowsfrom, arrowsto = arrowsto)
-end#»»
-function comp_isless((id1, k1), (id2, k2), order)#««
+end
+function comp_isless((id1, k1), (id2, k2), order)
 	id1 == id2 && return isless(parse(Int, k1), parse(Int, k2))
 	return isless(findfirst(==(id1), order), findfirst(==(id2), order))
-end#»»
+end
 @inline modclass(m::Mod) =
 	let k = (findfirst(==(m.class), MOD_CLASSES))
 	isnothing(k) && error("mod \"$(m.id)\": bad mod class \"$(m.class)\"")
 	k; end
-function sortkey1(id, moddb, dep)#««
+function sortkey1(id, moddb, dep)
 	# returns (class(id), max class(before id), date(id))
 	c0 = modclass(moddb[id])
 	prev = get(dep.arrowsto, id, [])
 	c1 = maximum(modclass(moddb[x]) for x in prev; init = -1)
 	(c0, c1, moddb[id].lastupdate)
-end#»»
+end
 @inline sortkey1(moddb, dep) = id -> sortkey1(id, moddb, dep)
 "Returns a list of mod IDs in install order, given all dependencies"
-function installorder(list; moddb=global_moddb)#««
+function installorder(list; moddb=global_moddb)
 	# use Kahn's algorithm for topological sorting
 	# (this should be average-time quasi-linear with the use of a heap)
 	#
@@ -295,8 +303,8 @@ function installorder(list; moddb=global_moddb)#««
 		end
 	end
 	reverse!(ret)
-end #»»
-function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
+end
+function check_conflicts(;selection = global_selection, moddb=global_moddb)
 	owners = Dict{String, Vector{Tuple{String, String}}}()
 	# check exclusivity
 	for (id, clist) in selection
@@ -312,11 +320,11 @@ function check_conflicts(;selection = global_selection, moddb=global_moddb)#««
 		printwarn("tag \"$x\" is owned by the following components:")
 		for (id, c) in v; println("  ", id, ":", c); end
 	end
-end#»»
+end
 
 
 # Pre-TP2 functions: download, extract, status ««1
-function updateurl(mod::Mod)#««
+function updateurl(mod::Mod)
 	printlog("get latest release for $(mod.url)")
 	repo = mod.url[8:end]
 	api = "https://api.github.com/repos/$repo/releases/latest";
@@ -330,8 +338,8 @@ function updateurl(mod::Mod)#««
 		m = match(r"\"tarball_url\"\s*:\s*\"([^\"]*)\"", line)
 		m ≠ nothing && (mod.archive=mod.id*".tar.gz"; return m.captures[1])
 	end
-end#»»
-function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
+end
+function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 	mod.url ∈ ("Manual", "") && return true # do nothing
 	url = mod.url
 	println("\n\e[1mmod url is $url, archive $(mod.archive)\e[m")
@@ -384,14 +392,14 @@ function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 	end
 	mod.url = url
 	true
-end#»»
+end
 @inline isextracted(mod::Mod) = isdir(joinpath(MODS, mod.id))
-function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
+function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 	isextracted(mod) && return true
 	lowercase(mod.archive) == "manual" && return true
 	download(mod; down=DOWN) || return false
 	archive = joinpath(down, mod.archive)
-	try mktempdir(TEMP) do(dir); cd(dir) do
+	mktempdir(TEMP) do(dir); cd(dir) do
 		printsim("extract $archive to $dir")
 		simulate && return true
 		# extract archive in tmp directory««
@@ -405,7 +413,7 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 			run(`tar xf $archive`)
 		else
 			error("unknown archive format: ", mod.archive)
-		end#»»
+		end #»»
 		write_moddb()
 		# if this contains only one directory, move its contents to tmp dir««
 		files = readdir()
@@ -432,50 +440,55 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)#««
 			(mv("questpack", mod.id); symlink(mod.id, "questpack"))
 		# move extracted files to mods directory
 		for file in readdir(); mv(file,  joinpath(mods, file); force=true); end
-	end end
-	catch e
-		if e isa SystemError; printerr(e)
-		else; rethrow(e); end
+	end
+	# end
+# 	catch e
+# 		if e isa SystemError; printerr(e)
+# 		else; rethrow(e); end
 	end
 	return true
-end#»»
-function status(mod::Mod; selection=global_selection, selected=nothing)#««
+end
+function status(mod::Mod; selection=global_selection, selected=nothing)
 	sel = !isempty(get(selection, mod.id, Int[]))
 	selected ∈ (sel, nothing) || return
 	mod.id ∈ ("eet", "stratagems") && print("\e[34m")
 	@printf("%c%c%c %7s %-22s %s\n",
 		isfile(joinpath(DOWN, mod.archive)) ? 'd' : '.',
-		ispath(joinpath(MODS, mod.id)) ? 'x' : '.',
-		sel ? 's' : '.',
+		isextracted(mod) ? 'x' : '.', sel ? 's' : '.',
 		Dates.format(mod.lastupdate, "yyyy-mm"),
 		mod.id, mod.description)
 	print("\e[m")
-end#»»
+end
 # TP2 data extraction ««1
-function lang_score(langname, pref_lang=GAME_LANG)#««
+function lang_score(langname, pref_lang=GAME_LANG)
 	for (i, pref) in pairs(pref_lang)
 		occursin(pref, langname) && return i
 	end
 	return typemax(Int)
-end#»»
-function extract(m)#««
+end
+function extract(m)
 	println("extract $(m.id)")
-	do_extract(m) && update_mod(m)
-end#»»
-@inline extract(m::Mod) = do_extract(m) && update_mod(m)
-function update_mod(m::Mod)#««
+	do_extract(m) && update(m)
+end
+@inline extract(m::Mod) = do_extract(m) && update(m)
+"""    update(mod)
+
+Assuming that this mod is extracted, update all mod info available from
+extracted files: tp2 file, readme, languages, list of mod components.
+"""
+function update(m::Mod)
 	id = m.id
 	printsim("updating mod $id...")
 	cd(MODS) do
-	if isempty(m.tp2)#««
+	if isempty(m.tp2)
 		println("  $id: determine tp2")
 		for path in ("$id.tp2", "$id/$id.tp2", "$id/setup-$id.tp2", "setup-$id.tp2",
 			"setup-$id.exe", "$id/setup-$id.exe")
 			ispath(path) && (m.tp2 = path; break)
 		end
 		isempty(m.tp2) && printerr("no TP2 file found")
-	end#»»
-	if isempty(m.languages)#««
+	end
+	if isempty(m.languages)
 		println("  $id: determine languages")
 		m.game_lang = m.tool_lang = 0
 		# m.languages
@@ -489,7 +502,7 @@ function update_mod(m::Mod)#««
 			m.tool_lang = argmin([lang_score(l, TOOL_LANG) for l in m.languages]) - 1
 		end
 	end#»»
-	if all(isempty, c.name for c in m.components)#««
+	if all(isempty, c.name for c in m.components)
 		printlog("  $id: determine components")
 		prop = Dict(c.id => c for c in m.components) # store properties
 		empty!(m.components) # we will store them in WeiDU-order
@@ -501,6 +514,7 @@ function update_mod(m::Mod)#««
 				c.name, c.group, c.subgroup =
 					fixutf8.((x["name"], get(x["group"], 1, ""), get(x,"subgroup","")))
 				push!(m.components, c)
+				delete!(prop, k)
 			end
 		end
 		for k in keys(prop); isempty(k) && continue
@@ -509,14 +523,14 @@ function update_mod(m::Mod)#««
 			found || printwarn("\e[31;1m '$(m.id):$k' not found\e[m")
 		end
 	end#»»
-	if isempty(m.readme) # no hardcoded readme provided««
+	if isempty(m.readme) # no hardcoded readme provided
 		printlog("  $id: determine readme")
 		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-readme $(m.tp2) $(m.tool_lang)`)
 			x = match(r"^R (.*)", line); isnothing(x) && continue
 			isfile(x.captures[1]) && (m.readme = joinpath(MODS, x.captures[1]); break)
 		end
-	end#»»
-	if isempty(m.readme) # try and guess...««
+	end
+	if isempty(m.readme) # try and guess...
 		printlog("  $id: try to guess readme")
 		readmes = [ joinpath(root, f)
 			for (root, _, files) in walkdir(joinpath(MODS, id))
@@ -524,19 +538,19 @@ function update_mod(m::Mod)#««
 		!isempty(readmes) && 
 			(m.readme = joinpath(MODS, id, 
 				readmes[argmin([ lang_score(f, TOOL_LANG) for f in readmes ])]))
-	end#»»
-	if isempty(m.readme) && startswith(m.url, "https://github.com")#««
+	end
+	if isempty(m.readme) && startswith(m.url, "https://github.com")
 		printlog("  $id: using github readme")
 		x = match(r"https://github.com/[^/]*/[^/]*", m.url)
 		m.readme = x.match
-	end#»»
+	end
 	end # cd(MODS)
 	m.lastupdate = Date(unix2datetime(maximum(mtime(joinpath(root, f))
 		for (root,_,files) in walkdir(joinpath(MODS, m.id))
 		for f in files if endswith(f, r"\.tp[2ah]"i); init=0)))
 	true
-end#»»
-function readme(mod::Mod)#««
+end
+function readme(mod::Mod)
 	if startswith(mod.readme, "https://")
 		printlog("showing online documentation '$(mod.readme)'")
 		run(`w3m $(mod.readme)`)
@@ -565,65 +579,11 @@ function readme(mod::Mod)#««
 	else
 		error("unknown file format: $(mod.readme)")
 	end
-end#»»
+end
 @inline tp2(mod::Mod) = extract(mod) && run(`view $(joinpath(MODS, mod.tp2))`)
 
-# Selection files handling««1
-function read_selection_line(line)#««
-	r = r"^((\s*)([^=#][^=]*[^= ])(\s*=\s*)(|[^# ]|[^# ][^#]*[^# ]))?((\s*#.*)?)$"
-	m = match(r, line)
-	@assert m≠nothing && length(m.captures)>=5 "Invalid selection line: $line"
-	return (lhs = m.captures[3], eq = m.captures[4], rhs = m.captures[5],
-		indent = m.captures[2], comment = m.captures[6])
-end#»»
-function read_selection_old(filename=SELECTION)#««««
-# 	selection = Tuple{Symbol,Vector{Int}}[]
-	selection = Dict{String, Set{String}}()
-	for line in eachline(filename)
-		cap = read_selection_line(line); isnothing(cap.lhs) && continue
-		id = lowercase(cap.lhs)
-		@assert !haskey(selection, id)
-		set = Set(split(cap.rhs)); isempty(set) || (selection[id] = set)
-	end
-	return selection
-end#»»»»
-# function write_selection(selection=global_selection, filename=SELECTION)#««
-# 	nm = length(selection)
-# 	nc = sum(length(c) for (_, c) in selection)
-# 	printlog("writing selection ($nm mods, $nc components) to $filename")
-# 	open(filename, "w") do io
-# 		for (k, c) in selection; println(io, k, '=', join(c, ' ')); end
-# 	end
-# end#»»
-# "tries to update the selection file while preserving comments etc."
-# function update_selection(selection=global_selection, filename=SELECTION)#««
-# 	nm = length(selection)
-# 	nc = sum(length(c) for (_, c) in selection)
-# 	printlog("updating selection ($nm mods, $nc components) in $filename")
-# 	todo = Set(keys(selection))
-# 	text = ""
-# 	nchanged = 0
-# 	for line in eachline(filename)
-# 		cap = read_selection_line(line)
-# 		if !isnothing(cap.lhs)
-# 			id, components = lowercase(cap.lhs), split(cap.rhs)
-# 			s = get(selection, id, Set(String[]))
-# 			line = cap.indent*cap.lhs*cap.eq* join(s, ' ')*cap.comment
-# 			Set(s) ≠ Set(components) && (nchanged+= 1)
-# 			delete!(todo, id)
-# 		end
-# 		text*= line*'\n'
-# 	end
-# 	for id in todo; isempty(selection[id]) && continue
-# 		text*= id*'='*join(selection[id], ' ')*'\n'
-# 	end
-# 	printlog("modified $nchanged lines, added $(length(todo)) lines")
-# 	cp(filename, filename*'~'; force=true)
-# 	open(filename, "w") do io; write(io, text); end
-# 	run(ignorestatus(`diff --color=always $(filename*'~') $filename`))
-# end#»»
 # Mod components ««1
-function weidu_installed(dirs...)#««
+function weidu_installed(dirs...)
 	status = Dict{String, Vector{String}}()
 	for d in dirs; f = joinpath(d, "weidu.log")
 		ispath(f) || continue
@@ -638,16 +598,15 @@ function weidu_installed(dirs...)#««
 		end
 	end
 	status
-end#»»
-function printcomp(io::IO, m, c::ModComponent; selection, installed, moddb)#««
+end
+function printcomp(io::IO, m, c::ModComponent; selection, installed, moddb)
 	@printf(io, "%c%c%c `%s:%s` %s\n",
 		c.id ∈ get(selection, m.id, []) ? 's' : '.',
 		c.id ∉ get(installed, m.id, []) ? '.' : modgame(m; moddb)==:bg1 ? '1' : '2',
 		isempty(c.path) ? '.' : 'p',
 		m.id, c.id, description(c))
-end#»»
-function merge_selection(io; selection=global_selection,#««
-		verbose=true)
+end
+function merge_selection(io; selection=global_selection, verbose=true)
 	to_add = Dict{String,Set{String}}()
 	to_del = Dict{String,Set{String}}()
 	for line in eachline(io)
@@ -669,11 +628,11 @@ function merge_selection(io; selection=global_selection,#««
 	isempty(to_del) || printlog("Removed:")
 	for (k, v) in to_del; printlog("\e[31m-", k, ": ", join(v, ", "), "\e[m");end
 	return selection
-end#»»
-@inline read_selection(filename) =
-	merge_selection(filename; selection=Dict{String,Set{String}}())
-const selection_preamble = """
-"««5 This file is to be read using the vim editor, launched as
+end
+@inline read_selection(filename; kwargs...) =
+	merge_selection(filename; selection=Dict{String,Set{String}}(), kwargs...)
+const selection_preamble = raw"""
+" ««5 This file is to be read using the vim editor, launched as
 "  vim +'so %' <name of the file>
 " The following lines map some useful keys for helping modifying the selection:
 " - space key (de)selects a component
@@ -687,12 +646,38 @@ sy match modSel /^s[12][.p] .*$/|hi link modSel DiffChange
 sy match modGrp /^# .*$/|hi link modGrp ModeMsg
 sy match modSub /^## .*$/|hi link modSub Title
 nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>
-finish "»»5"""
-function component_editor(filename; selection)#««
+finish "»»5 """
+
+function component_editor(filename; selection)
 	run(`vim -c 'so %' $filename`)
 	merge_selection(filename; selection)
-end#»»
-function components!(mod::Mod; selection=global_selection,#««
+end
+"""    edit(mod; kwargs...)
+Prepares a text file containing the description and selection status of
+all the components of this mod, launches an editor allowing the user
+to interactively modify this selection, and integrates the resulting changes
+in the selection.
+
+The relevant lines in the text file are of the following form:
+
+    s.. `modname:id` description
+
+The first character is either `s` (for a selected component)
+or `.` (for a deselected component).
+
+The second character indicates the current installation status for
+this component: it is either `.` (uninstalled), `1` (installed in bg1)
+or `2` (installed in bg2).
+
+The third character is either `p` (for a fully pathed component)
+or `.`.
+
+\\\``modname:id`\\\` indicates the mod and component number.
+
+The editor (`vim`) is configured so that the space bar toggles the selection
+status of each component.
+"""
+function edit(mod::Mod; selection=global_selection,
 		gamedir = GAMEDIR[modgame(mod)], moddb=global_moddb, edit=true)
 # 	extract(mod) || return
 	installed = weidu_installed(gamedir)
@@ -706,25 +691,27 @@ function components!(mod::Mod; selection=global_selection,#««
 			(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
 		printcomp(io, mod, c; selection, installed, moddb)
 	end
-	edit && (close(io); component_editor(filename; selection))
-end#»»
-@inline components(mod::Mod; kwargs...)= components!(mod; edit=false, kwargs...)
-struct ComponentTree#««
+	edit || return
+	close(io)
+	component_editor(filename; selection)
+end
+@inline components(mod::Mod; kwargs...)= edit(mod; edit=false, kwargs...)
+struct ComponentTree
 	alternatives::Vector{NTuple{2,String}}
 	children::Dict{String,ComponentTree}
 	@inline ComponentTree() = new([], Dict())
 end#»»
 findbranch(root::ComponentTree, path) = isempty(path) ? root :
 	findbranch(get!(root.children, first(path), ComponentTree()), path[2:end])
-function build_tree(;moddb=global_moddb)#««
+function build_tree(;moddb=global_moddb)
 	root = ComponentTree()
 	for (id, m) in moddb, c in modcomponents(m)
 		isempty(c.path) && continue
 		push!(findbranch(root, c.path).alternatives, (id, c.id))
 	end
 	root
-end#»»
-function display_tree(io::IO, root, level=1;#««
+end
+function display_tree(io::IO, root, level=1;
 		moddb=global_moddb, selection=global_selection, installed, order)
 	for (id, k) in sort(collect(root.alternatives);
 			lt=(x,y)->comp_isless(x,y,order))
@@ -738,22 +725,11 @@ function display_tree(io::IO, root, level=1;#««
 		println(io, '#'^level, ' ', s, " «",'«', level)
 		display_tree(io, c, level+1; selection, moddb, installed, order)
 	end
-end#»»
-function write_selection(io::IO; selection=global_selection, #««
+end
+function write_selection(io::IO; selection=global_selection,
 		moddb=global_moddb, installed = weidu_installed(GAMEDIR...),
 		order = installorder(keys(moddb); moddb))
-	print(io, """
-se fencs=utf8 ft= fdm=marker fmr=««,»»
-sy match modComp /\`[^\`]*\`/|hi link modComp Constant
-sy match modAdd /^s\.[.p] .*$/ contains=modComp |hi link modAdd DiffAdd
-sy match modDel /^\.[12][.p] .*$/ contains=modComp |hi link modDel DiffDelete
-sy match modSel /^s[12][.p] .*$/|hi link modSel DiffChange
-sy match modGrp /^# .*$/|hi link modGrp ModeMsg
-sy match modSub /^## .*$/|hi link modSub Title
-nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>
-1,/^finish/d
-finish
-""")
+	println(io, selection_preamble)
 	# First: sorted components
 	display_tree(io, build_tree(;moddb); selection, moddb, installed, order)
 	# Then unsorted
@@ -761,7 +737,7 @@ finish
 	i = ""
 	for id in order
 		m = moddb[id]; g = ""; h = ""
-		isempty(get(selection, id, ())) || extract(m)
+# 		isempty(get(selection, id, ())) || extract(m)
 		for c in modcomponents(m)
 			isempty(c.path) || continue
 			id ≠ i && (i=id; println(io, "## ", i, " «","«2"))
@@ -771,23 +747,31 @@ finish
 			printcomp(io, m, c; selection, installed, moddb)
 		end
 	end
-end#»»
+end
 function write_selection(filename::AbstractString; kwargs...)
 	printlog("writing selection (new format): $filename")
 	open(filename, "w") do io; write_selection(io; kwargs...); end
 end
-function components!(;selection=global_selection,moddb=global_moddb,#««
-	installed = weidu_installed(GAMEDIR...),
+"""    edit()
+
+Edits the global component selection database.
+
+This is built of two parts:
+ - the first part groups all “pathed” components, i.e. those which are
+   classified by game feature;
+ - the second part lists all remaining unclassified components.
+"""
+function edit(;file=SELECTION, selection=global_selection,
+		moddb=global_moddb, installed = weidu_installed(GAMEDIR...),
 	order = installorder(keys(moddb); moddb))
-	f = joinpath(TEMP, "config")
-	open(f, "w") do io
+	open(file, "w") do io
 		write_selection(io; selection, moddb, installed, order)
 	end
-	component_editor(f; selection)
-end#»»
+	component_editor(file; selection)
+end
 
 # Mod installation ««1
-function install(mod; simulate=false, uninstall=false, #««
+function install(mod; simulate=false, uninstall=false,
 		selection=global_selection, gamedirs=GAMEDIR,
 		order = installorder(keys(selection)))
 	extract(mod) || return
@@ -810,12 +794,12 @@ function install(mod; simulate=false, uninstall=false, #««
 	selected = uninstall ? Set(String[]) : get!(selection, id, Set(String[]))
 
 	to_add, to_del = String[], String[] # compute set difference in weidu order:
-	for c in mod.components; k = c.id#««
+	for c in mod.components; k = c.id
 		if k ∈ selected; k ∉ current && push!(to_add, k)
 		else; k ∈ current && push!(to_del, k); end
-	end#»»
+	end
 	isempty(to_add) && isempty(to_del) && (printlog("nothing to do"); return)
-	if !isempty(to_add) # create symlink««
+	if !isempty(to_add) # create symlink
 		for file in ("$id.tp2", "setup-$id.tp2", "$id")
 			target = joinpath(MODS, file); ispath(target) || continue
 			link = joinpath(gamedir, file); ispath(link) && continue
@@ -825,14 +809,14 @@ function install(mod; simulate=false, uninstall=false, #««
 				symlink(relpath(target, gamedir), link)
 			end
 		end
-	end#»»
-	cd(gamedir) do#««
+	end
+	cd(gamedir) do
 		cmd = `weinstall $(mod.id) --language $(mod.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $to_add --force-uninstall-list $to_del`
 # 		id == "eet" && (cmd = `weinstall eet --skip-at-view --noautoupdate --no-exit-pause --force-install-list 0 $(gamedirs.bg1)`)
 		printsim(cmd)
 		simulate && return
 		run(ignorestatus(cmd))
-	end#»»
+	end
 	now_installed = get(weidu_installed(gamedir), id, String[])
 	not_installed = setdiff(selected, now_installed)
 	if !isempty(not_installed)
@@ -845,14 +829,14 @@ function install(mod; simulate=false, uninstall=false, #««
 		r = lowercase(get(readline(), 1, 'n'))
 		r == 'y' && (selection[id] = Set(now_installed); update_selection())
 	end
-end #»»
-function uninstall(mod; selection = global_selection, kwargs...)#««
+end
+function uninstall(mod; selection = global_selection, kwargs...)
 	delete!(selection, mod.id)
 	install(mod)
 	update_selection()
-end#»»
+end
 # Global routines««1
-function do_all(f; class=nothing, pause=false, limit=typemax(Int),#««
+function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		selected = (f == status ? nothing : true),
 		selection = global_selection, moddb=global_moddb,
 		kwargs...)
@@ -877,9 +861,9 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),#««
 		end
 		f(mod; selected, kwargs...)
 	end
-end#»»
+end
 "returns the first mod (in install order) with non-installed component"
-function nextmods(n; selection=global_selection, #««
+function nextmods(n; selection=global_selection,
 		installed = weidu_installed(GAMEDIR...),
 		order = installorder(keys(filter(!isempty, global_selection))))
 	ret = []
@@ -889,8 +873,8 @@ function nextmods(n; selection=global_selection, #««
 		length(ret) ≥ n && break
 	end
 	ret
-end#»»
-function do_first(f, n=1; moddb=global_moddb, selection=global_selection,#««
+end
+function do_first(f, n=1; moddb=global_moddb, selection=global_selection,
 		kwargs...)
 	order = installorder(keys(filter(!isempty, selection)))
 	for id in nextmods(n; selection, order)
@@ -898,20 +882,20 @@ function do_first(f, n=1; moddb=global_moddb, selection=global_selection,#««
 			printask("call function $f($id) ? (ynqrc)")
 			r = lowercase(get(readline(), 1, 'n'))
 			r == 'r' && (readme(moddb[id]); continue)
-			r == 'c' && (components!(moddb[id]); continue) 
+			r == 'c' && (edit(moddb[id]); continue) 
 			r == 'q' && return
 			r == 'y' && f(moddb[id]; order, kwargs...)
 			break
 		end
 	end
-end#»»
-list1 = (:download, :extract, :install, :uninstall, :show_components, :status)
+end
+list1 = (:download, :extract, :install, :uninstall, :status)
 for f in list1; @eval begin
 	@inline $f(; kwargs...) = do_all($f; kwargs...)
 	@inline $f(n::Integer; kwargs...) = do_first($f, n; kwargs...)
 end end
 # interactive commands are allowed only *one* mod (but can be a symbol)
-list2 = (list1..., :readme, :tp2, :components!, :components, :status)
+list2 = (list1..., :readme, :tp2, :components, :status, :edit)
 for f in list2; @eval begin
 	@inline $f(id::Union{String,Symbol}; kwargs...) = $f(findmod(id); kwargs...)
 end end
@@ -920,3 +904,4 @@ end end
 end
 
 M=ModTool
+# vim: fdm=syntax fdl=1:

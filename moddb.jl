@@ -1,6 +1,6 @@
 include("modtool.jl")
 using .ModTool: Mod, ModComponent, findmod, addmods!,extract, isextracted,
-	update_mod, write_moddb, maybe_rewrite_moddb, read_moddb, write_selection,
+	update, write_moddb, maybe_rewrite_moddb, read_moddb, write_selection,
 	printlog, printwarn, printsim, printerr,
 	MODDB, MODS, DOWN, TEMP, SELECTION
 using HTTP
@@ -61,14 +61,14 @@ function mod_exclusives(mod::Mod; except = String[])#««
 	end
 	return [ id => (exclusive = excl,) for (id, excl) in ret ]
 end#»»
-function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
+function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		orderfile = BWS_BG2IO)
 	moddb = bws_moddb(source, orderfile)
 	delete!(moddb, "weidu")
 	delete!(moddb, "weidu64")
 	printlog(length(moddb), " mods read")
 	printlog("adding new mods")
-	function mkmod(id, url, description, class, archive = "")#««
+	function mkmod(id, url, description, class, archive = "")
 		m = match(r"github.com/(([^/])*/([^/]*))", url)
 		# use github urls whenever possible
 		if startswith(url, "github:")
@@ -87,71 +87,69 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 		elseif isempty(archive)
 			archive = id*match(r"\.[^.]*$", url).match
 		end
-		return Mod(;id, url, description, class, archive)
-	end#»»
-	addmods!(moddb,
-	# Argent77 ««3
+		addmods!(moddb, Mod(;id, url, description, class, archive))
+	end
+	# Argent77 ««2
 	mkmod("a7-convenienteenpcs", "github:Argent77/A7-NoEENPCs",
-		"Convenient EE NPCs", "NPC-Related"),
-	mkmod("extraexpandedencounters", "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip", "Extra Expanded Encounters", "Quests"),
-	# ArtemiusI ««3
+		"Convenient EE NPCs", "NPC-Related")
+	mkmod("extraexpandedencounters", "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip", "Extra Expanded Encounters", "Quests")
+	# ArtemiusI ««2
 	mkmod("housetweaks", "github:ArtemiusI/House-Rule-Tweaks",
-		"House Rule Tweaks", "Tweak"),
-	# Spellhold Studios ««3
-	mkmod("saradas_magic", "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip", "Saradas Magic", "Items"),
-	mkmod("saradas_magic_2", "github:SpellholdStudios/Saradas_Magic_for_BG2", "Saradas BG2", "Spells"),
-	mkmod("beyond_the_law", "github:SpellholdStudios/Beyond_the_Law", "Beyond the Law", "NPC"),
-	mkmod("kiara-zaiya", "github:SpellholdStudios/Kiara_Zaiya", "Kiara Zaiya NPCs", "NPC"),
-	mkmod("iylos", "github:SpellholdStudios/Iylos", "Iylos (ToB monk)", "NPC"),
-	mkmod("firkraag", "github:SpellholdStudios/Super_Firkraag", "Super Firkraag", "Quests"),
-	mkmod("ruad", "github:SpellholdStudios/RuadRofhessaItemUpgrade", "Ruad Ro'fhessa Item Upgrade", "Items"),
-	mkmod("bolsa", "github:SpellholdStudios/Bolsa", "Bolsa (merchant)", "Items"),
+		"House Rule Tweaks", "Tweak")
+	# Spellhold Studios ««2
+	mkmod("saradas_magic", "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip", "Saradas Magic", "Items")
+	mkmod("saradas_magic_2", "github:SpellholdStudios/Saradas_Magic_for_BG2", "Saradas BG2", "Spells")
+	mkmod("beyond_the_law", "github:SpellholdStudios/Beyond_the_Law", "Beyond the Law", "NPC")
+	mkmod("kiara-zaiya", "github:SpellholdStudios/Kiara_Zaiya", "Kiara Zaiya NPCs", "NPC")
+	mkmod("iylos", "github:SpellholdStudios/Iylos", "Iylos (ToB monk)", "NPC")
+	mkmod("firkraag", "github:SpellholdStudios/Super_Firkraag", "Super Firkraag", "Quests")
+	mkmod("ruad", "github:SpellholdStudios/RuadRofhessaItemUpgrade", "Ruad Ro'fhessa Item Upgrade", "Items")
+	mkmod("bolsa", "github:SpellholdStudios/Bolsa", "Bolsa (merchant)", "Items")
 # 	next 2 mods are broken in EE games:
 # 	mkmod("RPG-KP", "github:SpellholdStudios/RPG_Dungeon_Kit_Pack",
-# 		"RPG Dungeon kit pack", "Kits"),
+# 		"RPG Dungeon kit pack", "Kits")
 # 	mkmod("RItemPack", "github:SpellholdStudios/RPG_Dungeon_Item_Pack",
-# 		"RPG Dungeon item pack", "Items"),
-	# Gibberlings3 ««3
-	mkmod("wheels", "github:Gibberlings3/WheelsOfProphecy", "Wheels of Prophecy", "Quests"),
-	mkmod("forgotten-armament", "github:Gibberlings3/Forgotten-Armament", "Forgotten Armament", "Items"),
-	mkmod("skills-and-abilities", "github:Gibberlings3/Skills-and-Abilities", "Skills and Abilities", "Kits"),
-	mkmod("c#sodboabri", "github:Gibberlings3/The_Boareskyr_Bridge_Scene", "The Boareskyr Bridge Scene", "Quests"),
-	mkmod("sodrtd", "github:Gibberlings3/Road_To_Discovery_for_SoD", "Road to Discovery", "Quests"),
-	mkmod("c#endlessbg1", "github:Gibberlings3/EndlessBG1", "Endless BG1", "Quests"),
-	mkmod("dw_lanthorn", "github:Gibberlings3/Restored-Rhynn-Lanthorn", "Restored Rhynn Lanthorn quest", "Quests"),
-	mkmod("druidsor", "github:Gibberlings3/Geomantic_Sorcerer", "Geomantic Sorcerer", "Kits"),
-	mkmod("valhorn", "github:Gibberlings3/Improved_Horns_of_Valhalla", "Improved Horn of Valhalla", "Items"),
-	mkmod("transitions", "github:Gibberlings3/transitions", "Transitions", "Fixes"),
-	# Gitjas ««3
-	mkmod("c#brandock", "github:Gitjas/Brandock_the_Mage", "Brandock the Mage", "NPC"),
-	mkmod("c#solaufein", "github:Gitjas/Solaufeins_Rescue_NPC", "Solaufein's Rescue", "NPC"),
-	mkmod("c#brage", "github:Gitjas/Brages_Redemption", "Brage's Redemption", "NPC"),
-	# Github misc. ««3
-	mkmod("d0tweak", "github:Pocket-Plane-Group/D0Tweak", "Ding0 Tweak Pack", "Tweak"),
-# 	mkmod("rttitempack", "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack",  "Return to Trademeet item pack", "Items"), # no tp2...
-	mkmod("nanstein", "github:GwendolyneFreddy/Nanstein", "Nanstein item upgrade", "Items"),
-	mkmod("iwditempack", "github:GwendolyneFreddy/IWD_Item_Pack", "IWD item pack", "Items"),
-	mkmod("aurora", "github:Sampsca/Auroras-Shoes-and-Boots", "Aurora's shoes and boots", "Items"),
-	mkmod("monasticorders", "github:aquadrizzt/MonasticOrders", "Monastic Orders", "Kits"),
-	mkmod("deitiesoffaerun", "github:Raduziel/Deities-Of-Faerun", "Deities of Faerun", "Kits"),
-	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweak"),
-	mkmod("mih_sp", "github:AngelGryph/MadeInHeaven_SpellPack", "Made In Heaven: Spell Pack", "Spells"),
-	mkmod("mih_eq", "github:AngelGryph/MadeInHeaven_EncountersAndQuests", "Made In Heaven: Encounters and Quests", "Quests"),
-	mkmod("themed_tweaks", "github:lzenner/themed_tweaks", "Themed tweaks", "Tweak"),
-	# Weasel mods ««3
-	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPC"),
-	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPC"),
-	mkmod("walahnan", "weaselmods:walahnan", "Walahnan (gnome chronomancer)", "NPC"),
-	mkmod("ofheirloomsandclasses", "weaselmods:of-heirlooms-and-classes", "Of Heirlooms and Classes", "Items"),
-	mkmod("faldornbg2", "weaselmods:faldorn-bg2ee", "Faldorn BG2", "NPC"),
-	mkmod("khalidbg2", "weaselmods:khalid-bg2", "Khalid BG2", "NPC"),
-	mkmod("gahesh", "weaselmods:gahesh", "Gahesh (LG half-orc sorcerer)", "NPC"),
-	# Misc. ««3
-	mkmod("mortis", "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip", "Mortis Mini Mod", "Items"),
-	mkmod("unique_items", "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip", "BGEE/SOD Item replacement fun pack", "Items"),
-	mkmod("arcanearcher", "www.shsforums.net/files/download/994-arcane-archer/", "Arcane Archer", "Kits"),
-	#»»3
-	)
+# 		"RPG Dungeon item pack", "Items")
+	# Gibberlings3 ««2
+	mkmod("wheels", "github:Gibberlings3/WheelsOfProphecy", "Wheels of Prophecy", "Quests")
+	mkmod("forgotten-armament", "github:Gibberlings3/Forgotten-Armament", "Forgotten Armament", "Items")
+	mkmod("skills-and-abilities", "github:Gibberlings3/Skills-and-Abilities", "Skills and Abilities", "Kits")
+	mkmod("c#sodboabri", "github:Gibberlings3/The_Boareskyr_Bridge_Scene", "The Boareskyr Bridge Scene", "Quests")
+	mkmod("sodrtd", "github:Gibberlings3/Road_To_Discovery_for_SoD", "Road to Discovery", "Quests")
+	mkmod("c#endlessbg1", "github:Gibberlings3/EndlessBG1", "Endless BG1", "Quests")
+	mkmod("dw_lanthorn", "github:Gibberlings3/Restored-Rhynn-Lanthorn", "Restored Rhynn Lanthorn quest", "Quests")
+	mkmod("druidsor", "github:Gibberlings3/Geomantic_Sorcerer", "Geomantic Sorcerer", "Kits")
+	mkmod("valhorn", "github:Gibberlings3/Improved_Horns_of_Valhalla", "Improved Horn of Valhalla", "Items")
+	mkmod("transitions", "github:Gibberlings3/transitions", "Transitions", "Fixes")
+	# Gitjas ««2
+	mkmod("c#brandock", "github:Gitjas/Brandock_the_Mage", "Brandock the Mage", "NPC")
+	mkmod("c#solaufein", "github:Gitjas/Solaufeins_Rescue_NPC", "Solaufein's Rescue", "NPC")
+	mkmod("c#brage", "github:Gitjas/Brages_Redemption", "Brage's Redemption", "NPC")
+	# Github misc. ««2
+	mkmod("d0tweak", "github:Pocket-Plane-Group/D0Tweak", "Ding0 Tweak Pack", "Tweak")
+# 	mkmod("rttitempack", "github:GwendolyneFreddy/ReturnToTrademeet_ItemPack",  "Return to Trademeet item pack", "Items") # no tp2...
+	mkmod("nanstein", "github:GwendolyneFreddy/Nanstein", "Nanstein item upgrade", "Items")
+	mkmod("iwditempack", "github:GwendolyneFreddy/IWD_Item_Pack", "IWD item pack", "Items")
+	mkmod("aurora", "github:Sampsca/Auroras-Shoes-and-Boots", "Aurora's shoes and boots", "Items")
+	mkmod("monasticorders", "github:aquadrizzt/MonasticOrders", "Monastic Orders", "Kits")
+	mkmod("deitiesoffaerun", "github:Raduziel/Deities-Of-Faerun", "Deities of Faerun", "Kits")
+	mkmod("tnt", "github:BGforgeNet/bg2-tweaks-and-tricks", "Tweaks and Tricks", "Tweak")
+	mkmod("mih_sp", "github:AngelGryph/MadeInHeaven_SpellPack", "Made In Heaven: Spell Pack", "Spells")
+	mkmod("mih_eq", "github:AngelGryph/MadeInHeaven_EncountersAndQuests", "Made In Heaven: Encounters and Quests", "Quests")
+	mkmod("themed_tweaks", "github:lzenner/themed_tweaks", "Themed tweaks", "Tweak")
+	# Weasel mods ««2
+	mkmod("thevanishingofskiesilvershield", "weaselmods:the-vanishing-of-skie-silvershield", "The vanishing of Skie Silvershield", "NPC")
+	mkmod("bristlelick", "weaselmods:bristlelick", "Bristlelick (gnoll NPC)", "NPC")
+	mkmod("walahnan", "weaselmods:walahnan", "Walahnan (gnome chronomancer)", "NPC")
+	mkmod("ofheirloomsandclasses", "weaselmods:of-heirlooms-and-classes", "Of Heirlooms and Classes", "Items")
+	mkmod("faldornbg2", "weaselmods:faldorn-bg2ee", "Faldorn BG2", "NPC")
+	mkmod("khalidbg2", "weaselmods:khalid-bg2", "Khalid BG2", "NPC")
+	mkmod("gahesh", "weaselmods:gahesh", "Gahesh (LG half-orc sorcerer)", "NPC")
+	# Misc. ««2
+	mkmod("mortis", "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip", "Mortis Mini Mod", "Items")
+	mkmod("unique_items", "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip", "BGEE/SOD Item replacement fun pack", "Items")
+	mkmod("arcanearcher", "www.shsforums.net/files/download/994-arcane-archer/", "Arcane Archer", "Kits")
+	#»»2
 	printlog("  now $(length(moddb)) mods stored")
 	# Tweak mod urls ««
 	for (k, v) in (
@@ -265,20 +263,25 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 	#»»
 	moddb["arcanearcher"].archive = "arcanearcher.zip"
 	printlog("setting mod component properties")
-	function setmod!(id, list...)#««
+	function createcomponent!(m::Mod, k)
+		isempty(k) && return m.compat
+		comp = m.components
+		j = findfirst(c->c.id == k, comp)
+		!isnothing(j) && return comp[j]
+		push!(comp, ModComponent(k, ""))
+		return last(comp)
+	end
+	function setmod!(id, list...)
 		m = findmod(id; moddb)
 		for (i, kv) in list; i = string(i)
-			j = findfirst(c->c.id == i, m.components)
-			isnothing(j) &&
-				(push!(m.components, ModComponent(i, "")); j=length(m.components))
-			c = m.components[j]
+			c = createcomponent!(m, i)
 			for (k, v) in pairs(kv)
 				k == :path && !isempty(c.path) && printwarn("warning, '$id:$i'.path is not empty")
 				k != :path && (v = unique!(sort!([v;])))
 				push!(getfield(c, Symbol(k)), v...)
 			end
 		end
-	end#»»
+	end
 	setmod!("a7#improvedarcher",#««
 		0 => (path=["Classes", "Ranger"],),
 		10 => (path=["Classes", "Fighter"],),
@@ -795,7 +798,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 # "margarita",
 	], before = ["bg2ee_ga", "bg2eer"],),)
 	setmod!("dlcmerger", "" => (before = filter(≠("dlcmerger"),
-		moddb["eet"].components[1].after),))
+		moddb["eet"].compat.after),))
 	#»»
 	setmod!("epicthieving",#««
 		0 => (path = ["Skills", "Thieving"],),
@@ -1420,18 +1423,18 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB, #««
 		4 => (path=["Classes", "Mage"],),
 		5 => (path=["Spells", "Alteration"],),
 	)#»»
-		# extract data from already downloaded/extracted mods ««
+		# extract data from already downloaded/extracted mods
 		for (id, mod) in moddb
-			isextracted(mod) && update_mod(mod)
+			isextracted(mod) && update(mod)
 			for f in id.*(".tar.gz", ".zip", ".7z", ".rar")
 				isfile(joinpath(DOWN, f)) && (mod.archive = f; break)
 			end
-		end#»»
+		end
 
 	global global_moddb = moddb
 	printsim("writing moddb $dest")
 	write_moddb(dest; moddb)
-end#»»
+end
 
 #««1 Selection handling
 function bws_selection(source = BWS_USER)#««

@@ -2,11 +2,11 @@
 
 Usage:
 
-ModTool.import_bws_moddb()
-ModTool.status(all)
-ModTool.edit(:stratagems)
-ModTool.update_selection()
-ModTool.install(all)
+ModTool.status()
+ModTool.edit(:stratagems) # or edit selection with vim
+ModTool.install()
+
+See also `moddb.jl` for initializing configuration files.
 """
 module ModTool
 # Preamble ««1
@@ -20,21 +20,13 @@ module ModTool
 #  - mih_ip fails to download
 # - Generic installation order
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
-# + fix updating selection file
-# + make a persistent selection file
-# + store all mod properties in moddb (only English versions of texts?)
-# + add a new database for computed properties (readme/release/etc.)
 # - use labels like ProjectInfinity
-# - use ProjectInfinity's *.ini files if available
-#  - needs extracting mods before (re)computing install order
-#  - including readme if needed (still prefer local readme)
-# + pass install-order to help install(first)
-# - github: auto-guess mod dir + name
-# + use WeiDU's --list-* options
-#  + list-languages
-#  + list-components
-#  + list-readme [MODDED]
-#  + list-actions [MODDED]
+# - provide a simple way to add a mod to the db with minimal input info
+#   - use ProjectInfinity's *.ini files if available
+#    - needs extracting mods before (re)computing install order
+#    - including readme if needed (still prefer local readme)
+#   - for github urls:: auto-guess mod dir + name
+#   - use this in moddb.jl
 # - do a complete EET installation routine
 # + add the following characteristics at a component-level:
 #  + before/after: declare install order
@@ -744,7 +736,7 @@ function write_selection(io::IO; selection=global_selection,
 		end
 	end
 end
-function write_selection(filename::AbstractString; kwargs...)
+function write_selection(filename::AbstractString = SELECTION; kwargs...)
 	printlog("writing selection (new format): $filename")
 	open(filename, "w") do io; write_selection(io; kwargs...); end
 end
@@ -823,7 +815,7 @@ function install(mod; simulate=false, uninstall=false,
 		end
 		printask("update selection?")
 		r = lowercase(get(readline(), 1, 'n'))
-		r == 'y' && (selection[id] = Set(now_installed); update_selection())
+		r == 'y' && (selection[id] = Set(now_installed); write_selection())
 	end
 end
 function uninstall(mod; selection = global_selection, kwargs...)

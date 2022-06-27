@@ -239,6 +239,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	moddb["imnesvale"].class="Quests"
 	moddb["impasylum"].class="Quests"
 	moddb["item_rev"].class="Items"
+	moddb["kelsey"].class="NPC"
 	moddb["paintbg"].class="UI"
 	moddb["rr"].class="Tweak"
 	moddb["spell_rev"].class="Spells"
@@ -801,9 +802,24 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	# better: EET/tbl/compatibility.tbl
 	"dlcmerger", "bgeetextpack", "sodrus", "bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "darkhorizonsbgee", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "saradas_magic", "k9sharteelnpc", "sirene", "tenyathermidor", "soa", "karatur", "verrsza", "white", "bgsodde",
 # "margarita",
-	], before = ["bg2ee_ga", "bg2eer"],),)
+	], before = ["bg2ee_ga", "bg2eer"],),
+	 0 => (path = ["EET",],))
 	setmod!("dlcmerger", "" => (before = filter(≠("dlcmerger"),
-		moddb["eet"].compat.after),))
+		moddb["eet"].compat.after),),
+		1 => (path = ["EET"],),
+		2 => (path = ["EET"],),
+		3 => (path = ["EET"],),
+	)
+	setmod!("bg2eetrans",
+		0 => (path = ["EET",],),
+	)
+	setmod!("bgsodde",
+		0 => (path = ["EET",],),
+	)
+	setmod!("eet_end",
+		1 => (path = ["EET",],),
+		2 => (path = ["EET",],),
+	)
 	#»»
 	setmod!("epicthieving",#««
 		0 => (path = ["Skills", "Thieving"],),

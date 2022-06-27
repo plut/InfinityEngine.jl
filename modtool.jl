@@ -737,7 +737,7 @@ function write_selection(io::IO; selection=global_selection,
 	end
 end
 function write_selection(filename::AbstractString = SELECTION; kwargs...)
-	printlog("writing selection (new format): $filename")
+	printlog("writing selection: $filename")
 	open(filename, "w") do io; write_selection(io; kwargs...); end
 end
 """    edit()

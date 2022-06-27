@@ -2704,11 +2704,12 @@ url = "https://www.dropbox.com/s/qdvhlx6hg9lh10n/SoDGerman.zip?dl=1"
     name = "SoD: Deutscher Text-Patch von Shai Hulud und Are"
 
 [bolsa]
+archive = "bolsa-v6.0.0.zip"
 class = "Items"
 description = "Bolsa (merchant)"
 id = "bolsa"
 lastupdate = 1970-01-01
-url = "github:SpellholdStudios/Bolsa"
+url = "https://github.com/SpellholdStudios/Bolsa/releases/download/v6.0.0/bolsa-v6.0.0.zip"
 
 [bom]
 archive = "BoM_V3EE.zip"
@@ -6790,6 +6791,7 @@ url = "github:Gibberlings3/EET"
     [eet.components.1]
     id = "0"
     name = "EET core (resource importation)"
+    path = ["EET"]
 
 [eet-are_fix]
 archive = "EET-ARE_fix-v2.zip"
@@ -6812,19 +6814,28 @@ url = "Manual"
     [eet_end.components.1]
     id = "0"
     name = "Standard installation"
+    path = ["EET"]
     subgroup = "EET end (last mod in install order)"
 
     [eet_end.components.2]
     id = "1"
     name = "Also update saves (no backups, check the readme file)"
+    path = ["EET"]
     subgroup = "EET end (last mod in install order)"
 
 [eet_fix]
+archive = "eet_fix.tar.gz"
 class = "Fixes"
 description = "EET Fixpack"
 id = "eet_fix"
-lastupdate = 1970-01-01
+languages = ["English", "Russian"]
+lastupdate = 2022-06-26
+tp2 = "eet_fix/eet_fix.tp2"
 url = "github:EE-Mod-Setup/EET_Fixpack"
+
+    [eet_fix.components.1]
+    id = "0"
+    name = "EET Fix"
 
 [eet_gui]
 archive = "Manual"
@@ -9709,7 +9720,7 @@ url = "github:Gibberlings3/Keldorn_Romance"
 
 [kelsey]
 archive = "KelseyV5.zip"
-class = "UI"
+class = "NPC"
 description = "Kelsey NPC"
 id = "kelsey"
 languages = ["English", "Espanol (Traducido por Clan DLAN)", "German (Translated by Beaz and Beyshaliban)", "Russian (Translated by Prowler)"]

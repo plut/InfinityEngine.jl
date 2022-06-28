@@ -8922,12 +8922,12 @@ url = "github:Gitjas/hiddenadventure"
     name = "Silver Sword"
 
 [hiddengameplayoptions]
-archive = "A7-HiddenGameplayOptions-master.zip"
+archive = "lin-A7-HiddenGameplayOptions-v3.0.zip"
 class = "UI"
 description = "Reveal Hidden Gameplay Options"
 id = "hiddengameplayoptions"
 lastupdate = 1970-01-01
-url = "github:Argent77/A7-HiddenGameplayOptions"
+url = "https://github.com/Argent77/A7-HiddenGameplayOptions/releases/download/latest/lin-A7-HiddenGameplayOptions-v3.0.zip"
 
 [hollyelf]
 class = "BigQuests"
@@ -9629,31 +9629,31 @@ url = "github:Pocket-Plane-Group/Item_Upgrade"
     [itemupgrade.components.1]
     id = "0"
     name = "Original Version (new upgrades in a list)"
+    path = ["Items", "Upgrades"]
     subgroup = "Shadows Of Amn Item Upgrades"
-		path = ["Items", "Upgrades"]
 
     [itemupgrade.components.2]
     id = "10"
     name = "Revised Version (new upgrades presented in the same style as existing upgrades)"
+    path = ["Items", "Upgrades"]
     subgroup = "Shadows Of Amn Item Upgrades"
-		path = ["Items", "Upgrades"]
 
     [itemupgrade.components.3]
     id = "1"
     name = "Original Version (new upgrades in a list)"
+    path = ["Items", "Upgrades"]
     subgroup = "Throne Of Bhaal Item Upgrades"
-		path = ["Items", "Upgrades"]
 
     [itemupgrade.components.4]
     id = "11"
     name = "Revised Version (new upgrades presented in the same style as existing upgrades)"
+    path = ["Items", "Upgrades"]
     subgroup = "Throne Of Bhaal Item Upgrades"
-		path = ["Items", "Upgrades"]
 
     [itemupgrade.components.5]
     id = "12"
     name = "Install supplemental Cespenar audio for Item Upgrade"
-		path = ["Cosmetic", "Sound"]
+    path = ["Cosmetic", "Sound"]
 
 [iwd1_eet]
 archive = "iwd1_eet_alpha.zip"

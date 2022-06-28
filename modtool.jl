@@ -1,3 +1,4 @@
+modtool_no_init = 1
 """ ModTool - BG2 modding tool
 
 Usage:
@@ -376,7 +377,7 @@ function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 			return true
 		else
 			url = "https://github.com/$(mod.url[8:end])/releases/download/latest/$(mod.archive)"
-			printlog("  $(mod.id): computing new url=$url")
+# 			printlog("  $(mod.id): computing new url=$url")
 		end
 	end
 	if isnothing(url)
@@ -649,19 +650,29 @@ function ini_data(m::Mod; moddb = global_moddb)
 end
 
 # Mod components ««1
+struct WeiDUStack{T}
+	itr::T
+end
+@inline Base.IteratorSize(::WeiDUStack) = Base.SizeUnknown()
+@inline weidu_stack(dir::AbstractString) =
+	WeiDUStack(eachline(joinpath(dir, "weidu.log")))
+function Base.iterate(s::WeiDUStack, state=nothing)
+	while true
+		x = iterate(s.itr, state); isnothing(x) && return x
+		(line, state) = x
+		m = match(r"^~(.*)~\s+#(\d+)\s+#(\d+)\s*", line)
+		isnothing(m) && continue
+		(tp2, lang, comp) = m.captures
+		id = lowercase(tp2[1:end-4])
+		k = findlast('/', id); !isnothing(k) && (id = id[k+1:end])
+		startswith(id, "setup-") && (id = id[7:end])
+		return ((id, comp), state)
+	end
+end
 function weidu_installed(dirs...)
 	status = Dict{String, Vector{String}}()
-	for d in dirs; f = joinpath(d, "weidu.log")
-		ispath(f) || continue
-		for line in eachline(f)
-			m = match(r"^~(.*)~\s+#(\d+)\s+#(\d+)\s*", line)
-			isnothing(m) && continue
-			(tp2, lang, comp) = m.captures
-			id = lowercase(tp2[1:end-4])
-			k = findlast('/', id); !isnothing(k) && (id = id[k+1:end])
-			startswith(id, "setup-") && (id = id[7:end])
-			push!(get!(status, id, String[]), comp)
-		end
+	for d in dirs, (id, comp) in weidu_stack(d)
+		push!(get!(status, id, String[]), comp)
 	end
 	status
 end
@@ -937,6 +948,8 @@ function nextmods(n; selection=global_selection,
 	end
 	ret
 end
+function topmods(n; selection=global_selection, dir=GAMEDIR.bg2)
+end
 function do_first(f, n=1; moddb=global_moddb, selection=global_selection,
 		kwargs...)
 	order = installorder(keys(filter(!isempty, selection)))
@@ -963,7 +976,6 @@ end end
 
 # ««1
 end
-
 M=ModTool
 R=isdefined(M, :global_moddb) ? M.global_moddb["rr"] : nothing
 C=isnothing(R) ? R : R.components

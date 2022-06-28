@@ -30,7 +30,6 @@ function bws_moddb(source = BWS_MODDB, orderfile=BWS_BG2IO)
 		m = match(r"github.com/(([^/])*/([^/]*))", url)
 		!isnothing(m) && ( url = "github:"*m.captures[1]; archive = "")
 		addmods!(moddb, Mod(;id, url, description, archive, class="noclass:$id"))
-		println("$(length(moddb)) $id")
 	end
 	printsim("reading order file $orderfile")
 	for line in eachline(orderfile)
@@ -297,6 +296,20 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		30 => (path=["Classes", "Fighter"],),
 		100 => (path=["Items", "Ammunition"],),
 	)#»»
+	setmod!("ajantisbg1",#««
+		0 => (path = ["NPC", "Ajantis"],),
+		1 => (path = ["NPC", "Ajantis"],),
+	)#»»
+	setmod!("ajantisbg2",#««
+		0 => (path = ["NPC", "Ajantis"],),
+		1 => (path = ["NPC", "Ajantis"],),
+		3 => (path = ["NPC", "Ajantis"],),
+		41 => (path = ["NPC", "Ajantis"],),
+		42 => (path = ["NPC", "Ajantis"],),
+		43 => (path = ["NPC", "Ajantis"],),
+		44 => (path = ["NPC", "Ajantis"],),
+		5 => (path = ["NPC", "Ajantis"],),
+	)#»»
 	setmod!("animalcompanions",#««
 		0 => (path=["Classes", "Ranger"],),
 	)#»»
@@ -421,6 +434,64 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
  510 => (path = ["Items", "Stores"],),
  999 => (path = ["Cosmetic", "Icons"],),
 	)#»»
+	setmod!("banterpack",#««
+		0 => (path=["NPC"],),
+		1 => (path=["NPC", "Banter accelerator"],),
+		2 => (path=["NPC"],),
+		3 => (path=["NPC", "Banter accelerator"],),
+	)#»»
+	setmod!("bg1aerie", 0 => (path = ["NPC", "Aerie"],))
+	setmod!("bg1npc",#««
+		 0 => (path=["NPC"],),
+		 1 => (path=["NPC"],),
+		 20 => (path=["NPC", "Ajantis"],),
+		 21 => (path=["NPC", "Ajantis"],),
+		 22 => (path=["NPC", "Ajantis"],),
+		 23 => (path=["NPC", "Ajantis"],),
+		 24 => (path=["NPC", "Ajantis"],),
+		 30 => (path=["NPC", "Branwen"],),
+		 31 => (path=["NPC", "Branwen"],),
+		 32 => (path=["NPC", "Branwen"],),
+		 33 => (path=["NPC", "Branwen"],),
+		 34 => (path=["NPC", "Branwen"],),
+		 40 => (path=["NPC", "Coran"],),
+		 41 => (path=["NPC", "Coran"],),
+		 42 => (path=["NPC", "Coran"],),
+		 43 => (path=["NPC", "Coran"],),
+		 44 => (path=["NPC", "Coran"],),
+		 50 => (path=["NPC", "Dynaheir"],),
+		 51 => (path=["NPC", "Dynaheir"],),
+		 52 => (path=["NPC", "Dynaheir"],),
+		 53 => (path=["NPC", "Dynaheir"],),
+		 54 => (path=["NPC", "Dynaheir"],),
+		 60 => (path=["NPC", "Shar-Teel"],),
+		 61 => (path=["NPC", "Shar-Teel"],),
+		 62 => (path=["NPC", "Shar-Teel"],),
+		 63 => (path=["NPC", "Shar-Teel"],),
+		 64 => (path=["NPC", "Shar-Teel"],),
+		 70 => (path=["NPC", "Xan"],),
+		 71 => (path=["NPC", "Xan"],),
+		 72 => (path=["NPC", "Xan"],),
+		 73 => (path=["NPC", "Xan"],),
+		 74 => (path=["NPC", "Xan"],),
+		 80 => (path=["NPC"],),
+		 90 => (path=["NPC", "Wait"],),
+		 100 => (path=["NPC", "Banter accelerator"],),
+		 110 => (path=["NPC", "Banter accelerator"],),
+		 111 => (path=["NPC", "Banter accelerator"],),
+		 112 => (path=["NPC", "Banter accelerator"],),
+		 113 => (path=["NPC", "Banter accelerator"],),
+		 114 => (path=["NPC", "Banter accelerator"],),
+		 120 => (path=["Skills", "Reputation"],),
+		 130 => (path=["NPC", "Sarevok"],),
+		 131 => (path=["NPC", "Sarevok"],),
+		 240 => (path=["NPC", "Kivan"],),
+		 241 => (path=["NPC", "Kivan"],),
+		 150 => (path=["NPC", "Kivan"],),
+		 155 => (path=["NPC", "Coran"],),
+		 160 => (path=["Cosmetic", "Portraits"],),
+		 200 => (path=["NPC"],),
+	),#»»
 	setmod!("cdtweaks",#««
 		"" => (after = ["tomeandblood", "bg1npc", "thecalling", "item_rev", "divine_remix"],),
 		10 => (path = ["Cosmetic", "Sprites"],),
@@ -644,13 +715,22 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		30 => (path=["Skills", "Lore"],),
 		40 => (path=["Skills", "Lore"],),
 	)#»»
+	setmod!("cernd", 0 => (path = ["NPC", "Cernd"],))
 	setmod!("charlatan",#««
 		0 => (path=["Classes", "Bard"],),
 		1 => (path=["NPC", "Eldoth"],),
 	)#»»
+	setmod!("chattyimoen",#««
+		0 => (path = ["NPC", "Imoen"],),
+		1 => (path = ["NPC", "Imoen"],),
+		2 => (path = ["NPC", "Imoen"],),
+		3 => (path = ["NPC", "Imoen"],),
+		4 => (path = ["NPC", "Imoen"],),
+	)#»»
 	setmod!("cowledmenace",#««
 		"" => (after = "eet", depends = "eet",),
 	)#»»
+	setmod!("corwineet", 0 => (path = ["NPC", "Corwin"],))
 	setmod!("crossmodbg2",#««
 		"" => (after = [ "adrian", "ajantisbg1", "ajantisbg2", "amber", "angelo", "aranw", "arath_eet", "aurenaseph", "branwen", "c#solaufein", "coran", "coranbgfriend", "dace_eet", "fade", "faren", "foundling", "gahesh", "gavin", "haerdalisromance", "haldamir", "hephernaanbg2", "hubelpot", "isra", "iylos", "kelsey", "keto", "khalidbg2", "kido", "kindrek", "kivan", "longerroadee", "luxleysoa", "neh'taniel", "ninde_eet", "petsy", "quayle", "saerileth", "sarahtob", "skiecost", "solaufein", "tashia", "thebeaurinlegacy", "tiax", "tsujatha", "varshoon", "verrsza", "willowisp", "xan", "xanbg1friend", "xulaye", "yasraena", "yoshimosremorse", "yvette", ],),
 	)#»»
@@ -949,6 +1029,23 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		432 => (exclusive = ["ar1900.bcs", "impshad.bcs"],),
 		440 => (exclusive = ["giafir.itm", "ysg2.cre", "ysfire01.cre", "ysguar01.cre"],),
 	)#»»
+	setmod!("haerdalis_friendship", 0 => (path = ["NPC", "Haer'dalis"],))
+	setmod!("haerdalisromance", 0 => (path = ["NPC", "Haer'dalis"],))
+	setmod!("imoenfriendship", 0 => (path = ["NPC", "Imoen"],))
+	setmod!("iepbanters",#««
+		0	=> (path=["NPC"],),
+		1 => (path=["NPC"],),
+		2 => (path=["NPC", "Imoen"],),
+		3 => (path=["NPC", "Anomen"],),
+		4 => (path=["NPC"],),
+		5 => (path=["NPC"],),
+		6 => (path=["NPC", "Banter accelerator"],),
+		7 => (path=["NPC", "Banter accelerator"],),
+		8 => (path=["NPC", "Banter accelerator"],),
+		9 => (path=["NPC", "Banter accelerator"],),
+		10 => (path=["NPC", "Banter accelerator"],),
+		11 => (path=["NPC", "Banter accelerator"],),
+	)#»»
 	setmod!("item_rev",#««
 		"" => (after = ["eet"],),
 	0 => (exclusive = ["hlolth.itm", "clolth.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "blun01.itm", "bolt01.itm", "sahbolt.itm", "kuobolt.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bull01.itm", "chan01.itm", "clck01.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "amsoul01.itm", "leat01.itm", "aegis.itm", "bruenaxe.itm", "bruenpla.itm", "cattibow.itm", "catliowp.cre", "figlion.itm", "spidfgsu.cre", "figspid.itm", "bsw1h01.itm", "bersersu.cre", "bleat01.itm", "miscbc.itm", "nebdag.itm", "quiver01.itm", "reaver.itm", "korax01.itm", "nparm.itm", "npbow.itm", "npbelt.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npstaf.itm", "npplat.itm", "keldorn.spl", "npring01.itm", "npshld.itm", "npsw01.itm", "clolth.itm", "hlolth.itm", "finsarev.itm", "plat01.itm", "rods01.itm", "rods01.spl", "shld01.itm", "slng01.itm", "sper01.itm", "staf01.itm", "smoundsu.cre", "smoundsu.itm", "sw1h01.itm", "xbow01.itm", "waflail.itm", "wawak.itm"], path=["Items"],),
@@ -1006,7 +1103,10 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		40 => (path=["Spells", "New spells"],),
 		80 => (path=["Cosmetic", "Icons"],),
 	)#»»
+	setmod!("janquest", 0 => (path = ["NPC", "Jan"],))
+	setmod!("k9sharteelnpc", 0 => (path = ["NPC", "Shar-Teel"],))
 	setmod!("keto", "" => (after = ["kelsey"],),)
+	setmod!("kivan", 0 => (path = ["NPC", "Kivan"],))
 	setmod!("klatu",#««
 		1000 => (path=["Items"],),
 		1010 => (path=["Items"],),
@@ -1030,10 +1130,12 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		2200 => (path=["Skills", "Familiar"],),
 		3070 => (path=["Cosmetic", "Icons"],),
 	)#»»
+	setmod!("korganfriendship", 0 => (path = ["NPC", "Korgan"],))
 	setmod!("leui",#««
 		"" => (before = ["eeuitweaks", "might_and_guile", "stratagems",
 		"tomeandblood", "shadowadept", "deities-of-faerun", "faiths_and_powers"],),
 	)#»»
+	setmod!("mazzy", 0 => (path = ["NPC", "Mazzy"],))
 	setmod!("mercenary",#««
 		0 => (path=["Classes", "Fighter"],),
 		1 => (path=["NPC", "Kagain"],),
@@ -1100,12 +1202,18 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	setmod!("mih_eq",#««
 		"" => (before = ["stratagems"],),
 	)#»»
+	setmod!("minscfriendship", 0 => (path = ["NPC", "Minsc"],))
 	setmod!("monasticorders",#««
 		0 => (path=["Classes", "Monk"],),
 		1 => (path=["Classes", "Monk"],),
 		2 => (path=["Classes", "Monk"],),
 		3 => (path=["Classes", "Monk"],),
 		4 => (path=["Classes", "Monk"],),
+	)#»»
+	setmod!("npc_tweak",#««
+		0 => (path = ["NPC", "Anomen"],),
+		1 => (path = ["NPC", "Cernd"],),
+		2 => (path = ["NPC", "Nalia"],),
 	)#»»
 	setmod!("npckit",#««
 	)#»»
@@ -1156,6 +1264,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		74 => (path=["Fighting", "Armor"],),
 		75 => (path=["Fighting", "Armor"],),
 	)#»»
+	setmod!("sarevokromance", 0 => (path = ["NPC", "Sarevok"],))
 	setmod!("scales_of_balance",#««
 		"" => (conflicts = ["kit_rev", "kitpack",],
 			after = ["cdtweaks", "item_rev", "kitpack", "tomeandblood",
@@ -1192,6 +1301,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		2122 => (path=["Tables", "XP", "Quests"],),
 		2123 => (path=["Tables", "XP", "Quests"],),
 	)#»»
+	setmod!("skiecost", 0 => (path = ["NPC", "Skie"],))
 	setmod!("song_and_silence",#««
 		0 => (path=["Classes"],),
 		1 => (path=["Items", "Stores"],),
@@ -1435,6 +1545,8 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		1202 => (path=["Spells", "Schools"],),
 		1203 => (path=["Spells", "Schools"],),
 	)#»»
+	setmod!("valygarfriendship", 0 => (path = ["NPC", "Valygar"],))
+	setmod!("viconia", 0 => (path = ["NPC", "Viconia"],))
 	setmod!("wheels",#««
 		"" => (before = "stratagems",),
 	),#»»
@@ -1446,6 +1558,18 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		4 => (path=["Classes", "Mage"],),
 		5 => (path=["Spells", "Alteration"],),
 	)#»»
+	setmod!("wilsonchronicles", 0 => (path = ["NPC", "Wilson"],))
+	setmod!("xan",#««
+		0 => (path = ["NPC", "Xan"],),
+		1 => (path = ["NPC", "Xan"],),
+		2 => (path = ["NPC", "Xan"],),
+		3 => (path = ["NPC", "Xan"],),
+		4 => (path = ["NPC", "Xan"],),
+		5 => (path = ["NPC", "Xan"],),
+		6 => (path = ["NPC", "Xan"],),
+	)#»»
+	setmod!("xanbg1friend", 0 => (path = ["NPC", "Xan"],))
+	setmod!("yoshimo", 0 => (path = ["NPC", "Yoshimo"],))
 		# extract data from already downloaded/extracted mods
 		for (id, mod) in moddb
 # 		for (id, mod) in Iterators.take(moddb, 20)

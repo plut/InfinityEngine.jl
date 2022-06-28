@@ -411,10 +411,12 @@ url = "github:Gibberlings3/Ajantis_BG1_Expansion"
     [ajantisbg1.components.1]
     id = "0"
     name = "Installs Ajantis BG1 Expansion Modification"
+		path = ["NPC", "Ajantis"]
 
     [ajantisbg1.components.2]
     id = "1"
     name = "Install the unique BG:EE BAM for Ajantis' Family Shield"
+		path = ["NPC", "Ajantis"]
 
 [ajantisbg2]
 archive = "win-ajantisbg2-v20.zip"
@@ -430,38 +432,46 @@ url = "https://www.baldurs-gate.de/index.php?resources/jasteys-sir-ajantis-f%C3%
     [ajantisbg2.components.1]
     id = "0"
     name = "Sir Ajantis NPC for BGII"
+		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.2]
     id = "1"
     name = "Install the unique BG(II):EE BAM for Ajantis' Family Shield"
+		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.3]
     id = "3"
     name = "Installation of adult romance content"
+		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.4]
     id = "41"
     name = "Speed: 45 minutes real time minimum between Dialogues"
     subgroup = "Select Ajantis' Friendship Dialogues and Romance Speed:"
+		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.5]
     id = "42"
     name = "Speed: 30 minutes real time minimum between Dialogues"
     subgroup = "Select Ajantis' Friendship Dialogues and Romance Speed:"
+		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.6]
     id = "43"
     name = "Speed: 15 minutes real time minimum between Dialogues"
     subgroup = "Select Ajantis' Friendship Dialogues and Romance Speed:"
+		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.7]
     id = "44"
     name = "Speed: 1 hour 30 minutes (extended) real time minimum between Dialogues"
     subgroup = "Select Ajantis' Friendship Dialogues and Romance Speed:"
+		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.8]
     id = "5"
     name = "Ajantis kit choice: make Ajantis Cavalier"
+		path = ["NPC", "Ajantis"]
 
 [ajantisportraitpack]
 archive = "AjantisPortraitPack_v4.zip"
@@ -2504,6 +2514,7 @@ url = "http://lynxlynx.info/ie/modhub.php?Isaya/bg2eetrans"
     [bg2eetrans.components.1]
     id = "0"
     name = "Initialisation"
+		path = ["EET"]
 
 [bg2eew]
 archive = "BG2EEWv101.rar"
@@ -2719,6 +2730,7 @@ url = "https://www.dropbox.com/s/qdvhlx6hg9lh10n/SoDGerman.zip?dl=1"
     [bgsodde.components.1]
     id = "0"
     name = "SoD: Deutscher Text-Patch von Shai Hulud und Are"
+		path = ["EET"]
 
 [bolsa]
 archive = "bolsa-v6.0.0.zip"
@@ -5026,6 +5038,7 @@ url = "github:SpellholdStudios/CerndFriendship"
     [cernd.components.1]
     id = "0"
     name = "Cernd Friendship for BG2: ToB"
+		path = ["NPC", "Cernd"]
 
 [charlatan]
 archive = "charlatan.tar.gz"
@@ -5061,25 +5074,30 @@ url = "https://github.com/AstroBryGuy/ChattyImoen/releases/download/v1.3/lin-cha
     [chattyimoen.components.1]
     id = "0"
     name = "Chatty Imoen: Expanded Character Sounds"
+		path = ["NPC", "Imoen"]
 
     [chattyimoen.components.2]
     id = "1"
     name = "Chatty Imoen: Add NPC Interactions"
+		path = ["NPC", "Imoen"]
 
     [chattyimoen.components.3]
     id = "2"
     name = "Give Imoen her BG1 Portrait"
     subgroup = "Chatty Imoen: Imoen Portrait Replacements"
+		path = ["NPC", "Imoen"]
 
     [chattyimoen.components.4]
     id = "3"
     name = "Give Imoen her SoD Portrait"
     subgroup = "Chatty Imoen: Imoen Portrait Replacements"
+		path = ["NPC", "Imoen"]
 
     [chattyimoen.components.5]
     id = "4"
     name = "Give Imoen her BG2 Portrait"
     subgroup = "Chatty Imoen: Imoen Portrait Replacements"
+		path = ["NPC", "Imoen"]
 
 [chloe]
 class = "NPC"
@@ -6629,16 +6647,19 @@ url = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
     id = "1"
     name = "\"Siege of Dragonspear\" DLC"
     subgroup = "Merge DLC into game"
+		path = ["EET"]
 
     [dlcmerger.components.2]
     id = "2"
     name = "User-defined DLC"
     subgroup = "Merge DLC into game"
+		path = ["EET"]
 
     [dlcmerger.components.3]
     id = "3"
     name = "All available DLCs"
     subgroup = "Merge DLC into game"
+		path = ["EET"]
 
 [dorn]
 class = "NPC-Related"
@@ -8963,6 +8984,7 @@ url = "github:SpellholdStudios/ImoenFriendship"
     [imoenfriendship.components.1]
     id = "0"
     name = "Imoen Friendship"
+		path = ["NPC", "Imoen"]
 
 [imoenromance]
 archive = "Imoen Romance.zip"
@@ -9598,6 +9620,7 @@ url = "https://www.dropbox.com/s/u35zhecotxb42qx/JansQuest1.5.0.zip?dl=1"
     [janquest.components.1]
     id = "0"
     name = "Jan's Extended Quest"
+		path = ["NPC", "Jan"]
 
 [jimfix]
 class = "Tweak"
@@ -10297,6 +10320,7 @@ url = "github:SpellholdStudios/KorganFriendship"
     [korganfriendship.components.1]
     id = "0"
     name = "Korgan Friendship for BG2: ToB"
+		path = ["NPC", "Korgan"]
 
 [lena]
 class = "NPC"
@@ -10507,6 +10531,7 @@ url = "github:SpellholdStudios/MazzyFriendship"
     [mazzy.components.1]
     id = "0"
     name = "Mazzy Friendship"
+		path = ["NPC", "Mazzy"]
 
 [melynda]
 class = "BigQuests"
@@ -11371,6 +11396,7 @@ url = "github:SpellholdStudios/MinscFriendship"
     [minscfriendship.components.1]
     id = "0"
     name = "Minsc Friendship for BG2 and ToB"
+		path = ["NPC", "Minsc"]
 
 [monasticorders]
 archive = "monasticorders.tar.gz"
@@ -11696,14 +11722,17 @@ url = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/NPCTweak&pre"
     [npc_tweak.components.1]
     id = "0"
     name = "Anomen"
+		path = ["NPC", "Anomen"]
 
     [npc_tweak.components.2]
     id = "1"
     name = "Cernd"
+		path = ["NPC", "Cernd"]
 
     [npc_tweak.components.3]
     id = "2"
     name = "Nalia"
+		path = ["NPC", "Nalia"]
 
 [npcflirt]
 archive = "NPCFlirtV105.zip"
@@ -12589,6 +12618,7 @@ url = "https://www.dropbox.com/s/pifofoz21t15zph/Sarevok%20Romance%20v1.4.zip?dl
     [sarevokromance.components.1]
     id = "0"
     name = "Aeryn's Sarevok Romance for BGII: Throne of Bhaal"
+		path = ["NPC", "Sarevok"]
 
 [scales_of_balance]
 archive = "scales_of_balance.tar.gz"
@@ -16262,6 +16292,7 @@ url = "github:SpellholdStudios/ViconiaFriendship"
     [viconia.components.1]
     id = "0"
     name = "Viconia Friendship"
+		path = ["NPC", "Viconia"]
 
 [viconiarevamped]
 archive = "ViconiaRevamped v7.0.zip"
@@ -16554,34 +16585,41 @@ url = "github:Pocket-Plane-Group/Xan_for_BGII"
     [xan.components.1]
     id = "0"
     name = "Xan NPC MOD for Baldur's Gate II"
+		path = ["NPC", "Xan"]
 
     [xan.components.2]
     id = "1"
     name = "Change Xan's class to Fighter/Mage"
     subgroup = "Install alternate class for Xan?"
+		path = ["NPC", "Xan"]
 
     [xan.components.3]
     id = "2"
     name = "Change Xan's class to Mage"
     subgroup = "Install alternate class for Xan?"
+		path = ["NPC", "Xan"]
 
     [xan.components.4]
     id = "3"
     name = "Change Xan's class to Sorcerer"
     subgroup = "Install alternate class for Xan?"
+		path = ["NPC", "Xan"]
 
     [xan.components.5]
     id = "4"
     name = "Change Xan's class to Wild Mage (ToB only)"
     subgroup = "Install alternate class for Xan?"
+		path = ["NPC", "Xan"]
 
     [xan.components.6]
     id = "5"
     name = "BG1-style flaming swords"
+		path = ["NPC", "Xan"]
 
     [xan.components.7]
     id = "6"
     name = "Xan's Alternate Voice by Joey Bracken"
+		path = ["NPC", "Xan"]
 
 [xanbg1friend]
 archive = "XanBG1Friend_v10.zip"
@@ -16597,6 +16635,7 @@ url = "github:Pocket-Plane-Group/Xan_BG1_Friendship"
     [xanbg1friend.components.1]
     id = "0"
     name = "Xan's friendship path for BG1"
+		path = ["NPC", "Xan"]
 
 [xanbg1voice]
 archive = "XanBG1Voice_v2.zip"
@@ -16664,6 +16703,7 @@ url = "github:SpellholdStudios/YoshimoFriendship"
     [yoshimo.components.1]
     id = "0"
     name = "Yoshimo Friendship Mod for BGII: SoA"
+		path = ["NPC", "Yoshimo"]
 
 [yoshimoromance]
 archive = "YoshimoRomance v6.0.zip"

@@ -841,7 +841,7 @@ end
 # Mod installation ««1
 function install(mod; simulate=false, uninstall=false,
 		selection=global_selection, gamedirs=GAMEDIR,
-		order = installorder(keys(selection)))
+		order = installorder(keys(selection)), write=false)
 	extract(mod) || return
 	id = mod.id
 
@@ -895,7 +895,7 @@ function install(mod; simulate=false, uninstall=false,
 end
 function uninstall(mod; selection = global_selection, write=true, kwargs...)
 	delete!(selection, mod.id)
-	install(mod)
+	install(mod; write, kwargs...)
 	write && write_selection()
 end
 # Global routines««1

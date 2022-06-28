@@ -429,7 +429,7 @@ tp2 = "ajantisbg1/setup-ajantisbg1.tp2"
 url = "github:Gibberlings3/Ajantis_BG1_Expansion"
 
     [ajantisbg1.compat]
-    after = ["c#endlessbg1", "transitions", "bg1npc"]
+    after = ["bg1npc", "c#endlessbg1", "transitions"]
     before = ["eet_end"]
 
     [ajantisbg1.components.1]
@@ -760,7 +760,7 @@ tp2 = "artisanskitpack/artisanskitpack.tp2"
 url = "github:ArtemiusI/The-Artisan-s-Kitpack"
 
     [artisanskitpack.compat]
-    after = ["skitianpcs", "emily", "ajantisbg1", "ajantisbg2"]
+    after = ["ajantisbg1", "ajantisbg2", "emily", "skitianpcs"]
 
     [artisanskitpack.components.1]
     group = "Rule Tweaks"
@@ -1100,7 +1100,7 @@ url = "github:InfinityMods/Ascension"
 
     [ascension.compat]
     after = ["eet"]
-    before = ["wheels", "iylos", "spell_rev", "stratagems", "eet_end"]
+    before = ["eet_end", "iylos", "spell_rev", "stratagems", "wheels"]
 
     [ascension.components.1]
     group = "Ascension"
@@ -1366,7 +1366,7 @@ url = "https://www.dropbox.com/s/hs3besqzichlru0/atweaks-v453.zip?dl=1"
     path = ["Classes", "Fighter"]
 
     [atweaks.components.27]
-    exclusive = ["spin102.spl", "spin101.spl", "spin104.spl", "spin105.spl", "spin106.spl"]
+    exclusive = ["spin101.spl", "spin102.spl", "spin104.spl", "spin105.spl", "spin106.spl"]
     group = "Gameplay tweaks"
     id = "202"
     name = "Enhance the Bhaalpowers and standardize their casting time"
@@ -1535,7 +1535,7 @@ url = "https://www.dropbox.com/s/hs3besqzichlru0/atweaks-v453.zip?dl=1"
     path = ["Items"]
 
     [atweaks.components.5]
-    exclusive = ["spwi105.spl", "spin937.spl"]
+    exclusive = ["spin937.spl", "spwi105.spl"]
     group = "PnP tweaks"
     id = "104"
     name = "PnP Color Spray"
@@ -2087,8 +2087,8 @@ tp2 = "bg1npc/bg1npc.tp2"
 url = "github:Gibberlings3/BG1NPC"
 
     [bg1npc.compat]
-    after = ["c#brage", "bgqe"]
-    before = ["framed", "atweaks", "cdtweaks", "c#brandock", "eet_end"]
+    after = ["bgqe", "c#brage"]
+    before = ["atweaks", "c#brandock", "cdtweaks", "eet_end", "framed"]
 
     [bg1npc.components.1]
     id = "0"
@@ -2766,7 +2766,7 @@ tp2 = "bgqe/setup-bgqe.tp2"
 url = "github:Gibberlings3/BG_Quests_And_Encounters"
 
     [bgqe.compat]
-    before = ["acbre", "c#brage", "c#brandock", "bg1npc", "eet_end"]
+    before = ["acbre", "bg1npc", "c#brage", "c#brandock", "eet_end"]
 
     [bgqe.components.1]
     id = "0"
@@ -3009,7 +3009,7 @@ tp2 = "c#sodboabri/c#sodboabri.tp2"
 url = "github:Gibberlings3/The_Boareskyr_Bridge_Scene"
 
     ["c#sodboabri".compat]
-    before = ["acbre", "c#brage", "c#brandock", "sodrtd", "eet_end"]
+    before = ["acbre", "c#brage", "c#brandock", "eet_end", "sodrtd"]
 
     ["c#sodboabri".components.1]
     id = "0"
@@ -3038,8 +3038,8 @@ tp2 = "c#solaufein/c#solaufein.tp2"
 url = "github:Gitjas/Solaufeins_Rescue_NPC"
 
     ["c#solaufein".compat]
-    after = ["subrace", "eilistraee", "eet"]
-    before = ["eet_end", "c#brandock", "corthalaromantique"]
+    after = ["eet", "eilistraee", "subrace"]
+    before = ["c#brandock", "corthalaromantique", "eet_end"]
 
     ["c#solaufein".components.1]
     id = "0"
@@ -3138,7 +3138,7 @@ tp2 = "cdtweaks/setup-cdtweaks.tp2"
 url = "github:Gibberlings3/Tweaks-Anthology"
 
     [cdtweaks.compat]
-    after = ["iwdification", "thecalling", "tomeandblood", "item_rev", "arestorationp", "bg1npc", "divine_remix"]
+    after = ["arestorationp", "bg1npc", "divine_remix", "item_rev", "iwdification", "thecalling", "tomeandblood"]
 
     [cdtweaks.components.1]
     group = "Cosmetic Changes"
@@ -3447,7 +3447,7 @@ url = "github:Gibberlings3/Tweaks-Anthology"
     subgroup = "Alter Wisdom-Based Divine Bonus Spell Table"
 
     [cdtweaks.components.137]
-    exclusive = ["lufmt.2da", "lufmc.2da"]
+    exclusive = ["lufmc.2da", "lufmt.2da"]
     group = "Rule Changes"
     id = "2300"
     name = "Triple-Class HLA Tables"
@@ -4845,7 +4845,7 @@ url = "github:Gibberlings3/Tweaks-Anthology"
     subgroup = "Gems and Potions Require Identification"
 
     [cdtweaks.components.55]
-    exclusive = ["spcl644.spl", "spcl643.spl", "sppr604.spl", "anisum05.2da", "wwbearwe.cre", "anisum04.2da", "wwbear.cre"]
+    exclusive = ["anisum04.2da", "anisum05.2da", "spcl643.spl", "spcl644.spl", "sppr604.spl", "wwbear.cre", "wwbearwe.cre"]
     group = "Content Changes"
     id = "1150"
     name = "Shapeshifter Rebalancing [Weimer]"
@@ -5353,7 +5353,7 @@ tp2 = "crossmodbg2/setup-crossmodbg2.tp2"
 url = "github:Gibberlings3/Crossmod_Banter_Pack_for_Baldurs_Gate_II"
 
     [crossmodbg2.compat]
-    after = ["arath_eet", "xanbg1friend", "xulaye_eet", "varshoon", "amber", "tsujatha", "c#solaufein", "ninde_eet", "sarahtob", "luxleysoa", "coran", "yasraena", "quayle", "haerdalisromance", "tiax", "alternatives", "yoshimosremorse", "verrsza", "xan", "aurenaseph", "totdg", "foundling", "kitanya", "faren", "keto", "nephele", "haldamir", "willowisp", "branwen", "sirene", "hephernaanbg2", "coranbgfriend", "khalidbg2", "iylos", "tashia", "adrian", "thebeaurinlegacy", "isra", "petsy", "hubelpot", "gahesh", "ajantisbg2", "haerdalis_friendship", "kindrek", "kelsey", "skiecost", "dace_eet", "paina", "gavin", "fade", "saerileth", "neh'taniel", "longerroadee", "verrbg2", "yvette", "angelo", "gavin_bg2", "nathaniel", "kido", "aranw", "yoshimoromance", "ajantisbg1", "kivan", "solaufein", "keldorn_rom"]
+    after = ["adrian", "ajantisbg1", "ajantisbg2", "alternatives", "amber", "angelo", "aranw", "arath_eet", "aurenaseph", "branwen", "c#solaufein", "coran", "coranbgfriend", "dace_eet", "fade", "faren", "foundling", "gahesh", "gavin", "gavin_bg2", "haerdalis_friendship", "haerdalisromance", "haldamir", "hephernaanbg2", "hubelpot", "isra", "iylos", "keldorn_rom", "kelsey", "keto", "khalidbg2", "kido", "kindrek", "kitanya", "kivan", "longerroadee", "luxleysoa", "nathaniel", "neh'taniel", "nephele", "ninde_eet", "paina", "petsy", "quayle", "saerileth", "sarahtob", "sirene", "skiecost", "solaufein", "tashia", "thebeaurinlegacy", "tiax", "totdg", "tsujatha", "varshoon", "verrbg2", "verrsza", "willowisp", "xan", "xanbg1friend", "xulaye_eet", "yasraena", "yoshimoromance", "yoshimosremorse", "yvette"]
 
     [crossmodbg2.components.1]
     id = "0"
@@ -5400,7 +5400,7 @@ tp2 = "setup-d0questpack.tp2"
 url = "http://mods.pocketplane.net/win-questpack-v34.zip"
 
     [d0questpack.compat]
-    after = ["kelsey", "ub", "keto"]
+    after = ["kelsey", "keto", "ub"]
 
     [d0questpack.components.1]
     exclusive = ["AI"]
@@ -5414,19 +5414,19 @@ url = "http://mods.pocketplane.net/win-questpack-v34.zip"
     path = ["Story", "BG2"]
 
     [d0questpack.components.11]
-    exclusive = ["potn38.itm", "spwi106.spl", "spwi815.spl", "potn33.itm"]
+    exclusive = ["potn33.itm", "potn38.itm", "spwi106.spl", "spwi815.spl"]
     id = "9"
     name = "Rahul Kanakia's Potion Quest"
     path = ["Story", "BG2"]
 
     [d0questpack.components.12]
-    exclusive = ["spin755.spl", "spin747.spl", "hellself.cre", "sphl002.spl", "sphl003.spl", "sphl004.spl", "hellself.eff", "spin751.spl", "spin753.spl", "spin749.spl", "sphl001.spl", "hellgen2.cre", "sphl005.spl", "cutc7g.bcs"]
+    exclusive = ["cutc7g.bcs", "hellgen2.cre", "hellself.cre", "hellself.eff", "sphl001.spl", "sphl002.spl", "sphl003.spl", "sphl004.spl", "sphl005.spl", "spin747.spl", "spin749.spl", "spin751.spl", "spin753.spl", "spin755.spl"]
     id = "10"
     name = "Revised Hell Trials"
     path = ["Story", "BG2"]
 
     [d0questpack.components.13]
-    exclusive = ["amtcle01.cre", "amtmag01.cre", "amtpik01.cre", "amtarc01.cre", "amtcap01.cre", "amtgen01.cre"]
+    exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"]
     id = "11"
     name = "IO2 Dialogue & Combat Enhancement"
     path = ["Areas", "BG2", "Oasis"]
@@ -5440,7 +5440,7 @@ url = "http://mods.pocketplane.net/win-questpack-v34.zip"
     subgroup = "Improved Oasis II"
 
     [d0questpack.components.15]
-    exclusive = ["pirmur05.cre", "ppsanik.cre", "pirmur02.cre"]
+    exclusive = ["pirmur02.cre", "pirmur05.cre", "ppsanik.cre"]
     id = "13"
     name = "Saving Sanik In Brynnlaw"
     path = ["Story", "BG2"]
@@ -5450,13 +5450,13 @@ url = "http://mods.pocketplane.net/win-questpack-v34.zip"
     name = "Burglary Of The Bookkeeper"
 
     [d0questpack.components.17]
-    exclusive = ["sutear.bam", "sutear.itm", "sudryad.cre", "sufake.itm", "suinvis.cre", "sumound.cre", "sufake.bam"]
+    exclusive = ["sudryad.cre", "sufake.bam", "sufake.itm", "suinvis.cre", "sumound.cre", "sutear.bam", "sutear.itm"]
     id = "15"
     name = "New Fate For The Dryads' Acorns"
     path = ["Quests", "BG2"]
 
     [d0questpack.components.18]
-    exclusive = ["besamen.cre", "baisera.cre"]
+    exclusive = ["baisera.cre", "besamen.cre"]
     id = "16"
     name = "The Tragedy Of Besamen"
     path = ["Quests", "BG2"]
@@ -5510,13 +5510,13 @@ url = "http://mods.pocketplane.net/win-questpack-v34.zip"
     subgroup = "Miscellaneous Enhancements"
 
     [d0questpack.components.6]
-    exclusive = ["sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre", "reddeath.bcs"]
+    exclusive = ["reddeath.bcs", "sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre"]
     id = "401"
     name = "Without Additonal Random Encounters"
     subgroup = "Miscellaneous Enhancements"
 
     [d0questpack.components.7]
-    exclusive = ["aran.cre", "mvpries.cre", "tassa.cre", "arnfgt04.cre", "arnfgt03.cre", "vvtanov.cre", "ar0300.bcs", "maevar.cre", "aran02.cre", "mvguard1.cre", "ar0300.are", "c6kach.cre", "renal.cre", "thief1.cre", "c6tanov.bcs"]
+    exclusive = ["ar0300.are", "ar0300.bcs", "aran.cre", "aran02.cre", "arnfgt03.cre", "arnfgt04.cre", "c6kach.cre", "c6tanov.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "renal.cre", "tassa.cre", "thief1.cre", "vvtanov.cre"]
     id = "5"
     name = "Additional Shadow Thieves Content"
     path = ["Story", "BG2"]
@@ -5698,7 +5698,7 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     path = ["Spells", "New spells"]
 
     [d5_random_tweaks.components.19]
-    exclusive = ["potn14.spl", "spwi312.spl", "msectype.2da", "spwi305.spl"]
+    exclusive = ["msectype.2da", "potn14.spl", "spwi305.spl", "spwi312.spl"]
     id = "2305"
     name = "Make Haste and Slow Properly Cancel Each Other"
     path = ["Spells", "Alteration"]
@@ -5738,13 +5738,13 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     name = "Increase Range of Icelance"
 
     [d5_random_tweaks.components.25]
-    exclusive = ["spwi413d.spl", "spwi413a.spl"]
+    exclusive = ["spwi413a.spl", "spwi413d.spl"]
     id = "2413"
     name = "Allow Target of Otiluke's Sphere to Use Inventory Screen"
     path = ["Spells", "Alteration"]
 
     [d5_random_tweaks.components.26]
-    exclusive = ["spwi418.spl", "spwi403.spl"]
+    exclusive = ["spwi403.spl", "spwi418.spl"]
     id = "2418"
     name = "Set Fire Shield and Acid Sheath Spells to be Breachable"
     path = ["Spells", "Abjuration"]
@@ -5877,7 +5877,7 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     path = ["Spells", "Conjuration"]
 
     [d5_random_tweaks.components.48]
-    exclusive = ["spwi914.spl", "spwi806.spl"]
+    exclusive = ["spwi806.spl", "spwi914.spl"]
     id = "2914"
     name = "Add Instant Death Effect to Energy Drain"
     path = ["Spells", "Necromancy"]
@@ -5905,19 +5905,19 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     path = ["Items"]
 
     [d5_random_tweaks.components.52]
-    exclusive = ["brac18.itm", "7eyes.2da"]
+    exclusive = ["7eyes.2da", "brac18.itm"]
     id = "3020"
     name = "Proper Missile Deflection for the Gloves of Missile Snaring"
     path = ["Items"]
 
     [d5_random_tweaks.components.53]
-    exclusive = ["pfirex.bam", "pfirea.bam"]
+    exclusive = ["pfirea.bam", "pfirex.bam"]
     id = "3030"
     name = "Improve Detonating Weapons"
     path = ["Items"]
 
     [d5_random_tweaks.components.54]
-    exclusive = ["leat14.itm", "eff_e02.wav"]
+    exclusive = ["eff_e02.wav", "leat14.itm"]
     id = "3040"
     name = "Add Revised Barkskin to 'Skin of the Forest' Armor"
     path = ["Items"]
@@ -5934,13 +5934,13 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     path = ["Items"]
 
     [d5_random_tweaks.components.57]
-    exclusive = ["hamm06a.itm", "hamm06b.itm", "hamm06.itm"]
+    exclusive = ["hamm06.itm", "hamm06a.itm", "hamm06b.itm"]
     id = "3070"
     name = "Make the Dwarven Thrower Hammer Usable by Non-Dwarves"
     path = ["Items"]
 
     [d5_random_tweaks.components.58]
-    exclusive = ["misc3o.itm", "misc3n.itm"]
+    exclusive = ["misc3n.itm", "misc3o.itm"]
     id = "3080"
     name = "Improve Azlaer's Harp and Methild's Harp"
     path = ["Items"]
@@ -6113,8 +6113,8 @@ tp2 = "deitiesoffaerun/deitiesoffaerun.tp2"
 url = "github:Raduziel/Deities-Of-Faerun"
 
     [deitiesoffaerun.compat]
-    after = ["tiax", "drake", "iwdification", "glamnpcpack", "eet", "raduzielsuniversalspells", "tenyathermidor", "dsotsc", "finchnpc", "yvette", "allthingsmazzy", "nephele", "yeslicknpc", "k9sharteelnpc", "branwen", "gavin", "quayle"]
-    before = ["tomeandblood", "ihateundead", "eet_end"]
+    after = ["allthingsmazzy", "branwen", "drake", "dsotsc", "eet", "finchnpc", "gavin", "glamnpcpack", "iwdification", "k9sharteelnpc", "nephele", "quayle", "raduzielsuniversalspells", "tenyathermidor", "tiax", "yeslicknpc", "yvette"]
+    before = ["eet_end", "ihateundead", "tomeandblood"]
     conflicts = ["faiths_and_powers", "spell_rev"]
 
     [deitiesoffaerun.components.1]
@@ -6699,7 +6699,7 @@ tp2 = "djinnicompanion/djinnicompanion.tp2"
 url = "github:Argent77/DjinniCompanion"
 
     [djinnicompanion.compat]
-    after = ["d0questpack", "a7-golemconstruction", "ascension", "ub", "eet", "wheels"]
+    after = ["a7-golemconstruction", "ascension", "d0questpack", "eet", "ub", "wheels"]
     before = ["eet_end"]
 
     [djinnicompanion.components.1]
@@ -6778,7 +6778,7 @@ tp2 = "dlcmerger/setup-dlcmerger.tp2"
 url = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
 
     [dlcmerger.compat]
-    before = ["saradas_magic", "drake", "white", "verrsza", "garrick-tt", "bg1npcmusic", "drizztsaga", "tenyathermidor", "bgeetextpack", "bg1ub", "k9roughworld", "bg1npc", "soa", "k9sharteelnpc", "sodrus", "sirene", "darkhorizonsbgee", "karatur", "bg1aerie", "bgsodde"]
+    before = ["bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "bgeetextpack", "bgsodde", "darkhorizonsbgee", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "k9sharteelnpc", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white"]
 
     [dlcmerger.components.1]
     id = "1"
@@ -6971,8 +6971,8 @@ tp2 = "eet/eet.tp2"
 url = "github:Gibberlings3/EET"
 
     [eet.compat]
-    after = ["saradas_magic", "drake", "white", "verrsza", "garrick-tt", "bg1npcmusic", "drizztsaga", "tenyathermidor", "bgeetextpack", "bg1ub", "k9roughworld", "bg1npc", "soa", "k9sharteelnpc", "sodrus", "dlcmerger", "sirene", "darkhorizonsbgee", "karatur", "bg1aerie", "bgsodde"]
-    before = ["bg2eer", "bg2ee_ga"]
+    after = ["bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "bgeetextpack", "bgsodde", "darkhorizonsbgee", "dlcmerger", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "k9sharteelnpc", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white"]
+    before = ["bg2ee_ga", "bg2eer"]
 
     [eet.components.1]
     id = "0"
@@ -7535,12 +7535,12 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
     name = "Westley Weimer's \"Red Badge\" Poison-Based Encounter"
 
     [eetact2.components.12]
-    exclusive = ["tsmaepet.cre", "mvpries.cre", "maevar.cre", "ar9391.bcs", "mvguard1.cre"]
+    exclusive = ["ar9391.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "tsmaepet.cre"]
     id = "200"
     name = "Gebhard Blucher's Improved Mae'Var"
 
     [eetact2.components.13]
-    exclusive = ["ar0318.bcs", "ar0318.are"]
+    exclusive = ["ar0318.are", "ar0318.bcs"]
     id = "210"
     name = "Gebhard Blucher's Lich in the Docks"
 
@@ -7549,19 +7549,19 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
     name = "Gebhard Blucher's Improved Demon Knights"
 
     [eetact2.components.15]
-    exclusive = ["archlich.cre", "ar0331.bcs", "hldemi.cre", "ar0330.bcs"]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
     id = "230"
     name = "Install Westley Weimer's Kangaxx and Kensai Ryu's guardians"
     subgroup = "Kensai Ryu's Tougher Kangaxx and Guardians"
 
     [eetact2.components.16]
-    exclusive = ["archlich.cre", "ar0331.bcs", "hldemi.cre", "ar0330.bcs"]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "archlich.cre", "hldemi.cre"]
     id = "231"
     name = "Install Westley Weimer's Kangaxx - no guardians"
     subgroup = "Kensai Ryu's Tougher Kangaxx and Guardians"
 
     [eetact2.components.17]
-    exclusive = ["ar0331.bcs", "hldemi.cre", "ar0330.bcs"]
+    exclusive = ["ar0330.bcs", "ar0331.bcs", "hldemi.cre"]
     id = "232"
     name = "Install Kensai Ryu's guardians - no improved Kangaxx"
     subgroup = "Kensai Ryu's Tougher Kangaxx and Guardians"
@@ -7576,22 +7576,22 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
     name = "Kensai Ryu's Improved Crypt King"
 
     [eetact2.components.2]
-    exclusive = ["ily1.cre", "ilyhamm.itm", "ar0601.are"]
+    exclusive = ["ar0601.are", "ily1.cre", "ilyhamm.itm"]
     id = "100"
     name = "Westley Weimer's Improved Ilyich"
 
     [eetact2.components.20]
-    exclusive = ["spwndrow.bcs", "spwnmon.bcs", "spwntoa.bcs", "spwnrak.bcs", "spwnbeh.bcs", "spwnmind.bcs", "spwnorc.bcs", "spwnvamp.bcs", "spwntrol.bcs", "spwndead.bcs", "spwnwolf.bcs", "spwngol.bcs"]
+    exclusive = ["spwnbeh.bcs", "spwndead.bcs", "spwndrow.bcs", "spwngol.bcs", "spwnmind.bcs", "spwnmon.bcs", "spwnorc.bcs", "spwnrak.bcs", "spwntoa.bcs", "spwntrol.bcs", "spwnvamp.bcs", "spwnwolf.bcs"]
     id = "260"
     name = "Ishan's \"Always Toughest Random Spawns in Dungeons\""
 
     [eetact2.components.21]
-    exclusive = ["amncen1.cre", "ar0045.bcs", "ar0041.bcs", "ar0046.bcs"]
+    exclusive = ["amncen1.cre", "ar0041.bcs", "ar0045.bcs", "ar0046.bcs"]
     id = "270"
     name = "Gebhard Blucher's Random City Encounters"
 
     [eetact2.components.22]
-    exclusive = ["ar0044.bcs", "ar0042.bcs", "ar0043.bcs"]
+    exclusive = ["ar0042.bcs", "ar0043.bcs", "ar0044.bcs"]
     id = "280"
     name = "Kensai Ryu's Random Wilderness Encounters"
 
@@ -7601,32 +7601,32 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
     name = "Westley Weimer's Improved Undead"
 
     [eetact2.components.24]
-    exclusive = ["gormind.bcs", "mindal01.bcs", "flayer01.bcs"]
+    exclusive = ["flayer01.bcs", "gormind.bcs", "mindal01.bcs"]
     id = "300"
     name = "Gebhard Blucher's Improved Mind Flayers"
 
     [eetact2.components.25]
-    exclusive = ["spin691.spl", "dragblac.bcs", "udsilver.itm", "dragred.bcs", "dhadra01.bcs", "spin693.spl"]
+    exclusive = ["dhadra01.bcs", "dragblac.bcs", "dragred.bcs", "spin691.spl", "spin693.spl", "udsilver.itm"]
     id = "310"
     name = "Westley Weimer's Smarter Dragons in SoA"
 
     [eetact2.components.26]
-    exclusive = ["behdir01.bcs", "elderorb.bcs", "behold.itm", "gauth01.bcs", "behhiv01.bcs", "behold01.bcs"]
+    exclusive = ["behdir01.bcs", "behhiv01.bcs", "behold.itm", "behold01.bcs", "elderorb.bcs", "gauth01.bcs"]
     id = "320"
     name = "Westley Weimer's Smarter Beholders"
 
     [eetact2.components.27]
-    exclusive = ["vampir01.bcs", "vamemi01.bcs"]
+    exclusive = ["vamemi01.bcs", "vampir01.bcs"]
     id = "330"
     name = "Kensai Ryu's Smarter Vampires"
 
     [eetact2.components.28]
-    exclusive = ["bodtan.cre", "lich01.cre", "lavok01.cre", "mage10a.bcs"]
+    exclusive = ["bodtan.cre", "lavok01.cre", "lich01.cre", "mage10a.bcs"]
     id = "340"
     name = "Westley Weimer's Slightly Smarter Mages and Liches"
 
     [eetact2.components.29]
-    exclusive = ["golsto01.cre", "goliro.itm", "golsto.itm", "golada01.cre", "goliro01.cre"]
+    exclusive = ["golada01.cre", "goliro.itm", "goliro01.cre", "golsto.itm", "golsto01.cre"]
     id = "350"
     name = "Westley Weimer's Improved Golems"
 
@@ -7645,7 +7645,7 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
     name = "Kensai Ryu's Improved Copper Coronet"
 
     [eetact2.components.32]
-    exclusive = ["Oasis", "amtcle01.cre", "amtmag01.cre", "amtpik01.cre", "amtarc01.cre", "amtcap01.cre"]
+    exclusive = ["Oasis", "amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtmag01.cre", "amtpik01.cre"]
     id = "380"
     name = "SimDing0's Improved Oasis (obsolete version)"
     path = ["Areas", "BG2", "Oasis"]
@@ -7656,7 +7656,7 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
     name = "Mike Barnes' Improved Small Teeth Pass"
 
     [eetact2.components.34]
-    exclusive = ["ar18prie.cre", "ar18arch.cre", "ar18skel.cre", "ar1800.are", "ar18dwaf.cre", "ar18mage.cre", "ar18fig.cre", "ar18thif.cre"]
+    exclusive = ["ar1800.are", "ar18arch.cre", "ar18dwaf.cre", "ar18fig.cre", "ar18mage.cre", "ar18prie.cre", "ar18skel.cre", "ar18thif.cre"]
     id = "400"
     name = "Mike Barnes' Improved North Forest"
 
@@ -7666,7 +7666,7 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
     name = "Mike Barnes' Marching Mountains"
 
     [eetact2.components.36]
-    exclusive = ["dempit01.cre", "tanari.bcs", "mage20c.bcs", "demglab.bcs", "dempit.bcs", "telpit1.cre"]
+    exclusive = ["demglab.bcs", "dempit.bcs", "dempit01.cre", "mage20c.bcs", "tanari.bcs", "telpit1.cre"]
     id = "420"
     name = "Westley Weimer's Slightly Tougher Demons"
 
@@ -7694,7 +7694,7 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
     name = "Westley Weimer's Improved TorGal and De'Arnisse Keep"
 
     [eetact2.components.40]
-    exclusive = ["ysg2.cre", "ysfire01.cre", "ysguar01.cre", "giafir.itm"]
+    exclusive = ["giafir.itm", "ysfire01.cre", "ysg2.cre", "ysguar01.cre"]
     id = "440"
     name = "Westley Weimer's Tougher Fire Giants"
 
@@ -7711,27 +7711,27 @@ url = "https://www.dropbox.com/s/ld8lbj7duq62v7h/Tactics2_for_EE.zip?dl=1"
     name = "Westley Weimer's Anti-Paladin Kit"
 
     [eetact2.components.5]
-    exclusive = ["sahamb01.bcs", "sahgrd01.cre", "sahcpt01.cre"]
+    exclusive = ["sahamb01.bcs", "sahcpt01.cre", "sahgrd01.cre"]
     id = "130"
     name = "Westley Weimer's Improved Sahuagin City"
 
     [eetact2.components.6]
-    exclusive = ["bodtan.cre", "bodhi2.cre"]
+    exclusive = ["bodhi2.cre", "bodtan.cre"]
     id = "140"
     name = "Westley Weimer's Improved Bodhi"
 
     [eetact2.components.7]
-    exclusive = ["helljon.dlg", "ar2900.bcs"]
+    exclusive = ["ar2900.bcs", "helljon.dlg"]
     id = "150"
     name = "Westley Weimer's Improved Irenicus"
 
     [eetact2.components.8]
-    exclusive = ["hlketta.cre", "hlolaf.cre", "hlsion.cre", "hlketta.bcs", "hlmafer.cre", "hlstal.cre", "ar0907.bcs", "hlkoshi.cre"]
+    exclusive = ["ar0907.bcs", "hlketta.bcs", "hlketta.cre", "hlkoshi.cre", "hlmafer.cre", "hlolaf.cre", "hlsion.cre", "hlstal.cre"]
     id = "160"
     name = "Westley Weimer's Improved Guarded Compound in the Temple District"
 
     [eetact2.components.9]
-    exclusive = ["hllayen.cre", "hlshang.cre", "ar1008.bcs", "hlrevan.cre"]
+    exclusive = ["ar1008.bcs", "hllayen.cre", "hlrevan.cre", "hlshang.cre"]
     id = "170"
     name = "Westley Weimer's Improved Twisted Rune"
 
@@ -8310,8 +8310,8 @@ tp2 = "faiths_and_powers/faiths_and_powers.tp2"
 url = "github:UnearthedArcana/Faiths_and_Powers"
 
     [faiths_and_powers.compat]
-    after = ["iwdification", "item_rev", "tomeandblood", "a7#improvedshamanicdance", "monasticorders", "spell_rev", "divine_remix"]
-    before = ["fnp_multiclass", "might_and_guile", "cdtweaks", "scales_of_balance", "stratagems"]
+    after = ["a7#improvedshamanicdance", "divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood"]
+    before = ["cdtweaks", "fnp_multiclass", "might_and_guile", "scales_of_balance", "stratagems"]
 
     [faiths_and_powers.components.1]
     id = "21"
@@ -8450,7 +8450,7 @@ tp2 = "fnp_multiclass/fnp_multiclass.tp2"
 url = "manual"
 
     [fnp_multiclass.compat]
-    after = ["iwdification", "item_rev", "deitiesoffaerun", "tomeandblood", "monasticorders", "song_and_silence", "spell_rev", "divine_remix", "faiths_and_powers", "fnp", "might_and_guile"]
+    after = ["deitiesoffaerun", "divine_remix", "faiths_and_powers", "fnp", "item_rev", "iwdification", "might_and_guile", "monasticorders", "song_and_silence", "spell_rev", "tomeandblood"]
     before = ["cdtweaks", "scales_of_balance", "stratagems"]
 
     [fnp_multiclass.components.1]
@@ -9366,7 +9366,7 @@ tp2 = "isra/isra.tp2"
 url = "github:SpellholdStudios/Isra_NPC"
 
     [isra.compat]
-    after = ["valerie", "eet", "gavin"]
+    after = ["eet", "gavin", "valerie"]
     before = ["eet_end"]
 
     [isra.components.1]
@@ -9410,7 +9410,7 @@ url = "github:Gibberlings3/ItemRevisions"
     after = ["eet"]
 
     [item_rev.components.1]
-    exclusive = ["chan01.itm", "npbelt.itm", "helm01.itm", "bruenpla.itm", "hlolth.itm", "slng01.itm", "smoundsu.itm", "dwplat01.itm", "bow01.itm", "halb01.itm", "dwbolt01.itm", "arow01.itm", "npclck.itm", "dart01.itm", "reaver.itm", "rods01.spl", "npplat.itm", "cattibow.itm", "dagg01.itm", "npbow.itm", "npshld.itm", "hamm01.itm", "dwsper01.itm", "ax1h01.itm", "npring01.itm", "clolth.itm", "bleat01.itm", "npmisc1.itm", "bsw1h01.itm", "sw1h01.itm", "npsw01.itm", "wawak.itm", "catliowp.cre", "miscbc.itm", "amsoul01.itm", "dwsw1h01.itm", "amul01.spl", "bersersu.cre", "xbow01.itm", "clck01.itm", "brac01.itm", "keldorn.spl", "staf01.itm", "quiver01.itm", "spidfgsu.cre", "kuobolt.itm", "figlion.itm", "figspid.itm", "nparm.itm", "bruenaxe.itm", "sper01.itm", "leat01.itm", "boot01.itm", "aegis.itm", "smoundsu.cre", "shld01.itm", "korax01.itm", "bolt01.itm", "dwblun01.itm", "dwshld01.itm", "npchan.itm", "finsarev.itm", "sahbolt.itm", "bull01.itm", "rods01.itm", "blun01.itm", "dwxbow01.itm", "dwhalb01.itm", "plat01.itm", "waflail.itm", "amul01.itm", "npstaf.itm", "dwclck01.itm", "nebdag.itm", "dwchan01.itm"]
+    exclusive = ["aegis.itm", "amsoul01.itm", "amul01.itm", "amul01.spl", "arow01.itm", "ax1h01.itm", "bersersu.cre", "bleat01.itm", "blun01.itm", "bolt01.itm", "boot01.itm", "bow01.itm", "brac01.itm", "bruenaxe.itm", "bruenpla.itm", "bsw1h01.itm", "bull01.itm", "catliowp.cre", "cattibow.itm", "chan01.itm", "clck01.itm", "clolth.itm", "dagg01.itm", "dart01.itm", "dwblun01.itm", "dwbolt01.itm", "dwchan01.itm", "dwclck01.itm", "dwhalb01.itm", "dwplat01.itm", "dwshld01.itm", "dwsper01.itm", "dwsw1h01.itm", "dwxbow01.itm", "figlion.itm", "figspid.itm", "finsarev.itm", "halb01.itm", "hamm01.itm", "helm01.itm", "hlolth.itm", "keldorn.spl", "korax01.itm", "kuobolt.itm", "leat01.itm", "miscbc.itm", "nebdag.itm", "nparm.itm", "npbelt.itm", "npbow.itm", "npchan.itm", "npclck.itm", "npmisc1.itm", "npplat.itm", "npring01.itm", "npshld.itm", "npstaf.itm", "npsw01.itm", "plat01.itm", "quiver01.itm", "reaver.itm", "rods01.itm", "rods01.spl", "sahbolt.itm", "shld01.itm", "slng01.itm", "smoundsu.cre", "smoundsu.itm", "sper01.itm", "spidfgsu.cre", "staf01.itm", "sw1h01.itm", "waflail.itm", "wawak.itm", "xbow01.itm"]
     id = "0"
     name = "Item Revisions by Demivrgvs"
     path = ["Items"]
@@ -9630,25 +9630,30 @@ url = "github:Pocket-Plane-Group/Item_Upgrade"
     id = "0"
     name = "Original Version (new upgrades in a list)"
     subgroup = "Shadows Of Amn Item Upgrades"
+		path = ["Items", "Upgrades"]
 
     [itemupgrade.components.2]
     id = "10"
     name = "Revised Version (new upgrades presented in the same style as existing upgrades)"
     subgroup = "Shadows Of Amn Item Upgrades"
+		path = ["Items", "Upgrades"]
 
     [itemupgrade.components.3]
     id = "1"
     name = "Original Version (new upgrades in a list)"
     subgroup = "Throne Of Bhaal Item Upgrades"
+		path = ["Items", "Upgrades"]
 
     [itemupgrade.components.4]
     id = "11"
     name = "Revised Version (new upgrades presented in the same style as existing upgrades)"
     subgroup = "Throne Of Bhaal Item Upgrades"
+		path = ["Items", "Upgrades"]
 
     [itemupgrade.components.5]
     id = "12"
     name = "Install supplemental Cespenar audio for Item Upgrade"
+		path = ["Cosmetic", "Sound"]
 
 [iwd1_eet]
 archive = "iwd1_eet_alpha.zip"
@@ -9669,8 +9674,8 @@ tp2 = "iwdification/setup-iwdification.tp2"
 url = "github:Gibberlings3/iwdification"
 
     [iwdification.compat]
-    after = ["rr", "garrick-tt"]
-    before = ["cdtweaks", "a7-totlm-bg2ee", "stratagems"]
+    after = ["garrick-tt", "rr"]
+    before = ["a7-totlm-bg2ee", "cdtweaks", "stratagems"]
 
     [iwdification.components.1]
     group = "Miscellaneous Changes"
@@ -9718,7 +9723,7 @@ url = "github:Gibberlings3/iwdification"
     group = "Class Updates"
     id = "120"
     name = "IWD Class Updates: Thief: Evasion"
-    path = ["Skills", "Evaion"]
+    path = ["Skills", "Evasion"]
 
     [iwdification.components.17]
     group = "Additional Spells"
@@ -10574,7 +10579,7 @@ tp2 = "leui/leui.tp2"
 url = "github:r-e-d/LeUI"
 
     [leui.compat]
-    before = ["eeuitweaks", "deitiesoffaerun", "faiths_and_powers", "tomeandblood", "might_and_guile", "shadowadept", "stratagems", "deities-of-faerun"]
+    before = ["deities-of-faerun", "deitiesoffaerun", "eeuitweaks", "faiths_and_powers", "might_and_guile", "shadowadept", "stratagems", "tomeandblood"]
 
     [leui.components.1]
     id = "0"
@@ -10840,7 +10845,7 @@ url = "github:OlvynChuru/METweaks"
     path = ["Skills", "Backstab"]
 
     [metweaks.components.17]
-    exclusive = ["scrl13.itm", "scrl14.itm", "scrl15.itm", "scrl12.itm", "scrl17.itm", "scrl16.itm", "scrl11.itm"]
+    exclusive = ["scrl11.itm", "scrl12.itm", "scrl13.itm", "scrl14.itm", "scrl15.itm", "scrl16.itm", "scrl17.itm"]
     id = "2000"
     name = "Allow cursed scrolls to be used on enemies"
     path = ["Items"]
@@ -11012,7 +11017,7 @@ tp2 = "might_and_guile/might_and_guile.tp2"
 url = "github:UnearthedArcana/Might_and_Guile"
 
     [might_and_guile.compat]
-    after = ["rr", "faiths_and_powers", "item_rev", "song_and_silence", "spell_rev"]
+    after = ["faiths_and_powers", "item_rev", "rr", "song_and_silence", "spell_rev"]
     before = ["refinements", "stratagems"]
 
     [might_and_guile.components.1]
@@ -12626,8 +12631,8 @@ tp2 = "rr/setup-rr.tp2"
 url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 
     [rr.compat]
-    after = ["tod", "eetact2", "d0questpack", "item_rev", "beyond_the_law", "song_and_silence", "ctb", "spell_rev", "divine_remix"]
-    before = ["eet_tweaks", "virtue", "atweaks", "stratagems"]
+    after = ["beyond_the_law", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "song_and_silence", "spell_rev", "tod"]
+    before = ["atweaks", "eet_tweaks", "stratagems", "virtue"]
     conflicts = ["iispellsystemadjustments"]
 
     [rr.components.1]
@@ -12656,7 +12661,7 @@ url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
     path = ["Story", "BG2"]
 
     [rr.components.13]
-    exclusive = ["aran.cre", "arkanisg.cre", "palern.cre", "c6arkan3.cre", "ar0300.bcs", "c6arkan.cre", "mook.cre", "gaelan.cre", "mookft01.cre", "booter.cre", "c6arkan.bcs", "mook02.cre", "stguard1.bcs", "c6kach.cre", "stguard1.cre", "c6yean.cre"]
+    exclusive = ["ar0300.bcs", "aran.cre", "arkanisg.cre", "booter.cre", "c6arkan.bcs", "c6arkan.cre", "c6arkan3.cre", "c6kach.cre", "c6yean.cre", "gaelan.cre", "mook.cre", "mook02.cre", "mookft01.cre", "palern.cre", "stguard1.bcs", "stguard1.cre"]
     id = "12"
     name = "Shadow Thief Improvements"
     path = ["Story", "BG2"]
@@ -12673,7 +12678,7 @@ url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
     path = ["Classes", "Thief"]
 
     [rr.components.3]
-    exclusive = ["luth0.2da", "luft0.2da", "lumt0.2da", "luct0.2da", "luth1.2da"]
+    exclusive = ["luct0.2da", "luft0.2da", "lumt0.2da", "luth0.2da", "luth1.2da"]
     id = "2"
     name = "Thief High Level Ability revisions"
     path = ["Tables", "HLA"]
@@ -12685,13 +12690,13 @@ url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
     path = ["Skills", "Thieving"]
 
     [rr.components.5]
-    exclusive = ["clabba01.2da", "clabba04.2da", "clabba03.2da"]
+    exclusive = ["clabba01.2da", "clabba03.2da", "clabba04.2da"]
     id = "4"
     name = "Bard kit revisions"
     path = ["Classes", "Bard"]
 
     [rr.components.6]
-    exclusive = ["luba3.2da", "luba0.2da", "luba2.2da"]
+    exclusive = ["luba0.2da", "luba2.2da", "luba3.2da"]
     id = "5"
     name = "Bard High Level Ability revisions"
     path = ["Tables", "HLA"]
@@ -12903,11 +12908,11 @@ tp2 = "scales_of_balance/scales_of_balance.tp2"
 url = "github:UnearthedArcana/Scales_of_Balance"
 
     [scales_of_balance.compat]
-    after = ["rr", "kitpack", "item_rev", "tomeandblood", "might_and_guile", "atweaks", "cdtweaks"]
-    conflicts = ["kitpack", "kit_rev"]
+    after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "rr", "tomeandblood"]
+    conflicts = ["kit_rev", "kitpack"]
 
     [scales_of_balance.components.1]
-    exclusive = ["skilldex.2da", "dexmod.2da"]
+    exclusive = ["dexmod.2da", "skilldex.2da"]
     id = "100"
     name = "IWO - Yet Another Revised Armor System"
     path = ["Fighting", "Armor"]
@@ -12918,7 +12923,7 @@ url = "github:UnearthedArcana/Scales_of_Balance"
     path = ["Fighting", "Proficiencies"]
 
     [scales_of_balance.components.11]
-    exclusive = ["saverog.2da", "savemonk.2da", "saveprs.2da", "savewar.2da", "savewiz.2da"]
+    exclusive = ["savemonk.2da", "saveprs.2da", "saverog.2da", "savewar.2da", "savewiz.2da"]
     id = "160"
     name = "STO - Saving Throw Overhaul"
     path = ["Tables", "Saving throws"]
@@ -12938,7 +12943,7 @@ url = "github:UnearthedArcana/Scales_of_Balance"
     subgroup = "STO - IWD Spell Evasion"
 
     [scales_of_balance.components.14]
-    exclusive = ["strmod.2da", "savecndh.2da", "savecng.2da", "intmod.2da", "strmodex.2da"]
+    exclusive = ["intmod.2da", "savecndh.2da", "savecng.2da", "strmod.2da", "strmodex.2da"]
     id = "200"
     name = "SBO - Stat Bonus Overhaul"
     path = ["Tables", "Abilities"]
@@ -12965,7 +12970,7 @@ url = "github:UnearthedArcana/Scales_of_Balance"
     path = ["Items", "Weapons"]
 
     [scales_of_balance.components.19]
-    exclusive = ["hpct.2da", "hpfm.2da", "hpprs.2da", "hpwiz.2da", "hpprog.2da", "hpfmt.2da", "hpmt.2da", "hpcm.2da", "hpmonk.2da", "hpfc.2da", "hpwar.2da", "hpconbon.2da", "hpbarb.2da"]
+    exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
     id = "206"
     name = "Generous (above-average) hit points"
     path = ["Tables", "HP"]
@@ -12979,21 +12984,21 @@ url = "github:UnearthedArcana/Scales_of_Balance"
     subgroup = "IWO - Aesthetic & Enchantment Tweaks"
 
     [scales_of_balance.components.20]
-    exclusive = ["hpct.2da", "hpfm.2da", "hpprs.2da", "hpwiz.2da", "hpprog.2da", "hpfmt.2da", "hpmt.2da", "hpcm.2da", "hpmonk.2da", "hpfc.2da", "hpwar.2da", "hpconbon.2da", "hpbarb.2da"]
+    exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
     id = "207"
     name = "Closer to average hit points"
     path = ["Tables", "HP"]
     subgroup = "SBO - Hit Dice Overhaul"
 
     [scales_of_balance.components.21]
-    exclusive = ["hpct.2da", "hpfm.2da", "hpprs.2da", "hpwiz.2da", "hpprog.2da", "hpfmt.2da", "hpmt.2da", "hpcm.2da", "hpmonk.2da", "hpfc.2da", "hpwar.2da", "hpconbon.2da", "hpbarb.2da"]
+    exclusive = ["hpbarb.2da", "hpcm.2da", "hpconbon.2da", "hpct.2da", "hpfc.2da", "hpfm.2da", "hpfmt.2da", "hpmonk.2da", "hpmt.2da", "hpprog.2da", "hpprs.2da", "hpwar.2da", "hpwiz.2da"]
     id = "208"
     name = "Reduced hit points"
     path = ["Tables", "HP"]
     subgroup = "SBO - Hit Dice Overhaul"
 
     [scales_of_balance.components.22]
-    exclusive = ["mxspldru.2da", "xplevel.2da", "lunumab.2da"]
+    exclusive = ["lunumab.2da", "mxspldru.2da", "xplevel.2da"]
     id = "210"
     name = "XPO - Slower, standardized XP Tables"
     path = ["Tables", "XP"]
@@ -13082,7 +13087,7 @@ url = "github:UnearthedArcana/Scales_of_Balance"
 
     [scales_of_balance.components.7]
     conflicts = ["rr"]
-    exclusive = ["weapprof.2da", "universal_clubs", "thac0.2da"]
+    exclusive = ["thac0.2da", "universal_clubs", "weapprof.2da"]
     id = "122"
     name = "WPO - Systemic Proficiency Changes"
     path = ["Fighting", "Proficiencies"]
@@ -13391,7 +13396,7 @@ tp2 = "skills-and-abilities/skills-and-abilities.tp2"
 url = "github:Gibberlings3/Skills-and-Abilities"
 
     [skills-and-abilities.compat]
-    after = ["song_and_silence", "might_and_guile"]
+    after = ["might_and_guile", "song_and_silence"]
     before = ["enhanced-powergaming-scripts"]
 
     [skills-and-abilities.components.1]
@@ -13852,7 +13857,7 @@ tp2 = "sodrtd/sodrtd.tp2"
 url = "github:Gibberlings3/Road_To_Discovery_for_SoD"
 
     [sodrtd.compat]
-    after = ["themed_tweaks", "eet"]
+    after = ["eet", "themed_tweaks"]
     before = ["eet_end"]
 
     [sodrtd.components.1]
@@ -14030,13 +14035,13 @@ url = "github:Gibberlings3/SpellRevisions"
     after = ["ub"]
 
     [spell_rev.components.1]
-    exclusive = ["spwi977.spl", "spdr201.spl", "sppr101.spl", "sppr107.spl", "spin683.spl", "spra304.spl", "sppr105.spl", "elemtype.itm", "spin789.spl", "spin701.spl", "sppr108.spl", "sppr113.spl", "spra301.spl", "spdr501.spl", "spdr601.spl", "spcl213.spl", "spentaai.bam", "spwi978.spl", "spra306.spl", "sppr109.spl", "spdr101.spl", "spentaci.bam", "spmagglo.vvc", "undtype.itm", "sppr110.spl", "spcl722.spl", "spin788.spl", "spra303.spl", "spin102.spl", "sppr116.spl", "spra302.spl", "spmagglo.bam", "mstone.itm", "sppr106.spl", "spin101.spl", "sppr104.spl", "spcl721.spl", "sppr102.spl", "sppr111.spl", "sppr103.spl", "shille3.itm", "shille.itm", "spin103.spl", "spin104.spl", "shille2.itm", "spin105.spl", "spra305.spl", "spin113.spl", "spdr301.spl", "spin106.spl", "spdr401.spl", "vermtype.itm"]
+    exclusive = ["elemtype.itm", "mstone.itm", "shille.itm", "shille2.itm", "shille3.itm", "spcl213.spl", "spcl721.spl", "spcl722.spl", "spdr101.spl", "spdr201.spl", "spdr301.spl", "spdr401.spl", "spdr501.spl", "spdr601.spl", "spentaai.bam", "spentaci.bam", "spin101.spl", "spin102.spl", "spin103.spl", "spin104.spl", "spin105.spl", "spin106.spl", "spin113.spl", "spin683.spl", "spin701.spl", "spin788.spl", "spin789.spl", "spmagglo.bam", "spmagglo.vvc", "sppr101.spl", "sppr102.spl", "sppr103.spl", "sppr104.spl", "sppr105.spl", "sppr106.spl", "sppr107.spl", "sppr108.spl", "sppr109.spl", "sppr110.spl", "sppr111.spl", "sppr113.spl", "sppr116.spl", "spra301.spl", "spra302.spl", "spra303.spl", "spra304.spl", "spra305.spl", "spra306.spl", "spwi977.spl", "spwi978.spl", "undtype.itm", "vermtype.itm"]
     id = "0"
     name = "Spell Revisions"
     path = ["Spells"]
 
     [spell_rev.components.2]
-    exclusive = ["devagood.cre", "planevil.cre", "plangood.cre", "devaevil.cre"]
+    exclusive = ["devaevil.cre", "devagood.cre", "planevil.cre", "plangood.cre"]
     id = "10"
     name = "Deva and Planetar Animations"
     path = ["Cosmetic", "Sprites"]
@@ -14153,7 +14158,7 @@ tp2 = "stratagems/setup-stratagems.tp2"
 url = "github:Gibberlings3/SwordCoastStratagems"
 
     [stratagems.compat]
-    after = ["wheels", "eetact2", "d0questpack", "item_rev", "ascension", "refinements", "spell_rev", "tactics"]
+    after = ["ascension", "d0questpack", "eetact2", "item_rev", "refinements", "spell_rev", "tactics", "wheels"]
     before = ["cdtweaks", "eet_end"]
 
     [stratagems.components.1]
@@ -14174,7 +14179,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Make the starting dungeon slightly harder"
 
     [stratagems.components.101]
-    exclusive = ["shadel.bcs", "shalt01.cre", "rngsha02", "shadel.cre"]
+    exclusive = ["rngsha02", "shadel.bcs", "shadel.cre", "shalt01.cre"]
     group = "Tactical Challenges"
     id = "8010"
     name = "Improved Shade Lord"
@@ -14186,7 +14191,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Spellcasting Demiliches"
 
     [stratagems.components.103]
-    exclusive = ["spwndrow.bcs", "spwnmon.bcs", "spwntoa.bcs", "spwnrak.bcs", "spwnbeh.bcs", "spwnmind.bcs", "spwnorc.bcs", "spwnvamp.bcs", "spwntrol.bcs", "spwndead.bcs", "spwnwolf.bcs", "spwngol.bcs"]
+    exclusive = ["spwnbeh.bcs", "spwndead.bcs", "spwndrow.bcs", "spwngol.bcs", "spwnmind.bcs", "spwnmon.bcs", "spwnorc.bcs", "spwnrak.bcs", "spwntoa.bcs", "spwntrol.bcs", "spwnvamp.bcs", "spwnwolf.bcs"]
     group = "Tactical Challenges"
     id = "8040"
     name = "Tie difficulty of level-dependent monster groupings to the difficulty slider"
@@ -14198,7 +14203,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Improved Random Encounters"
 
     [stratagems.components.105]
-    exclusive = ["torgal.cre", "pptroll1.cre", "torgal3.cre", "ar1300.are", "ar1303.are", "trolsp01.cre", "ar1302.are", "ar1301.are", "trolsi01.cre"]
+    exclusive = ["ar1300.are", "ar1301.are", "ar1302.are", "ar1303.are", "pptroll1.cre", "torgal.cre", "torgal3.cre", "trolsi01.cre", "trolsp01.cre"]
     group = "Tactical Challenges"
     id = "8060"
     name = "Improved de'Arnise Keep (\"Tactics Remix\")"
@@ -14210,7 +14215,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Improved Unseeing Eye"
 
     [stratagems.components.107]
-    exclusive = ["bodfgt01.cre", "ppbodhi4.cre", "chevil08.cre", "bodhi2.cre", "bodfgt02.cre", "bodhi2.bcs"]
+    exclusive = ["bodfgt01.cre", "bodfgt02.cre", "bodhi2.bcs", "bodhi2.cre", "chevil08.cre", "ppbodhi4.cre"]
     group = "Tactical Challenges"
     id = "8080"
     name = "Improved Bodhi"
@@ -14240,7 +14245,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Improved battle with Irenicus in Spellhold"
 
     [stratagems.components.111]
-    exclusive = ["sahpri01.cre", "sahpr2.cre", "sahamb02.bcs", "sahamb01.cre", "sahbar01.cre", "sahkng01.cre", "sahamb01.bcs"]
+    exclusive = ["sahamb01.bcs", "sahamb01.cre", "sahamb02.bcs", "sahbar01.cre", "sahkng01.cre", "sahpr2.cre", "sahpri01.cre"]
     group = "Tactical Challenges"
     id = "8110"
     name = "Improved Sahuagin"
@@ -14257,19 +14262,19 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Rebalanced troll regeneration"
 
     [stratagems.components.114]
-    exclusive = ["drow01.cre", "jael01.cre", "daqilue.cre", "drow06.cre", "dagmag01.cre", "uddrow01.cre"]
+    exclusive = ["dagmag01.cre", "daqilue.cre", "drow01.cre", "drow06.cre", "jael01.cre", "uddrow01.cre"]
     group = "Tactical Challenges"
     id = "8140"
     name = "Improved Drow"
 
     [stratagems.components.115]
-    exclusive = ["ar3005.are", "gormind.cre", "gorsta01.cre", "ar3006.are", "ar3021.are"]
+    exclusive = ["ar3005.are", "ar3006.are", "ar3021.are", "gormind.cre", "gorsta01.cre"]
     group = "Tactical Challenges"
     id = "8150"
     name = "Improved Watcher's Keep"
 
     [stratagems.components.116]
-    exclusive = ["ysfire01.cre", "ysguar01.cre", "hgwar01.cre", "elemimix.bcs", "gorsku01.bcs", "golbur01.bcs", "giafir01.cre"]
+    exclusive = ["elemimix.bcs", "giafir01.cre", "golbur01.bcs", "gorsku01.bcs", "hgwar01.cre", "ysfire01.cre", "ysguar01.cre"]
     group = "Tactical Challenges"
     id = "8160"
     name = "Improved Fire Giant temple"
@@ -14281,13 +14286,13 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Improved Sendai's Enclave"
 
     [stratagems.components.118]
-    exclusive = ["eyesek01.cre", "bazliz04.cre", "bazliz03.cre", "gorsal.bcs", "eyesnt01.bcs", "bazmonk.cre"]
+    exclusive = ["bazliz03.cre", "bazliz04.cre", "bazmonk.cre", "eyesek01.cre", "eyesnt01.bcs", "gorsal.bcs"]
     group = "Tactical Challenges"
     id = "8180"
     name = "Improved Abazigal's Lair"
 
     [stratagems.components.119]
-    exclusive = ["elear01.cre", "spmugg.cre", "bhguard2.cre", "ar1900.are", "druear01.cre", "talkni01.cre", "udelda.cre", "smound01.cre", "talmiss.cre", "elearg01.cre", "spmugg2.cre", "elair01.cre", "udelf.cre", "udelde.cre"]
+    exclusive = ["ar1900.are", "bhguard2.cre", "druear01.cre", "elair01.cre", "elear01.cre", "elearg01.cre", "smound01.cre", "spmugg.cre", "spmugg2.cre", "talkni01.cre", "talmiss.cre", "udelda.cre", "udelde.cre", "udelf.cre"]
     group = "Tactical Challenges"
     id = "8190"
     name = "Improved Minor Encounters"
@@ -14375,7 +14380,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     path = ["Creatures"]
 
     [stratagems.components.22]
-    exclusive = ["spcl644.spl", "spcl643.spl", "spcl612.spl", "spcl611.spl"]
+    exclusive = ["spcl611.spl", "spcl612.spl", "spcl643.spl", "spcl644.spl"]
     group = "Gameplay tweaks"
     id = "4030"
     name = "Improved shapeshifting"
@@ -14637,7 +14642,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     path = ["Items", "Magic weapons"]
 
     [stratagems.components.60]
-    exclusive = ["spidsw.cre", "spidph.cre", "spidhu.cre"]
+    exclusive = ["spidhu.cre", "spidph.cre", "spidsw.cre"]
     group = "AI enhancements"
     id = "6200"
     name = "Improved Spiders"
@@ -14658,21 +14663,21 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     path = ["Creatures"]
 
     [stratagems.components.63]
-    exclusive = ["lbasilsk.bcs", "gbasilsk.bcs"]
+    exclusive = ["gbasilsk.bcs", "lbasilsk.bcs"]
     group = "AI enhancements"
     id = "6320"
     name = "Smarter basilisks"
     path = ["Creatures"]
 
     [stratagems.components.64]
-    exclusive = ["golsto01.cre", "golbra01.cre", "golcly01.cre", "golice01.cre", "goliro01.cre"]
+    exclusive = ["golbra01.cre", "golcly01.cre", "golice01.cre", "goliro01.cre", "golsto01.cre"]
     group = "AI enhancements"
     id = "6500"
     name = "Improved golems"
     path = ["Creatures"]
 
     [stratagems.components.65]
-    exclusive = ["dembal02.cre", "demglab.bcs", "demfig01.cre", "glabrez.cre", "tanari.cre", "marilith.cre", "demglab.cre", "dembal01.cre", "pwarden.cre", "demsuc.cre", "cornugon.bcs", "demfig02.cre", "tanari2.cre", "dembal01.bcs", "demglab2.cre", "erinyes.bcs", "tanari.bcs", "smarter_demons"]
+    exclusive = ["cornugon.bcs", "dembal01.bcs", "dembal01.cre", "dembal02.cre", "demfig01.cre", "demfig02.cre", "demglab.bcs", "demglab.cre", "demglab2.cre", "demsuc.cre", "erinyes.bcs", "glabrez.cre", "marilith.cre", "pwarden.cre", "smarter_demons", "tanari.bcs", "tanari.cre", "tanari2.cre"]
     group = "AI enhancements"
     id = "6510"
     name = "Improved fiends and celestials"
@@ -14686,14 +14691,14 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     path = ["Creatures"]
 
     [stratagems.components.67]
-    exclusive = ["fsdragon.cre", "udsilver.cre", "dragblue.cre", "dragred.bcs", "dragbrow.bcs", "dragblac.cre", "firkra02.cre", "dragred1.itm", "gorsal.cre", "shadra01.cre", "dragblac.bcs"]
+    exclusive = ["dragblac.bcs", "dragblac.cre", "dragblue.cre", "dragbrow.bcs", "dragred.bcs", "dragred1.itm", "firkra02.cre", "fsdragon.cre", "gorsal.cre", "shadra01.cre", "udsilver.cre"]
     group = "AI enhancements"
     id = "6540"
     name = "Smarter dragons"
     path = ["Creatures", "Dragons"]
 
     [stratagems.components.68]
-    exclusive = ["beheld01.cre", "behold01.bcs", "behdir01.bcs", "udelder.cre", "hlvaxal.cre", "gauth01.bcs", "hlhive.cre"]
+    exclusive = ["behdir01.bcs", "beheld01.cre", "behold01.bcs", "gauth01.bcs", "hlhive.cre", "hlvaxal.cre", "udelder.cre"]
     group = "AI enhancements"
     id = "6550"
     name = "Smarter beholders"
@@ -14714,14 +14719,14 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     subgroup = "Replace many +1 magic weapons with nonmagical \"fine\" ones"
 
     [stratagems.components.70]
-    exclusive = ["gith01.bcs", "gorgit.cre", "gith01.cre"]
+    exclusive = ["gith01.bcs", "gith01.cre", "gorgit.cre"]
     group = "AI enhancements"
     id = "6570"
     name = "Smarter githyanki"
     path = ["Creatures"]
 
     [stratagems.components.71]
-    exclusive = ["lassal.cre", "vampir01.bcs", "nevm4.bcs", "vampjah.cre", "vampm01.cre", "c6valen.cre", "bodvam01.cre"]
+    exclusive = ["bodvam01.cre", "c6valen.cre", "lassal.cre", "nevm4.bcs", "vampir01.bcs", "vampjah.cre", "vampm01.cre"]
     group = "AI enhancements"
     id = "6580"
     name = "Improved Vampires"
@@ -14744,7 +14749,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
 
     [stratagems.components.74]
     depends = ["ascension"]
-    exclusive = ["jumjum.bcs", "fingrom.bcs"]
+    exclusive = ["fingrom.bcs", "jumjum.bcs"]
     group = "AI enhancements"
     id = "6810"
     name = "Smarter Gromnir"
@@ -14768,7 +14773,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
 
     [stratagems.components.77]
     depends = ["ascension"]
-    exclusive = ["finsend.bcs", "finsend.cre", "finiren.cre"]
+    exclusive = ["finiren.cre", "finsend.bcs", "finsend.cre"]
     group = "AI enhancements"
     id = "6840"
     name = "Ascension versions of Irenicus and Sendai use SCS abilities and AI"
@@ -14776,14 +14781,14 @@ url = "github:Gibberlings3/SwordCoastStratagems"
 
     [stratagems.components.78]
     depends = ["ascension"]
-    exclusive = ["finnabas.bcs", "finmaril.bcs", "finaluf.bcs", "finbalor.bcs"]
+    exclusive = ["finaluf.bcs", "finbalor.bcs", "finmaril.bcs", "finnabas.bcs"]
     group = "AI enhancements"
     id = "6850"
     name = "Ascension demons use SCS abilities and AI"
     path = ["Creatures", "Fiends"]
 
     [stratagems.components.79]
-    exclusive = ["noblpa.bcs", "sardopp.bcs", "zorl.bcs", "doppss.bcs"]
+    exclusive = ["doppss.bcs", "noblpa.bcs", "sardopp.bcs", "zorl.bcs"]
     group = "Tactical Challenges"
     id = "7000"
     name = "Improved doppelgangers"
@@ -14797,21 +14802,21 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     subgroup = "Replace many +1 magic weapons with nonmagical \"fine\" ones"
 
     [stratagems.components.80]
-    exclusive = ["ronelit.cre", "ronguar.cre", "irongu.cre"]
+    exclusive = ["irongu.cre", "ronelit.cre", "ronguar.cre"]
     group = "Tactical Challenges"
     id = "7010"
     name = "Tougher Black Talons and Iron Throne guards"
     path = ["Creatures"]
 
     [stratagems.components.81]
-    exclusive = ["lamalh.cre", "molkar.cre", "morvin.bcs", "drakar.cre", "drakar.bcs", "maneir.cre", "halaca.cre", "telka.cre", "molkar.bcs", "maneir.bcs", "lamalh.bcs", "morvin.cre", "zeela.cre", "halaca.bcs"]
+    exclusive = ["drakar.bcs", "drakar.cre", "halaca.bcs", "halaca.cre", "lamalh.bcs", "lamalh.cre", "maneir.bcs", "maneir.cre", "molkar.bcs", "molkar.cre", "morvin.bcs", "morvin.cre", "telka.cre", "zeela.cre"]
     group = "Tactical Challenges"
     id = "7020"
     name = "Improved deployment for parties of assassins"
     path = ["Creatures"]
 
     [stratagems.components.82]
-    exclusive = ["kobolda.cre", "kobold.cre"]
+    exclusive = ["kobold.cre", "kobolda.cre"]
     group = "Tactical Challenges"
     id = "7030"
     name = "Improved kobolds"
@@ -14831,25 +14836,25 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Improved Ulcaster"
 
     [stratagems.components.85]
-    exclusive = ["baresh2.cre", "barwlf.cre", "kaishwlf.cre", "baresh.bcs", "daese.cre"]
+    exclusive = ["baresh.bcs", "baresh2.cre", "barwlf.cre", "daese.cre", "kaishwlf.cre"]
     group = "Tactical Challenges"
     id = "7060"
     name = "Improved Balduran's Isle"
 
     [stratagems.components.86]
-    exclusive = ["lovem.cre", "fearm.cre", "love.bcs", "rook.cre", "dopdur1.cre", "islann.cre", "bishop.cre", "dopdur.cre", "avaricem.cre", "dopdop.bcs", "greed.bcs", "fuerne.cre"]
+    exclusive = ["avaricem.cre", "bishop.cre", "dopdop.bcs", "dopdur.cre", "dopdur1.cre", "fearm.cre", "fuerne.cre", "greed.bcs", "islann.cre", "love.bcs", "lovem.cre", "rook.cre"]
     group = "Tactical Challenges"
     id = "7070"
     name = "Improved Durlag's Tower"
 
     [stratagems.components.87]
-    exclusive = ["tanar.cre", "cultt1.cre", "tracea.cre"]
+    exclusive = ["cultt1.cre", "tanar.cre", "tracea.cre"]
     group = "Tactical Challenges"
     id = "7080"
     name = "Improved Demon Cultists"
 
     [stratagems.components.88]
-    exclusive = ["takiyah.cre", "osmadi.cre", "amaran.cre", "izefia.cre", "corsone.cre"]
+    exclusive = ["amaran.cre", "corsone.cre", "izefia.cre", "osmadi.cre", "takiyah.cre"]
     group = "Tactical Challenges"
     id = "7090"
     name = "Improved Cloakwood Druids"
@@ -14868,19 +14873,19 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     subgroup = "Reduce the number of Arrows of Dispelling in stores"
 
     [stratagems.components.90]
-    exclusive = ["kysus.cre", "rezdan.cre", "gentho.cre", "drasus.cre"]
+    exclusive = ["drasus.cre", "gentho.cre", "kysus.cre", "rezdan.cre"]
     group = "Tactical Challenges"
     id = "7110"
     name = "Improved Drasus party"
 
     [stratagems.components.91]
-    exclusive = ["brenda.cre", "lasala.cre", "denak.cre", "diana.cre"]
+    exclusive = ["brenda.cre", "denak.cre", "diana.cre", "lasala.cre"]
     group = "Tactical Challenges"
     id = "7130"
     name = "Improved Red Wizards"
 
     [stratagems.components.92]
-    exclusive = ["shaldr.cre", "wudei.cre", "rahvin.cre", "haseo.cre"]
+    exclusive = ["haseo.cre", "rahvin.cre", "shaldr.cre", "wudei.cre"]
     group = "Tactical Challenges"
     id = "7140"
     name = "Improved Undercity assassins"
@@ -14898,7 +14903,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Tougher chapter-two end battle"
 
     [stratagems.components.95]
-    exclusive = ["credus.cre", "taugos.cre", "ardeno.cre", "bandit.bcs"]
+    exclusive = ["ardeno.cre", "bandit.bcs", "credus.cre", "taugos.cre"]
     group = "Tactical Challenges"
     id = "7210"
     name = "Tougher chapter-three end battle"
@@ -14915,13 +14920,13 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     name = "Tougher chapter-five end battle"
 
     [stratagems.components.98]
-    exclusive = ["diarmid.cre", "semaj.cre", "galdor.cre", "sarevo.cre", "tazok2.cre"]
+    exclusive = ["diarmid.cre", "galdor.cre", "sarevo.cre", "semaj.cre", "tazok2.cre"]
     group = "Tactical Challenges"
     id = "7250"
     name = "Improved final battle"
 
     [stratagems.components.99]
-    exclusive = ["hairto.cre", "telka.cre", "sunin.cre", "gnarl.cre", "jenkal.cre", "slythe.cre", "tamoko.cre"]
+    exclusive = ["gnarl.cre", "hairto.cre", "jenkal.cre", "slythe.cre", "sunin.cre", "tamoko.cre", "telka.cre"]
     group = "Tactical Challenges"
     id = "7900"
     name = "Improved minor encounters"
@@ -15178,7 +15183,7 @@ tp2 = "themed_tweaks/themed_tweaks.tp2"
 url = "github:lzenner/themed_tweaks"
 
     [themed_tweaks.compat]
-    after = ["c#endlessbg1", "transitions", "eet", "bg1npc"]
+    after = ["bg1npc", "c#endlessbg1", "eet", "transitions"]
 
     [themed_tweaks.components.1]
     id = "60"
@@ -15339,7 +15344,7 @@ url = "github:BGforgeNet/bg2-tweaks-and-tricks"
     after = ["ctb"]
 
     [tnt.components.1]
-    exclusive = ["fmfae.cre", "fmimp.cre", "fmqua.cre", "famps.cre", "fmmep.cre", "fmspd.cre", "fmcat.cre", "fmrab.cre", "fmfer.cre"]
+    exclusive = ["famps.cre", "fmcat.cre", "fmfae.cre", "fmfer.cre", "fmimp.cre", "fmmep.cre", "fmqua.cre", "fmrab.cre", "fmspd.cre"]
     group = "Familiars"
     id = "0"
     name = "Smarter familiars"
@@ -15595,7 +15600,7 @@ url = "github:BGforgeNet/bg2-tweaks-and-tricks"
     path = ["Spells", "Divination"]
 
     [tnt.components.47]
-    exclusive = ["spwi413d.spl", "spwi413a.spl"]
+    exclusive = ["spwi413a.spl", "spwi413d.spl"]
     group = "Spells and abilities"
     id = "46"
     name = "Sensible Otiluke's Resilient Sphere"
@@ -15608,7 +15613,7 @@ url = "github:BGforgeNet/bg2-tweaks-and-tricks"
     path = ["Spells", "Enchantment"]
 
     [tnt.components.49]
-    exclusive = ["spwi609.spl", "spwi515.spl", "spcl505.spl"]
+    exclusive = ["spcl505.spl", "spwi515.spl", "spwi609.spl"]
     group = "Spells and abilities"
     id = "48"
     name = "Working Non-Detection"
@@ -15899,10 +15904,10 @@ url = "github:subtledoctor/TomeAndBlood"
 
     [tomeandblood.compat]
     after = ["spell_rev"]
-    before = ["faiths_and_powers", "might_and_guile", "cdtweaks", "scales_of_balance", "stratagems"]
+    before = ["cdtweaks", "faiths_and_powers", "might_and_guile", "scales_of_balance", "stratagems"]
 
     [tomeandblood.components.1]
-    exclusive = ["spwi703.spl", "spwi804.spl", "spwi607.spl"]
+    exclusive = ["spwi607.spl", "spwi703.spl", "spwi804.spl"]
     id = "11"
     name = "Rebalanced Spell Schools"
     path = ["Spells", "Schools"]
@@ -16067,7 +16072,7 @@ url = "github:subtledoctor/TomeAndBlood"
     path = ["Spells", "Illusion"]
 
     [tomeandblood.components.6]
-    exclusive = ["spwi609.spl", "spwi203.spl", "spwi322.spl", "spwi515.spl", "spwi224.spl", "sppr309.spl", "scrl6k.itm"]
+    exclusive = ["scrl6k.itm", "sppr309.spl", "spwi203.spl", "spwi224.spl", "spwi322.spl", "spwi515.spl", "spwi609.spl"]
     id = "14"
     name = "Revised Invisibility and True Seeing"
     path = ["Spells", "Illusion"]
@@ -16129,7 +16134,7 @@ url = "github:Gibberlings3/transitions"
 
     [transitions.compat]
     after = ["c#endlessbg1", "eet"]
-    before = ["eet_end", "bg1re"]
+    before = ["bg1re", "eet_end"]
 
     [transitions.components.1]
     id = "0"

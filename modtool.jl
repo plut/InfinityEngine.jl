@@ -11,8 +11,10 @@ See also `moddb.jl` for initializing configuration files.
 module ModTool
 # Preamble ««1
 # TODO ««
-#  - move compat back as component [1] to simplify dependency handling
-#  - status() shows installation status (in color)
+#  + move compat back as component [1] to simplify dependency handling
+#  + status() shows installation status (in color)
+#  - status() shows out-of-order components
+#   (i.e. those installed before something that should come after)
 # mod-specific fixes:
 #  - questpack is very badly named
 #  - mortis: tra/Francais -> tra/French

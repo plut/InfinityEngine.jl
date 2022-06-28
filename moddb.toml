@@ -2605,12 +2605,28 @@ url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downf
     name = "TeamBG's Weapons Pack for BG:EE, BGT and TuTu Version 1.04"
 
 [bggoeet]
+archive = "bggoeet.tar.gz"
 class = "UI"
 description = "Baldur's Gate Graphics Overhaul for EET and BGT"
 id = "bggoeet"
-lastupdate = 1970-01-01
-url = "github:BigWorldProject/BGGOEET"
+lastupdate = 2022-06-28
 readme = "http://www.shsforums.net/topic/56410-what-is-it/"
+tp2 = "bggoeet/bggoeet.tp2"
+url = "github:BigWorldProject/BGGOEET"
+
+    [bggoeet.components.1]
+    id = "0"
+    name = "Purple Patches"
+    subgroup = "Baldur's Gate Graphics Overhaul for EET"
+
+    [bggoeet.components.2]
+    id = "1"
+    name = "No Purple Patches"
+    subgroup = "Baldur's Gate Graphics Overhaul for EET"
+
+    [bggoeet.components.3]
+    id = "2"
+    name = "Use extended BG1 areas for TDDz"
 
 [bgqe]
 class = "Quests"
@@ -7582,8 +7598,13 @@ archive = "EETMoveItemsSoA.zip"
 class = "Items"
 description = "Move Items into SoA"
 id = "eetmoveitemssoa"
-lastupdate = 1970-01-01
+lastupdate = 2016-11-19
+tp2 = "eetmoveitemssoa/eetmoveitemssoa.tp2"
 url = "https://www.dropbox.com/s/ryb76gshhvkax3j/EETMoveItemsSoA.zip?dl=1"
+
+    [eetmoveitemssoa.components.1]
+    id = "0"
+    name = "Some of your old items found in Irenicus Dungeon (ONLY FOR EET)"
 
 [eeuitweaks]
 archive = "eeuitweaks.tar.gz"

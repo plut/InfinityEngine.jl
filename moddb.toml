@@ -385,14 +385,14 @@ url = "github:Gitjas/Ascalons_Questpack"
 
 [acbre]
 class = "NPC"
-description = "Ascalons Breagar"
+description = "Breagar (LG dwarf blacksmith)"
 id = "acbre"
 lastupdate = 1970-01-01
 url = "github:Gitjas/Ascalons_Breagar"
 
 [adrian]
 class = "NPC"
-description = "Adrian NPC"
+description = "Adrian (LE half-elf mage)"
 id = "adrian"
 lastupdate = 1970-01-01
 url = "github:SpellholdStudios/Adrian_NPC"
@@ -411,12 +411,12 @@ url = "github:Gibberlings3/Ajantis_BG1_Expansion"
     [ajantisbg1.components.1]
     id = "0"
     name = "Installs Ajantis BG1 Expansion Modification"
-		path = ["NPC", "Ajantis"]
+    path = ["NPC", "Ajantis"]
 
     [ajantisbg1.components.2]
     id = "1"
     name = "Install the unique BG:EE BAM for Ajantis' Family Shield"
-		path = ["NPC", "Ajantis"]
+    path = ["NPC", "Ajantis"]
 
 [ajantisbg2]
 archive = "win-ajantisbg2-v20.zip"
@@ -432,46 +432,46 @@ url = "https://www.baldurs-gate.de/index.php?resources/jasteys-sir-ajantis-f%C3%
     [ajantisbg2.components.1]
     id = "0"
     name = "Sir Ajantis NPC for BGII"
-		path = ["NPC", "Ajantis"]
+    path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.2]
     id = "1"
     name = "Install the unique BG(II):EE BAM for Ajantis' Family Shield"
-		path = ["NPC", "Ajantis"]
+    path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.3]
     id = "3"
     name = "Installation of adult romance content"
-		path = ["NPC", "Ajantis"]
+    path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.4]
     id = "41"
     name = "Speed: 45 minutes real time minimum between Dialogues"
+    path = ["NPC", "Ajantis"]
     subgroup = "Select Ajantis' Friendship Dialogues and Romance Speed:"
-		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.5]
     id = "42"
     name = "Speed: 30 minutes real time minimum between Dialogues"
+    path = ["NPC", "Ajantis"]
     subgroup = "Select Ajantis' Friendship Dialogues and Romance Speed:"
-		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.6]
     id = "43"
     name = "Speed: 15 minutes real time minimum between Dialogues"
+    path = ["NPC", "Ajantis"]
     subgroup = "Select Ajantis' Friendship Dialogues and Romance Speed:"
-		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.7]
     id = "44"
     name = "Speed: 1 hour 30 minutes (extended) real time minimum between Dialogues"
+    path = ["NPC", "Ajantis"]
     subgroup = "Select Ajantis' Friendship Dialogues and Romance Speed:"
-		path = ["NPC", "Ajantis"]
 
     [ajantisbg2.components.8]
     id = "5"
     name = "Ajantis kit choice: make Ajantis Cavalier"
-		path = ["NPC", "Ajantis"]
+    path = ["NPC", "Ajantis"]
 
 [ajantisportraitpack]
 archive = "AjantisPortraitPack_v4.zip"
@@ -561,6 +561,7 @@ url = "https://www.dropbox.com/s/kt9u12x8qagq8lu/AloraEE.zip?dl=1"
     [alora.components.1]
     id = "0"
     name = "Chosen of Mystra's Alora NPC Mod"
+    path = ["NPC", "Alora"]
 
 [alternatives]
 class = "Quests"
@@ -579,7 +580,7 @@ url = "github:Gibberlings3/Alternatives"
 [amber]
 archive = "amber.tar.gz"
 class = "NPC"
-description = "Amber"
+description = "Amber (CG tiefling rogue)"
 id = "amber"
 languages = ["English", "Deutsch", "Spanish"]
 lastupdate = 2022-06-23
@@ -596,7 +597,7 @@ url = "github:MattyGroove/Amber"
 
 [angelo]
 class = "NPC"
-description = "Angelo NPC"
+description = "Angelo (CN human fighter)"
 id = "angelo"
 languages = ["English", "Russian (by fufel007)"]
 lastupdate = 2021-09-28
@@ -656,21 +657,21 @@ url = "github:BartVanBeurden/bgee-animus"
 [anishai]
 archive = "Gibberlings3-Anishai-v3-0-gc1368e4.zip"
 class = "NPC"
-description = "Anishai"
+description = "Anishai (CN/LE human monk)"
 id = "anishai"
 lastupdate = 1970-01-01
 url = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/Anishai"
 
 [aranw]
 class = "NPC"
-description = "Aran Whitehand NPC"
+description = "Aran Whitehand (human fighter)"
 id = "aranw"
 lastupdate = 1970-01-01
 url = "github:cmorganbg/Aran-Whitehand"
 
 [arath_eet]
 class = "NPC"
-description = "Arath (Rewired)"
+description = "Arath (human druid)"
 id = "arath_eet"
 lastupdate = 1970-01-01
 url = "github:RoxanneSHS/ArathEET"
@@ -688,6 +689,7 @@ url = "www.shsforums.net/files/download/994-arcane-archer/"
     [arcanearcher.components.1]
     id = "0"
     name = "Arcane Archer"
+    path = ["Classes", "Ranger"]
 
 [area_patcher]
 archive = "Manual"
@@ -1072,6 +1074,7 @@ url = "github:InfinityMods/Ascension"
     group = "Ascension"
     id = "0"
     name = "Rewritten Final Chapter of Throne of Bhaal"
+    path = ["Story", "ToB"]
 
     [ascension.components.10]
     group = "Tougher Throne of Bhaal battles"
@@ -1107,16 +1110,19 @@ url = "github:InfinityMods/Ascension"
     group = "Additional Content (not part of original Ascension mod)"
     id = "2100"
     name = "Alternate Balthazar portrait, by Cuv"
+    path = ["Cosmetic", "Portraits"]
 
     [ascension.components.17]
     group = "Additional Content (not part of original Ascension mod)"
     id = "2200"
     name = "Extended Epilogues for additional Beamdog NPCs, by shawne"
+    path = ["NPC"]
 
     [ascension.components.18]
     group = "Additional Content (not part of original Ascension mod)"
     id = "2300"
     name = "Sharper portraits of Abazigal and Gromnir for the Enhanced Edition, by DavidW"
+    path = ["Cosmetic", "Portraits"]
 
     [ascension.components.19]
     group = "Additional Content (not part of original Ascension mod)"
@@ -1127,43 +1133,51 @@ url = "github:InfinityMods/Ascension"
     group = "Ascension"
     id = "10"
     name = "Balthazar can be redeemed"
+    path = ["Story", "ToB"]
 
     [ascension.components.3]
     group = "Ascension"
     id = "20"
     name = "Improved Sarevok-Player Interactions"
+    path = ["NPC", "Sarevok"]
 
     [ascension.components.4]
     group = "Ascension"
     id = "30"
     name = "Improved Imoen-Player Interactions in Throne of Bhaal"
+    path = ["NPC", "Imoen"]
 
     [ascension.components.5]
     group = "Ascension"
     id = "40"
     name = "Restored Bhaalspawn Powers"
+    path = ["Skills", "Bhaalspawn"]
 
     [ascension.components.6]
     group = "Ascension"
     id = "50"
     name = "Improved Slayer Transformation"
+    path = ["Skills", "Bhaalspawn"]
 
     [ascension.components.7]
     group = "Ascension"
     id = "60"
     name = "David Gaider's expanded epilogues for Bioware NPCs"
+    path = ["NPC"]
     subgroup = "Expanded Epilogues for Bioware NPCs"
 
     [ascension.components.8]
     group = "Ascension"
     id = "61"
     name = "Alternate epilogues by Shawne"
+    path = ["NPC"]
     subgroup = "Expanded Epilogues for Bioware NPCs"
 
     [ascension.components.9]
     group = "Tougher Throne of Bhaal battles"
     id = "1000"
     name = "Tougher Abazigal"
+    path = ["Story", "ToB"]
 
 [asharnpc]
 archive = "AsharNPC_v131.rar"
@@ -1965,18 +1979,22 @@ url = "github:Pocket-Plane-Group/Banter_Pack"
     [banterpack.components.1]
     id = "0"
     name = "Pocket Plane Banter Pack for BG2: Shadows of Amn"
+    path = ["NPC"]
 
     [banterpack.components.2]
     id = "1"
     name = "Install SOA Banter Accelerator script?(Increases the frequency of interparty banter)"
+    path = ["NPC", "Banter accelerator"]
 
     [banterpack.components.3]
     id = "2"
     name = "Pocket Plane Banter Pack for BG2: Throne of Bhaal"
+    path = ["NPC"]
 
     [banterpack.components.4]
     id = "3"
     name = "Install TOB Banter Accelerator script?(Increases the frequency of interparty banter)"
+    path = ["NPC", "Banter accelerator"]
 
 [bardicwonders]
 class = "Kits"
@@ -2012,6 +2030,7 @@ url = "https://www.dropbox.com/s/7obd7oopktkl5jv/BG1AerieV12.zip?dl=1"
     [bg1aerie.components.1]
     id = "0"
     name = "Aerie for BG:EE"
+    path = ["NPC", "Aerie"]
 
 [bg1npc]
 class = "NPC-Related"
@@ -2026,283 +2045,332 @@ url = "github:Gibberlings3/BG1NPC"
     [bg1npc.components.1]
     id = "0"
     name = "The BG1 NPC Project: Required Modifications"
+    path = ["NPC"]
 
     [bg1npc.components.10]
     group = "The BG1 NPC Project: Romances"
     id = "32"
     name = "Speed: 30 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Branwen"]
     subgroup = "The BG1 NPC Project: Branwen's Romance Core (teen content)"
 
     [bg1npc.components.11]
     group = "The BG1 NPC Project: Romances"
     id = "33"
     name = "Speed: 15 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Branwen"]
     subgroup = "The BG1 NPC Project: Branwen's Romance Core (teen content)"
 
     [bg1npc.components.12]
     group = "The BG1 NPC Project: Romances"
     id = "34"
     name = "Speed: 1 hour 30 minutes (extended) real time minimum between LoveTalks"
+    path = ["NPC", "Branwen"]
     subgroup = "The BG1 NPC Project: Branwen's Romance Core (teen content)"
 
     [bg1npc.components.13]
     group = "The BG1 NPC Project: Romances"
     id = "40"
     name = "Speed: 1 hour real time (standard) minimum between LoveTalks"
+    path = ["NPC", "Coran"]
     subgroup = "The BG1 NPC Project: Coran's Romance Core (adult content)"
 
     [bg1npc.components.14]
     group = "The BG1 NPC Project: Romances"
     id = "41"
     name = "Speed: 45 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Coran"]
     subgroup = "The BG1 NPC Project: Coran's Romance Core (adult content)"
 
     [bg1npc.components.15]
     group = "The BG1 NPC Project: Romances"
     id = "42"
     name = "Speed: 30 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Coran"]
     subgroup = "The BG1 NPC Project: Coran's Romance Core (adult content)"
 
     [bg1npc.components.16]
     group = "The BG1 NPC Project: Romances"
     id = "43"
     name = "Speed: 15 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Coran"]
     subgroup = "The BG1 NPC Project: Coran's Romance Core (adult content)"
 
     [bg1npc.components.17]
     group = "The BG1 NPC Project: Romances"
     id = "44"
     name = "Speed: 1 hour 30 minutes (extended) real time minimum between LoveTalks"
+    path = ["NPC", "Coran"]
     subgroup = "The BG1 NPC Project: Coran's Romance Core (adult content)"
 
     [bg1npc.components.18]
     group = "The BG1 NPC Project: Romances"
     id = "50"
     name = "Speed: 1 hour real time (standard) minimum between LoveTalks"
+    path = ["NPC", "Dynaheir"]
     subgroup = "The BG1 NPC Project: Dynaheir's Romance Core (teen content)"
 
     [bg1npc.components.19]
     group = "The BG1 NPC Project: Romances"
     id = "51"
     name = "Speed: 45 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Dynaheir"]
     subgroup = "The BG1 NPC Project: Dynaheir's Romance Core (teen content)"
 
     [bg1npc.components.2]
     group = "The BG1 NPC Project: Banters, Quests, and Interjections"
     id = "10"
     name = "The BG1 NPC Project: Banters, Quests, and Interjections"
+    path = ["NPC"]
 
     [bg1npc.components.20]
     group = "The BG1 NPC Project: Romances"
     id = "52"
     name = "Speed: 30 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Dynaheir"]
     subgroup = "The BG1 NPC Project: Dynaheir's Romance Core (teen content)"
 
     [bg1npc.components.21]
     group = "The BG1 NPC Project: Romances"
     id = "53"
     name = "Speed: 15 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Dynaheir"]
     subgroup = "The BG1 NPC Project: Dynaheir's Romance Core (teen content)"
 
     [bg1npc.components.22]
     group = "The BG1 NPC Project: Romances"
     id = "54"
     name = "Speed: 1 hour 30 minutes (extended) real time minimum between LoveTalks"
+    path = ["NPC", "Dynaheir"]
     subgroup = "The BG1 NPC Project: Dynaheir's Romance Core (teen content)"
 
     [bg1npc.components.23]
     group = "The BG1 NPC Project: Romances"
     id = "60"
     name = "Speed: 1 hour real time (standard) minimum between LoveTalks"
+    path = ["NPC", "Shar-Teel"]
     subgroup = "The BG1 NPC Project: Shar-Teel Relationship Core (adult content)"
 
     [bg1npc.components.24]
     group = "The BG1 NPC Project: Romances"
     id = "61"
     name = "Speed: 45 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Shar-Teel"]
     subgroup = "The BG1 NPC Project: Shar-Teel Relationship Core (adult content)"
 
     [bg1npc.components.25]
     group = "The BG1 NPC Project: Romances"
     id = "62"
     name = "Speed: 30 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Shar-Teel"]
     subgroup = "The BG1 NPC Project: Shar-Teel Relationship Core (adult content)"
 
     [bg1npc.components.26]
     group = "The BG1 NPC Project: Romances"
     id = "63"
     name = "Speed: 15 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Shar-Teel"]
     subgroup = "The BG1 NPC Project: Shar-Teel Relationship Core (adult content)"
 
     [bg1npc.components.27]
     group = "The BG1 NPC Project: Romances"
     id = "64"
     name = "Speed: 1 hour 30 minutes (extended) real time minimum between LoveTalks"
+    path = ["NPC", "Shar-Teel"]
     subgroup = "The BG1 NPC Project: Shar-Teel Relationship Core (adult content)"
 
     [bg1npc.components.28]
     group = "The BG1 NPC Project: Romances"
     id = "70"
     name = "Speed: 1 hour real time (standard) minimum between LoveTalks"
+    path = ["NPC", "Xan"]
     subgroup = "The BG1 NPC Project: Xan's Romance Core (teen content)"
 
     [bg1npc.components.29]
     group = "The BG1 NPC Project: Romances"
     id = "71"
     name = "Speed: 45 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Xan"]
     subgroup = "The BG1 NPC Project: Xan's Romance Core (teen content)"
 
     [bg1npc.components.3]
     group = "The BG1 NPC Project: Romances"
     id = "20"
     name = "Speed: 1 hour real time (standard) minimum between LoveTalks"
+    path = ["NPC", "Ajantis"]
     subgroup = "The BG1 NPC Project: Ajantis Romance Core (teen content)"
 
     [bg1npc.components.30]
     group = "The BG1 NPC Project: Romances"
     id = "72"
     name = "Speed: 30 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Xan"]
     subgroup = "The BG1 NPC Project: Xan's Romance Core (teen content)"
 
     [bg1npc.components.31]
     group = "The BG1 NPC Project: Romances"
     id = "73"
     name = "Speed: 15 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Xan"]
     subgroup = "The BG1 NPC Project: Xan's Romance Core (teen content)"
 
     [bg1npc.components.32]
     group = "The BG1 NPC Project: Romances"
     id = "74"
     name = "Speed: 1 hour 30 minutes (extended) real time minimum between LoveTalks"
+    path = ["NPC", "Xan"]
     subgroup = "The BG1 NPC Project: Xan's Romance Core (teen content)"
 
     [bg1npc.components.33]
     group = "The BG1 NPC Project: Romances"
     id = "80"
     name = "The BG1 NPC Project: Female Romance Challenges, Ajantis vs Xan vs Coran"
+    path = ["NPC"]
 
     [bg1npc.components.34]
     group = "The BG1 NPC Project: Tweaks"
     id = "90"
     name = "The BG1 NPC Project: NPCs can be sent to wait in an inn"
+    path = ["NPC", "Wait"]
 
     [bg1npc.components.35]
     group = "The BG1 NPC Project: Tweaks"
     id = "100"
     name = "Jason Compton's Accelerated Banter Script"
+    path = ["NPC", "Banter accelerator"]
 
     [bg1npc.components.36]
     group = "The BG1 NPC Project: Tweaks"
     id = "110"
     name = "Banter Timing: Normal (about 27 minutes between banter dialogs)"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.37]
     group = "The BG1 NPC Project: Tweaks"
     id = "111"
     name = "Banter Timing: Fast (about 20 minutes between banter dialogs)"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.38]
     group = "The BG1 NPC Project: Tweaks"
     id = "112"
     name = "Banter Timing: Very fast (about 13 minutes between banter dialogs)"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.39]
     group = "The BG1 NPC Project: Tweaks"
     id = "113"
     name = "Banter Timing: Slow (about 40 minutes between banter dialogs)"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.4]
     group = "The BG1 NPC Project: Romances"
     id = "21"
     name = "Speed: 45 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Ajantis"]
     subgroup = "The BG1 NPC Project: Ajantis Romance Core (teen content)"
 
     [bg1npc.components.40]
     group = "The BG1 NPC Project: Tweaks"
     id = "114"
     name = "Banter Timing: Very slow (about 55 minutes between banter dialogs)"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.41]
     group = "The BG1 NPC Project: Tweaks"
     id = "120"
     name = "The BG1 NPC Project: Bardic Reputation Adjustment"
+    path = ["Skills", "Reputation"]
 
     [bg1npc.components.42]
     group = "The BG1 NPC Project: Tweaks"
     id = "130"
     name = "SixofSpades Extended Sarevok's Diary"
+    path = ["NPC", "Sarevok"]
     subgroup = "The BG1 NPC Project: Sarevok's Diary Adjustments"
 
     [bg1npc.components.43]
     group = "The BG1 NPC Project: Tweaks"
     id = "131"
     name = "Sarevok's Diary Date Changes only"
+    path = ["NPC", "Sarevok"]
     subgroup = "The BG1 NPC Project: Sarevok's Diary Adjustments"
 
     [bg1npc.components.44]
     group = "The BG1 NPC Project: Tweaks"
     id = "240"
     name = "Kivan uses spears"
+    path = ["NPC", "Kivan"]
     subgroup = "The BG1 NPC Project: Kivan's Proficiency"
 
     [bg1npc.components.45]
     group = "The BG1 NPC Project: Tweaks"
     id = "241"
     name = "Kivan uses halberds"
+    path = ["NPC", "Kivan"]
     subgroup = "The BG1 NPC Project: Kivan's Proficiency"
 
     [bg1npc.components.46]
     group = "The BG1 NPC Project: Portrait Changes and Additions"
     id = "150"
     name = "The BG1 NPC Project: Kivan's \"Kivan and Deheriana Companions\" portrait"
+    path = ["NPC", "Kivan"]
 
     [bg1npc.components.47]
     group = "The BG1 NPC Project: Portrait Changes and Additions"
     id = "155"
     name = "The BG1 NPC Project: Give Coran his \"Murder in Baldur's Gate\" portrait"
+    path = ["NPC", "Coran"]
 
     [bg1npc.components.48]
     group = "The BG1 NPC Project: Portrait Changes and Additions"
     id = "160"
     name = "The BG1 NPC Project: Add Non-Joinable NPC portraits to quests and dialogues"
+    path = ["Cosmetic", "Portraits"]
 
     [bg1npc.components.49]
     id = "200"
     name = "The BG1 NPC Project: Player-Initiated Dialogues"
+    path = ["NPC"]
 
     [bg1npc.components.5]
     group = "The BG1 NPC Project: Romances"
     id = "22"
     name = "Speed: 30 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Ajantis"]
     subgroup = "The BG1 NPC Project: Ajantis Romance Core (teen content)"
 
     [bg1npc.components.6]
     group = "The BG1 NPC Project: Romances"
     id = "23"
     name = "Speed: 15 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Ajantis"]
     subgroup = "The BG1 NPC Project: Ajantis Romance Core (teen content)"
 
     [bg1npc.components.7]
     group = "The BG1 NPC Project: Romances"
     id = "24"
     name = "Speed: 1 hour 30 minutes (extended) real time minimum between LoveTalks"
+    path = ["NPC", "Ajantis"]
     subgroup = "The BG1 NPC Project: Ajantis Romance Core (teen content)"
 
     [bg1npc.components.8]
     group = "The BG1 NPC Project: Romances"
     id = "30"
     name = "Speed: 1 hour real time (standard) minimum between LoveTalks"
+    path = ["NPC", "Branwen"]
     subgroup = "The BG1 NPC Project: Branwen's Romance Core (teen content)"
 
     [bg1npc.components.9]
     group = "The BG1 NPC Project: Romances"
     id = "31"
     name = "Speed: 45 minutes real time minimum between LoveTalks"
+    path = ["NPC", "Branwen"]
     subgroup = "The BG1 NPC Project: Branwen's Romance Core (teen content)"
 
 [bg1npcmusic]
@@ -2514,7 +2582,7 @@ url = "http://lynxlynx.info/ie/modhub.php?Isaya/bg2eetrans"
     [bg2eetrans.components.1]
     id = "0"
     name = "Initialisation"
-		path = ["EET"]
+    path = ["EET"]
 
 [bg2eew]
 archive = "BG2EEWv101.rar"
@@ -2730,10 +2798,9 @@ url = "https://www.dropbox.com/s/qdvhlx6hg9lh10n/SoDGerman.zip?dl=1"
     [bgsodde.components.1]
     id = "0"
     name = "SoD: Deutscher Text-Patch von Shai Hulud und Are"
-		path = ["EET"]
+    path = ["EET"]
 
 [bolsa]
-archive = "bolsa-v6.0.0.zip"
 class = "Items"
 description = "Bolsa (merchant)"
 id = "bolsa"
@@ -2741,7 +2808,7 @@ languages = ["Espanol", "English (translation by Lollorian)", "Francais (traduct
 lastupdate = 2020-06-26
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/bolsa/readme/bolsa-readme-english.txt"
 tp2 = "bolsa/bolsa.tp2"
-url = "https://github.com/SpellholdStudios/Bolsa/releases/download/v6.0.0/bolsa-v6.0.0.zip"
+url = "github:SpellholdStudios/Bolsa"
 
     [bolsa.components.1]
     id = "0"
@@ -4651,7 +4718,7 @@ url = "github:Gibberlings3/Tweaks-Anthology"
     group = "Content Changes"
     id = "1075"
     name = "Send BioWare NPCs to an Inn [DavidW/Zed Nocear]"
-    path = ["NPC"]
+    path = ["NPC", "Wait"]
 
     [cdtweaks.components.45]
     group = "Content Changes"
@@ -5024,6 +5091,7 @@ url = "github:Gibberlings3/PnP_Celestials"
     [celestials.components.1]
     id = "0"
     name = "PnP Celestials"
+    path = ["Creatures"]
 
 [cernd]
 class = "NPC-Related"
@@ -5038,7 +5106,7 @@ url = "github:SpellholdStudios/CerndFriendship"
     [cernd.components.1]
     id = "0"
     name = "Cernd Friendship for BG2: ToB"
-		path = ["NPC", "Cernd"]
+    path = ["NPC", "Cernd"]
 
 [charlatan]
 archive = "charlatan.tar.gz"
@@ -5061,7 +5129,6 @@ url = "github:Raduziel/Charlatan-Kit"
     path = ["NPC", "Eldoth"]
 
 [chattyimoen]
-archive = "lin-chattyimoen-v1.3.zip"
 class = "NPC-Related"
 description = "Chatty Imoen"
 id = "chattyimoen"
@@ -5069,35 +5136,35 @@ languages = ["English", "Francais", "Deutsch", "Italiano (Sottotitoli solo; voce
 lastupdate = 2017-05-07
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/chattyimoen/readme.html"
 tp2 = "chattyimoen/setup-chattyimoen.tp2"
-url = "https://github.com/AstroBryGuy/ChattyImoen/releases/download/v1.3/lin-chattyimoen-v1.3.zip"
+url = "github:AstroBryGuy/ChattyImoen"
 
     [chattyimoen.components.1]
     id = "0"
     name = "Chatty Imoen: Expanded Character Sounds"
-		path = ["NPC", "Imoen"]
+    path = ["NPC", "Imoen"]
 
     [chattyimoen.components.2]
     id = "1"
     name = "Chatty Imoen: Add NPC Interactions"
-		path = ["NPC", "Imoen"]
+    path = ["NPC", "Imoen"]
 
     [chattyimoen.components.3]
     id = "2"
     name = "Give Imoen her BG1 Portrait"
+    path = ["NPC", "Imoen"]
     subgroup = "Chatty Imoen: Imoen Portrait Replacements"
-		path = ["NPC", "Imoen"]
 
     [chattyimoen.components.4]
     id = "3"
     name = "Give Imoen her SoD Portrait"
+    path = ["NPC", "Imoen"]
     subgroup = "Chatty Imoen: Imoen Portrait Replacements"
-		path = ["NPC", "Imoen"]
 
     [chattyimoen.components.5]
     id = "4"
     name = "Give Imoen her BG2 Portrait"
+    path = ["NPC", "Imoen"]
     subgroup = "Chatty Imoen: Imoen Portrait Replacements"
-		path = ["NPC", "Imoen"]
 
 [chloe]
 class = "NPC"
@@ -5140,6 +5207,7 @@ url = "github:MattyGroove/ConvinientAmmunition"
     [convinientammunition.components.1]
     id = "0"
     name = "Convinient Ammunition"
+    path = ["Items", "Ammunition"]
 
 [coran]
 archive = "Coran_v6.zip"
@@ -5177,6 +5245,7 @@ url = "github:RoxanneSHS/Corwin"
     [corwineet.components.1]
     id = "0"
     name = "Corwin NPC"
+    path = ["NPC", "Corwin"]
 
 [cowledmenace]
 archive = "cowledmenace.tar.gz"
@@ -5226,7 +5295,7 @@ tp2 = "crossmodbg2/setup-crossmodbg2.tp2"
 url = "github:Gibberlings3/Crossmod_Banter_Pack_for_Baldurs_Gate_II"
 
     [crossmodbg2.compat]
-    after = ["adrian", "ajantisbg1", "ajantisbg2", "amber", "angelo", "aranw", "arath_eet", "aurenaseph", "branwen", "c#solaufein", "coran", "coranbgfriend", "dace_eet", "fade", "faren", "foundling", "gahesh", "gavin", "haerdalisromance", "haldamir", "hephernaanbg2", "hubelpot", "isra", "iylos", "kelsey", "keto", "khalidbg2", "kido", "kindrek", "kivan", "longerroadee", "luxleysoa", "neh'taniel", "ninde_eet", "petsy", "quayle", "saerileth", "sarahtob", "skiecost", "solaufein", "tashia", "thebeaurinlegacy", "tiax", "tsujatha", "varshoon", "verrsza", "willowisp", "xan", "xanbg1friend", "xulaye", "yasraena", "yoshimosremorse", "yvette"]
+    after = ["adrian", "ajantisbg1", "ajantisbg2", "amber", "angelo", "aranw", "arath_eet", "aurenaseph", "branwen", "c#solaufein", "coran", "coranbgfriend", "dace_eet", "fade", "faren", "foundling", "gahesh", "gavin", "haerdalisromance", "haldamir", "hephernaanbg2", "hubelpot", "isra", "iylos", "kelsey", "keto", "khalidbg2", "kido", "kindrek", "kivan", "longerroadee", "luxleysoa", "neh'taniel", "ninde_eet", "petsy", "quayle", "saerileth", "sarahtob", "skiecost", "solaufein", "tashia", "thebeaurinlegacy", "tiax", "tsujatha", "varshoon", "verrsza", "willowisp", "xan", "xanbg1friend", "xulaye_eet", "yasraena", "yoshimosremorse", "yvette"]
 
     [crossmodbg2.components.1]
     id = "0"
@@ -5296,7 +5365,7 @@ url = "http://mods.pocketplane.net/win-questpack-v34.zip"
     exclusive = ["cutc7g.bcs", "hellgen2.cre", "hellself.cre", "hellself.eff", "sphl001.spl", "sphl002.spl", "sphl003.spl", "sphl004.spl", "sphl005.spl", "spin747.spl", "spin749.spl", "spin751.spl", "spin753.spl", "spin755.spl"]
     id = "10"
     name = "Revised Hell Trials"
-    path = ["Areas", "BG2", "Ending"]
+    path = ["Story", "BG2"]
 
     [d0questpack.components.13]
     exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"]
@@ -5625,6 +5694,7 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     exclusive = ["shades.2da"]
     id = "2451"
     name = "Make Shadow Monster Summons More Illusionary"
+    path = ["Spells", "Conjuration"]
 
     [d5_random_tweaks.components.28]
     exclusive = ["sppr404.spl"]
@@ -5635,6 +5705,7 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     [d5_random_tweaks.components.29]
     id = "1451"
     name = "Make Smashing Wave Party-Friendly"
+    path = ["Spells", "Evocation"]
 
     [d5_random_tweaks.components.3]
     exclusive = ["spwi108.spl"]
@@ -5761,6 +5832,7 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     [d5_random_tweaks.components.5]
     id = "1151"
     name = "Reduce Damage but Improve Blindness in SR's Sunscorch"
+    path = ["Spells", "Evocation"]
 
     [d5_random_tweaks.components.50]
     id = "3000"
@@ -5794,6 +5866,7 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     [d5_random_tweaks.components.55]
     id = "3050"
     name = "Make IR's Rod of Absorption Truly Instantaneous"
+    path = ["Items", "Wands"]
 
     [d5_random_tweaks.components.56]
     exclusive = ["boot12.spl"]
@@ -5823,6 +5896,7 @@ url = "github:subtledoctor/d5_Random_Tweaks"
     [d5_random_tweaks.components.6]
     id = "1152"
     name = "Improve Faerie Fire"
+    path = ["Spells", "Evocation"]
 
     [d5_random_tweaks.components.60]
     exclusive = ["misc89.itm"]
@@ -6646,20 +6720,20 @@ url = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
     [dlcmerger.components.1]
     id = "1"
     name = "\"Siege of Dragonspear\" DLC"
+    path = ["EET"]
     subgroup = "Merge DLC into game"
-		path = ["EET"]
 
     [dlcmerger.components.2]
     id = "2"
     name = "User-defined DLC"
+    path = ["EET"]
     subgroup = "Merge DLC into game"
-		path = ["EET"]
 
     [dlcmerger.components.3]
     id = "3"
     name = "All available DLCs"
+    path = ["EET"]
     subgroup = "Merge DLC into game"
-		path = ["EET"]
 
 [dorn]
 class = "NPC-Related"
@@ -6677,9 +6751,13 @@ lastupdate = 2017-07-12
 tp2 = "dr8_hotfix/dr8_hotfix.tp2"
 url = "https://www.dropbox.com/s/w3io6hbyb9axgjk/DR8_hotfix.zip?dl=1"
 
+    [dr8_hotfix.compat]
+    after = ["divine_remix"]
+
     [dr8_hotfix.components.1]
     id = "0"
     name = "hotfix for Divine Remix v8b"
+    path = ["Classes", "Cleric"]
 
 ["dragonspear_ui++"]
 class = "UI"
@@ -6859,7 +6937,6 @@ url = "Manual"
     [eet_end.components.1]
     id = "0"
     name = "Standard installation"
-    path = ["EET"]
     subgroup = "EET end (last mod in install order)"
 
     [eet_end.components.2]
@@ -6881,6 +6958,7 @@ url = "github:EE-Mod-Setup/EET_Fixpack"
     [eet_fix.components.1]
     id = "0"
     name = "EET Fix"
+    path = ["EET"]
 
 [eet_gui]
 archive = "Manual"
@@ -7615,7 +7693,7 @@ url = "github:RoxanneSHS/EET_Expanded_Thief_Stronghold"
     name = "Thief Stronghold for All"
 
 [eetmoveitemssoa]
-archive = "EETMoveItemsSoA.zip"
+archive = "eetmoveitemssoa.zip"
 class = "Items"
 description = "Move Items into SoA"
 id = "eetmoveitemssoa"
@@ -8257,7 +8335,7 @@ url = "http://dl.spellholdstudios.net/faren"
 [finchnpc]
 archive = "finchnpc.tar.gz"
 class = "NPC"
-description = "Finch NPC"
+description = "Finch (NG gnome cleric)"
 id = "finchnpc"
 languages = ["English", "Francais", "Espanol", "German", "Russian"]
 lastupdate = 2022-06-23
@@ -8312,18 +8390,22 @@ url = "manual"
     [fnp_multiclass.components.1]
     id = "91"
     name = "Multiclass Druids"
+    path = ["Classes", "Druid"]
 
     [fnp_multiclass.components.2]
     id = "92"
     name = "Multiclass Shamans"
+    path = ["Classes", "Shaman"]
 
     [fnp_multiclass.components.3]
     id = "95"
     name = "Multiclass Cleric kits (install AFTER all other kit mods!!)"
+    path = ["Classes", "Cleric"]
 
     [fnp_multiclass.components.4]
     id = "99"
     name = "Apply FnP multiclass kits to NPCs"
+    path = ["NPC"]
 
 [forgotten-armament]
 archive = "forgotten-armament.tar.gz"
@@ -8574,6 +8656,7 @@ url = "github:SpellholdStudios/HaerdalisFriendship"
     [haerdalis_friendship.components.1]
     id = "0"
     name = "Haer'Dalis Friendship for BG2: ToB"
+    path = ["NPC", "Haer'dalis"]
 
 [haerdalisromance]
 archive = "haerdalisromance.tar.gz"
@@ -8589,6 +8672,7 @@ url = "github:MattyGroove/haerdalisromance"
     [haerdalisromance.components.1]
     id = "0"
     name = "Haer'Dalis Romance (SoA & ToB)"
+    path = ["NPC", "Haer'dalis"]
 
 [haldamir]
 class = "NPC"
@@ -8611,22 +8695,27 @@ url = "http://lynxlynx.info/ie/modhub.php?Sampsca/ThrownHammers&pre"
     [hammers.components.1]
     id = "0"
     name = "Thrown Hammers"
+    path = ["Cosmetic", "Sprites"]
 
     [hammers.components.2]
     id = "15"
     name = "Thrown Spiritual Hammers"
+    path = ["Cosmetic", "Sprites"]
 
     [hammers.components.3]
     id = "25"
     name = "Normal throwing hammers"
+    path = ["Items"]
 
     [hammers.components.4]
     id = "35"
     name = "+1 throwing weapons"
+    path = ["Items"]
 
     [hammers.components.5]
     id = "50"
     name = "Additional magic items"
+    path = ["Items"]
 
 [heartwood]
 class = "Items"
@@ -8839,55 +8928,67 @@ url = "github:SpellholdStudios/IEP_Extended_Banter"
     [iepbanters.components.1]
     id = "0"
     name = "Extended NPC-NPC Interaction SoA"
+    path = ["NPC"]
 
     [iepbanters.components.10]
     id = "9"
     name = "30 Minutes"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.11]
     id = "10"
     name = "45 Minutes"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.12]
     id = "11"
     name = "60 Minutes"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.2]
     id = "1"
     name = "Extended Minsc/Aerie Interaction ToB"
+    path = ["NPC"]
 
     [iepbanters.components.3]
     id = "2"
     name = "Imoen \"Retrospection\" dialogue for BGII: ToB"
+    path = ["NPC", "Imoen"]
 
     [iepbanters.components.4]
     id = "3"
     name = "Wake-Up dialogue for Anomen Romance (By David Gaider with additions from Kulyok)"
+    path = ["NPC", "Anomen"]
 
     [iepbanters.components.5]
     id = "4"
     name = "NPC Conflict Revisions"
+    path = ["NPC"]
 
     [iepbanters.components.6]
     id = "5"
     name = "Restored Aerie/Jaheira/Anomen interjection in Underdark"
+    path = ["NPC"]
 
     [iepbanters.components.7]
     id = "6"
     name = "10 Minutes"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.8]
     id = "7"
     name = "15 Minutes"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.9]
     id = "8"
     name = "20 Minutes"
+    path = ["NPC", "Banter accelerator"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
 [ihateundead]
@@ -8904,50 +9005,62 @@ url = "github:Raduziel/I-Hate-Undead-Kitpack"
     [ihateundead.components.1]
     id = "0"
     name = "Undead Predator (Ranger Kit)"
+    path = ["Classes", "Ranger"]
 
     [ihateundead.components.10]
     id = "9"
     name = "Pallid Mask (Monk Kit)"
+    path = ["Classes", "Monk"]
 
     [ihateundead.components.11]
     id = "10"
     name = "Dreadful Witch (Shaman Kit)"
+    path = ["Classes", "Shaman"]
 
     [ihateundead.components.12]
     id = "11"
     name = "Imprisoned Soul (Sorcerer Kit)"
+    path = ["Classes", "Sorcerer"]
 
     [ihateundead.components.2]
     id = "1"
     name = "Holy Redeemer (Cleric Kit)"
+    path = ["Classes", "Cleric"]
 
     [ihateundead.components.3]
     id = "2"
     name = "Deathslayer (Wizard Kit)"
+    path = ["Classes", "Wizard"]
 
     [ihateundead.components.4]
     id = "3"
     name = "Undead Hunter Revision (Paladin Kit)"
+    path = ["Classes", "Paladin"]
 
     [ihateundead.components.5]
     id = "4"
     name = "Death Tricker (Thief Kit)"
+    path = ["Classes", "Thief"]
 
     [ihateundead.components.6]
     id = "5"
     name = "Burial Defender (Fighter Kit)"
+    path = ["Classes", "Fighter"]
 
     [ihateundead.components.7]
     id = "6"
     name = "Grave Mourner (Bard Kit)"
+    path = ["Classes", "Bard"]
 
     [ihateundead.components.8]
     id = "7"
     name = "Circle Enforcer (Druid Kit)"
+    path = ["Classes", "Druid"]
 
     [ihateundead.components.9]
     id = "8"
     name = "Jaheira, the Circle Enforcer"
+    path = ["NPC", "Jaheira"]
 
 [iispellsystemadjustments]
 archive = "iispellsystemadjustmentsv7.1.zip"
@@ -8984,7 +9097,7 @@ url = "github:SpellholdStudios/ImoenFriendship"
     [imoenfriendship.components.1]
     id = "0"
     name = "Imoen Friendship"
-		path = ["NPC", "Imoen"]
+    path = ["NPC", "Imoen"]
 
 [imoenromance]
 archive = "Imoen Romance.zip"
@@ -9620,7 +9733,7 @@ url = "https://www.dropbox.com/s/u35zhecotxb42qx/JansQuest1.5.0.zip?dl=1"
     [janquest.components.1]
     id = "0"
     name = "Jan's Extended Quest"
-		path = ["NPC", "Jan"]
+    path = ["NPC", "Jan"]
 
 [jimfix]
 class = "Tweak"
@@ -9729,6 +9842,7 @@ url = "https://www.dropbox.com/s/tjyghy37av8gw5a/k9SharteelNPC%20-%201.4.rar?dl=
     [k9sharteelnpc.components.1]
     id = "0"
     name = "Install Shar-Teel NPC Mod"
+    path = ["NPC", "Shar-Teel"]
 
 [kale]
 archive = "kale.tar.gz"
@@ -9916,25 +10030,30 @@ url = "github:Gibberlings3/Kivan_and_Deheriana"
     [kivan.components.1]
     id = "100"
     name = "Kivan of Shilmista"
+    path = ["NPC", "Kivan"]
 
     [kivan.components.2]
     id = "200"
     name = "Wild Mage"
+    path = ["NPC", "Kivan"]
     subgroup = "Change Deheriana's Class from Fighter/Mage/Cleric to:"
 
     [kivan.components.3]
     id = "201"
     name = "Specialist-Mage, Enchanter"
+    path = ["NPC", "Kivan"]
     subgroup = "Change Deheriana's Class from Fighter/Mage/Cleric to:"
 
     [kivan.components.4]
     id = "202"
     name = "Specialist-Mage, Diviner"
+    path = ["NPC", "Kivan"]
     subgroup = "Change Deheriana's Class from Fighter/Mage/Cleric to:"
 
     [kivan.components.5]
     id = "300"
     name = "Install Herd's Alternative Portrait for Kivan."
+    path = ["NPC", "Kivan"]
 
 [klatu]
 archive = "klatu_Tweaks_and_Fixes_1.7.7z"
@@ -10320,7 +10439,7 @@ url = "github:SpellholdStudios/KorganFriendship"
     [korganfriendship.components.1]
     id = "0"
     name = "Korgan Friendship for BG2: ToB"
-		path = ["NPC", "Korgan"]
+    path = ["NPC", "Korgan"]
 
 [lena]
 class = "NPC"
@@ -10531,7 +10650,7 @@ url = "github:SpellholdStudios/MazzyFriendship"
     [mazzy.components.1]
     id = "0"
     name = "Mazzy Friendship"
-		path = ["NPC", "Mazzy"]
+    path = ["NPC", "Mazzy"]
 
 [melynda]
 class = "BigQuests"
@@ -10937,6 +11056,7 @@ url = "github:AngelGryph/MadeInHeaven_EncountersAndQuests"
     group = "Monster Enhancements"
     id = "0"
     name = "Revised Corporal Undead"
+    path = ["Creatures", "Undead"]
 
     [mih_eq.components.10]
     group = "Tactical Challenges: Original Saga"
@@ -10992,6 +11112,7 @@ url = "github:AngelGryph/MadeInHeaven_EncountersAndQuests"
     group = "Monster Enhancements"
     id = "1"
     name = "Revised Dragons"
+    path = ["Creatures", "Dragons"]
 
     [mih_eq.components.20]
     group = "Encounters & Quests: Original Saga"
@@ -11047,6 +11168,7 @@ url = "github:AngelGryph/MadeInHeaven_EncountersAndQuests"
     group = "Monster Enhancements"
     id = "2"
     name = "Revised Golems"
+    path = ["Creatures", "Golems"]
 
     [mih_eq.components.30]
     group = "Encounters & Quests: Siege of Dragonspear"
@@ -11102,6 +11224,7 @@ url = "github:AngelGryph/MadeInHeaven_EncountersAndQuests"
     group = "Monster Enhancements"
     id = "3"
     name = "Revised Liches"
+    path = ["Creatures", "Undead"]
 
     [mih_eq.components.40]
     group = "Tactical Challenges: Shadows of Amn"
@@ -11152,26 +11275,31 @@ url = "github:AngelGryph/MadeInHeaven_EncountersAndQuests"
     group = "Monster Enhancements"
     id = "4"
     name = "Revised Lycanthropes (EXPERIMENTAL)"
+    path = ["Creatures"]
 
     [mih_eq.components.6]
     group = "Monster Enhancements"
     id = "5"
     name = "Revised Magical Beasts"
+    path = ["Creatures"]
 
     [mih_eq.components.7]
     group = "Monster Enhancements"
     id = "6"
     name = "Revised Monstrous Spiders"
+    path = ["Creatures"]
 
     [mih_eq.components.8]
     group = "Monster Enhancements"
     id = "7"
     name = "Revised Oozes, Slimes & Jellies"
+    path = ["Creatures"]
 
     [mih_eq.components.9]
     group = "Monster Enhancements"
     id = "8"
     name = "Revised Vampires"
+    path = ["Creatures", "Undead"]
 
 [mih_ip]
 archive = "mih_ip.tar.gz"
@@ -11187,88 +11315,105 @@ url = "github:AngelGryph/MadeInHeaven_ItemPack"
     [mih_ip.components.1]
     id = "0"
     name = "Made in Heaven: Item Pack"
+    path = ["Items", "New"]
 
     [mih_ip.components.10]
     group = "Item Functionality Tweaks"
     id = "9"
     name = "Turn generic Full Plate into Field Plate"
+    path = ["Items"]
 
     [mih_ip.components.11]
     group = "Item Functionality Tweaks"
     id = "10"
     name = "Turn all Dragon Scale Armor into Scale Mail"
+    path = ["Items"]
 
     [mih_ip.components.12]
     group = "Item Functionality Tweaks"
     id = "11"
     name = "P&P Mace of Disruption (and similar items)"
+    path = ["Items"]
 
     [mih_ip.components.13]
     group = "Item Functionality Tweaks"
     id = "12"
     name = "Improved Tome of Golems"
+    path = ["Items"]
 
     [mih_ip.components.14]
     group = "Item Functionality Tweaks"
     id = "13"
     name = "Miscellaneous Item Improvements (see readme)"
+    path = ["Items"]
 
     [mih_ip.components.15]
     group = "Item Availability Tweaks"
     id = "14"
     name = "Add Potions of Extra Healing in BG1"
+    path = ["Items", "Potions"]
 
     [mih_ip.components.16]
     group = "Item Availability Tweaks"
     id = "15"
     name = "Nerf BG1 easter egg items"
+    path = ["Items"]
 
     [mih_ip.components.17]
     group = "Item Availability Tweaks"
     id = "16"
     name = "Sensible Shops (see readme)"
+    path = ["Items", "Stores"]
 
     [mih_ip.components.2]
     id = "1"
     name = "Icewind Dale items for Baldur's Gate 1 & 2"
+    path = ["Items", "New"]
 
     [mih_ip.components.3]
     id = "2"
     name = "Planescape Torment items for Baldur's Gate 1 & 2"
+    path = ["Items", "New"]
 
     [mih_ip.components.4]
     group = "Item Functionality Tweaks"
     id = "3"
     name = "BG1-style Wands of Frost & -Lightning"
+    path = ["Items", "Wands"]
 
     [mih_ip.components.5]
     group = "Item Functionality Tweaks"
     id = "4"
     name = "Healing potions work as in Pen & Paper"
+    path = ["Items", "Potions"]
     subgroup = "Alternative Healing Potions"
 
     [mih_ip.components.6]
     group = "Item Functionality Tweaks"
     id = "5"
     name = "Healing Potions work as in Icewind Dale"
+    path = ["Items", "Potions"]
     subgroup = "Alternative Healing Potions"
 
     [mih_ip.components.7]
     group = "Item Functionality Tweaks"
     id = "6"
     name = "Healing Potions work as in Baldur's Gate"
+    path = ["Items", "Potions"]
     subgroup = "Alternative Healing Potions"
 
     [mih_ip.components.8]
     group = "Item Functionality Tweaks"
     id = "7"
     name = "Holy Symbols are Amulets"
+    path = ["Items"]
     subgroup = "Change item type of Holy Symbols"
 
     [mih_ip.components.9]
     group = "Item Functionality Tweaks"
     id = "8"
     name = "Holy Symbols are Belts"
+    path = ["Items"]
     subgroup = "Change item type of Holy Symbols"
 
 [mih_sp]
@@ -11378,10 +11523,12 @@ url = "github:Raduziel/MilitiaOfficer-Kit"
     [militiaofficer.components.1]
     id = "0"
     name = "Install Militia Officer kit for Fighters"
+    path = ["Classes", "Fighter"]
 
     [militiaofficer.components.2]
     id = "1"
     name = "Khalid, the Militia Officer."
+    path = ["NPC", "Khalid"]
 
 [minscfriendship]
 class = "NPC-Related"
@@ -11396,7 +11543,7 @@ url = "github:SpellholdStudios/MinscFriendship"
     [minscfriendship.components.1]
     id = "0"
     name = "Minsc Friendship for BG2 and ToB"
-		path = ["NPC", "Minsc"]
+    path = ["NPC", "Minsc"]
 
 [monasticorders]
 archive = "monasticorders.tar.gz"
@@ -11722,17 +11869,17 @@ url = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/NPCTweak&pre"
     [npc_tweak.components.1]
     id = "0"
     name = "Anomen"
-		path = ["NPC", "Anomen"]
+    path = ["NPC", "Anomen"]
 
     [npc_tweak.components.2]
     id = "1"
     name = "Cernd"
-		path = ["NPC", "Cernd"]
+    path = ["NPC", "Cernd"]
 
     [npc_tweak.components.3]
     id = "2"
     name = "Nalia"
-		path = ["NPC", "Nalia"]
+    path = ["NPC", "Nalia"]
 
 [npcflirt]
 archive = "NPCFlirtV105.zip"
@@ -12393,6 +12540,7 @@ url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
     [rr.components.12]
     id = "11"
     name = "Chosen of Cyric encounter"
+    path = ["Story", "BG2"]
 
     [rr.components.13]
     exclusive = ["ar0300.bcs", "aran.cre", "arkanisg.cre", "booter.cre", "c6arkan.bcs", "c6arkan.cre", "c6arkan3.cre", "c6kach.cre", "c6yean.cre", "gaelan.cre", "mook.cre", "mook02.cre", "mookft01.cre", "palern.cre", "stguard1.bcs", "stguard1.cre"]
@@ -12402,6 +12550,7 @@ url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
     [rr.components.14]
     id = "999"
     name = "BG2-style icons for RR content"
+    path = ["Cosmetic", "Icons"]
 
     [rr.components.2]
     exclusive = ["clabth02.2da", "clabth03.2da", "clabth04.2da"]
@@ -12618,7 +12767,7 @@ url = "https://www.dropbox.com/s/pifofoz21t15zph/Sarevok%20Romance%20v1.4.zip?dl
     [sarevokromance.components.1]
     id = "0"
     name = "Aeryn's Sarevok Romance for BGII: Throne of Bhaal"
-		path = ["NPC", "Sarevok"]
+    path = ["NPC", "Sarevok"]
 
 [scales_of_balance]
 archive = "scales_of_balance.tar.gz"
@@ -13077,26 +13226,32 @@ url = "weaselmods:skie-the-cost-of-one-girls-soul"
     [skiecost.components.1]
     id = "0"
     name = "Skie: The Cost of One Girl's Soul - New quest for Baldur's Gate 2 EE"
+    path = ["NPC", "Skie"]
 
     [skiecost.components.2]
     id = "1"
     name = "Skie: The Cost of One Girl's Soul - Allow Skie to return as a joinable NPC"
+    path = ["NPC", "Skie"]
 
     [skiecost.components.3]
     id = "2"
     name = "Skie: The Cost of One Girl's Soul - Add Player-Initiated Dialogue (PID) for Skie"
+    path = ["NPC", "Skie"]
 
     [skiecost.components.4]
     id = "3"
     name = "Skie: The Cost of One Girl's Soul - The Return of Eddard Silvershield (quest & a joinable NPC)"
+    path = ["NPC", "Skie"]
 
     [skiecost.components.5]
     id = "4"
     name = "Skie: The Cost of One Girl's Soul - Add Player-Initiated Dialogue (PID) for Eddard"
+    path = ["NPC", "Skie"]
 
     [skiecost.components.6]
     id = "5"
     name = "Skie: The Cost of One Girl's Soul - Add brand new SoD-oriented items to BG2"
+    path = ["NPC", "Skie"]
 
 [skills-and-abilities]
 archive = "skills-and-abilities.tar.gz"
@@ -13113,66 +13268,78 @@ url = "github:Gibberlings3/Skills-and-Abilities"
     group = "New Kits"
     id = "601"
     name = "Assign kit to Minsc"
+    path = ["Classes", "Ranger"]
     subgroup = "Install Rashemaar Berserker Kit for Rangers"
 
     [skills-and-abilities.components.10]
     group = "Class Updates"
     id = "50"
     name = "Add Detect Illusion for Wizard Slayer"
+    path = ["Classes", "Fighter"]
 
     [skills-and-abilities.components.11]
     group = "Class Updates"
     id = "80"
     name = "Add New Paladin Abilities"
+    path = ["Classes", "Paladin"]
 
     [skills-and-abilities.components.12]
     group = "Class Updates"
     id = "60"
     name = "Replace Inquisitor True Seeing for Detect Illusion Skill"
+    path = ["Classes", "Paladin"]
 
     [skills-and-abilities.components.13]
     group = "Class Updates"
     id = "100"
     name = "Allow Inquisitor Kit to Cast Divine Spells"
+    path = ["Classes", "Paladin"]
 
     [skills-and-abilities.components.14]
     group = "Class Updates"
     id = "120"
     name = "Turn Undead Overhaul"
+    path = ["Classes", "Cleric"]
 
     [skills-and-abilities.components.15]
     group = "Class Updates"
     id = "91"
     name = "Update Existing HLAs in Addition to Adding New HLAs"
+    path = ["Tables", "HLA"]
     subgroup = "Add New HLAs for ALL Classes and Kits"
 
     [skills-and-abilities.components.16]
     group = "Class Updates"
     id = "92"
     name = "ONLY Add New HLAs"
+    path = ["Tables", "HLA"]
     subgroup = "Add New HLAs for ALL Classes and Kits"
 
     [skills-and-abilities.components.17]
     group = "Proficiencies"
     id = "300"
     name = "Update Weapon Fighting Styles"
+    path = ["Fighting", "Proficiencies"]
 
     [skills-and-abilities.components.18]
     group = "Proficiencies"
     id = "311"
     name = "Vanilla Proficiency Progression"
+    path = ["Fighting", "Proficiencies"]
     subgroup = "Overhaul Proficiency System - Add New Proficiencies and Weapon Styles"
 
     [skills-and-abilities.components.19]
     group = "Proficiencies"
     id = "312"
     name = "Accelerated Proficiency Progression"
+    path = ["Fighting", "Proficiencies"]
     subgroup = "Overhaul Proficiency System - Add New Proficiencies and Weapon Styles"
 
     [skills-and-abilities.components.2]
     group = "New Kits"
     id = "602"
     name = "Do NOT assign kit to Minsc"
+    path = ["Classes", "Ranger"]
     subgroup = "Install Rashemaar Berserker Kit for Rangers"
 
     [skills-and-abilities.components.20]
@@ -13185,43 +13352,51 @@ url = "github:Gibberlings3/Skills-and-Abilities"
     group = "More Meaningful Stat Bonuses"
     id = "400"
     name = "2H Weapon Additional Strength Bonus"
+    path = ["Fighting", "Proficiencies"]
 
     [skills-and-abilities.components.3]
     group = "New Kits"
     id = "610"
     name = "Install Psi Warrior Kit for Fighters"
+    path = ["Classes", "Fighter"]
 
     [skills-and-abilities.components.4]
     group = "Class Updates"
     id = "11"
     name = "Add Lockpicking"
+    path = ["Classes", "Bard"]
     subgroup = "Update Skills for Bards"
 
     [skills-and-abilities.components.5]
     group = "Class Updates"
     id = "12"
     name = "Add Lockpicking and Find/Disarm Traps"
+    path = ["Classes", "Bard"]
     subgroup = "Update Skills for Bards"
 
     [skills-and-abilities.components.6]
     group = "Class Updates"
     id = "130"
     name = "Allow Blade Kit to Specialize in Melee Weapons"
+    path = ["Classes", "Bard"]
 
     [skills-and-abilities.components.7]
     group = "Class Updates"
     id = "20"
     name = "Update Skills for Monks"
+    path = ["Classes", "Monk"]
 
     [skills-and-abilities.components.8]
     group = "Class Updates"
     id = "70"
     name = "Add New Monk Abilities"
+    path = ["Classes", "Monk"]
 
     [skills-and-abilities.components.9]
     group = "Class Updates"
     id = "40"
     name = "Update Skills for Rangers"
+    path = ["Classes", "Ranger"]
 
 [skitianpcs]
 archive = "skitianpcs.tar.gz"
@@ -13918,6 +14093,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     group = "Gameplay tweaks"
     id = "3500"
     name = "Remove spells not in BG1"
+    path = ["Spells"]
     subgroup = "Standardise spells between BG and BG2"
 
     [stratagems.components.110]
@@ -13983,6 +14159,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     group = "Gameplay tweaks"
     id = "3501"
     name = "Introduce BG2 spell scrolls into BG1"
+    path = ["Spells"]
     subgroup = "Standardise spells between BG and BG2"
 
     [stratagems.components.120]
@@ -14143,42 +14320,49 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     group = "Gameplay tweaks"
     id = "4160"
     name = "License costs 10,000 gp"
+    path = ["Story", "BG2", "Magic license"]
     subgroup = "Increase the price of a license to practise magic in Athkatla"
 
     [stratagems.components.34]
     group = "Gameplay tweaks"
     id = "4161"
     name = "License costs 15,000 gp"
+    path = ["Story", "BG2", "Magic license"]
     subgroup = "Increase the price of a license to practise magic in Athkatla"
 
     [stratagems.components.35]
     group = "Gameplay tweaks"
     id = "4162"
     name = "License costs 20,000 gp"
+    path = ["Story", "BG2", "Magic license"]
     subgroup = "Increase the price of a license to practise magic in Athkatla"
 
     [stratagems.components.36]
     group = "Gameplay tweaks"
     id = "4163"
     name = "License costs 30,000 gp"
+    path = ["Story", "BG2", "Magic license"]
     subgroup = "Increase the price of a license to practise magic in Athkatla"
 
     [stratagems.components.37]
     group = "Gameplay tweaks"
     id = "4164"
     name = "License costs 50,000 gp"
+    path = ["Story", "BG2", "Magic license"]
     subgroup = "Increase the price of a license to practise magic in Athkatla"
 
     [stratagems.components.38]
     group = "Gameplay tweaks"
     id = "4170"
     name = "Gaelan wants 40,000 gold pieces"
+    path = ["Story", "BG2", "Gaelan Bayle"]
     subgroup = "Increase the price asked by Gaelan Bayle"
 
     [stratagems.components.39]
     group = "Gameplay tweaks"
     id = "4171"
     name = "Gaelan wants 60,000 gold pieces"
+    path = ["Story", "BG2", "Gaelan Bayle"]
     subgroup = "Increase the price asked by Gaelan Bayle"
 
     [stratagems.components.4]
@@ -14191,18 +14375,21 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     group = "Gameplay tweaks"
     id = "4172"
     name = "Gaelan wants 80,000 gold pieces"
+    path = ["Story", "BG2", "Gaelan Bayle"]
     subgroup = "Increase the price asked by Gaelan Bayle"
 
     [stratagems.components.41]
     group = "Gameplay tweaks"
     id = "4173"
     name = "Gaelan wants 100,000 gold pieces"
+    path = ["Story", "BG2", "Gaelan Bayle"]
     subgroup = "Increase the price asked by Gaelan Bayle"
 
     [stratagems.components.42]
     group = "Gameplay tweaks"
     id = "4174"
     name = "Gaelan wants 120,000 gold pieces"
+    path = ["Story", "BG2", "Gaelan Bayle"]
     subgroup = "Increase the price asked by Gaelan Bayle"
 
     [stratagems.components.43]
@@ -14710,6 +14897,7 @@ url = "http://shadowlich.free.fr/BG2/SwordSaint-v1.0.7z"
     [swordsaint.components.1]
     id = "0"
     name = "Sword Saint"
+    path = ["Classes", "Fighter"]
 
 [tangledisle]
 archive = "tangledisle.zip"
@@ -14798,6 +14986,7 @@ url = "github:CrevsDaak/thalan"
     [thalan.components.1]
     id = "0"
     name = "Thalantyr - Item Upgrade"
+    path = ["Items", "Upgrades"]
 
 [the_horde]
 archive = "TheHorde_1.2.zip"
@@ -16025,6 +16214,7 @@ url = "github:AngelGryph/UnfinishedBusiness"
     [ub.components.1]
     id = "0"
     name = "The Kidnapping of Boo by Cliffette"
+    path = ["NPC", "Minsc"]
 
     [ub.components.10]
     id = "9"
@@ -16041,10 +16231,12 @@ url = "github:AngelGryph/UnfinishedBusiness"
     [ub.components.13]
     id = "13"
     name = "Yoshimo's Original Portrait"
+    path = ["NPC", "Yoshimo"]
 
     [ub.components.14]
     id = "14"
     name = "Anomen's Original Portrait"
+    path = ["NPC", "Anomen"]
 
     [ub.components.15]
     id = "15"
@@ -16061,6 +16253,7 @@ url = "github:AngelGryph/UnfinishedBusiness"
     [ub.components.18]
     id = "19"
     name = "Restored Bhaalspawn Powers, by David Gaider"
+    path = ["Skills", "Bhaalspawn"]
 
     [ub.components.19]
     id = "20"
@@ -16069,6 +16262,7 @@ url = "github:AngelGryph/UnfinishedBusiness"
     [ub.components.2]
     id = "1"
     name = "The Suna Seni/Valygar Relationship"
+    path = ["NPC", "Valygar"]
 
     [ub.components.20]
     id = "21"
@@ -16077,14 +16271,17 @@ url = "github:AngelGryph/UnfinishedBusiness"
     [ub.components.21]
     id = "22"
     name = "Justifier Kit"
+    path = ["Classes", "Ranger"]
 
     [ub.components.22]
     id = "23"
     name = "Feralan Kit"
+    path = ["Classes", "Ranger"]
 
     [ub.components.23]
     id = "24"
     name = "Sarevok's Remorse"
+    path = ["NPC", "Sarevok"]
 
     [ub.components.24]
     id = "25"
@@ -16198,6 +16395,7 @@ url = "github:Gibberlings3/Improved_Horns_of_Valhalla"
     [valhorn.components.1]
     id = "0"
     name = "Improved Horns of Valhalla"
+    path = ["Items", "Upgrades"]
 
 [valygarfriendship]
 class = "NPC-Related"
@@ -16212,6 +16410,7 @@ url = "github:SpellholdStudios/ValygarFriendship"
     [valygarfriendship.components.1]
     id = "0"
     name = "Valygar Corthala Friendship"
+    path = ["NPC", "Valygar"]
 
 [vampire_world]
 archive = "Vampire_world_mod_v.0.55_EET.zip"
@@ -16292,7 +16491,7 @@ url = "github:SpellholdStudios/ViconiaFriendship"
     [viconia.components.1]
     id = "0"
     name = "Viconia Friendship"
-		path = ["NPC", "Viconia"]
+    path = ["NPC", "Viconia"]
 
 [viconiarevamped]
 archive = "ViconiaRevamped v7.0.zip"
@@ -16305,7 +16504,7 @@ url = "weaselmods:viconia-revamped"
 [vienxay]
 archive = "vienxay.tar.gz"
 class = "NPC"
-description = "Vienxay"
+description = "Vienxay (NE elf shadow-mage)"
 id = "vienxay"
 languages = ["English"]
 lastupdate = 2022-06-23
@@ -16517,6 +16716,7 @@ url = "weaselmods:wilson-chronicles"
     [wilsonchronicles.components.1]
     id = "0"
     name = "Wilson Chronicles - expansion for our favorite bear companion"
+    path = ["NPC", "Wilson"]
 
 [wings]
 archive = "Wings_EET.zip"
@@ -16585,41 +16785,41 @@ url = "github:Pocket-Plane-Group/Xan_for_BGII"
     [xan.components.1]
     id = "0"
     name = "Xan NPC MOD for Baldur's Gate II"
-		path = ["NPC", "Xan"]
+    path = ["NPC", "Xan"]
 
     [xan.components.2]
     id = "1"
     name = "Change Xan's class to Fighter/Mage"
+    path = ["NPC", "Xan"]
     subgroup = "Install alternate class for Xan?"
-		path = ["NPC", "Xan"]
 
     [xan.components.3]
     id = "2"
     name = "Change Xan's class to Mage"
+    path = ["NPC", "Xan"]
     subgroup = "Install alternate class for Xan?"
-		path = ["NPC", "Xan"]
 
     [xan.components.4]
     id = "3"
     name = "Change Xan's class to Sorcerer"
+    path = ["NPC", "Xan"]
     subgroup = "Install alternate class for Xan?"
-		path = ["NPC", "Xan"]
 
     [xan.components.5]
     id = "4"
     name = "Change Xan's class to Wild Mage (ToB only)"
+    path = ["NPC", "Xan"]
     subgroup = "Install alternate class for Xan?"
-		path = ["NPC", "Xan"]
 
     [xan.components.6]
     id = "5"
     name = "BG1-style flaming swords"
-		path = ["NPC", "Xan"]
+    path = ["NPC", "Xan"]
 
     [xan.components.7]
     id = "6"
     name = "Xan's Alternate Voice by Joey Bracken"
-		path = ["NPC", "Xan"]
+    path = ["NPC", "Xan"]
 
 [xanbg1friend]
 archive = "XanBG1Friend_v10.zip"
@@ -16635,7 +16835,7 @@ url = "github:Pocket-Plane-Group/Xan_BG1_Friendship"
     [xanbg1friend.components.1]
     id = "0"
     name = "Xan's friendship path for BG1"
-		path = ["NPC", "Xan"]
+    path = ["NPC", "Xan"]
 
 [xanbg1voice]
 archive = "XanBG1Voice_v2.zip"
@@ -16703,7 +16903,7 @@ url = "github:SpellholdStudios/YoshimoFriendship"
     [yoshimo.components.1]
     id = "0"
     name = "Yoshimo Friendship Mod for BGII: SoA"
-		path = ["NPC", "Yoshimo"]
+    path = ["NPC", "Yoshimo"]
 
 [yoshimoromance]
 archive = "YoshimoRomance v6.0.zip"

@@ -13,7 +13,7 @@ module ModDB
 include("modtool.jl")
 using .ModTool: Mod, ModComponent, findmod, addmods!,extract, isextracted,
 	update, write_moddb, maybe_rewrite_moddb, read_moddb, write_selection,
-	printlog, printwarn, printsim, printerr,
+	printlog, printwarn, printsim, printerr, ini_data,
 	MODDB, MODS, DOWN, TEMP, SELECTION
 using HTTP
 # Constants««
@@ -303,9 +303,12 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		for (i, kv) in list; i = string(i)
 			c = createcomponent!(m, i)
 			for (k, v) in pairs(kv)
-				k == :path && !isempty(c.path) && printwarn("warning, '$id:$i'.path is not empty")
-				k != :path && (v = unique!(sort!([v;])))
-				push!(getfield(c, Symbol(k)), v...)
+				if k == :path
+					!isempty(c.path) && printwarn("warning, '$id:$i'.path is not empty")
+					c.path = v
+				else
+					push!(getfield(c,Symbol(k)), [v;]...)
+				end
 			end
 		end
 	end
@@ -927,8 +930,8 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 # "margarita",
 	], before = ["bg2ee_ga", "bg2eer"],),
 	 0 => (path = ["EET",],))
-	setmod!("dlcmerger", "" => (before = filter(≠("dlcmerger"),
-		moddb["eet"].compat.after),),
+	setmod!("dlcmerger",
+		"" => (before=collect(filter(≠("dlcmerger"), moddb["eet"].compat.after)),),
 		1 => (path = ["EET"],),
 		2 => (path = ["EET"],),
 		3 => (path = ["EET"],),
@@ -1340,7 +1343,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	setmod!("npckit",
 	)
 	setmod!("rr",
-		"" => (after = ["refinements", "item_rev", "eetact2", "song_and_silence", "divine_remix", "tod", "spell_rev", "ctb", "d0questpack", "beyond_the_law", ],
+		"" => (after = ["item_rev", "eetact2", "song_and_silence", "divine_remix", "tod", "spell_rev", "ctb", "d0questpack", "beyond_the_law", ],
 			before = ["stratagems", "atweaks", "eet_tweaks", "virtue"],
 			conflicts = ["iispellsystemadjustments"],),
 		0 => (exclusive = ["weapprof.2da"], path=["Fighting", "Proficiencies"]),
@@ -1733,7 +1736,10 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		# extract data from already downloaded/extracted mods
 		for (id, mod) in moddb
 # 		for (id, mod) in Iterators.take(moddb, 20)
-			isextracted(mod) && update(mod)
+			if isextracted(mod)
+				update(mod)
+				ini_data(mod; moddb)
+			end
 			for f in id.*(".tar.gz", ".zip", ".7z", ".rar")
 				isfile(joinpath(DOWN, f)) && (mod.archive = f; break)
 			end
@@ -1773,7 +1779,7 @@ function import_bws_selection((source, dest) = BWS_USER => SELECTION)#««
 end#»»
 
 end
-ModDB.import_bws_moddb()
+isinteractive() || ModDB.import_bws_moddb()
 # TODO: make a command-line option for this:
 # don't do this if selection is more recent than BWS config:
 # import_bws_selection()

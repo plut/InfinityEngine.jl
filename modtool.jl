@@ -42,6 +42,7 @@ using Printf
 using Dates
 using TOML
 using JSON
+using IniFile
 using DataStructures
 using HTTP
 using LibGit2
@@ -104,22 +105,25 @@ mutable struct ModComponent
 	group::String
 	subgroup::String
 	# compatibility properties:
-	after::Vector{String}
-	before::Vector{String}
-	conflicts::Vector{String}
-	depends::Vector{String}
-	exclusive::Vector{String}
-	path::Vector{String} # e.g. ["Weapons&Armor", "Proficiencies"]
+	after::Set{String}
+	before::Set{String}
+	conflicts::Set{String}
+	depends::Set{String}
+	exclusive::Set{String}
+	path::Vector{String} # e.g. ["Fighting", "Proficiencies"]
 	@inline ModComponent(i, t, g="", s="") =
-		new(string(i), t, g, s, [], [], [], [], [], [])
+		new(string(i), t, g, s, (Set{String}() for _ in 1:5)..., [])
 	@inline ModComponent(d::AbstractDict) =
 		new((get(d, k,"") for k in ("id", "name", "group", "subgroup"))...,
-		 (get(d,k,[]) for k in ("after", "before", "conflicts", "depends", "exclusive", "path"))...)
+		 (Set{String}(get(d,k,[])) for k in ("after", "before", "conflicts", "depends", "exclusive"))...,
+		 get(d, "path", []))
 end
 @inline Base.isempty(c::ModComponent) =
 	all(isempty(getfield(c, i)) for i in 1:fieldcount(ModComponent))
+@inline toml_field(x) = x
+@inline toml_field(x::Set) = sort(collect(x))
 @inline db_prop(c::ModComponent, pairs...) =
-	Dict(pairs..., (string(s) => getfield(c,  s)
+	Dict(pairs..., (string(s) => toml_field(getfield(c,  s))
 	for s in fieldnames(ModComponent) if !isempty(getfield(c, s)))...)
 @inline description(c::ModComponent) =
 	let n = isempty(c.name) ? "<unknown>" : c.name
@@ -157,6 +161,7 @@ const MOD_CLASSES = split(replace("""
 	DlcMerger
 	Initial
 	Early
+	Overwrite
 	Fixes
 	BigQuests
 	Quests
@@ -169,9 +174,11 @@ const MOD_CLASSES = split(replace("""
 	Items
 	Kits
 	Tweak # merges “tactical”, “rules” and “AI”
+	Early_Tweak
+	Tweak_Early
 	Tweaks
 	AI
-	Sound
+	Sounds
 	Late
 	UI
 	Final
@@ -290,6 +297,14 @@ function sortkey1(id, moddb, dep)
 	(c0, c1, moddb[id].lastupdate)
 end
 @inline sortkey1(moddb, dep) = id -> sortkey1(id, moddb, dep)
+function circulardep(todo, dep)
+	for x in sort(collect(todo))
+		s = sort(collect(filter(∈(todo), get(dep.arrowsfrom, x, String[]))))
+		isempty(s) && continue
+		println(x, " -> ", join(s, ' '))
+	end
+	"Circular dependency found: $(todo)"
+end
 "Returns a list of mod IDs in install order, given all dependencies"
 function installorder(list; moddb=global_moddb)
 	# use Kahn's algorithm for topological sorting
@@ -305,7 +320,7 @@ function installorder(list; moddb=global_moddb)
 			
 	while !isempty(todo)
 		# loop invariant: arrowsfrom[y] = count of x ∈ todo such that x->y
-		@assert !isempty(available) "Circular dependency found: $(todo)"
+		@assert !isempty(available) circulardep(todo, dep)
 		x = heappop!(available, ord)
 		push!(ret, x); delete!(todo, x)
 		for y in get(dep.arrowsto, x, String[])
@@ -601,6 +616,37 @@ function readme(mod::Mod)
 	end
 end
 @inline tp2(mod::Mod) = extract(mod) && run(`view $(joinpath(MODS, mod.tp2))`)
+# INI data extraction ««1
+modsfrom(list; moddb = global_moddb) =
+	(x for x in lowercase.(string.(list)) if haskey(moddb, x))
+"""    ini_data(id): updates from ProjectInfinity ini file."""
+function ini_data(m::Mod; moddb = global_moddb)
+	file = joinpath(MODS, m.id, m.id*".ini")
+	isfile(file) || return
+	ini = redirect_stdout(devnull) do; read(Inifile(), file); end
+	ini.sections = Dict(lowercase(k)=>v for (k,v) in ini.sections)
+	section = get(ini.sections, "metadata", nothing); isnothing(section) && return
+	printlog("reading Project Infinity-style readme for $(m.id)")
+	dict = Dict(lowercase(k)=>v for (k, v) in section)
+	function push_compat(set, s)
+		list = modsfrom(split(get(dict, s, ""), r",\s*"); moddb)
+		list = filter(∉(set), [list...])
+		isempty(list) && return
+		printlog("  $(m.id).$s ←", join(list, ' '))
+		push!(set, list...)
+	end
+	push_compat(m.compat.after, "after")
+	push_compat(m.compat.before, "before")
+	class = get(dict, "type", "")
+	if m.class ≠ class ≠ ""
+		printwarn(" '$(m.id)': has class $(m.class), INI file says $class")
+	end
+	if isempty(m.readme)
+		m.readme = get(split(get(dict, "readme", ""), r",\s*"), 1, "")
+		isempty(m.readme) ||
+		printlog("  $(m.id).readme ← $(m.readme)")
+	end
+end
 
 # Mod components ««1
 function weidu_installed(dirs...)
@@ -666,6 +712,7 @@ sy match modSel /^s[12][.p] .*$/|hi link modSel DiffChange
 sy match modGrp /^# .*$/|hi link modGrp ModeMsg
 sy match modSub /^## .*$/|hi link modSub Title
 nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>
+normal j
 finish "»»5 """
 
 function component_editor(filename; selection)

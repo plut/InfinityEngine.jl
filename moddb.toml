@@ -2610,6 +2610,7 @@ description = "Baldur's Gate Graphics Overhaul for EET and BGT"
 id = "bggoeet"
 lastupdate = 1970-01-01
 url = "github:BigWorldProject/BGGOEET"
+readme = "http://www.shsforums.net/topic/56410-what-is-it/"
 
 [bgqe]
 class = "Quests"
@@ -2708,8 +2709,15 @@ archive = "bolsa-v6.0.0.zip"
 class = "Items"
 description = "Bolsa (merchant)"
 id = "bolsa"
-lastupdate = 1970-01-01
+languages = ["Espanol", "English (translation by Lollorian)", "Francais (traduction : Elgaern)", "Italiano (traduzione di ilot)"]
+lastupdate = 2020-06-26
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/bolsa/readme/bolsa-readme-english.txt"
+tp2 = "bolsa/bolsa.tp2"
 url = "https://github.com/SpellholdStudios/Bolsa/releases/download/v6.0.0/bolsa-v6.0.0.zip"
+
+    [bolsa.components.1]
+    id = "0"
+    name = "Bolsa"
 
 [bom]
 archive = "BoM_V3EE.zip"
@@ -15729,8 +15737,98 @@ url = "https://www.dropbox.com/s/eolau4r9cq60jjn/Touchstone.zip?dl=1"
 class = "Fixes"
 description = "Transitions"
 id = "transitions"
-lastupdate = 1970-01-01
+languages = ["American English"]
+lastupdate = 2022-01-02
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/transitions/readme.transitions.english.txt"
+tp2 = "transitions/transitions.tp2"
 url = "github:Gibberlings3/transitions"
+
+    [transitions.components.1]
+    id = "0"
+    name = "Main component: Allow continued play after Sarevok and/or Irenicus is defeated"
+
+    [transitions.components.10]
+    id = "200"
+    name = "Close quests and rumors that can't be finished after Sarevok is defeated"
+
+    [transitions.components.11]
+    id = "40"
+    name = "Clean up the town folk chatter with regard to Sarevok"
+
+    [transitions.components.12]
+    id = "50"
+    name = "Clean up the wounded from the thieves' maze"
+
+    [transitions.components.13]
+    id = "60"
+    name = "Elminster makes an appearance outside of the Ducal Palace"
+
+    [transitions.components.14]
+    id = "70"
+    name = "Duke Eltan's reward option: House near Ducal Palace"
+
+    [transitions.components.15]
+    id = "71"
+    name = "Duke Eltan's reward option: Cabin in High Hedge"
+
+    [transitions.components.16]
+    id = "72"
+    name = "Duke Eltan's reward option: Gray house in NW Beregost"
+
+    [transitions.components.17]
+    id = "73"
+    name = "Duke Eltan's reward option: House across from Flaming Fist compound"
+
+    [transitions.components.18]
+    id = "80"
+    name = "Add Waves of Refugees to Baldur's Gate"
+
+    [transitions.components.19]
+    id = "130"
+    name = "Use abbreviated capture scene leading to BG2"
+
+    [transitions.components.2]
+    id = "10"
+    name = "Use BGI ending movie as a dream and give new bhaal-spawn power at first rest"
+
+    [transitions.components.20]
+    id = "140"
+    name = "Use Irenicus in hell movie to restore Bhaal-spawn powers after he is defeated"
+
+    [transitions.components.3]
+    id = "20"
+    name = "Equipped"
+    subgroup = "Give Sarevok his armor, helm, and sword"
+
+    [transitions.components.4]
+    id = "21"
+    name = "In inventory only"
+    subgroup = "Give Sarevok his armor, helm, and sword"
+
+    [transitions.components.5]
+    id = "22"
+    name = "Use EndlessBG1's handling of Sarevok's equipment, if available, else use Option 2"
+    subgroup = "Give Sarevok his armor, helm, and sword"
+
+    [transitions.components.6]
+    id = "30"
+    name = "Those supporters that are still alive when Sarevok dies immediately flee the area (to give more clean-up quests)"
+    subgroup = "Clean-up Quests"
+
+    [transitions.components.7]
+    id = "31"
+    name = "Behavior of the Sarevok's supporters in the final BGI battle is unchanged"
+    subgroup = "Clean-up Quests"
+
+    [transitions.components.8]
+    id = "32"
+    name = "Option 1 and use gentler Tamoko quest"
+    subgroup = "Clean-up Quests"
+
+    [transitions.components.9]
+    id = "33"
+    name = "Option 2 and use gentler Tamoko quest"
+    subgroup = "Clean-up Quests"
 
 [travellers]
 archive = "travellers.tar.gz"
@@ -16580,11 +16678,3 @@ url = "weaselmods:yvette-romance"
     [yvette.components.2]
     id = "1"
     name = "Yvette Romance - alternative class (Pure Heartwarder)"
-
-[zzzz]
-archive = "manual"
-class = "UI"
-description = "ZZZZ"
-id = "zzzz"
-lastupdate = 1970-01-01
-url = "manual"

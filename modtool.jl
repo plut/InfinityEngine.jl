@@ -11,6 +11,8 @@ See also `moddb.jl` for initializing configuration files.
 module ModTool
 # Preamble ««1
 # TODO ««
+#  - move compat back as component [1] to simplify dependency handling
+#  - status() shows installation status (in color)
 # mod-specific fixes:
 #  - questpack is very badly named
 #  - mortis: tra/Francais -> tra/French
@@ -81,6 +83,16 @@ end
 @inline printerr(s...) = println("\e[31;1m", s..., "\e[m")
 @inline printwarn(s...) = println("\e[33;1m", s..., "\e[m")
 @inline printask(s...) = println("\e[36;1m", s..., "\e[m")
+
+function ask(f, message)
+	r = nothing
+	printask(message)
+	while true
+		r = readline(); isempty(r) && continue
+		y = f(lowercase(r[1]))
+		!isnothing(y) && return y
+	end
+end
 
 # Data structures ««1
 
@@ -244,13 +256,13 @@ function dependencies(list ;moddb=global_moddb)
 		push!(fb, a); push!(get!(arrowsto,a, Set{String}()), b)
 	end
 	for id in list
-		for c in modcomponents(findmod(id;moddb))
+		c = moddb[id].compat
 			# special: empty key indicates a dependency for the whole mod
-			isempty(c.id) || continue
+# 			isempty(c.id) || continue
 			isempty(c.after) && isempty(c.before) && continue
 			for a in c.after; a ∈ list && connect(a => id); end
 			for b in c.before; b ∈ list && connect(id => b); end
-		end
+# 		end
 	end
 	return (arrowsfrom = arrowsfrom, arrowsto = arrowsto)
 end
@@ -436,15 +448,32 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 	end
 	return true
 end
-function status(mod::Mod; selection=global_selection, selected=nothing)
-	sel = !isempty(get(selection, mod.id, Int[]))
-	selected ∈ (sel, nothing) || return
-	mod.id ∈ ("eet", "stratagems") && print("\e[34m")
-	@printf("%c%c%c %7s %-22s %s\n",
+"""    status(mod)
+
+Shows on one line the status of a given mod, in the form:
+
+    abcd identifier description
+
+where:
+ - `a` is download status (either `'d'` or `'.'`);
+ - `b` is extraction status (either `'x'` or `'.'`);
+ - `c` indicates presence of selected components (either `'s'` or `'.'`);
+ - `d` indicates installation status (either `'+'` if some components needs to be installed, `'-'` if they need to be removed, `'#'` if both are true, or `'.'` if nothing needs to be done)."""
+function status(mod::Mod; selection=global_selection, selected=nothing,
+		installed = weidu_installed(GAMEDIR...))
+	sel = get(selection, mod.id, Set{String}()); s = !isempty(sel)
+	selected ∈ (s, nothing) || return
+	ins = get(installed, mod.id, Set{String}())
+	st = issubset(sel, ins)<<1 | issubset(ins, sel)
+# 	println(sel, ins)
+	st1, st2, st3 = (("\e[33m",'#',"\e[m"), ("\e[32m",'+',"\e[m"),
+		("\e[31m",'-',"\e[m"),("",'.',""))[st+1]
+# 	mod.id ∈ ("eet", "stratagems") && print("\e[34m")
+	@printf("%s%c%c%c%c %7s %-22s %s%s\n", st1,
 		isfile(joinpath(DOWN, mod.archive)) ? 'd' : '.',
-		isextracted(mod) ? 'x' : '.', sel ? 's' : '.',
+		isextracted(mod) ? 'x' : '.', s ? 's' : '.', st2,
 		Dates.format(mod.lastupdate, "yyyy-mm"),
-		mod.id, mod.description)
+		mod.id, mod.description, st3)
 	print("\e[m")
 end
 # TP2 data extraction ««1
@@ -771,14 +800,10 @@ function install(mod; simulate=false, uninstall=false,
 	warned = false
 	for k in order; k == id && break
 		isempty(symdiff(get(installed, k, []), get(selection, k, []))) && continue
-		println("$k: $(get(installed, k, [])) => $(get(selection, k, []))")
 		printwarn("warning: mod '$k' should probably be installed before '$id'")
 		warned = true
 	end
-	if warned
-		printask("proceed anyway? (yn)"); r = readline()
-		lowercase(first(r)) == 'y' || return
-	end
+	warned && (ask(==('y'), "proceed anyway? (yn)") || return)
 	selected = uninstall ? Set(String[]) : get!(selection, id, Set(String[]))
 
 	to_add, to_del = String[], String[] # compute set difference in weidu order:
@@ -813,15 +838,14 @@ function install(mod; simulate=false, uninstall=false,
 			c = findcomponent(mod, k)
 			printwarn(isnothing(c) ? "$k (not found)" : "$k ($(description(c)))")
 		end
-		printask("update selection?")
-		r = lowercase(get(readline(), 1, 'n'))
-		r == 'y' && (selection[id] = Set(now_installed); write_selection())
+		ask(==('y'), "update selection? (yn)") && 
+			(selection[id] = Set(now_installed); write_selection())
 	end
 end
-function uninstall(mod; selection = global_selection, kwargs...)
+function uninstall(mod; selection = global_selection, write=true, kwargs...)
 	delete!(selection, mod.id)
 	install(mod)
-	update_selection()
+	write && write_selection()
 end
 # Global routines««1
 function do_all(f; class=nothing, pause=false, limit=typemax(Int),
@@ -866,14 +890,11 @@ function do_first(f, n=1; moddb=global_moddb, selection=global_selection,
 		kwargs...)
 	order = installorder(keys(filter(!isempty, selection)))
 	for id in nextmods(n; selection, order)
-		while true
-			printask("call function $f($id) ? (ynqrc)")
-			r = lowercase(get(readline(), 1, 'n'))
-			r == 'r' && (readme(moddb[id]); continue)
-			r == 'c' && (edit(moddb[id]); continue) 
-			r == 'q' && return
-			r == 'y' && f(moddb[id]; order, kwargs...)
-			break
+		ask("call function $f($id)? (ynqrc)") do r
+			r == 'r' && (readme(moddb[id]); return true)
+			r == 'c' && (edit(moddb[id]); return true)
+			r == 'q' && return true
+			r == 'y' && (f(moddb[id]; order, kwargs...); return true)
 		end
 	end
 end
@@ -885,7 +906,8 @@ end end
 # interactive commands are allowed only *one* mod (but can be a symbol)
 list2 = (list1..., :readme, :tp2, :components, :status, :edit)
 for f in list2; @eval begin
-	@inline $f(id::Union{String,Symbol}; kwargs...) = $f(findmod(id); kwargs...)
+	@inline $f(idlist::Union{String,Symbol}...; kwargs...) =
+	for id in idlist; $f(findmod(id); kwargs...); end
 end end
 
 # ««1
@@ -894,4 +916,5 @@ end
 M=ModTool
 R=isdefined(M, :global_moddb) ? M.global_moddb["rr"] : nothing
 C=isnothing(R) ? R : R.components
+nothing
 # vim: fdm=syntax fdl=1:

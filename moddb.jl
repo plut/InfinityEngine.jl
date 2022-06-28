@@ -70,6 +70,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	moddb = bws_moddb(source, orderfile)
 	delete!(moddb, "weidu")
 	delete!(moddb, "weidu64")
+	delete!(moddb, "zzzz")
 	printlog(length(moddb), " mods read")
 	printlog("adding new mods")
 	function mkmod(id, url, description, class, archive = "")
@@ -252,6 +253,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	# »»
 		# Tweak mod readme««
 	printlog("hardcoding mod readme")
+	moddb["bggoeet"].readme = "http://www.shsforums.net/topic/56410-what-is-it/"
 	moddb["bom"].readme = "https://sorcerers.net/Games/BG2/bomip-docs/index.html"
 	moddb["faiths_and_powers"].readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
 	moddb["tnt"].readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"

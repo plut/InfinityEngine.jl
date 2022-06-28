@@ -1,4 +1,4 @@
-modtool_no_init = 1
+# modtool_no_init = 1
 """ ModTool - BG2 modding tool
 
 Usage:
@@ -257,14 +257,112 @@ end
 	global moddb_changed = true
 	setfield!(m, k, convert(typeof(x), v))
 end
-@inline function findcomponent(mod, k)
+@inline function component(mod, k; fail = false)
 	k = lowercase(string(k)); for c in mod.components; c.id == k && return c; end
-# 	error("mod '$(mod.id)': component '$k' not found")
+	fail && error("mod '$(mod.id)': component '$k' not found")
+end
+
+"Given a *sorted* list of (mod id, component id) pairs,
+returns the set of dependency arrows among these components,
+as pairs (i, j) of indices in the list."
+function dep_arrows(list; moddb=global_moddb)
+	@assert issorted(list)
+	@inline sortedfind(list, x) = !isempty(searchsorted(list, x))
+	# first build the mod ↔ component maps:
+	# j = cindex[i] = index of mod of i-th listed component
+	# i = mrange[j] = range of components with j-th mod
+	# (cindex[i] = j for all j ∈ mrange[i])
+	cindex = Vector{Int}(undef, length(list))
+	mrange = Int[]
+	oldid = nothing
+	for (i, (id, _)) in pairs(list)
+		if id ≠ oldid
+			oldid = id
+			push!(mrange, i)
+		end
+		cindex[i] = length(mrange)
+	end
+	mlist = [ first(list[i]) for i in mrange ] # list of individual mods
+	push!(mrange, length(list)+1)
+	mrange = [mrange[i]:mrange[i+1]-1 for i in 1:length(mrange)-1]
+	println("mlist=$mlist")
+	println("cindex=$cindex")
+	println("mrange=$mrange")
+	# build database of arrows
+	# for each (mod, comp) pair (A, x), (B, y), we look for the most
+	# specific relation first:
+	arrows0, arrows1, arrows2 = (NTuple{2,Int}[] for _ in 1:3)
+	for (j, id) in pairs(mlist)
+		cj = moddb[id].compat; u = mrange[j]
+		for b in cj.after
+			if contains(b, ':')
+				ib = searchsorted(list, rsplit(b, ':'; limit=2))
+				isone(length(ib)) && append!(arrows1, (first(ib), i) for i ∈ u)
+			else
+				jb = searchsorted(mlist, b)
+				isone(length(jb)) && append!(arrows2,
+					(ib,i) for ib ∈ mrange[first(jb)], i ∈ u)
+			end
+		end
+		for a in cj.before
+			if contains(a, ':')
+				ia = searchsorted(list, rsplit(a, ':'; limit=2))
+				isone(length(ia)) && append!(arrows1, (i, first(ia)) for i ∈ u)
+			else
+				ja = searchsorted(mlist, a)
+				isone(length(ja)) && append!(arrows2,
+					(i,ia) for ia ∈ mrange[first(ja)], i ∈ u)
+			end
+		end
+	end
+	for (i, (id, k)) in pairs(list)
+		ci = component(moddb[id], k; fail=true)
+		for b in ci.after
+			if contains(b, ':')
+				ib = searchsorted(list, rsplit(b, ':'; limit=2))
+				isone(length(ib)) && push!(arrows0, (first(ib), i))
+			else
+				jb = searchsorted(mlist, b)
+				isone(length(jb)) && append!(arrows1, (ib,i) for ib ∈ mrange[first(jb)])
+			end
+		end
+		for a in ci.before
+			if contains(a, ':')
+				ia = searchsorted(list, rsplit(a, ':'; limit=2))
+				isone(length(ia)) && push!(arrowscc, (i, first(ia)))
+			else
+				ja = searchsorted(mlist, a)
+				isone(length(ja)) && append!(arrows1, (i,ia) for ia ∈ mrange[first(ja)])
+			end
+		end
+	end
+	for x in (arrows0, arrows1, arrows2); unique!(sort!(x)); end
+	# arrows indexed by destination:
+	rarrows0,rarrows1,rarrows2 = sort.(reverse.((arrows0, arrows1, arrows2)))
+	arrows = copy(arrows0)
+	for (x,y) in arrows1
+		!sortedfind(rarrows0, (y,x)) && !sortedfind(rarrows1, (y,x)) &&
+			push!(arrows, (x,y))
+	end
+	for (x,y) in arrows2
+		!sortedfind(rarrows0, (y,x)) && !sortedfind(rarrows1, (y,x)) &&
+		!sortedfind(rarrows2, (y,x)) && push!(arrows, (x,y))
+	end
+	return arrows
+end
+function installorder(list; moddb = global_moddb)
+	list = sort(list)
+	arrowsfrom, arrowsto = ([Int[] for _ in 1:length(list)] for _ in 1:2)
+	for (b, a) in dep_arrows(list)
+		fb = arrowsfrom[b]
+		a ∈ fb && continue
+		push!(fb, a); push!(arrowsto[a], b)
+	end
 end
 
 "Returns the dependency matrix for these mods, encoded as
 (arrowsfrom = dict(mod1 => mod2, ...), arrowsto = dict(mod1 => n1, ...))"
-function dependencies(list ;moddb=global_moddb)
+function dependencies_old(list ;moddb=global_moddb)
 	arrowsfrom = Dict{String,Set{String}}(); arrowsto = copy(arrowsfrom)
 	function connect((b, a),)
 		fb = get!(arrowsfrom, b, Set{String}())
@@ -314,7 +412,7 @@ function installorder(list; moddb=global_moddb)
 	# bias it to the right (most mods want to be installed late...)
 	ret = sizehint!(String[], length(list))
 	todo = Set(collect(list))
-	dep = dependencies(list;moddb)
+	dep = dependencies_old(list;moddb)
 	ord = Base.Order.By(sortkey1(moddb, dep), Base.Order.Reverse)
 	available = [ id for id in list if isempty(get(dep.arrowsfrom, id, [])) ]
 	heapify!(available, ord)
@@ -796,7 +894,7 @@ function display_tree(io::IO, root, level=1;
 			lt=(x,y)->comp_isless(x,y,order))
 		m = findmod(id; moddb)
 # 		extract(m);
-		c = findcomponent(m, k)
+		c = component(m, k)
 		isnothing(c) && (printerr("'$id:$k' not found"); continue)
 		printcomp(io, m, c; selection, installed, moddb)
 	end
@@ -897,7 +995,7 @@ function install(mod; simulate=false, uninstall=false,
 	if !isempty(not_installed)
 		printwarn("warning: the following components were not installed:")
 		for k in not_installed
-			c = findcomponent(mod, k)
+			c = component(mod, k)
 			printwarn(isnothing(c) ? "$k (not found)" : "$k ($(description(c)))")
 		end
 		ask(==('y'), "update selection? (yn)") && 

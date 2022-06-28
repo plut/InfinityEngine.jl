@@ -14366,6 +14366,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     id = "1500"
     name = "Include arcane spells from Icewind Dale: Enhanced Edition"
     path = ["Spells", "New spells"]
+		before = ["faiths_and_powers"]
 
     [stratagems.components.20]
     group = "Gameplay tweaks"
@@ -14437,6 +14438,7 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     id = "1510"
     name = "Include divine spells from Icewind Dale: Enhanced Edition"
     path = ["Spells", "New spells"]
+		before = ["faiths_and_powers"]
 
     [stratagems.components.30]
     group = "Gameplay tweaks"

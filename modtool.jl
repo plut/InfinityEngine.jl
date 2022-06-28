@@ -184,6 +184,11 @@ const MOD_CLASSES = split(replace("""
 	resize!(m.components, max(length(m.components), i))
 	m.components[i] = c
 end
+"setlang: recompute mod languages; call this each time languages might change"
+@inline setlang!(m::Mod) = if !isempty(m.languages)
+	m.game_lang = argmin([lang_score(l, GAME_LANG) for l in m.languages]) - 1
+	m.tool_lang = argmin([lang_score(l, TOOL_LANG) for l in m.languages]) - 1
+else m.tool_lang = m.game_lang = 0; end
 
 # Mod DB handling ««1
 @inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
@@ -196,6 +201,7 @@ function merge_moddb(filename = MODDB; moddb = global_moddb)
 		for k in mod_fields
 			ifhaskey(d, string(k)) do x; setfield!(m, k, x); end
 		end
+		setlang!(m)
 		ifhaskey(d, "lastupdate") do x; m.lastupdate = Date(x); end
 		ifhaskey(d, "compat") do x; m.compat = ModComponent(x); end
 		ifhaskey(d, "components") do x; for (k,prop) in x
@@ -506,17 +512,13 @@ function update(m::Mod)
 	end
 	if isempty(m.languages)
 		printlog("  $id: determine languages")
-		m.game_lang = m.tool_lang = 0
 		# m.languages
 		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-languages $(m.tp2)`)
 			x = match(r"^(\d+):(.*)$", line); isnothing(x) && continue
 			@assert parse(Int, x.captures[1]) == length(m.languages)
 			push!(m.languages, fixutf8(x.captures[2]))
 		end
-		if !isempty(m.languages)
-			m.game_lang = argmin([lang_score(l, GAME_LANG) for l in m.languages]) - 1
-			m.tool_lang = argmin([lang_score(l, TOOL_LANG) for l in m.languages]) - 1
-		end
+		setlang!(m)
 	end#»»
 	if all(isempty, c.name for c in m.components)
 		printlog("  $id: determine components")
@@ -893,9 +895,9 @@ function do_first(f, n=1; moddb=global_moddb, selection=global_selection,
 		ask("call function $f($id)? (ynqrc)") do r
 			r == 'r' && (readme(moddb[id]); return true)
 			r == 'c' && (edit(moddb[id]); return true)
-			r == 'q' && return true
+			r == 'q' && return false
 			r == 'y' && (f(moddb[id]; order, kwargs...); return true)
-		end
+		end || break
 	end
 end
 list1 = (:download, :extract, :install, :uninstall, :status, :update)

@@ -12,7 +12,7 @@ See also `moddb.jl` for initializing configuration files.
 module ModTool
 # Preamble ««1
 # TODO ««
-#  - check that status() shows enough mods
+#  + check that status() shows enough mods
 #  - update modtool.jl to write correct compat packets
 #  - indicate both lanthorn mods in db
 #  - uninstall(n), uninstall(upto=m)
@@ -216,7 +216,7 @@ end
 else m.tool_lang = m.game_lang = 0; end
 
 # Mod DB handling ««1
-@inline allcomponents(moddb) =
+@inline allcomponents(moddb=moddb) =
 	Dict(k => Set(c.id for c in moddb[k].components) for (k,v) in moddb)
 @inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
 @inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
@@ -370,8 +370,10 @@ end
 returns the list of (mod, component) string pairs,
 sorted in best installation order. Fails if a circular dependency is found."
 function installorder(selection=selection; moddb=moddb)
-	list = unique!(sort!([ (id, component_compat(moddb[id], k))
-		for (id, l) in pairs(selection) for k in l]))
+	list = [ (id, component_compat(moddb[id], k))
+		for (id, l) in pairs(selection) for k in l]
+	for id in Set(keys(selection)); push!(list, (id, 1)); end
+	unique!(sort!(list))
 	arrowsfrom, arrowsto = ([Set{Int}() for _ in 1:length(list)] for _ in 1:2)
 	for (b, a) in dependencies(list)
 		push!(arrowsfrom[b], a); push!(arrowsto[a], b)

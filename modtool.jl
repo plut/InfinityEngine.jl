@@ -14,6 +14,8 @@ module ModTool
 # TODO ««
 #  - check that status() shows enough mods
 #  - update modtool.jl to write correct compat packets
+#  - indicate both lanthorn mods in db
+#  - uninstall(n), uninstall(upto=m)
 #  + status() shows out-of-order components
 #   (i.e. those installed before something that should come after)
 # mod-specific fixes:
@@ -192,6 +194,7 @@ function compat_parse(str; moddb=moddb)
 	(id, k) = split(str, ':'; limit=2)
 	return (id, component_compat(moddb[id], k))
 end
+@inline compatname(m::Mod, k) = k ≤ 1 ? m.id : m.id*'/'*m.compat[k].components
 @inline modgame(m::Mod; moddb=moddb) =
 	m.id ∈ moddb["eet"].compat[1].after ? :bg1 : :bg2
 @inline components(m::Mod) = (m.components)
@@ -1038,7 +1041,7 @@ function do_first(f, n=1; moddb=moddb, selection=selection,
 		kwargs...)
 	order = installorder(selection)
 	for (id,k) in nextmods(n; selection, order)
-		ask("call function $f($id/$k)? (ynqrc)") do r
+		ask("call function $f($(compatname(moddb[id],k)))? (ynqrc)") do r
 			r == 'r' && (readme(moddb[id]); return true)
 			r == 'c' && (edit(moddb[id]); return true)
 			r == 'q' && return false

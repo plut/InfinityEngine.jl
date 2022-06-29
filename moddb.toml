@@ -143,22 +143,27 @@ url = "github:Argent77/A7-ImprovedShamanicDance"
     ["a7#improvedshamanicdance".components.1]
     id = "0"
     name = "Improved Shamanic Dance"
+    path = ["Classes", "Shaman"]
 
     ["a7#improvedshamanicdance".components.2]
     id = "10"
     name = "Expanded Shamanic Dance for high level characters"
+    path = ["Classes", "Shaman"]
 
     ["a7#improvedshamanicdance".components.3]
     id = "20"
     name = "Add spell \"Shamanic Pact\""
+    path = ["Classes", "Shaman"]
 
     ["a7#improvedshamanicdance".components.4]
     id = "30"
     name = "Apply Shamanic Dance improvements to Shaman kits"
+    path = ["Classes", "Shaman"]
 
     ["a7#improvedshamanicdance".components.5]
     id = "40"
     name = "Shaman-specific items"
+    path = ["Items"]
 
 [a7-banteraccelerator]
 archive = "A7-BanterAccelerator-master.zip"
@@ -2023,22 +2028,22 @@ url = "github:Pocket-Plane-Group/Banter_Pack"
     [banterpack.components.1]
     id = "0"
     name = "Pocket Plane Banter Pack for BG2: Shadows of Amn"
-    path = ["NPC"]
+    path = ["NPC", "Banter"]
 
     [banterpack.components.2]
     id = "1"
     name = "Install SOA Banter Accelerator script?(Increases the frequency of interparty banter)"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
 
     [banterpack.components.3]
     id = "2"
     name = "Pocket Plane Banter Pack for BG2: Throne of Bhaal"
-    path = ["NPC"]
+    path = ["NPC", "Banter"]
 
     [banterpack.components.4]
     id = "3"
     name = "Install TOB Banter Accelerator script?(Increases the frequency of interparty banter)"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
 
 [bardicwonders]
 class = "Kits"
@@ -2285,34 +2290,34 @@ url = "github:Gibberlings3/BG1NPC"
     group = "The BG1 NPC Project: Tweaks"
     id = "100"
     name = "Jason Compton's Accelerated Banter Script"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
 
     [bg1npc.components.36]
     group = "The BG1 NPC Project: Tweaks"
     id = "110"
     name = "Banter Timing: Normal (about 27 minutes between banter dialogs)"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.37]
     group = "The BG1 NPC Project: Tweaks"
     id = "111"
     name = "Banter Timing: Fast (about 20 minutes between banter dialogs)"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.38]
     group = "The BG1 NPC Project: Tweaks"
     id = "112"
     name = "Banter Timing: Very fast (about 13 minutes between banter dialogs)"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.39]
     group = "The BG1 NPC Project: Tweaks"
     id = "113"
     name = "Banter Timing: Slow (about 40 minutes between banter dialogs)"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.4]
@@ -2326,7 +2331,7 @@ url = "github:Gibberlings3/BG1NPC"
     group = "The BG1 NPC Project: Tweaks"
     id = "114"
     name = "Banter Timing: Very slow (about 55 minutes between banter dialogs)"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "BGEE Banter Timing Tweak"
 
     [bg1npc.components.41]
@@ -5318,7 +5323,6 @@ url = "github:Maltodaxtrin/CowledMenace"
 
     [cowledmenace.compat.1]
     after = ["eet"]
-    depends = ["eet"]
 
     [cowledmenace.components.1]
     id = "1000"
@@ -5541,6 +5545,10 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/d0tweak/readme-d0tweak.html"
 tp2 = "d0tweak/setup-d0tweak.tp2"
 url = "github:Pocket-Plane-Group/D0Tweak"
 
+    [d0tweak.compat.1]
+    after = ["rr"]
+    components = "11"
+
     [d0tweak.components.1]
     id = "0"
     name = "Enhanced Goodberries"
@@ -5607,7 +5615,6 @@ url = "github:Pocket-Plane-Group/D0Tweak"
     name = "Kill Cespenar"
 
     [d0tweak.components.8]
-    after = ["rr"]
     id = "11"
     name = "Visual Ioun Stones"
     path = ["Cosmetic", "Sprites"]
@@ -6115,7 +6122,6 @@ url = "github:Raduziel/Deities-Of-Faerun"
     [deitiesoffaerun.compat.1]
     after = ["allthingsmazzy", "branwen", "drake", "dsotsc", "eet", "finchnpc", "gavin", "glamnpcpack", "iwdification", "k9sharteelnpc", "nephele", "quayle", "raduzielsuniversalspells", "tenyathermidor", "tiax", "yeslicknpc", "yvette"]
     before = ["eet_end", "ihateundead", "tomeandblood"]
-    conflicts = ["faiths_and_powers", "spell_rev"]
 
     [deitiesoffaerun.components.1]
     id = "0"
@@ -6777,9 +6783,6 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/dlcmerger/readme/readme.txt"
 tp2 = "dlcmerger/setup-dlcmerger.tp2"
 url = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
 
-    [dlcmerger.compat.1]
-    before = ["bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "bgeetextpack", "bgsodde", "darkhorizonsbgee", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "k9sharteelnpc", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white"]
-
     [dlcmerger.components.1]
     id = "1"
     name = "\"Siege of Dragonspear\" DLC"
@@ -6945,11 +6948,13 @@ url = "github:Gibberlings3/Restored-Rhynn-Lanthorn"
     [dw_lanthorn.components.1]
     id = "10"
     name = "Classic Version (faithful restoration of cut content from the original game)"
+    path = ["Story", "BG2"]
     subgroup = "Restored Rhynn Lanthorn lens quest"
 
     [dw_lanthorn.components.2]
     id = "20"
     name = "Expanded Version (adds four new locations where lenses can be found)"
+    path = ["Story", "BG2"]
     subgroup = "Restored Rhynn Lanthorn lens quest"
 
 [edwinromance]
@@ -6971,7 +6976,7 @@ tp2 = "eet/eet.tp2"
 url = "github:Gibberlings3/EET"
 
     [eet.compat.1]
-    after = ["bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "bgeetextpack", "bgsodde", "darkhorizonsbgee", "dlcmerger", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "k9sharteelnpc", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white"]
+    after = ["bg1aerie", "bg1npcmusic", "bg1ub", "bgeetextpack", "bgsodde", "darkhorizonsbgee", "dlcmerger", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "k9sharteelnpc", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white"]
     before = ["bg2ee_ga", "bg2eer"]
 
     [eet.components.1]
@@ -8366,6 +8371,7 @@ url = "github:UnearthedArcana/Faiths_and_Powers"
     [faiths_and_powers.components.6]
     id = "30"
     name = "Give Option to Cast Like Sorcerers (do not install if planning to use 5E casting)"
+    path = ["Spells"]
 
     [faiths_and_powers.components.7]
     id = "31"
@@ -8569,10 +8575,12 @@ url = "http://www.mediafire.com/download/726ji7jzgomi1vq/fullplate-v2.2.zip"
     [fullplate.components.2]
     id = "102"
     name = "Full Plate And Packing Steel: Field Improvisation (convenience tweak, remove restrictions on combining protective items)"
+    path = ["Items", "Protection"]
 
     [fullplate.components.3]
     id = "204"
     name = "Full Plate And Packing Steel: Little He Knows Where a Foe May Lurk (everyone can backstab at x2, thieves/assassins do better)"
+    path = ["Skills", "Backstab"]
 
 [g3anniversary]
 class = "SmallQuests"
@@ -8922,12 +8930,157 @@ url = "github:Gitjas/hiddenadventure"
     name = "Silver Sword"
 
 [hiddengameplayoptions]
-archive = "lin-A7-HiddenGameplayOptions-v3.0.zip"
+archive = "A7-HiddenGameplayOptions-master.zip"
 class = "UI"
 description = "Reveal Hidden Gameplay Options"
 id = "hiddengameplayoptions"
-lastupdate = 1970-01-01
-url = "https://github.com/Argent77/A7-HiddenGameplayOptions/releases/download/latest/lin-A7-HiddenGameplayOptions-v3.0.zip"
+languages = ["English", "Francais (traduction: Gwendolyne)", "Deutsch", "Polski (translation: Cahir)", "Portugues (translation: Nasher)", "Russian (translation: Saigon1983, yota13, Austin87)", "Korean (translation: begaborn)"]
+lastupdate = 2021-06-04
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/HiddenGameplayOptions/readme/readme.txt"
+tp2 = "hiddengameplayoptions/hiddengameplayoptions.tp2"
+url = "github:Argent77/A7-HiddenGameplayOptions"
+
+    [hiddengameplayoptions.compat.1]
+    after = ["cdtweaks", "leui", "leui-bg1ee", "leui-sod"]
+
+    [hiddengameplayoptions.components.1]
+    id = "0"
+    name = "Install all Hidden Gameplay Options at once"
+
+    [hiddengameplayoptions.components.10]
+    id = "18"
+    name = "Add in-game option \"Critical Hit Screen Shake\""
+
+    [hiddengameplayoptions.components.11]
+    id = "19"
+    name = "Add in-game option \"Show extra combat info\""
+
+    [hiddengameplayoptions.components.12]
+    id = "20"
+    name = "Add in-game option \"Show Game Date and Time on Pause\""
+
+    [hiddengameplayoptions.components.13]
+    id = "21"
+    name = "Add in-game option \"Disable Area Map Zoom\""
+
+    [hiddengameplayoptions.components.14]
+    id = "22"
+    name = "Add in-game option \"Reverse Mouse Wheel Zoom\""
+
+    [hiddengameplayoptions.components.15]
+    id = "23"
+    name = "Add in-game option \"Pause Game on Map Screen\""
+
+    [hiddengameplayoptions.components.16]
+    id = "24"
+    name = "Add in-game option \"Enable Fog\""
+
+    [hiddengameplayoptions.components.17]
+    id = "25"
+    name = "Add in-game option \"Disable Movies\""
+
+    [hiddengameplayoptions.components.18]
+    id = "26"
+    name = "Add in-game option \"No Cosmetic Attacks\""
+
+    [hiddengameplayoptions.components.19]
+    id = "27"
+    name = "Add in-game option \"XP Bonus in Nightmare Mode\""
+
+    [hiddengameplayoptions.components.2]
+    id = "10"
+    name = "Add in-game option \"Enable Debug Mode\""
+
+    [hiddengameplayoptions.components.20]
+    id = "28"
+    name = "Add in-game option \"Trigger Bored Sounds\""
+
+    [hiddengameplayoptions.components.21]
+    id = "29"
+    name = "Add in-game option \"Frame Rate\" (experimental)"
+
+    [hiddengameplayoptions.components.22]
+    id = "30"
+    name = "Add in-game option \"Action Feedback\""
+
+    [hiddengameplayoptions.components.23]
+    id = "31"
+    name = "Add in-game option \"Display Level Up Icon\""
+
+    [hiddengameplayoptions.components.24]
+    id = "32"
+    name = "Add in-game option \"Show Area of Effect Range\""
+
+    [hiddengameplayoptions.components.25]
+    id = "33"
+    name = "Add in-game option \"Enhanced Path Search\""
+
+    [hiddengameplayoptions.components.26]
+    id = "34"
+    name = "Add in-game option \"Expire Trap Highlights\""
+
+    [hiddengameplayoptions.components.27]
+    id = "35"
+    name = "Add in-game option \"Show Learnable Spells\""
+
+    [hiddengameplayoptions.components.28]
+    id = "36"
+    name = "Add in-game option \"Render Search Map\""
+
+    [hiddengameplayoptions.components.29]
+    id = "37"
+    name = "Add in-game option \"Render Dynamic Search Map\""
+
+    [hiddengameplayoptions.components.3]
+    id = "11"
+    name = "Add in-game option \"Enable UI Edit Mode\""
+
+    [hiddengameplayoptions.components.30]
+    id = "38"
+    name = "Add in-game options for Tweak Anthology's \"Create Interval Saves\""
+
+    [hiddengameplayoptions.components.31]
+    id = "39"
+    name = "Add in-game option \"Force Dialog Pause\""
+
+    [hiddengameplayoptions.components.32]
+    id = "101"
+    name = "for priest spells only"
+    subgroup = "Update key bindings"
+
+    [hiddengameplayoptions.components.33]
+    id = "102"
+    name = "for mage spells only"
+    subgroup = "Update key bindings"
+
+    [hiddengameplayoptions.components.34]
+    id = "103"
+    name = "for priest and mage spells"
+    subgroup = "Update key bindings"
+
+    [hiddengameplayoptions.components.4]
+    id = "12"
+    name = "Add in-game option \"Show Strrefs\""
+
+    [hiddengameplayoptions.components.5]
+    id = "13"
+    name = "Add in-game option \"Hotkeys On Tooltips\""
+
+    [hiddengameplayoptions.components.6]
+    id = "14"
+    name = "Add in-game option \"Show trigger icons on tab\""
+
+    [hiddengameplayoptions.components.7]
+    id = "15"
+    name = "Add in-game option \"Allow Spacebar in Dialogs\""
+
+    [hiddengameplayoptions.components.8]
+    id = "16"
+    name = "Add in-game option \"Limit druidic spells for Cleric/Ranger\""
+
+    [hiddengameplayoptions.components.9]
+    id = "17"
+    name = "Add in-game option \"3E Sneak Attack\""
 
 [hollyelf]
 class = "BigQuests"
@@ -9015,19 +9168,19 @@ url = "github:SpellholdStudios/IEP_Extended_Banter"
     [iepbanters.components.10]
     id = "9"
     name = "30 Minutes"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.11]
     id = "10"
     name = "45 Minutes"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.12]
     id = "11"
     name = "60 Minutes"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.2]
@@ -9058,19 +9211,19 @@ url = "github:SpellholdStudios/IEP_Extended_Banter"
     [iepbanters.components.7]
     id = "6"
     name = "10 Minutes"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.8]
     id = "7"
     name = "15 Minutes"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
     [iepbanters.components.9]
     id = "8"
     name = "20 Minutes"
-    path = ["NPC", "Banter accelerator"]
+    path = ["NPC", "Banter"]
     subgroup = "Install Banter Accelerator? How much time would you like in between NPC banters in-game?"
 
 [ihateundead]
@@ -9205,10 +9358,12 @@ url = "github:RoxanneSHS/Asylum"
     [impasylum.components.1]
     id = "0"
     name = "Improved Asylum Mod"
+    path = ["Story", "BG2"]
 
     [impasylum.components.2]
     id = "1"
     name = "Spellhold Lich"
+    path = ["Story", "BG2"]
 
 [indinpc]
 archive = "indinpc.tar.gz"
@@ -10566,6 +10721,7 @@ url = "github:RoxanneSHS/LensHunt"
     [lenshunt.components.1]
     id = "0"
     name = "The Broken Lanthorn"
+    path = ["Story", "BG2"]
 
 [leui]
 archive = "leui.tar.gz"
@@ -12125,7 +12281,7 @@ class = "SmallQuests"
 description = "Oozes Lounge"
 id = "ooze"
 languages = ["English", "Chinese by merzbau", "Polish by memory", "Russian by tipun", "French by deratiseur and Mornagest", "Korean by Pinkpanther", "Italian by improbabile"]
-lastupdate = 2022-06-24
+lastupdate = 2022-06-29
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/ooze/readme.txt"
 tp2 = "ooze/ooze.tp2"
 url = "weaselmods:oozes-lounge"
@@ -12353,6 +12509,7 @@ url = "github:Raduziel/Raduziels-Universal-Wizard-Spells"
     [raduzielsuniversalspells.components.1]
     id = "0"
     name = "Universal Wizard Spells"
+    path = ["Spells"]
 
 [randomiser]
 class = "Tweak"
@@ -12633,7 +12790,6 @@ url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
     [rr.compat.1]
     after = ["beyond_the_law", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "song_and_silence", "spell_rev", "tod"]
     before = ["atweaks", "eet_tweaks", "stratagems", "virtue"]
-    conflicts = ["iispellsystemadjustments"]
 
     [rr.components.1]
     exclusive = ["weapprof.2da"]
@@ -12734,10 +12890,12 @@ url = "github:SpellholdStudios/RuadRofhessaItemUpgrade"
     [ruad.components.1]
     id = "0"
     name = "Ruad Ro'fhessa (SoA)"
+    path = ["Items", "Upgrades"]
 
     [ruad.components.2]
     id = "10"
     name = "Ruad Ro'fhessa (ToB)"
+    path = ["Items", "Upgrades"]
 
 [rupert]
 archive = "rupert.tar.gz"
@@ -12909,7 +13067,6 @@ url = "github:UnearthedArcana/Scales_of_Balance"
 
     [scales_of_balance.compat.1]
     after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "rr", "tomeandblood"]
-    conflicts = ["kit_rev", "kitpack"]
 
     [scales_of_balance.components.1]
     exclusive = ["dexmod.2da", "skilldex.2da"]
@@ -13481,6 +13638,7 @@ url = "github:Gibberlings3/Skills-and-Abilities"
     group = "Proficiencies"
     id = "313"
     name = "NWN2 Style Proficiency Progression"
+    path = ["Fighting", "Proficiencies"]
     subgroup = "Overhaul Proficiency System - Add New Proficiencies and Weapon Styles"
 
     [skills-and-abilities.components.21]
@@ -13845,6 +14003,7 @@ url = "github:RoxanneSHS/SoDBanterEET"
     [sodbanter.components.1]
     id = "0"
     name = "SoD Banter Restoration"
+    path = ["NPC", "Banter"]
 
 [sodrtd]
 class = "Quests"
@@ -13991,7 +14150,7 @@ class = "Quests"
 description = "Shades of the Sword Coast"
 id = "sotsc"
 languages = ["English", "Italian by improbabile", "Korean by Pinkpanther", "Russian by tipun"]
-lastupdate = 2022-06-24
+lastupdate = 2022-06-29
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/SotSC/readme.txt"
 tp2 = "sotsc/sotsc.tp2"
 url = "weaselmods:shades-of-the-sword-coast"
@@ -14161,9 +14320,9 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     after = ["ascension", "d0questpack", "eetact2", "item_rev", "refinements", "spell_rev", "tactics", "wheels"]
     before = ["cdtweaks", "eet_end"]
 
-		[stratagems.compat.2]
-		components = "1500:1510"
-		before = ["faiths_and_powers"]
+    [stratagems.compat.2]
+    before = ["faiths_and_powers"]
+    components = "1500:1510"
 
     [stratagems.components.1]
     id = "100"
@@ -14370,7 +14529,6 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     id = "1500"
     name = "Include arcane spells from Icewind Dale: Enhanced Edition"
     path = ["Spells", "New spells"]
-		before = ["faiths_and_powers"]
 
     [stratagems.components.20]
     group = "Gameplay tweaks"
@@ -14442,7 +14600,6 @@ url = "github:Gibberlings3/SwordCoastStratagems"
     id = "1510"
     name = "Include divine spells from Icewind Dale: Enhanced Edition"
     path = ["Spells", "New spells"]
-		before = ["faiths_and_powers"]
 
     [stratagems.components.30]
     group = "Gameplay tweaks"

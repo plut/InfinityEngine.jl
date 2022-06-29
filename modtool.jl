@@ -13,7 +13,7 @@ module ModTool
 # Preamble ««1
 # TODO ««
 #  + check that status() shows enough mods
-#  - update modtool.jl to write correct compat packets
+#  + update modtool.jl to write correct compat packets
 #  - indicate both lanthorn mods in db
 #  - uninstall(n), uninstall(upto=m)
 #  + status() shows out-of-order components
@@ -111,12 +111,15 @@ mutable struct ModComponent
 	group::String
 	subgroup::String
 	path::Vector{String} # e.g. ["Fighting", "Proficiencies"]
+	conflicts::Set{String}
+	depends::Set{String}
 	exclusive::Set{String}
 	@inline ModComponent(i, t, g="", s="") =
-		new(string(i), t, g, s, (Set{String}() for _ in 1:5)..., [])
+		new(string(i), t, g, s, [], Set{String}(), Set{String}(), Set{String}())
 	@inline ModComponent(d::AbstractDict) =
 		new((get(d, k,"") for k in ("id", "name", "group", "subgroup"))...,
-		get(d, "path", []), Set(get(d, "exclusive", [])))
+		get(d, "path", []), Set(get(d, "conflicts", [])),
+		Set(get(d, "depends", [])), Set(get(d, "exclusive", [])))
 end
 @inline Base.isempty(c::ModComponent) =
 	all(isempty(getfield(c, i)) for i in 1:fieldcount(ModComponent))
@@ -156,7 +159,6 @@ end
 	
 @inline Base.in(i::Integer, c::ModCompat) = any(i ∈ r for r ∈ c.ranges)
 @inline Base.in(i::AbstractString, c::ModCompat) = parse(Int, i) ∈ c
-const empty_compat = ModCompat()
 # Mod ««2
 mutable struct Mod
 	id::String
@@ -176,7 +178,7 @@ mutable struct Mod
 	@inline Mod(;id, url="", description="", class="", archive="", tp2="",
 		lastupdate=1970, languages = String[], readme="", components=[]) = begin
 		new(lowercase(id), url, description, archive, class, Date(lastupdate),
-			readme, tp2, languages, [],
+			readme, tp2, languages, [ModCompat()],
 			[ ModComponent(k,v) for (k,v) in pairs(components)], 0, 0)
 		end
 end
@@ -231,9 +233,11 @@ function merge_moddb(filename = MODDB; moddb = moddb)
 		setlang!(m)
 		ifhaskey(d, "lastupdate") do x; m.lastupdate = Date(x); end
 		ifhaskey(d, "compat") do x
+			empty!(m.compat)
 			for k in sort(parse.(Int, keys(x)))
 				push!(m.compat, ModCompat(x[string(k)]))
 			end end
+		isempty(m.compat) && push!(m.compat, ModCompat())
 		any(c->isempty(c.components), m.compat) || push!(m.compat, ModCompat())
 		ifhaskey(d, "components") do x; for (k,prop) in x
 			# using dict constructor for `ModComponent`:
@@ -251,10 +255,10 @@ function write_moddb(io::IO; moddb=moddb)
 			x = getfield(m, k); isempty(x) || (d[string(k)] = x)
 		end
 		d["lastupdate"] = m.lastupdate
-		isempty(m.compat) || (d["compat"] = Dict(string(i) => dict(c)
-			for (i,c) in pairs(m.compat) if !isempty(c)))
-		!isempty(m.components) && (d["components"] = Dict(string(i)=>dict(c)
-			for (i,c) in pairs(m.components) if !isempty(c)))
+		for c in ("compat", "components")
+			x = filter(!isempty, getfield(m, Symbol(c)))
+			isempty(x) || (d[c] = Dict(string(i) => dict(c) for (i,c) in pairs(x)))
+		end
 		d
 	end
 end
@@ -578,7 +582,7 @@ function status(mod::Mod, k; selection=selection, selected=nothing, stack=stack,
 		isfile(joinpath(DOWN, mod.archive)) ? 'd' : '.',
 		isextracted(mod) ? 'x' : '.', s ? 's' : '.', st2, el2,
 		Dates.format(mod.lastupdate, "yyyy-mm"),
-		mod.id* (k>1 ? "/"*string(k) : ""), mod.description, el3, st3)
+		compatname(mod, k), mod.description, el3, st3)
 	print("\e[m")
 end
 # Mod extraction & update ««1
@@ -707,7 +711,7 @@ function ini_data(m::Mod; moddb = moddb)
 	ini = redirect_stdout(devnull) do; read(Inifile(), file); end
 	ini.sections = Dict(lowercase(k)=>v for (k,v) in ini.sections)
 	section = get(ini.sections, "metadata", nothing); isnothing(section) && return
-	printlog("reading Project Infinity-style readme for $(m.id)")
+	printlog("reading ini file for $(m.id)")
 	dict = Dict(lowercase(k)=>v for (k, v) in section)
 	function push_compat(set, s)
 		list = modsfrom(split(get(dict, s, ""), r",\s*"); moddb)
@@ -716,8 +720,8 @@ function ini_data(m::Mod; moddb = moddb)
 		printlog("  $(m.id).$s ←", join(list, ' '))
 		push!(set, list...)
 	end
-	push_compat(m.compat.after, "after")
-	push_compat(m.compat.before, "before")
+	push_compat(m.compat[1].after, "after")
+	push_compat(m.compat[1].before, "before")
 	class = get(dict, "type", "")
 	if m.class ≠ class ≠ ""
 		printwarn(" '$(m.id)': has class $(m.class), INI file says $class")
@@ -890,7 +894,7 @@ function display_tree(io::IO, root, level=1;
 	end
 end
 function write_selection(io::IO; selection=selection, moddb=moddb,
-		stack=stack, order=installorder(keys(moddb); moddb))
+		stack=stack, order=installorder(selection))
 	installed = stack_installed(stack)
 	println(io, selection_preamble)
 	# First: sorted components
@@ -992,10 +996,36 @@ function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 			(selection[id] = Set(now_installed); write_selection())
 	end
 end
-function uninstall(mod; selection = selection, write=true, kwargs...)
+function uninstall(mod::Mod; selection=selection, write=true, kwargs...)
 	delete!(selection, mod.id)
 	install(mod; write, kwargs...)
 	write && write_selection()
+end
+function uninstall(n::Integer=-1 ; moddb=moddb, stack=stack, simulate=true,
+		upto=nothing, confirm=true)
+	prev = ""; clist = String[]; i = 0
+	(n < 0) && (n = isnothing(upto) ? 1 : typemax(n))
+	if upto isa String
+		upto = Set([upto])
+	elseif upto == early_late
+		upto = Set([([x[1][1], x[2][1]] for x ∈ early_late())...;])
+	end
+	for (id, k) in reverse([stack...;])
+		j = component_compat(moddb[id], k)
+		id == prev && (push!(clist, k); continue)
+		if !isempty(prev)
+			m = moddb[prev]
+			i+=1; i > n && break
+			@assert !isempty(clist)
+			cmd = `weinstall $prev --language $(m.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-uninstall-list $clist`
+			printsim(cmd)
+			!simulate && (!confirm || ask(==('y'), "confirm?")) &&
+				cd(GAMEDIR[modgame(m)]) do; run(ignorestatus(cmd)); end
+			!isnothing(upto) && (delete!(upto, prev); isempty(upto) && break)
+		end
+		clist = [k]
+		prev = id
+	end
 end
 # Global routines««1
 function do_all(f; class=nothing, pause=false, limit=typemax(Int),
@@ -1052,7 +1082,7 @@ function do_first(f, n=1; moddb=moddb, selection=selection,
 		end || break
 	end
 end
-list1 = (:download, :extract, :install, :uninstall, :status, :update)
+list1 = (:download, :extract, :install, :status, :update)
 for f in list1; @eval begin
 	@inline $f(; kwargs...) = do_all($f; kwargs...)
 	@inline $f(n::Integer; kwargs...) = do_first($f, n; kwargs...)

@@ -12,8 +12,9 @@ See also `moddb.jl` for initializing configuration files.
 module ModTool
 # Preamble ««1
 # TODO ««
+#  - check that status() shows enough mods
 #  - update modtool.jl to write correct compat packets
-#  - status() shows out-of-order components
+#  + status() shows out-of-order components
 #   (i.e. those installed before something that should come after)
 # mod-specific fixes:
 #  - questpack is very badly named
@@ -212,6 +213,8 @@ end
 else m.tool_lang = m.game_lang = 0; end
 
 # Mod DB handling ««1
+@inline allcomponents(moddb) =
+	Dict(k => Set(c.id for c in moddb[k].components) for (k,v) in moddb)
 @inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
 @inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
 const mod_fields=(:id,:url,:class,:description,:archive,:readme,:languages,:tp2)
@@ -864,7 +867,7 @@ function comp_isless((id1, k1), (id2, k2), order)
 		return isless(something(parse(Int, k1),-1), something(parse(Int, k2),-1))
 	i1 = findfirst(∈(((id1,k1),(id1,""))),order)
 	i2 = findfirst(∈(((id2,k2),(id2,""))),order)
-	return isless(i1, i2)
+	return isnothing(i2) || (!isnothing(i1) && isless(i1, i2))
 end
 function display_tree(io::IO, root, level=1;
 		moddb=moddb, selection=selection, installed, order)
@@ -919,7 +922,7 @@ This is built of two parts:
  - the second part lists all remaining unclassified components.
 """
 function edit(;file=SELECTION, selection=selection, moddb=moddb,
-		 stack=stack, order = installorder((i, "") for i ∈ keys(moddb); moddb))
+		 stack=stack, order = installorder(allcomponents(moddb); moddb))
 	open(file, "w") do io
 		write_selection(io; selection, moddb, stack, order)
 	end
@@ -995,9 +998,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		selection = selection, moddb=moddb,
 		kwargs...)
 	i = 0; c = ""
-	l = installorder(f == status ?
-		Dict(k => Set(c.id for c in moddb[k].components) for (k,v) in moddb) :
-		[id for (id,l) in selection if !isempty(l)]; moddb)
+	l = installorder(f == status ? allcomponents(moddb) : selection; moddb)
 	bad = early_late(;moddb)
 	for (id, k) in l
 		mod = moddb[id]

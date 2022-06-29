@@ -145,9 +145,11 @@ mutable struct ModCompat
 		return m
 	end
 end
+@inline Base.isempty(c::ModCompat) =
+	isempty(c.components) && isempty(c.after) && isempty(c.before)
 @inline ModCompat(d::AbstractDict) =
 	ModCompat(get(d,"components",""), get(d,"after",[]), get(d,"before",[]))
-@inline dict(c::ModCompat) = Dict(string(k)=>getfield(c, k)
+@inline dict(c::ModCompat) = Dict(string(k)=>toml_field(getfield(c, k))
 	for k in (:components, :after, :before) if !isempty(getfield(c, k)))
 	
 @inline Base.in(i::Integer, c::ModCompat) = any(i ∈ r for r ∈ c.ranges)
@@ -176,12 +178,14 @@ mutable struct Mod
 			[ ModComponent(k,v) for (k,v) in pairs(components)], 0, 0)
 		end
 end
-@inline compat(m::Mod) = [m.compat; empty_compat]
 "returns the index of compatibility structure matching component k of mod."
 function component_compat(m::Mod, k)
 	i = parse(Int, k)
-	return something(findfirst(x->i ∈ x, compat(m)), 1)
+	return something(findfirst(x->i ∈ x, m.compat), 1)
 end
+"returns only components in this compatibility class."
+@inline getcompat(db, id, k; moddb=moddb) =
+	filter(x->component_compat(moddb[id],x) == k, get(db, id,Set{String}()))
 "parses a string 'id:comp' as (mod id, compat index)."
 function compat_parse(str; moddb=moddb)
 	contains(str, ':') || return (str, 1)
@@ -225,6 +229,7 @@ function merge_moddb(filename = MODDB; moddb = moddb)
 			for k in sort(parse.(Int, keys(x)))
 				push!(m.compat, ModCompat(x[string(k)]))
 			end end
+		any(c->isempty(c.components), m.compat) || push!(m.compat, ModCompat())
 		ifhaskey(d, "components") do x; for (k,prop) in x
 			# using dict constructor for `ModComponent`:
 			component!(m, parse(Int, k), ModComponent(prop))
@@ -235,13 +240,14 @@ end
 @inline read_moddb(filename) = merge_moddb(filename; moddb=Dict{String,Mod}())
 function write_moddb(io::IO; moddb=moddb)
 	TOML.print(io, moddb; sorted=true) do m
+		@assert typeof(m) == Mod "bad type for TOML: $(typeof(m))"
 		d = Dict{String,Any}()
 		for k in mod_fields
 			x = getfield(m, k); isempty(x) || (d[string(k)] = x)
 		end
 		d["lastupdate"] = m.lastupdate
-		isempty(m.compat) ||
-			(d["compat"] = Dict(string(i) => dict(x) for (i,x) in pairs(m.compat)))
+		isempty(m.compat) || (d["compat"] = Dict(string(i) => dict(c)
+			for (i,c) in pairs(m.compat) if !isempty(c)))
 		!isempty(m.components) && (d["components"] = Dict(string(i)=>dict(c)
 			for (i,c) in pairs(m.components) if !isempty(c)))
 		d
@@ -277,7 +283,7 @@ as pairs (i, j) of indices in the list."
 	@assert issorted(list)
 	arrows = NTuple{2,Int}[]
 	for (i1, (id1, k1)) in pairs(list)
-		c = compat(moddb[id1])[k1]
+		c = moddb[id1].compat[k1]
 		for (id2, k2) in compat_parse.(c.after; moddb)
 			j2 = searchsorted(list, (id2, k2))
 			isone(length(j2)) && push!(arrows, (first(j2), i1))
@@ -532,10 +538,10 @@ where:
  - `b` is extraction status (either `'x'` or `'.'`);
  - `c` indicates presence of selected components (either `'s'` or `'.'`);
  - `d` indicates installation status (either `'+'` if some components needs to be installed, `'-'` if they need to be removed, `'#'` if both are true, or `'.'` if nothing needs to be done)."""
-function status(mod::Mod; selection=selection, selected=nothing, stack=stack)
-	sel = get(selection, mod.id, Set{String}()); s = !isempty(sel)
+function status(mod::Mod, k; selection=selection, selected=nothing, stack=stack)
+	sel, ins = (getcompat(x,mod.id,k) for x ∈ (selection, stack_installed(stack)))
+	s = !isempty(sel)
 	selected ∈ (s, nothing) || return
-	ins = stack_mod(stack, mod.id)
 	st = issubset(sel, ins)<<1 | issubset(ins, sel)
 	st1, st2, st3 = (("\e[33m",'#',"\e[m"), ("\e[32m",'+',"\e[m"),
 		("\e[31m",'-',"\e[m"),("",'.',""))[st+1]
@@ -544,7 +550,7 @@ function status(mod::Mod; selection=selection, selected=nothing, stack=stack)
 		isfile(joinpath(DOWN, mod.archive)) ? 'd' : '.',
 		isextracted(mod) ? 'x' : '.', s ? 's' : '.', st2,
 		Dates.format(mod.lastupdate, "yyyy-mm"),
-		mod.id, mod.description, st3)
+		mod.id* (k>1 ? "/"*string(k) : ""), mod.description, st3)
 	print("\e[m")
 end
 # Mod extraction & update ««1
@@ -800,7 +806,7 @@ or `.`.
 The editor (`vim`) is configured so that the space bar toggles the selection
 status of each component.
 """
-function edit(mod::Mod; moddb=moddb, selection=selection,
+function edit(mod::Mod; moddb=moddb, selection=selection, stack=stack,
 		installed=stack_installed(stack), edit=true)
 	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
 	io = edit ? open(filename, "w") : stdout
@@ -816,7 +822,7 @@ function edit(mod::Mod; moddb=moddb, selection=selection,
 	close(io)
 	component_editor(filename; selection)
 end
-@inline components(mod::Mod; kwargs...)= edit(mod; edit=false, kwargs...)
+@inline show(mod::Mod; kwargs...)= edit(mod; edit=false, kwargs...)
 # Component tree ««1
 struct ComponentTree
 	alternatives::Vector{NTuple{2,String}}
@@ -901,19 +907,22 @@ function edit(;file=SELECTION, selection=selection, moddb=moddb,
 end
 
 # Mod installation ««1
-function install(mod; simulate=false, uninstall=false,
-		selection=selection, gamedirs=GAMEDIR,
-		order = installorder(keys(selection)), write=false)
+@inline install(mod::Mod; kwargs...) = 
+	for k in 1:length(mod.compat); install(mod, k; kwargs...); end
+function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
+		selection=selection, gamedirs=GAMEDIR, stack = stack,
+		order = installorder(selection), write=false)
+	println("install: $(mod.id)/$index")
 	extract(mod) || return
 	id = mod.id
 
 	gamedir = gamedirs[modgame(mod)]
-	current = get(weidu_installed(gamedir), mod.id, String[])
-	installed = weidu_installed(gamedirs...)
+	installed = stack_installed(stack)
+	current = get(installed, mod.id, String[])
 	warned = false
-	for k in order; k == id && break
-		isempty(symdiff(get(installed, k, []), get(selection, k, []))) && continue
-		printwarn("warning: mod '$k' should probably be installed before '$id'")
+	for (i1, k1) in order; i1 == id && break
+		isempty(symdiff(get(installed,i1,[]), get(selection,i1,[]))) && continue
+		printwarn("warning: mod '$i1/$k1' should probably be installed before '$id'")
 		warned = true
 	end
 	warned && (ask(==('y'), "proceed anyway? (yn)") || return)
@@ -966,10 +975,11 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		selection = selection, moddb=moddb,
 		kwargs...)
 	i = 0; c = ""
-	l = installorder(f == status ? keys(moddb) :
+	l = installorder(f == status ?
+		Dict(k => Set(c.id for c in moddb[k].components) for (k,v) in moddb) :
 		[id for (id,l) in selection if !isempty(l)]; moddb)
-	for id in l
-		mod = findmod(id; moddb)
+	for (id, k) in l
+		mod = moddb[id]
 		pause && (printlog("-- paused before: $f $id--"); readline())
 		i+= 1; (i > limit) && break
 		# do nothing if this is the wrong mod class:
@@ -984,16 +994,18 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		else
 			printlog("\e[1m($n/$(length(selection)) $id)\e[m")
 		end
-		f(mod; selected, kwargs...)
+		f(mod, k; selected, kwargs...)
 	end
 end
-"returns the first n mods (in install order) with non-installed components"
+"returns the first n (mod, compat) pairs for which some installation needs to be done."
 function nextmods(n; moddb=moddb, selection=selection, stack=stack,
 		order=installorder(selection;moddb))
-	ret = []
-	for k in order
-		isempty(symdiff(selection[k], get(installed, k, []))) && continue
-		push!(ret, k)
+	installed = stack_installed(stack)
+	ret = Tuple{String,Int}[]
+	for (id, k) in order
+		sel, ins = (getcompat(x, id, k) for x in (selection, installed))
+		isempty(symdiff(sel, ins)) && continue
+		push!(ret, (id, k))
 		length(ret) ≥ n && break
 	end
 	ret
@@ -1002,13 +1014,14 @@ function topmods(n; selection=selection, dir=GAMEDIR.bg2)
 end
 function do_first(f, n=1; moddb=moddb, selection=selection,
 		kwargs...)
-	order = installorder(keys(filter(!isempty, selection)))
-	for id in nextmods(n; selection, order)
-		ask("call function $f($id)? (ynqrc)") do r
+	order = installorder(selection)
+	for (id,k) in nextmods(n; selection, order)
+		ask("call function $f($id/$k)? (ynqrc)") do r
 			r == 'r' && (readme(moddb[id]); return true)
 			r == 'c' && (edit(moddb[id]); return true)
 			r == 'q' && return false
-			r == 'y' && (f(moddb[id]; order, kwargs...); return true)
+			r == 'y' && (f(moddb[id], k; order, kwargs...); return true)
+			r == 'n' && return true
 		end || break
 	end
 end
@@ -1018,7 +1031,7 @@ for f in list1; @eval begin
 	@inline $f(n::Integer; kwargs...) = do_first($f, n; kwargs...)
 end end
 # interactive commands are allowed only *one* mod (but can be a symbol)
-list2 = (list1..., :readme, :tp2, :components, :status, :edit)
+list2 = (list1..., :readme, :tp2, :show, :status, :edit)
 for f in list2; @eval begin
 	@inline $f(idlist::Union{String,Symbol}...; kwargs...) =
 	for id in idlist; $f(findmod(id); kwargs...); end

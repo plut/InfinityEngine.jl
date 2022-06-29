@@ -63,11 +63,13 @@ const GAMEDIR =
 const GAME_LIST = keys(GAMEDIR)
 	
 function init()# setup global variables and filesystem
-	global global_moddb = read_moddb(MODDB)
-	printlog("read $(length(global_moddb)) mods in global database")
-	global global_selection = read_selection(SELECTION; verbose=false)
-	printlog("read selection status for $(length(global_selection)) mods; "*
-	"$(sum(length.(values(global_selection)))) components selected")
+	global moddb = read_moddb(MODDB)
+	printlog("read $(length(moddb)) mods in global database")
+	global selection = read_selection(SELECTION; verbose=false)
+	printlog("read selection status for $(length(selection)) mods; "*
+	"$(sum(length.(values(selection)))) components selected")
+	global stack = weidu_stack(GAMEDIR)
+	printlog("read $(length(stack.bg1))+$(length(stack.bg2)) installed components")
 	for d in (DOWN, MODS, TEMP) ispath(d) || mkdir(d); end
 end
 
@@ -186,7 +188,7 @@ const MOD_CLASSES = split(replace("""
 	BADCLASS
 """, r"#[^\n]*\n" =>"\n"))# »»
 @inline modarchive(m::Mod) = m.id*match(r"\.[^.]*$", m.url).match
-@inline modgame(m::Mod; moddb=global_moddb) =
+@inline modgame(m::Mod; moddb=moddb) =
 	m.id ∈ moddb["eet"].compat.after ? :bg1 : :bg2
 @inline modcomponents(m::Mod) = (m.components)
 @inline function modcomponent!(m::Mod, i, c)
@@ -204,7 +206,7 @@ else m.tool_lang = m.game_lang = 0; end
 @inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
 @inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
 const mod_fields=(:id,:url,:class,:description,:archive,:readme,:languages,:tp2)
-function merge_moddb(filename = MODDB; moddb = global_moddb)
+function merge_moddb(filename = MODDB; moddb = moddb)
 	dict = TOML.parsefile(filename)
 	for (id, d) in dict
 		m = get!(moddb, id, Mod(;id))
@@ -222,7 +224,7 @@ function merge_moddb(filename = MODDB; moddb = global_moddb)
 	return moddb
 end
 @inline read_moddb(filename) = merge_moddb(filename; moddb=Dict{String,Mod}())
-function write_moddb(io::IO; moddb=global_moddb)
+function write_moddb(io::IO; moddb=moddb)
 	TOML.print(io, moddb; sorted=true) do m
 		d = Dict{String,Any}()
 		for k in mod_fields
@@ -235,7 +237,7 @@ function write_moddb(io::IO; moddb=global_moddb)
 		d
 	end
 end
-function write_moddb(filename::AbstractString = MODDB; moddb=global_moddb)
+function write_moddb(filename::AbstractString = MODDB; moddb=moddb)
 	printlog("writing moddb: $filename")
 	mktemp(TEMP) do path, io # try this in a temporary file first
 		write_moddb(io; moddb)
@@ -244,12 +246,12 @@ function write_moddb(filename::AbstractString = MODDB; moddb=global_moddb)
 	end
 end
 
-@inline function findmod(id::Union{Symbol,String}; moddb = global_moddb)
+@inline function findmod(id::Union{Symbol,String}; moddb = moddb)
 	k = get(moddb, lowercase(string(id)), nothing)
 	isnothing(k) || return k
 	error("mod '$id' not found")
 end
-@inline findmod(pattern::Regex; moddb = global_moddb) =
+@inline findmod(pattern::Regex; moddb = moddb) =
 	[ id for id in keys(moddb) if occursin(pattern, id) ]
 @inline function Base.setproperty!(m::Mod, k::Symbol, v)
 	x = getfield(m, k)
@@ -259,13 +261,14 @@ end
 end
 @inline function component(mod, k; fail = false)
 	k = lowercase(string(k)); for c in mod.components; c.id == k && return c; end
-	fail && error("mod '$(mod.id)': component '$k' not found")
+	if fail; error("mod '$(mod.id)': component '$k' not found")
+	else return nothing; end
 end
 
 "Given a *sorted* list of (mod id, component id) pairs,
 returns the set of dependency arrows among these components,
 as pairs (i, j) of indices in the list."
-function dep_arrows(list; moddb=global_moddb)
+@inline function dep_arrows(list; moddb=moddb)
 	@assert issorted(list)
 	@inline sortedfind(list, x) = !isempty(searchsorted(list, x))
 	# first build the mod ↔ component maps:
@@ -285,9 +288,6 @@ function dep_arrows(list; moddb=global_moddb)
 	mlist = [ first(list[i]) for i in mrange ] # list of individual mods
 	push!(mrange, length(list)+1)
 	mrange = [mrange[i]:mrange[i+1]-1 for i in 1:length(mrange)-1]
-	println("mlist=$mlist")
-	println("cindex=$cindex")
-	println("mrange=$mrange")
 	# build database of arrows
 	# for each (mod, comp) pair (A, x), (B, y), we look for the most
 	# specific relation first:
@@ -316,7 +316,7 @@ function dep_arrows(list; moddb=global_moddb)
 		end
 	end
 	for (i, (id, k)) in pairs(list)
-		ci = component(moddb[id], k; fail=true)
+		ci = component(moddb[id], k); isnothing(ci) && continue
 		for b in ci.after
 			if contains(b, ':')
 				ib = searchsorted(list, rsplit(b, ':'; limit=2))
@@ -350,90 +350,79 @@ function dep_arrows(list; moddb=global_moddb)
 	end
 	return arrows
 end
-function installorder(list; moddb = global_moddb)
-	list = sort(list)
-	arrowsfrom, arrowsto = ([Int[] for _ in 1:length(list)] for _ in 1:2)
-	for (b, a) in dep_arrows(list)
-		fb = arrowsfrom[b]
-		a ∈ fb && continue
-		push!(fb, a); push!(arrowsto[a], b)
-	end
-end
 
-"Returns the dependency matrix for these mods, encoded as
-(arrowsfrom = dict(mod1 => mod2, ...), arrowsto = dict(mod1 => n1, ...))"
-function dependencies_old(list ;moddb=global_moddb)
-	arrowsfrom = Dict{String,Set{String}}(); arrowsto = copy(arrowsfrom)
-	function connect((b, a),)
-		fb = get!(arrowsfrom, b, Set{String}())
-		a ∈ fb && return
-		push!(fb, a); push!(get!(arrowsto,a, Set{String}()), b)
-	end
-	for id in list
-		c = moddb[id].compat
-			# special: empty key indicates a dependency for the whole mod
-# 			isempty(c.id) || continue
-			isempty(c.after) && isempty(c.before) && continue
-			for a in c.after; a ∈ list && connect(a => id); end
-			for b in c.before; b ∈ list && connect(id => b); end
-# 		end
-	end
-	return (arrowsfrom = arrowsfrom, arrowsto = arrowsto)
-end
-function comp_isless((id1, k1), (id2, k2), order)
-	id1 == id2 && return isless(parse(Int, k1), parse(Int, k2))
-	return isless(findfirst(==(id1), order), findfirst(==(id2), order))
-end
 @inline modclass(m::Mod) =
 	let k = (findfirst(==(m.class), MOD_CLASSES))
 	isnothing(k) && error("mod \"$(m.id)\": bad mod class \"$(m.class)\"")
 	k; end
-function sortkey1(id, moddb, dep)
+function sortkey2((id,k), prev, moddb)
 	# returns (class(id), max class(before id), date(id))
 	c0 = modclass(moddb[id])
-	prev = get(dep.arrowsto, id, [])
-	c1 = maximum(modclass(moddb[x]) for x in prev; init = -1)
-	(c0, c1, moddb[id].lastupdate)
+	c1 = maximum(modclass(moddb[x]) for (x,_) in prev; init = -1)
+	return (c0, c1, moddb[id].lastupdate)
 end
-@inline sortkey1(moddb, dep) = id -> sortkey1(id, moddb, dep)
-function circulardep(todo, dep)
-	for x in sort(collect(todo))
-		s = sort(collect(filter(∈(todo), get(dep.arrowsfrom, x, String[]))))
-		isempty(s) && continue
-		println(x, " -> ", join(s, ' '))
-	end
-	"Circular dependency found: $(todo)"
+@inline sortkey1(list, moddb, arrowsto) = i -> begin
+	sortkey2(list[i], (list[j] for j ∈ arrowsto[i]), moddb)
 end
-"Returns a list of mod IDs in install order, given all dependencies"
-function installorder(list; moddb=global_moddb)
-	# use Kahn's algorithm for topological sorting
-	# (this should be average-time quasi-linear with the use of a heap)
-	#
-	# bias it to the right (most mods want to be installed late...)
-	ret = sizehint!(String[], length(list))
-	todo = Set(collect(list))
-	dep = dependencies_old(list;moddb)
-	ord = Base.Order.By(sortkey1(moddb, dep), Base.Order.Reverse)
-	available = [ id for id in list if isempty(get(dep.arrowsfrom, id, [])) ]
-	heapify!(available, ord)
-			
-	while !isempty(todo)
-		# loop invariant: arrowsfrom[y] = count of x ∈ todo such that x->y
-		@assert !isempty(available) circulardep(todo, dep)
-		x = heappop!(available, ord)
-		push!(ret, x); delete!(todo, x)
-		for y in get(dep.arrowsto, x, String[])
-			delete!(dep.arrowsfrom[y], x)
-			isempty(dep.arrowsfrom[y]) && heappush!(available, y, ord)
+"""    circulardep(vertices, edges, names)
+
+Given a graph, returns the set of names of a strongly connected component."""
+function circulardep(vertices, edges, labels)
+	# renumber everything from indices in vertices
+	labels = [ join(labels[vertices[i]],':') for i ∈ eachindex(vertices) ]
+	edges = Dict(i => Set(findall(∈(edges[v]), vertices))
+		for (i, v) ∈ pairs(vertices))
+	n = length(labels)
+	done = falses(n)
+	for i in 1:n
+		done[i] && continue
+		stack = [[i]]
+		while !isempty(stack)
+			path = pop!(stack)
+			head = last(path)
+			done[head] && return "Circular dependency: ", labels[path]
+			done[head] = true
+			append!(stack, [path;next] for next ∈ edges[head])
 		end
 	end
-	reverse!(ret)
+# 	for x in sort(collect(todo))
+# 		s = sort(collect(filter(∈(todo), get(dep.arrowsfrom, x, String[]))))
+# 		isempty(s) && continue
+# 		println(x, " -> ", join(s, ' '))
+# 	end
+	"Circular dependency found: $(labels) (TODO: write strong connected component algorithm)"
 end
-function check_conflicts(;selection = global_selection, moddb=global_moddb)
+"Given a list of (mod => component set) (string => string set),
+returns the list of (mod, component) string pairs,
+sorted in best installation order. Fails if a circular dependency is found."
+function installorder(selection=selection; moddb=moddb)
+	list = sort([ (id, k) for (id, l) in pairs(selection) for k in l ])
+	arrowsfrom, arrowsto = ([Set{Int}() for _ in 1:length(list)] for _ in 1:2)
+	for (b, a) in dep_arrows(list)
+		push!(arrowsfrom[b], a); push!(arrowsto[a], b)
+	end
+	ord = Base.Order.By(sortkey1(list, moddb, arrowsto))
+	available = findall(isempty, arrowsfrom)
+	heapify!(available, ord)
+
+	todo = Set(eachindex(list))
+	ret = sizehint!(empty(list), length(list))
+	while !isempty(todo)
+		@assert !isempty(available) circulardep(collect(todo), arrowsfrom, list)
+		i = heappop!(available, ord)
+		push!(ret, list[i]); delete!(todo, i)
+		for j in arrowsto[i]
+			delete!(arrowsfrom[j], i)
+			isempty(arrowsfrom[j]) && heappush!(available, j, ord)
+		end
+	end
+	return reverse!(ret)
+end
+function check_conflicts(;selection = selection, moddb=moddb)
 	owners = Dict{String, Vector{Tuple{String, String}}}()
 	# check exclusivity
 	for (id, clist) in selection
-		mod = findmod(id; moddb)
+		mod = moddb[id]
 		for c in modcomponents(mod)
 			c.id ∈ clist || continue
 			for e in c.exclusive
@@ -446,7 +435,6 @@ function check_conflicts(;selection = global_selection, moddb=global_moddb)
 		for (id, c) in v; println("  ", id, ":", c); end
 	end
 end
-
 
 # Pre-TP2 functions: download, extract, status ««1
 function updateurl(mod::Mod)
@@ -581,13 +569,11 @@ where:
  - `b` is extraction status (either `'x'` or `'.'`);
  - `c` indicates presence of selected components (either `'s'` or `'.'`);
  - `d` indicates installation status (either `'+'` if some components needs to be installed, `'-'` if they need to be removed, `'#'` if both are true, or `'.'` if nothing needs to be done)."""
-function status(mod::Mod; selection=global_selection, selected=nothing,
-		installed = weidu_installed(GAMEDIR...))
+function status(mod::Mod; selection=selection, selected=nothing, stack=stack)
 	sel = get(selection, mod.id, Set{String}()); s = !isempty(sel)
 	selected ∈ (s, nothing) || return
-	ins = get(installed, mod.id, Set{String}())
+	ins = stack_mod(stack, mod.id)
 	st = issubset(sel, ins)<<1 | issubset(ins, sel)
-# 	println(sel, ins)
 	st1, st2, st3 = (("\e[33m",'#',"\e[m"), ("\e[32m",'+',"\e[m"),
 		("\e[31m",'-',"\e[m"),("",'.',""))[st+1]
 # 	mod.id ∈ ("eet", "stratagems") && print("\e[34m")
@@ -716,10 +702,10 @@ function readme(mod::Mod)
 end
 @inline tp2(mod::Mod) = extract(mod) && run(`view $(joinpath(MODS, mod.tp2))`)
 # INI data extraction ««1
-modsfrom(list; moddb = global_moddb) =
+modsfrom(list; moddb = moddb) =
 	(x for x in lowercase.(string.(list)) if haskey(moddb, x))
 """    ini_data(id): updates from ProjectInfinity ini file."""
-function ini_data(m::Mod; moddb = global_moddb)
+function ini_data(m::Mod; moddb = moddb)
 	file = joinpath(MODS, m.id, m.id*".ini")
 	isfile(file) || return
 	ini = redirect_stdout(devnull) do; read(Inifile(), file); end
@@ -747,41 +733,39 @@ function ini_data(m::Mod; moddb = global_moddb)
 	end
 end
 
+# WeiDU status««1
+@inline function weidu_filter(line)
+	m = match(r"^~(.*)~\s+#(\d+)\s+#(\d+)\s*", line)
+	isnothing(m) && return nothing
+	(tp2, lang, comp) = m.captures
+	id = lowercase(tp2[1:end-4])
+	k = findlast('/', id); !isnothing(k) && (id = id[k+1:end])
+	startswith(id, "setup-") && (id = id[7:end])
+	return (id, comp)
+end
+function weidu_stack(dir::AbstractString)
+	file = joinpath(dir, "weidu.log")
+	isfile(file) || (file = devnull)
+	filter(!isnothing, weidu_filter.(eachline(file)))
+end
+@inline weidu_stack(dirs::NamedTuple) =
+	NamedTuple{keys(dirs)}(weidu_stack.(values(dirs)))
+
+function stack_installed(stack=stack)
+	d = Dict{String,Set{String}}()
+	for s in stack, (id, k) in s; push!(get!(d, id, Set{String}()), k); end
+	return d
+end
+
 # Mod components ««1
-struct WeiDUStack{T}
-	itr::T
-end
-@inline Base.IteratorSize(::WeiDUStack) = Base.SizeUnknown()
-@inline weidu_stack(dir::AbstractString) =
-	WeiDUStack(eachline(joinpath(dir, "weidu.log")))
-function Base.iterate(s::WeiDUStack, state=nothing)
-	while true
-		x = iterate(s.itr, state); isnothing(x) && return x
-		(line, state) = x
-		m = match(r"^~(.*)~\s+#(\d+)\s+#(\d+)\s*", line)
-		isnothing(m) && continue
-		(tp2, lang, comp) = m.captures
-		id = lowercase(tp2[1:end-4])
-		k = findlast('/', id); !isnothing(k) && (id = id[k+1:end])
-		startswith(id, "setup-") && (id = id[7:end])
-		return ((id, comp), state)
-	end
-end
-function weidu_installed(dirs...)
-	status = Dict{String, Vector{String}}()
-	for d in dirs, (id, comp) in weidu_stack(d)
-		push!(get!(status, id, String[]), comp)
-	end
-	status
-end
 function printcomp(io::IO, m, c::ModComponent; selection, installed, moddb)
 	@printf(io, "%c%c%c `%s:%s` %s\n",
-		c.id ∈ get(selection, m.id, []) ? 's' : '.',
-		c.id ∉ get(installed, m.id, []) ? '.' : modgame(m; moddb)==:bg1 ? '1' : '2',
+		c.id ∈ get(selection, m.id,[]) ? 's' : '.',
+		c.id ∉ get(installed, m.id,[]) ? '.' : modgame(m; moddb)==:bg1 ? '1' : '2',
 		isempty(c.path) ? '.' : 'p',
 		m.id, c.id, description(c))
 end
-function merge_selection(io; selection=global_selection, verbose=true)
+function merge_selection(io; selection=selection, verbose=true)
 	to_add = Dict{String,Set{String}}()
 	to_del = Dict{String,Set{String}}()
 	for line in eachline(io)
@@ -807,13 +791,13 @@ end
 @inline read_selection(filename; kwargs...) =
 	merge_selection(filename; selection=Dict{String,Set{String}}(), kwargs...)
 const selection_preamble = raw"""
-" ««5 This file is to be read using the vim editor, launched as
+" ⟦5 This file is to be read using the vim editor, launched as
 "  vim +'so %' <name of the file>
 " The following lines map some useful keys for helping modifying the selection:
 " - space key (de)selects a component
 " - this uses tree folding (open with zo, close with zf)
 "
-se fencs=utf8 cms= ft= fdm=marker fmr=««,»»
+se fencs=utf8 cms= ft= fdm=marker fmr=⟦,⟧
 sy match modComp /\`[^\`]*\`/|hi link modComp Constant
 sy match modAdd /^s\.[.p] .*$/ contains=modComp |hi link modAdd DiffAdd
 sy match modDel /^\.[12][.p] .*$/ contains=modComp |hi link modDel DiffDelete
@@ -822,7 +806,7 @@ sy match modGrp /^# .*$/|hi link modGrp ModeMsg
 sy match modSub /^## .*$/|hi link modSub Title
 nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>
 normal j
-finish "»»5 """
+finish "⟧5 """
 
 function component_editor(filename; selection)
 # 	run(`vim $filename`)
@@ -854,18 +838,16 @@ or `.`.
 The editor (`vim`) is configured so that the space bar toggles the selection
 status of each component.
 """
-function edit(mod::Mod; selection=global_selection,
-		gamedir = GAMEDIR[modgame(mod)], moddb=global_moddb, edit=true)
-# 	extract(mod) || return
-	installed = weidu_installed(gamedir)
+function edit(mod::Mod; moddb=moddb, selection=selection,
+		installed=stack_installed(stack), edit=true)
 	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
 	io = edit ? open(filename, "w") : stdout
 	edit && println(io, selection_preamble)
 	g = "\0"; h = ""
 	for c in modcomponents(mod)
-		g ≠ c.group && (g = c.group; println(io, "# ", g, "«"*"«1"))
+		g ≠ c.group && (g = c.group; println(io, "# ", g, "⟦1"))
 		h ≠ c.subgroup &&
-			(h = c.subgroup; println(io,"## ",h, isempty(h) ? "»"*"»2" : "«"*"«2"))
+			(h = c.subgroup; println(io,"## ",h, isempty(h) ? "⟧2" : "⟦2"))
 		printcomp(io, mod, c; selection, installed, moddb)
 	end
 	edit || return
@@ -873,6 +855,7 @@ function edit(mod::Mod; selection=global_selection,
 	component_editor(filename; selection)
 end
 @inline components(mod::Mod; kwargs...)= edit(mod; edit=false, kwargs...)
+# Component tree ««1
 struct ComponentTree
 	alternatives::Vector{NTuple{2,String}}
 	children::Dict{String,ComponentTree}
@@ -880,7 +863,7 @@ struct ComponentTree
 end#»»
 findbranch(root::ComponentTree, path) = isempty(path) ? root :
 	findbranch(get!(root.children, first(path), ComponentTree()), path[2:end])
-function build_tree(;moddb=global_moddb)
+function build_tree(;moddb=moddb)
 	root = ComponentTree()
 	for (id, m) in moddb, c in modcomponents(m)
 		isempty(c.path) && continue
@@ -888,39 +871,48 @@ function build_tree(;moddb=global_moddb)
 	end
 	root
 end
+function comp_isless((id1, k1), (id2, k2), order)
+	id1 == id2 &&
+		return isless(something(parse(Int, k1),-1), something(parse(Int, k2),-1))
+	i1 = findfirst(∈(((id1,k1),(id1,""))),order)
+	i2 = findfirst(∈(((id2,k2),(id2,""))),order)
+	return isless(i1, i2)
+end
 function display_tree(io::IO, root, level=1;
-		moddb=global_moddb, selection=global_selection, installed, order)
+		moddb=moddb, selection=selection, installed, order)
 	for (id, k) in sort(collect(root.alternatives);
 			lt=(x,y)->comp_isless(x,y,order))
-		m = findmod(id; moddb)
+		m = moddb[id]
 # 		extract(m);
-		c = component(m, k)
-		isnothing(c) && (printerr("'$id:$k' not found"); continue)
+		c = component(m, k); isnothing(c)&&(printerr("'$id:$k' not found");continue)
+		println("$id $k")
 		printcomp(io, m, c; selection, installed, moddb)
 	end
 	for (s, c) in sort(collect(root.children); by=first)
-		println(io, '#'^level, ' ', s, " ««", level)
+		println(io, '#'^level, ' ', s, " ⟦", level)
 		display_tree(io, c, level+1; selection, moddb, installed, order)
 	end
 end
-function write_selection(io::IO; selection=global_selection,
-		moddb=global_moddb, installed = weidu_installed(GAMEDIR...),
-		order = installorder(keys(moddb); moddb))
+function write_selection(io::IO; selection=selection, moddb=moddb,
+		stack=stack, order=installorder(keys(moddb); moddb))
+	installed = stack_installed(stack)
 	println(io, selection_preamble)
 	# First: sorted components
+	println("order is $order")
+	println("tree has $(length(build_tree(;moddb).children)) children")
 	display_tree(io, build_tree(;moddb); selection, moddb, installed, order)
 	# Then unsorted
-	println(io, "# Individual, unsorted components «"*"«1")
+	println(io, "# Individual, unsorted components ⟦1")
 	i = ""
-	for id in order
-		m = moddb[id]; g = ""; h = ""
+	for (id,_) in order
+		m = moddb[id]; g = ""; h = "";
 # 		isempty(get(selection, id, ())) || extract(m)
 		for c in modcomponents(m)
 			isempty(c.path) || continue
-			id ≠ i && (i=id; println(io, "## ", i, " «","«2"))
-			g ≠ c.group && (g = c.group; println(io, "### ", g, "«","«3"))
+			id ≠ i && (i=id; println(io, "## ", i, " ⟦2"))
+			g ≠ c.group && (g = c.group; println(io, "### ", g, "⟦3"))
 			h ≠ c.subgroup &&
-				(h=c.subgroup; println(io,"#### ",h,isempty(h) ? "»"*"»4" : "«"*"«4"))
+				(h=c.subgroup; println(io,"#### ",h,isempty(h) ? "⟧4" : "⟦4"))
 			printcomp(io, m, c; selection, installed, moddb)
 		end
 	end
@@ -938,18 +930,17 @@ This is built of two parts:
    classified by game feature;
  - the second part lists all remaining unclassified components.
 """
-function edit(;file=SELECTION, selection=global_selection,
-		moddb=global_moddb, installed = weidu_installed(GAMEDIR...),
-	order = installorder(keys(moddb); moddb))
+function edit(;file=SELECTION, selection=selection, moddb=moddb,
+		 stack=stack, order = installorder((i, "") for i ∈ keys(moddb); moddb))
 	open(file, "w") do io
-		write_selection(io; selection, moddb, installed, order)
+		write_selection(io; selection, moddb, stack, order)
 	end
 	component_editor(file; selection)
 end
 
 # Mod installation ««1
 function install(mod; simulate=false, uninstall=false,
-		selection=global_selection, gamedirs=GAMEDIR,
+		selection=selection, gamedirs=GAMEDIR,
 		order = installorder(keys(selection)), write=false)
 	extract(mod) || return
 	id = mod.id
@@ -1002,7 +993,7 @@ function install(mod; simulate=false, uninstall=false,
 			(selection[id] = Set(now_installed); write_selection())
 	end
 end
-function uninstall(mod; selection = global_selection, write=true, kwargs...)
+function uninstall(mod; selection = selection, write=true, kwargs...)
 	delete!(selection, mod.id)
 	install(mod; write, kwargs...)
 	write && write_selection()
@@ -1010,7 +1001,7 @@ end
 # Global routines««1
 function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		selected = (f == status ? nothing : true),
-		selection = global_selection, moddb=global_moddb,
+		selection = selection, moddb=moddb,
 		kwargs...)
 	i = 0; c = ""
 	l = installorder(f == status ? keys(moddb) :
@@ -1029,15 +1020,14 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		if f == status
 			(mod.class ≠ c) && (c = mod.class; println("\e[1m$c\e[m"))
 		else
-			printlog("\e[1m($n/$(length(global_selection)) $id)\e[m")
+			printlog("\e[1m($n/$(length(selection)) $id)\e[m")
 		end
 		f(mod; selected, kwargs...)
 	end
 end
 "returns the first n mods (in install order) with non-installed components"
-function nextmods(n; selection=global_selection,
-		installed = weidu_installed(GAMEDIR...),
-		order = installorder(keys(filter(!isempty, global_selection))))
+function nextmods(n; moddb=moddb, selection=selection, stack=stack,
+		order=installorder(selection;moddb))
 	ret = []
 	for k in order
 		isempty(symdiff(selection[k], get(installed, k, []))) && continue
@@ -1046,9 +1036,9 @@ function nextmods(n; selection=global_selection,
 	end
 	ret
 end
-function topmods(n; selection=global_selection, dir=GAMEDIR.bg2)
+function topmods(n; selection=selection, dir=GAMEDIR.bg2)
 end
-function do_first(f, n=1; moddb=global_moddb, selection=global_selection,
+function do_first(f, n=1; moddb=moddb, selection=selection,
 		kwargs...)
 	order = installorder(keys(filter(!isempty, selection)))
 	for id in nextmods(n; selection, order)
@@ -1075,7 +1065,7 @@ end end
 # ««1
 end
 M=ModTool
-R=isdefined(M, :global_moddb) ? M.global_moddb["rr"] : nothing
+R=isdefined(M, :moddb) ? M.moddb["rr"] : nothing
 C=isnothing(R) ? R : R.components
 nothing
 # vim: fdm=syntax fdl=1:

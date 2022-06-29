@@ -1753,7 +1753,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 			end
 		end
 
-	global global_moddb = moddb
+	global moddb = moddb
 	printsim("writing moddb $dest")
 	write_moddb(dest; moddb)
 end
@@ -1776,14 +1776,14 @@ function bws_selection(source = BWS_USER)#««
 	return selection
 end#»»
 function import_bws_selection((source, dest) = BWS_USER => SELECTION)#««
-	global global_selection = bws_selection(source)
+	selection = bws_selection(source)
 	maybe_rewrite_moddb() do
-		for id in keys(global_selection)
-			m = global_moddb[id]
+		for id in keys(selection)
+			m = moddb[id]
 			isextracted(m) || extract(m)
 		end
 	end
-	write_selection(dest; moddb=global_moddb, selection = global_selection)
+	write_selection(dest; moddb, selection)
 end#»»
 
 end

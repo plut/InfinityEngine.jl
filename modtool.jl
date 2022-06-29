@@ -12,8 +12,7 @@ See also `moddb.jl` for initializing configuration files.
 module ModTool
 # Preamble ««1
 # TODO ««
-#  + move compat back as component [1] to simplify dependency handling
-#  + status() shows installation status (in color)
+#  - update modtool.jl to write correct compat packets
 #  - status() shows out-of-order components
 #   (i.e. those installed before something that should come after)
 # mod-specific fixes:
@@ -527,30 +526,51 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 	end
 	return true
 end
+function early_late(;moddb=moddb, stack=stack)
+	list = unique!([(id, component_compat(moddb[id],j)) for (id,j) ∈[stack...;]])
+	slist = unique!(sort(list))
+	arrows = Set(dependencies(slist; moddb))
+	ilist = [ searchsortedfirst(slist, x) for x ∈ list ]
+	bad = NTuple{2,Tuple{String,Int}}[]
+	for (i2, j2) in pairs(ilist), (i1, j1) in pairs(view(ilist, 1:i2-1))
+		# check that there does not exist an arrow i2->i1
+		(j2, j1) ∈ arrows || continue
+		println("$(list[i2]) should be before $(list[i1])")
+		push!(bad, (list[i1], list[i2]))
+	end
+	return bad # set of early/late pairs
+end
 """    status(mod)
 
 Shows on one line the status of a given mod, in the form:
 
-    abcd identifier description
+    abcde date identifier description
 
 where:
  - `a` is download status (either `'d'` or `'.'`);
  - `b` is extraction status (either `'x'` or `'.'`);
  - `c` indicates presence of selected components (either `'s'` or `'.'`);
- - `d` indicates installation status (either `'+'` if some components needs to be installed, `'-'` if they need to be removed, `'#'` if both are true, or `'.'` if nothing needs to be done)."""
-function status(mod::Mod, k; selection=selection, selected=nothing, stack=stack)
+ - `d` indicates installation status (either `'+'` if some components needs to be installed, `'-'` if they need to be removed, `'#'` if both are true, or `'.'` if nothing needs to be done);
+ - `e` indicates if the mod was installed too early (`v`), too late (`^`), both (`x`), or none.
+ """
+function status(mod::Mod, k; selection=selection, selected=nothing, stack=stack,
+		bad=())
 	sel, ins = (getcompat(x,mod.id,k) for x ∈ (selection, stack_installed(stack)))
 	s = !isempty(sel)
 	selected ∈ (s, nothing) || return
+		
 	st = issubset(sel, ins)<<1 | issubset(ins, sel)
 	st1, st2, st3 = (("\e[33m",'#',"\e[m"), ("\e[32m",'+',"\e[m"),
 		("\e[31m",'-',"\e[m"),("",'.',""))[st+1]
+	el = ((mod.id,k) ∈ first.(bad)) << 1 | ((mod.id,k)∈last.(bad))
+	el1,el3 = iszero(el) ? ("", "") : ("\e[31m", "\e[m")
+	el2 = ('.', '^', 'v', 'x')[el+1]
 # 	mod.id ∈ ("eet", "stratagems") && print("\e[34m")
-	@printf("%s%c%c%c%c %7s %-22s %s%s\n", st1,
+	@printf("%s%s%c%c%c%c%c %7s %-22s %s%s%s\n", st1, el1,
 		isfile(joinpath(DOWN, mod.archive)) ? 'd' : '.',
-		isextracted(mod) ? 'x' : '.', s ? 's' : '.', st2,
+		isextracted(mod) ? 'x' : '.', s ? 's' : '.', st2, el2,
 		Dates.format(mod.lastupdate, "yyyy-mm"),
-		mod.id* (k>1 ? "/"*string(k) : ""), mod.description, st3)
+		mod.id* (k>1 ? "/"*string(k) : ""), mod.description, el3, st3)
 	print("\e[m")
 end
 # Mod extraction & update ««1
@@ -709,12 +729,12 @@ end
 	id = lowercase(tp2[1:end-4])
 	k = findlast('/', id); !isnothing(k) && (id = id[k+1:end])
 	startswith(id, "setup-") && (id = id[7:end])
-	return (id, comp)
+	return (id, String(comp))
 end
 function weidu_stack(dir::AbstractString)
 	file = joinpath(dir, "weidu.log")
 	isfile(file) || (file = devnull)
-	filter(!isnothing, weidu_filter.(eachline(file)))
+	NTuple{2,String}.(filter(!isnothing, weidu_filter.(eachline(file))))
 end
 @inline weidu_stack(dirs::NamedTuple) =
 	NamedTuple{keys(dirs)}(weidu_stack.(values(dirs)))
@@ -978,6 +998,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 	l = installorder(f == status ?
 		Dict(k => Set(c.id for c in moddb[k].components) for (k,v) in moddb) :
 		[id for (id,l) in selection if !isempty(l)]; moddb)
+	bad = early_late(;moddb)
 	for (id, k) in l
 		mod = moddb[id]
 		pause && (printlog("-- paused before: $f $id--"); readline())
@@ -994,7 +1015,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		else
 			printlog("\e[1m($n/$(length(selection)) $id)\e[m")
 		end
-		f(mod, k; selected, kwargs...)
+		f(mod, k; selected, bad, kwargs...)
 	end
 end
 "returns the first n (mod, compat) pairs for which some installation needs to be done."

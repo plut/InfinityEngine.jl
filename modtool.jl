@@ -102,50 +102,69 @@ end
 
 # Data structures ««1
 
+# ModComponent ««2
 mutable struct ModComponent
 	id::String
 	name::String
 	group::String
 	subgroup::String
-	# compatibility properties:
-	after::Set{String}
-	before::Set{String}
-	conflicts::Set{String}
-	depends::Set{String}
-	exclusive::Set{String}
 	path::Vector{String} # e.g. ["Fighting", "Proficiencies"]
+	exclusive::Set{String}
 	@inline ModComponent(i, t, g="", s="") =
 		new(string(i), t, g, s, (Set{String}() for _ in 1:5)..., [])
 	@inline ModComponent(d::AbstractDict) =
 		new((get(d, k,"") for k in ("id", "name", "group", "subgroup"))...,
-		 (Set{String}(get(d,k,[])) for k in ("after", "before", "conflicts", "depends", "exclusive"))...,
-		 get(d, "path", []))
+		get(d, "path", []), Set(get(d, "exclusive", [])))
 end
 @inline Base.isempty(c::ModComponent) =
 	all(isempty(getfield(c, i)) for i in 1:fieldcount(ModComponent))
 @inline toml_field(x) = x
 @inline toml_field(x::Set) = sort(collect(x))
-@inline db_prop(c::ModComponent, pairs...) =
+@inline dict(c::ModComponent, pairs...) =
 	Dict(pairs..., (string(s) => toml_field(getfield(c,  s))
 	for s in fieldnames(ModComponent) if !isempty(getfield(c, s)))...)
 @inline description(c::ModComponent) =
 	let n = isempty(c.name) ? "<unknown>" : c.name
 	isempty(c.subgroup) ? n : c.subgroup*'/'*n
 	end
+# ModCompat ««2
+mutable struct ModCompat
+	# compatibility properties:
+	components::String # to which components does this apply?
+	ranges::Set{UnitRange{Int}} # same, parsed
+	after::Set{String}
+	before::Set{String}
+# 	conflicts::Set{String}
+# 	depends::Set{String}
+	function ModCompat(desc = "", after=[], before=[])
+		m = new(desc, Set{UnitRange{Int}}(), Set(after), Set(before))
+		isempty(desc) || for r ∈ split(desc, ',')
+			l = split(r, r"[-:]")
+			push!(m.ranges, parse(Int,l[1]):parse(Int,l[min(2, length(l))]))
+		end
+		return m
+	end
+end
+@inline ModCompat(d::AbstractDict) =
+	ModCompat(get(d,"components",""), get(d,"after",[]), get(d,"before",[]))
+@inline dict(c::ModCompat) = Dict(string(k)=>getfield(c, k)
+	for k in (:components, :after, :before) if !isempty(getfield(c, k)))
+	
+@inline Base.in(i::Integer, c::ModCompat) = any(i ∈ r for r ∈ c.ranges)
+@inline Base.in(i::AbstractString, c::ModCompat) = parse(Int, i) ∈ c
+const empty_compat = ModCompat()
+# Mod ««2
 mutable struct Mod
-	# data stored in moddb file:
 	id::String
 	url::String
 	description::String
 	archive::String
-	class::String # install rank
+	class::String
 	lastupdate::Date
-# 	properties::Dict{String,ComponentProperties}
-	# this data exists only once the mod is extracted:
-	readme::String # can exceptionally be hardcoded
+	readme::String
 	tp2::String
 	languages::Vector{String}
-	compat::ModComponent # holds compatibility (etc.) for whole mod
+	compat::Vector{ModCompat} # holds compatibility (etc.) for mod components
 	components::Vector{ModComponent} # sorted as in tp2 file
 	game_lang::Int # starts at zero (WeiDU indexing)
 	tool_lang::Int
@@ -153,10 +172,124 @@ mutable struct Mod
 	@inline Mod(;id, url="", description="", class="", archive="", tp2="",
 		lastupdate=1970, languages = String[], readme="", components=[]) = begin
 		new(lowercase(id), url, description, archive, class, Date(lastupdate),
-			readme, tp2, languages, ModComponent("", ""),
+			readme, tp2, languages, [],
 			[ ModComponent(k,v) for (k,v) in pairs(components)], 0, 0)
 		end
 end
+@inline compat(m::Mod) = [m.compat; empty_compat]
+"returns the index of compatibility structure matching component k of mod."
+function component_compat(m::Mod, k)
+	i = parse(Int, k)
+	return something(findfirst(x->i ∈ x, compat(m)), 1)
+end
+"parses a string 'id:comp' as (mod id, compat index)."
+function compat_parse(str; moddb=moddb)
+	contains(str, ':') || return (str, 1)
+	(id, k) = split(str, ':'; limit=2)
+	return (id, component_compat(moddb[id], k))
+end
+@inline modgame(m::Mod; moddb=moddb) =
+	m.id ∈ moddb["eet"].compat[1].after ? :bg1 : :bg2
+@inline components(m::Mod) = (m.components)
+@inline components(m::Mod, c::ModCompat) = filter(x->x.id∈(c), components(m))
+@inline function component(mod, k; fail = false)
+	k = lowercase(string(k)); for c in mod.components; c.id == k && return c; end
+	if fail; error("mod '$(mod.id)': component '$k' not found")
+	else return nothing; end
+end
+@inline function component!(m::Mod, i, c)
+	i = something(i, length(m.components)+1)
+	resize!(m.components, max(length(m.components), i))
+	m.components[i] = c
+end
+"setlang: recompute mod languages; call this each time languages might change"
+@inline setlang!(m::Mod) = if !isempty(m.languages)
+	m.game_lang = argmin([lang_score(l, GAME_LANG) for l in m.languages]) - 1
+	m.tool_lang = argmin([lang_score(l, TOOL_LANG) for l in m.languages]) - 1
+else m.tool_lang = m.game_lang = 0; end
+
+# Mod DB handling ««1
+@inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
+@inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
+const mod_fields=(:id,:url,:class,:description,:archive,:readme,:languages,:tp2)
+function merge_moddb(filename = MODDB; moddb = moddb)
+	dict = TOML.parsefile(filename)
+	for (id, d) in dict
+		m = get!(moddb, id, Mod(;id))
+		for k in mod_fields
+			ifhaskey(d, string(k)) do x; setfield!(m, k, x); end
+		end
+		setlang!(m)
+		ifhaskey(d, "lastupdate") do x; m.lastupdate = Date(x); end
+		ifhaskey(d, "compat") do x
+			for k in sort(parse.(Int, keys(x)))
+				push!(m.compat, ModCompat(x[string(k)]))
+			end end
+		ifhaskey(d, "components") do x; for (k,prop) in x
+			# using dict constructor for `ModComponent`:
+			component!(m, parse(Int, k), ModComponent(prop))
+		end end
+	end
+	return moddb
+end
+@inline read_moddb(filename) = merge_moddb(filename; moddb=Dict{String,Mod}())
+function write_moddb(io::IO; moddb=moddb)
+	TOML.print(io, moddb; sorted=true) do m
+		d = Dict{String,Any}()
+		for k in mod_fields
+			x = getfield(m, k); isempty(x) || (d[string(k)] = x)
+		end
+		d["lastupdate"] = m.lastupdate
+		isempty(m.compat) ||
+			(d["compat"] = Dict(string(i) => dict(x) for (i,x) in pairs(m.compat)))
+		!isempty(m.components) && (d["components"] = Dict(string(i)=>dict(c)
+			for (i,c) in pairs(m.components) if !isempty(c)))
+		d
+	end
+end
+function write_moddb(filename::AbstractString = MODDB; moddb=moddb)
+	printlog("writing moddb: $filename")
+	mktemp(TEMP) do path, io # try this in a temporary file first
+		write_moddb(io; moddb)
+		close(io); read_moddb(path) # catch errors...
+		mv(path, filename; force=true)
+	end
+end
+
+@inline function findmod(id::Union{Symbol,String}; moddb = moddb)
+	k = get(moddb, lowercase(string(id)), nothing)
+	isnothing(k) || return k
+	error("mod '$id' not found")
+end
+@inline findmod(pattern::Regex; moddb = moddb) =
+	[ id for id in keys(moddb) if occursin(pattern, id) ]
+@inline function Base.setproperty!(m::Mod, k::Symbol, v)
+	x = getfield(m, k)
+	v == x && return
+	global moddb_changed = true
+	setfield!(m, k, convert(typeof(x), v))
+end
+
+"Given a *sorted* list of (mod id, compat index) pairs,
+returns the set of dependency arrows among these components,
+as pairs (i, j) of indices in the list."
+@inline function dependencies(list; moddb=moddb)
+	@assert issorted(list)
+	arrows = NTuple{2,Int}[]
+	for (i1, (id1, k1)) in pairs(list)
+		c = compat(moddb[id1])[k1]
+		for (id2, k2) in compat_parse.(c.after; moddb)
+			j2 = searchsorted(list, (id2, k2))
+			isone(length(j2)) && push!(arrows, (first(j2), i1))
+		end
+		for (id2, k2) in compat_parse.(c.before; moddb)
+			j2 = searchsorted(list, (id2, k2))
+			isone(length(j2)) && push!(arrows, (i1, first(j2)))
+		end
+	end
+	return arrows
+end
+
 # Mod classes for install order#««
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
 # (this is somewhat different from EE Mod Setup's ordering)
@@ -187,170 +320,6 @@ const MOD_CLASSES = split(replace("""
 	Final
 	BADCLASS
 """, r"#[^\n]*\n" =>"\n"))# »»
-@inline modarchive(m::Mod) = m.id*match(r"\.[^.]*$", m.url).match
-@inline modgame(m::Mod; moddb=moddb) =
-	m.id ∈ moddb["eet"].compat.after ? :bg1 : :bg2
-@inline modcomponents(m::Mod) = (m.components)
-@inline function modcomponent!(m::Mod, i, c)
-	i = something(i, length(m.components)+1)
-	resize!(m.components, max(length(m.components), i))
-	m.components[i] = c
-end
-"setlang: recompute mod languages; call this each time languages might change"
-@inline setlang!(m::Mod) = if !isempty(m.languages)
-	m.game_lang = argmin([lang_score(l, GAME_LANG) for l in m.languages]) - 1
-	m.tool_lang = argmin([lang_score(l, TOOL_LANG) for l in m.languages]) - 1
-else m.tool_lang = m.game_lang = 0; end
-
-# Mod DB handling ««1
-@inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
-@inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
-const mod_fields=(:id,:url,:class,:description,:archive,:readme,:languages,:tp2)
-function merge_moddb(filename = MODDB; moddb = moddb)
-	dict = TOML.parsefile(filename)
-	for (id, d) in dict
-		m = get!(moddb, id, Mod(;id))
-		for k in mod_fields
-			ifhaskey(d, string(k)) do x; setfield!(m, k, x); end
-		end
-		setlang!(m)
-		ifhaskey(d, "lastupdate") do x; m.lastupdate = Date(x); end
-		ifhaskey(d, "compat") do x; m.compat = ModComponent(x); end
-		ifhaskey(d, "components") do x; for (k,prop) in x
-			# using dict constructor for `ModComponent`:
-			modcomponent!(m, parse(Int, k), ModComponent(prop))
-		end end
-	end
-	return moddb
-end
-@inline read_moddb(filename) = merge_moddb(filename; moddb=Dict{String,Mod}())
-function write_moddb(io::IO; moddb=moddb)
-	TOML.print(io, moddb; sorted=true) do m
-		d = Dict{String,Any}()
-		for k in mod_fields
-			x = getfield(m, k); isempty(x) || (d[string(k)] = x)
-		end
-		d["lastupdate"] = m.lastupdate
-		isempty(m.compat) || (d["compat"] = db_prop(m.compat))
-		!isempty(m.components) && (d["components"] = Dict(
-			string(i)=>db_prop(c) for (i,c) in pairs(m.components) if !isempty(c)))
-		d
-	end
-end
-function write_moddb(filename::AbstractString = MODDB; moddb=moddb)
-	printlog("writing moddb: $filename")
-	mktemp(TEMP) do path, io # try this in a temporary file first
-		write_moddb(io; moddb)
-		close(io); read_moddb(path) # catch errors...
-		mv(path, filename; force=true)
-	end
-end
-
-@inline function findmod(id::Union{Symbol,String}; moddb = moddb)
-	k = get(moddb, lowercase(string(id)), nothing)
-	isnothing(k) || return k
-	error("mod '$id' not found")
-end
-@inline findmod(pattern::Regex; moddb = moddb) =
-	[ id for id in keys(moddb) if occursin(pattern, id) ]
-@inline function Base.setproperty!(m::Mod, k::Symbol, v)
-	x = getfield(m, k)
-	v == x && return
-	global moddb_changed = true
-	setfield!(m, k, convert(typeof(x), v))
-end
-@inline function component(mod, k; fail = false)
-	k = lowercase(string(k)); for c in mod.components; c.id == k && return c; end
-	if fail; error("mod '$(mod.id)': component '$k' not found")
-	else return nothing; end
-end
-
-"Given a *sorted* list of (mod id, component id) pairs,
-returns the set of dependency arrows among these components,
-as pairs (i, j) of indices in the list."
-@inline function dep_arrows(list; moddb=moddb)
-	@assert issorted(list)
-	@inline sortedfind(list, x) = !isempty(searchsorted(list, x))
-	# first build the mod ↔ component maps:
-	# j = cindex[i] = index of mod of i-th listed component
-	# i = mrange[j] = range of components with j-th mod
-	# (cindex[i] = j for all j ∈ mrange[i])
-	cindex = Vector{Int}(undef, length(list))
-	mrange = Int[]
-	oldid = nothing
-	for (i, (id, _)) in pairs(list)
-		if id ≠ oldid
-			oldid = id
-			push!(mrange, i)
-		end
-		cindex[i] = length(mrange)
-	end
-	mlist = [ first(list[i]) for i in mrange ] # list of individual mods
-	push!(mrange, length(list)+1)
-	mrange = [mrange[i]:mrange[i+1]-1 for i in 1:length(mrange)-1]
-	# build database of arrows
-	# for each (mod, comp) pair (A, x), (B, y), we look for the most
-	# specific relation first:
-	arrows0, arrows1, arrows2 = (NTuple{2,Int}[] for _ in 1:3)
-	for (j, id) in pairs(mlist)
-		cj = moddb[id].compat; u = mrange[j]
-		for b in cj.after
-			if contains(b, ':')
-				ib = searchsorted(list, rsplit(b, ':'; limit=2))
-				isone(length(ib)) && append!(arrows1, (first(ib), i) for i ∈ u)
-			else
-				jb = searchsorted(mlist, b)
-				isone(length(jb)) && append!(arrows2,
-					(ib,i) for ib ∈ mrange[first(jb)], i ∈ u)
-			end
-		end
-		for a in cj.before
-			if contains(a, ':')
-				ia = searchsorted(list, rsplit(a, ':'; limit=2))
-				isone(length(ia)) && append!(arrows1, (i, first(ia)) for i ∈ u)
-			else
-				ja = searchsorted(mlist, a)
-				isone(length(ja)) && append!(arrows2,
-					(i,ia) for ia ∈ mrange[first(ja)], i ∈ u)
-			end
-		end
-	end
-	for (i, (id, k)) in pairs(list)
-		ci = component(moddb[id], k); isnothing(ci) && continue
-		for b in ci.after
-			if contains(b, ':')
-				ib = searchsorted(list, rsplit(b, ':'; limit=2))
-				isone(length(ib)) && push!(arrows0, (first(ib), i))
-			else
-				jb = searchsorted(mlist, b)
-				isone(length(jb)) && append!(arrows1, (ib,i) for ib ∈ mrange[first(jb)])
-			end
-		end
-		for a in ci.before
-			if contains(a, ':')
-				ia = searchsorted(list, rsplit(a, ':'; limit=2))
-				isone(length(ia)) && push!(arrowscc, (i, first(ia)))
-			else
-				ja = searchsorted(mlist, a)
-				isone(length(ja)) && append!(arrows1, (i,ia) for ia ∈ mrange[first(ja)])
-			end
-		end
-	end
-	for x in (arrows0, arrows1, arrows2); unique!(sort!(x)); end
-	# arrows indexed by destination:
-	rarrows0,rarrows1,rarrows2 = sort.(reverse.((arrows0, arrows1, arrows2)))
-	arrows = copy(arrows0)
-	for (x,y) in arrows1
-		!sortedfind(rarrows0, (y,x)) && !sortedfind(rarrows1, (y,x)) &&
-			push!(arrows, (x,y))
-	end
-	for (x,y) in arrows2
-		!sortedfind(rarrows0, (y,x)) && !sortedfind(rarrows1, (y,x)) &&
-		!sortedfind(rarrows2, (y,x)) && push!(arrows, (x,y))
-	end
-	return arrows
-end
-
 @inline modclass(m::Mod) =
 	let k = (findfirst(==(m.class), MOD_CLASSES))
 	isnothing(k) && error("mod \"$(m.id)\": bad mod class \"$(m.class)\"")
@@ -385,25 +354,19 @@ function circulardep(vertices, edges, labels)
 			append!(stack, [path;next] for next ∈ edges[head])
 		end
 	end
-# 	for x in sort(collect(todo))
-# 		s = sort(collect(filter(∈(todo), get(dep.arrowsfrom, x, String[]))))
-# 		isempty(s) && continue
-# 		println(x, " -> ", join(s, ' '))
-# 	end
-	"Circular dependency found: $(labels) (TODO: write strong connected component algorithm)"
 end
 "Given a list of (mod => component set) (string => string set),
 returns the list of (mod, component) string pairs,
 sorted in best installation order. Fails if a circular dependency is found."
 function installorder(selection=selection; moddb=moddb)
-	list = sort([ (id, k) for (id, l) in pairs(selection) for k in l ])
+	list = unique!(sort!([ (id, component_compat(moddb[id], k))
+		for (id, l) in pairs(selection) for k in l]))
 	arrowsfrom, arrowsto = ([Set{Int}() for _ in 1:length(list)] for _ in 1:2)
-	for (b, a) in dep_arrows(list)
+	for (b, a) in dependencies(list)
 		push!(arrowsfrom[b], a); push!(arrowsto[a], b)
 	end
-	ord = Base.Order.By(sortkey1(list, moddb, arrowsto))
-	available = findall(isempty, arrowsfrom)
-	heapify!(available, ord)
+	ord = Base.Order.By(sortkey1(list, moddb, arrowsto), Base.Order.Reverse)
+	available = heapify!(findall(isempty, arrowsfrom), ord)
 
 	todo = Set(eachindex(list))
 	ret = sizehint!(empty(list), length(list))
@@ -423,7 +386,7 @@ function check_conflicts(;selection = selection, moddb=moddb)
 	# check exclusivity
 	for (id, clist) in selection
 		mod = moddb[id]
-		for c in modcomponents(mod)
+		for c in components(mod)
 			c.id ∈ clist || continue
 			for e in c.exclusive
 				push!(get!(owners, e, valtype(owners)([])), (id, c.id))
@@ -436,7 +399,7 @@ function check_conflicts(;selection = selection, moddb=moddb)
 	end
 end
 
-# Pre-TP2 functions: download, extract, status ««1
+# Pre-extraction functions: download, status ««1
 function updateurl(mod::Mod)
 	printlog("get latest release for $(mod.url)")
 	repo = mod.url[8:end]
@@ -584,7 +547,7 @@ function status(mod::Mod; selection=selection, selected=nothing, stack=stack)
 		mod.id, mod.description, st3)
 	print("\e[m")
 end
-# TP2 data extraction ««1
+# Mod extraction & update ««1
 function lang_score(langname, pref_lang=GAME_LANG)
 	for (i, pref) in pairs(pref_lang)
 		occursin(pref, langname) && return i
@@ -701,7 +664,6 @@ function readme(mod::Mod)
 	end
 end
 @inline tp2(mod::Mod) = extract(mod) && run(`view $(joinpath(MODS, mod.tp2))`)
-# INI data extraction ««1
 modsfrom(list; moddb = moddb) =
 	(x for x in lowercase.(string.(list)) if haskey(moddb, x))
 """    ini_data(id): updates from ProjectInfinity ini file."""
@@ -844,7 +806,7 @@ function edit(mod::Mod; moddb=moddb, selection=selection,
 	io = edit ? open(filename, "w") : stdout
 	edit && println(io, selection_preamble)
 	g = "\0"; h = ""
-	for c in modcomponents(mod)
+	for c in components(mod)
 		g ≠ c.group && (g = c.group; println(io, "# ", g, "⟦1"))
 		h ≠ c.subgroup &&
 			(h = c.subgroup; println(io,"## ",h, isempty(h) ? "⟧2" : "⟦2"))
@@ -865,7 +827,7 @@ findbranch(root::ComponentTree, path) = isempty(path) ? root :
 	findbranch(get!(root.children, first(path), ComponentTree()), path[2:end])
 function build_tree(;moddb=moddb)
 	root = ComponentTree()
-	for (id, m) in moddb, c in modcomponents(m)
+	for (id, m) in moddb, c in components(m)
 		isempty(c.path) && continue
 		push!(findbranch(root, c.path).alternatives, (id, c.id))
 	end
@@ -907,7 +869,7 @@ function write_selection(io::IO; selection=selection, moddb=moddb,
 	for (id,_) in order
 		m = moddb[id]; g = ""; h = "";
 # 		isempty(get(selection, id, ())) || extract(m)
-		for c in modcomponents(m)
+		for c in components(m)
 			isempty(c.path) || continue
 			id ≠ i && (i=id; println(io, "## ", i, " ⟦2"))
 			g ≠ c.group && (g = c.group; println(io, "### ", g, "⟦3"))

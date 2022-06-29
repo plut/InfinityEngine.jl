@@ -96,7 +96,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/A7#ImprovedArcher/readme/readme.
 tp2 = "a7#improvedarcher/a7#improvedarcher.tp2"
 url = "github:Argent77/A7-ImprovedArcher"
 
-    ["a7#improvedarcher".compat]
+    ["a7#improvedarcher".compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -136,7 +136,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/A7#ImprovedShamanicDance/readme/
 tp2 = "a7#improvedshamanicdance/a7#improvedshamanicdance.tp2"
 url = "github:Argent77/A7-ImprovedShamanicDance"
 
-    ["a7#improvedshamanicdance".compat]
+    ["a7#improvedshamanicdance".compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -269,7 +269,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/A7-TestYourMettle/readme/readme.
 tp2 = "a7-testyourmettle/a7-testyourmettle.tp2"
 url = "github:Argent77/A7-TestYourMettle"
 
-    [a7-testyourmettle.compat]
+    [a7-testyourmettle.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -311,7 +311,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/A7-TotLM-BG2EE/readme/readme.htm
 tp2 = "a7-totlm-bg2ee/a7-totlm-bg2ee.tp2"
 url = "github:Argent77/A7-TotLM-BG2EE"
 
-    [a7-totlm-bg2ee.compat]
+    [a7-totlm-bg2ee.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -353,7 +353,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/ac_quest/Readme-AC_QUEST-English
 tp2 = "ac_quest/ac_quest.tp2"
 url = "github:Gitjas/Ascalons_Questpack"
 
-    [ac_quest.compat]
+    [ac_quest.compat.1]
     after = ["eet"]
     before = ["acbre", "c#brandock", "eet_end"]
 
@@ -428,7 +428,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/AjantisBG1/docs/readme.ajantisbg
 tp2 = "ajantisbg1/setup-ajantisbg1.tp2"
 url = "github:Gibberlings3/Ajantis_BG1_Expansion"
 
-    [ajantisbg1.compat]
+    [ajantisbg1.compat.1]
     after = ["bg1npc", "c#endlessbg1", "transitions"]
     before = ["eet_end"]
 
@@ -629,7 +629,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/angelo/readme-angelo.html"
 tp2 = "angelo/setup-angelo.tp2"
 url = "github:Gibberlings3/Angelo"
 
-    [angelo.compat]
+    [angelo.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -759,7 +759,7 @@ readme = "https://artisans-corner.com/the-artisans-kitpack/"
 tp2 = "artisanskitpack/artisanskitpack.tp2"
 url = "github:ArtemiusI/The-Artisan-s-Kitpack"
 
-    [artisanskitpack.compat]
+    [artisanskitpack.compat.1]
     after = ["ajantisbg1", "ajantisbg2", "emily", "skitianpcs"]
 
     [artisanskitpack.components.1]
@@ -1098,7 +1098,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/ascension/doc/readme-ascension.h
 tp2 = "ascension/ascension.tp2"
 url = "github:InfinityMods/Ascension"
 
-    [ascension.compat]
+    [ascension.compat.1]
     after = ["eet"]
     before = ["eet_end", "iylos", "spell_rev", "stratagems", "wheels"]
 
@@ -1244,7 +1244,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/atweaks/doc/readme_atweaks.html"
 tp2 = "atweaks/setup-atweaks.tp2"
 url = "https://www.dropbox.com/s/hs3besqzichlru0/atweaks-v453.zip?dl=1"
 
-    [atweaks.compat]
+    [atweaks.compat.1]
     after = ["rr", "stratagems"]
 
     [atweaks.components.1]
@@ -1629,7 +1629,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/AurenAseph/Readme-Auren.html"
 tp2 = "aurenaseph/setup-aurenaseph.tp2"
 url = "github:Gibberlings3/AurenAseph"
 
-    [aurenaseph.compat]
+    [aurenaseph.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -1997,7 +1997,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/bank_of_baldurs_gate/readme/bank
 tp2 = "bank_of_baldurs_gate/bank_of_baldurs_gate.tp2"
 url = "github:SpellholdStudios/Bank_of_Baldurs_Gate"
 
-    [bank_of_baldurs_gate.compat]
+    [bank_of_baldurs_gate.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -2016,7 +2016,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/banterpack/BANTER-README.txt"
 tp2 = "banterpack/setup-banterpack.tp2"
 url = "github:Pocket-Plane-Group/Banter_Pack"
 
-    [banterpack.compat]
+    [banterpack.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -2086,7 +2086,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/bg1npc/readme-bg1npc.html"
 tp2 = "bg1npc/bg1npc.tp2"
 url = "github:Gibberlings3/BG1NPC"
 
-    [bg1npc.compat]
+    [bg1npc.compat.1]
     after = ["bgqe", "c#brage"]
     before = ["atweaks", "c#brandock", "cdtweaks", "eet_end", "framed"]
 
@@ -2765,7 +2765,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/bgqe/readmes/english.bgqe.txt"
 tp2 = "bgqe/setup-bgqe.tp2"
 url = "github:Gibberlings3/BG_Quests_And_Encounters"
 
-    [bgqe.compat]
+    [bgqe.compat.1]
     before = ["acbre", "bg1npc", "c#brage", "c#brandock", "eet_end"]
 
     [bgqe.components.1]
@@ -3008,7 +3008,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/c#sodboabri/readme.c#sodboabri.e
 tp2 = "c#sodboabri/c#sodboabri.tp2"
 url = "github:Gibberlings3/The_Boareskyr_Bridge_Scene"
 
-    ["c#sodboabri".compat]
+    ["c#sodboabri".compat.1]
     before = ["acbre", "c#brage", "c#brandock", "eet_end", "sodrtd"]
 
     ["c#sodboabri".components.1]
@@ -3037,7 +3037,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/C#Solaufein/readme.solaufeinsres
 tp2 = "c#solaufein/c#solaufein.tp2"
 url = "github:Gitjas/Solaufeins_Rescue_NPC"
 
-    ["c#solaufein".compat]
+    ["c#solaufein".compat.1]
     after = ["eet", "eilistraee", "subrace"]
     before = ["c#brandock", "corthalaromantique", "eet_end"]
 
@@ -3137,7 +3137,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/cdtweaks/readme-cdtweaks.html"
 tp2 = "cdtweaks/setup-cdtweaks.tp2"
 url = "github:Gibberlings3/Tweaks-Anthology"
 
-    [cdtweaks.compat]
+    [cdtweaks.compat.1]
     after = ["arestorationp", "bg1npc", "divine_remix", "item_rev", "iwdification", "thecalling", "tomeandblood"]
 
     [cdtweaks.components.1]
@@ -5316,7 +5316,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/cowledmenace/style/g3readme.css"
 tp2 = "cowledmenace/setup-cowledmenace.tp2"
 url = "github:Maltodaxtrin/CowledMenace"
 
-    [cowledmenace.compat]
+    [cowledmenace.compat.1]
     after = ["eet"]
     depends = ["eet"]
 
@@ -5352,7 +5352,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/crossmodbg2/readme-crossmodbg2.h
 tp2 = "crossmodbg2/setup-crossmodbg2.tp2"
 url = "github:Gibberlings3/Crossmod_Banter_Pack_for_Baldurs_Gate_II"
 
-    [crossmodbg2.compat]
+    [crossmodbg2.compat.1]
     after = ["adrian", "ajantisbg1", "ajantisbg2", "alternatives", "amber", "angelo", "aranw", "arath_eet", "aurenaseph", "branwen", "c#solaufein", "coran", "coranbgfriend", "dace_eet", "fade", "faren", "foundling", "gahesh", "gavin", "gavin_bg2", "haerdalis_friendship", "haerdalisromance", "haldamir", "hephernaanbg2", "hubelpot", "isra", "iylos", "keldorn_rom", "kelsey", "keto", "khalidbg2", "kido", "kindrek", "kitanya", "kivan", "longerroadee", "luxleysoa", "nathaniel", "neh'taniel", "nephele", "ninde_eet", "paina", "petsy", "quayle", "saerileth", "sarahtob", "sirene", "skiecost", "solaufein", "tashia", "thebeaurinlegacy", "tiax", "totdg", "tsujatha", "varshoon", "verrbg2", "verrsza", "willowisp", "xan", "xanbg1friend", "xulaye_eet", "yasraena", "yoshimoromance", "yoshimosremorse", "yvette"]
 
     [crossmodbg2.components.1]
@@ -5399,7 +5399,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/questpack/readme.html"
 tp2 = "setup-d0questpack.tp2"
 url = "http://mods.pocketplane.net/win-questpack-v34.zip"
 
-    [d0questpack.compat]
+    [d0questpack.compat.1]
     after = ["kelsey", "keto", "ub"]
 
     [d0questpack.components.1]
@@ -5634,7 +5634,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/d5_random_tweaks/readme-d5_rando
 tp2 = "d5_random_tweaks/d5_random_tweaks.tp2"
 url = "github:subtledoctor/d5_Random_Tweaks"
 
-    [d5_random_tweaks.compat]
+    [d5_random_tweaks.compat.1]
     after = ["item_rev", "spell_rev"]
     before = ["faiths_and_powers", "might_and_guile"]
 
@@ -6112,7 +6112,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/DeitiesOfFaerun/readme/readme.tx
 tp2 = "deitiesoffaerun/deitiesoffaerun.tp2"
 url = "github:Raduziel/Deities-Of-Faerun"
 
-    [deitiesoffaerun.compat]
+    [deitiesoffaerun.compat.1]
     after = ["allthingsmazzy", "branwen", "drake", "dsotsc", "eet", "finchnpc", "gavin", "glamnpcpack", "iwdification", "k9sharteelnpc", "nephele", "quayle", "raduzielsuniversalspells", "tenyathermidor", "tiax", "yeslicknpc", "yvette"]
     before = ["eet_end", "ihateundead", "tomeandblood"]
     conflicts = ["faiths_and_powers", "spell_rev"]
@@ -6698,7 +6698,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/DjinniCompanion/readme/readme.ht
 tp2 = "djinnicompanion/djinnicompanion.tp2"
 url = "github:Argent77/DjinniCompanion"
 
-    [djinnicompanion.compat]
+    [djinnicompanion.compat.1]
     after = ["a7-golemconstruction", "ascension", "d0questpack", "eet", "ub", "wheels"]
     before = ["eet_end"]
 
@@ -6777,7 +6777,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/dlcmerger/readme/readme.txt"
 tp2 = "dlcmerger/setup-dlcmerger.tp2"
 url = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
 
-    [dlcmerger.compat]
+    [dlcmerger.compat.1]
     before = ["bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "bgeetextpack", "bgsodde", "darkhorizonsbgee", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "k9sharteelnpc", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white"]
 
     [dlcmerger.components.1]
@@ -6814,7 +6814,7 @@ lastupdate = 2017-07-12
 tp2 = "dr8_hotfix/dr8_hotfix.tp2"
 url = "https://www.dropbox.com/s/w3io6hbyb9axgjk/DR8_hotfix.zip?dl=1"
 
-    [dr8_hotfix.compat]
+    [dr8_hotfix.compat.1]
     after = ["divine_remix"]
 
     [dr8_hotfix.components.1]
@@ -6970,7 +6970,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/EET/readme-EET.html"
 tp2 = "eet/eet.tp2"
 url = "github:Gibberlings3/EET"
 
-    [eet.compat]
+    [eet.compat.1]
     after = ["bg1aerie", "bg1npc", "bg1npcmusic", "bg1ub", "bgeetextpack", "bgsodde", "darkhorizonsbgee", "dlcmerger", "drake", "drizztsaga", "garrick-tt", "k9roughworld", "k9sharteelnpc", "karatur", "saradas_magic", "sirene", "soa", "sodrus", "tenyathermidor", "verrsza", "white"]
     before = ["bg2ee_ga", "bg2eer"]
 
@@ -8309,7 +8309,7 @@ readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-prese
 tp2 = "faiths_and_powers/faiths_and_powers.tp2"
 url = "github:UnearthedArcana/Faiths_and_Powers"
 
-    [faiths_and_powers.compat]
+    [faiths_and_powers.compat.1]
     after = ["a7#improvedshamanicdance", "divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood"]
     before = ["cdtweaks", "fnp_multiclass", "might_and_guile", "scales_of_balance", "stratagems"]
 
@@ -8449,7 +8449,7 @@ lastupdate = 2022-06-21
 tp2 = "fnp_multiclass/fnp_multiclass.tp2"
 url = "manual"
 
-    [fnp_multiclass.compat]
+    [fnp_multiclass.compat.1]
     after = ["deitiesoffaerun", "divine_remix", "faiths_and_powers", "fnp", "item_rev", "iwdification", "might_and_guile", "monasticorders", "song_and_silence", "spell_rev", "tomeandblood"]
     before = ["cdtweaks", "scales_of_balance", "stratagems"]
 
@@ -8839,7 +8839,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/herthimoney/readme/English/readm
 tp2 = "herthimoney/herthimoney.tp2"
 url = "github:Austin-BG/HTaM"
 
-    [herthimoney.compat]
+    [herthimoney.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -8873,7 +8873,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/hiddenadventure/hidden-adventure
 tp2 = "hiddenadventure/hiddenadventure.tp2"
 url = "github:Gitjas/hiddenadventure"
 
-    [hiddenadventure.compat]
+    [hiddenadventure.compat.1]
     after = ["eet"]
     before = ["cdtweaks", "eet_end"]
 
@@ -8962,7 +8962,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/hubelpot/readme/hubelpot-readme-
 tp2 = "hubelpot/hubelpot.tp2"
 url = "github:SpellholdStudios/Hubelpot_the_Vegetable_Merchant_NPC"
 
-    [hubelpot.compat]
+    [hubelpot.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -9003,7 +9003,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/iepbanters/readme/iepbanters-rea
 tp2 = "iepbanters/iepbanters.tp2"
 url = "github:SpellholdStudios/IEP_Extended_Banter"
 
-    [iepbanters.compat]
+    [iepbanters.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -9084,7 +9084,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/IHateUndead/readme/readme.txt"
 tp2 = "ihateundead/ihateundead.tp2"
 url = "github:Raduziel/I-Hate-Undead-Kitpack"
 
-    [ihateundead.compat]
+    [ihateundead.compat.1]
     after = ["deitiesoffaerun"]
 
     [ihateundead.components.1]
@@ -9365,7 +9365,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/isra/readme/isra-readme-english.
 tp2 = "isra/isra.tp2"
 url = "github:SpellholdStudios/Isra_NPC"
 
-    [isra.compat]
+    [isra.compat.1]
     after = ["eet", "gavin", "valerie"]
     before = ["eet_end"]
 
@@ -9406,7 +9406,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/item_rev/readme-item_rev.html"
 tp2 = "item_rev/item_rev.tp2"
 url = "github:Gibberlings3/ItemRevisions"
 
-    [item_rev.compat]
+    [item_rev.compat.1]
     after = ["eet"]
 
     [item_rev.components.1]
@@ -9623,7 +9623,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/itemupgrade/readme-itemupgrades.
 tp2 = "itemupgrade/itemupgrade.tp2"
 url = "github:Pocket-Plane-Group/Item_Upgrade"
 
-    [itemupgrade.compat]
+    [itemupgrade.compat.1]
     before = ["cdtweaks", "stratagems"]
 
     [itemupgrade.components.1]
@@ -9673,7 +9673,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/iwdification/readme-iwdification
 tp2 = "iwdification/setup-iwdification.tp2"
 url = "github:Gibberlings3/iwdification"
 
-    [iwdification.compat]
+    [iwdification.compat.1]
     after = ["garrick-tt", "rr"]
     before = ["a7-totlm-bg2ee", "cdtweaks", "stratagems"]
 
@@ -9846,7 +9846,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/jimfix/readme/readme.txt"
 tp2 = "jimfix/setup-jimfix.tp2"
 url = "github:Banananaut/Jimfix"
 
-    [jimfix.compat]
+    [jimfix.compat.1]
     after = ["ascension", "stratagems"]
 
     [jimfix.components.1]
@@ -10047,7 +10047,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/keto/KetoReadme.txt"
 tp2 = "keto/setup-keto.tp2"
 url = "github:Pocket-Plane-Group/Keto"
 
-    [keto.compat]
+    [keto.compat.1]
     after = ["kelsey"]
 
     [keto.components.1]
@@ -10578,7 +10578,7 @@ readme = "https://github.com/r-e-d/LeUI/blob/master/README.md"
 tp2 = "leui/leui.tp2"
 url = "github:r-e-d/LeUI"
 
-    [leui.compat]
+    [leui.compat.1]
     before = ["deities-of-faerun", "deitiesoffaerun", "eeuitweaks", "faiths_and_powers", "might_and_guile", "shadowadept", "stratagems", "tomeandblood"]
 
     [leui.components.1]
@@ -11016,7 +11016,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/might_and_guile/readme-M_n_G.htm
 tp2 = "might_and_guile/might_and_guile.tp2"
 url = "github:UnearthedArcana/Might_and_Guile"
 
-    [might_and_guile.compat]
+    [might_and_guile.compat.1]
     after = ["faiths_and_powers", "item_rev", "rr", "song_and_silence", "spell_rev"]
     before = ["refinements", "stratagems"]
 
@@ -11155,7 +11155,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/mih_eq/docs/readme-mih_eq.html"
 tp2 = "mih_eq/setup-mih_eq.tp2"
 url = "github:AngelGryph/MadeInHeaven_EncountersAndQuests"
 
-    [mih_eq.compat]
+    [mih_eq.compat.1]
     before = ["stratagems"]
 
     [mih_eq.components.1]
@@ -11646,7 +11646,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/minscfriendship/readme/minscfrie
 tp2 = "minscfriendship/minscfriendship.tp2"
 url = "github:SpellholdStudios/MinscFriendship"
 
-    [minscfriendship.compat]
+    [minscfriendship.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -12017,7 +12017,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/ntotsc/docs/ReadMe-NTotSC.txt"
 tp2 = "ntotsc/ntotsc.tp2"
 url = "github:SpellholdStudios/NTotSC"
 
-    [ntotsc.compat]
+    [ntotsc.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -12593,7 +12593,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/rolles/readme/rolles-readme-engl
 tp2 = "rolles/rolles.tp2"
 url = "github:SpellholdStudios/Rolles"
 
-    [rolles.compat]
+    [rolles.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -12630,7 +12630,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/rr/doc/readme_rr.html"
 tp2 = "rr/setup-rr.tp2"
 url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 
-    [rr.compat]
+    [rr.compat.1]
     after = ["beyond_the_law", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "song_and_silence", "spell_rev", "tod"]
     before = ["atweaks", "eet_tweaks", "stratagems", "virtue"]
     conflicts = ["iispellsystemadjustments"]
@@ -12727,7 +12727,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/ruad/readme/ruad-readme-english.
 tp2 = "ruad/ruad.tp2"
 url = "github:SpellholdStudios/RuadRofhessaItemUpgrade"
 
-    [ruad.compat]
+    [ruad.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -12852,7 +12852,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/saradas_magic_2/readme/saradas_m
 tp2 = "saradas_magic_2/saradas_magic_2.tp2"
 url = "github:SpellholdStudios/Saradas_Magic_for_BG2"
 
-    [saradas_magic_2.compat]
+    [saradas_magic_2.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -12907,7 +12907,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/scales_of_balance/readme-sob.htm
 tp2 = "scales_of_balance/scales_of_balance.tp2"
 url = "github:UnearthedArcana/Scales_of_Balance"
 
-    [scales_of_balance.compat]
+    [scales_of_balance.compat.1]
     after = ["atweaks", "cdtweaks", "item_rev", "kitpack", "might_and_guile", "rr", "tomeandblood"]
     conflicts = ["kit_rev", "kitpack"]
 
@@ -13331,7 +13331,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/sirinescall/readme/sirine_readme
 tp2 = "sirinescall/setup-sirinescall.tp2"
 url = "github:Pocket-Plane-Group/Lure_Of_Sirines_Call"
 
-    [sirinescall.compat]
+    [sirinescall.compat.1]
     after = ["eet"]
     before = ["c#brandock", "eet_end"]
 
@@ -13395,7 +13395,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/skills-and-abilities/readme.html
 tp2 = "skills-and-abilities/skills-and-abilities.tp2"
 url = "github:Gibberlings3/Skills-and-Abilities"
 
-    [skills-and-abilities.compat]
+    [skills-and-abilities.compat.1]
     after = ["might_and_guile", "song_and_silence"]
     before = ["enhanced-powergaming-scripts"]
 
@@ -13856,7 +13856,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/sodrtd/readme.sodrtd.english.txt
 tp2 = "sodrtd/sodrtd.tp2"
 url = "github:Gibberlings3/Road_To_Discovery_for_SoD"
 
-    [sodrtd.compat]
+    [sodrtd.compat.1]
     after = ["eet", "themed_tweaks"]
     before = ["eet_end"]
 
@@ -13920,7 +13920,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/song_and_silence/readme-song_and
 tp2 = "song_and_silence/setup-song_and_silence.tp2"
 url = "github:Gibberlings3/SongAndSilence"
 
-    [song_and_silence.compat]
+    [song_and_silence.compat.1]
     before = ["cdtweaks"]
 
     [song_and_silence.components.1]
@@ -14031,7 +14031,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/spell_rev/readme-spell_rev.html"
 tp2 = "spell_rev/setup-spell_rev.tp2"
 url = "github:Gibberlings3/SpellRevisions"
 
-    [spell_rev.compat]
+    [spell_rev.compat.1]
     after = ["ub"]
 
     [spell_rev.components.1]
@@ -14157,9 +14157,13 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/stratagems/doc/readme-stratagems
 tp2 = "stratagems/setup-stratagems.tp2"
 url = "github:Gibberlings3/SwordCoastStratagems"
 
-    [stratagems.compat]
+    [stratagems.compat.1]
     after = ["ascension", "d0questpack", "eetact2", "item_rev", "refinements", "spell_rev", "tactics", "wheels"]
     before = ["cdtweaks", "eet_end"]
+
+		[stratagems.compat.2]
+		components = "1500:1510"
+		before = ["faiths_and_powers"]
 
     [stratagems.components.1]
     id = "100"
@@ -15158,7 +15162,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/thecalling/readme-thecalling.htm
 tp2 = "thecalling/thecalling.tp2"
 url = "github:Gibberlings3/The_Calling"
 
-    [thecalling.compat]
+    [thecalling.compat.1]
     before = ["cdtweaks", "stratagems"]
 
     [thecalling.components.1]
@@ -15184,7 +15188,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/themed_tweaks/readme.themed_twea
 tp2 = "themed_tweaks/themed_tweaks.tp2"
 url = "github:lzenner/themed_tweaks"
 
-    [themed_tweaks.compat]
+    [themed_tweaks.compat.1]
     after = ["bg1npc", "c#endlessbg1", "eet", "transitions"]
 
     [themed_tweaks.components.1]
@@ -15245,7 +15249,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/therune/Readme.txt"
 tp2 = "therune/setup-therune.tp2"
 url = "github:RoxanneSHS/The-Rune"
 
-    [therune.compat]
+    [therune.compat.1]
     after = ["cowledmenace"]
 
     [therune.components.1]
@@ -15342,7 +15346,7 @@ readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
 tp2 = "tnt/tnt.tp2"
 url = "github:BGforgeNet/bg2-tweaks-and-tricks"
 
-    [tnt.compat]
+    [tnt.compat.1]
     after = ["ctb"]
 
     [tnt.components.1]
@@ -15904,7 +15908,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/tomeandblood/README.txt"
 tp2 = "tomeandblood/tomeandblood.tp2"
 url = "github:subtledoctor/TomeAndBlood"
 
-    [tomeandblood.compat]
+    [tomeandblood.compat.1]
     after = ["spell_rev"]
     before = ["cdtweaks", "faiths_and_powers", "might_and_guile", "scales_of_balance", "stratagems"]
 
@@ -16134,7 +16138,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/transitions/readme.transitions.e
 tp2 = "transitions/transitions.tp2"
 url = "github:Gibberlings3/transitions"
 
-    [transitions.compat]
+    [transitions.compat.1]
     after = ["c#endlessbg1", "eet"]
     before = ["bg1re", "eet_end"]
 
@@ -16327,7 +16331,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/ua/items/readme.md"
 tp2 = "ua/ua.tp2"
 url = "github:BGforgeNet/bg2-uniqueartifacts"
 
-    [ua.compat]
+    [ua.compat.1]
     before = ["randomiser", "stratagems"]
 
     [ua.components.1]
@@ -16494,7 +16498,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/underrep/readme-underrep.txt"
 tp2 = "underrep/setup-underrep.tp2"
 url = "github:Pocket-Plane-Group/Under-Respresented_Items"
 
-    [underrep.compat]
+    [underrep.compat.1]
     before = ["cdtweaks"]
 
     [underrep.components.1]
@@ -16570,7 +16574,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/valygarfriendship/readme/valygar
 tp2 = "valygarfriendship/valygarfriendship.tp2"
 url = "github:SpellholdStudios/ValygarFriendship"
 
-    [valygarfriendship.compat]
+    [valygarfriendship.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 
@@ -16746,7 +16750,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/wheels/readme-wheels.html"
 tp2 = "wheels/setup-wheels.tp2"
 url = "github:Gibberlings3/WheelsOfProphecy"
 
-    [wheels.compat]
+    [wheels.compat.1]
     before = ["stratagems"]
 
     [wheels.components.1]
@@ -17067,7 +17071,7 @@ readme = "/home/jerome/jeux/ciopfs/modtool/mods/yoshimo/readme/yoshimofriendship
 tp2 = "yoshimo/yoshimo.tp2"
 url = "github:SpellholdStudios/YoshimoFriendship"
 
-    [yoshimo.compat]
+    [yoshimo.compat.1]
     after = ["eet"]
     before = ["eet_end"]
 

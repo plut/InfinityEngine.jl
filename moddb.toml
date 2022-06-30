@@ -179,7 +179,7 @@ archive = "a7-convenienteenpcs.zip"
 class = "NPC-Related"
 description = "Convenient EE NPCs"
 lastupdate = 1970-01-01
-url = "github:Argent77/A7-NoEENPCs"
+url = "https://github.com/Argent77/A7-NoEENPCs/releases/download/latest/a7-convenienteenpcs.zip"
 
 [a7-customkits]
 archive = "A7-Spellsword-v1.5.zip"
@@ -2008,12 +2008,6 @@ description = "Bear Walker - a Werebear/Ranger Kit"
 lastupdate = 1970-01-01
 url = "github:thisisulb/BearWalkerKit"
 
-[beyond_the_law]
-class = "NPC"
-description = "Beyond the Law"
-lastupdate = 1970-01-01
-url = "github:SpellholdStudios/Beyond_the_Law"
-
 [bg1aerie]
 archive = "BG1AerieV12.zip"
 class = "NPC-Related"
@@ -2870,6 +2864,30 @@ url = "https://downloads.weaselmods.net/download/bristlelick/?wpdmdl=406"
     [bristlelick.components.1]
     id = "0"
     name = "Bristlelick—the gnoll companion for BGEE"
+
+[btl]
+archive = "beyond-the-law-v2.0.0.zip"
+class = "NPC"
+description = "Beyond the Law"
+languages = ["English"]
+lastupdate = 2021-10-26
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/btl/readme/btl-readme-english.html"
+tp2 = "btl/btl.tp2"
+url = "https://github.com/SpellholdStudios/Beyond_the_Law/releases/download/v2.0.0/beyond-the-law-v2.0.0.zip"
+
+    [btl.components.1]
+    id = "0"
+    name = "Beyond the Law with Kiyone original sound set"
+    subgroup = "Beyond the Law - Kova & Kiyone"
+
+    [btl.components.2]
+    id = "1"
+    name = "Beyond the Law with alternate sound set for Kiyone (Female4)"
+    subgroup = "Beyond the Law - Kova & Kiyone"
+
+    [btl.components.3]
+    id = "2"
+    name = "Better balanced BTL items"
 
 [butchery]
 class = "Quests"
@@ -6850,8 +6868,14 @@ url = "github:SpellholdStudios/DSotSC"
 archive = "Demon Summon Ritual_v7.zip"
 class = "Items"
 description = "Unholy Gate Opening Ritual Book"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2019-11-17
+tp2 = "dsr/setup-dsr.tp2"
 url = "https://www.dropbox.com/s/5g43s13138wkpgc/Demon%20Summon%20Ritual_v7.zip?dl=1"
+
+    [dsr.components.1]
+    id = "0"
+    name = "Demon-summoning-ritual (WeiDU)"
 
 [duskblade]
 archive = "duskblade kit for bg2ee.zip"
@@ -8060,8 +8084,31 @@ url = "weaselmods:eilistraees-song"
 archive = "emad_v11.zip"
 class = "SmallQuests"
 description = "Every Mod and Dog"
-lastupdate = 1970-01-01
+languages = ["English", "German", "Russian", "French"]
+lastupdate = 2020-08-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/emad/readme-emad.french.html"
+tp2 = "emad/setup-emad.tp2"
 url = "https://www.gibberlings3.net/files/file/707-every-mod-and-dog/?do=download"
+
+    [emad.components.1]
+    id = "0"
+    name = "A Z-rated Adventure - an IM4 Non-Entry"
+
+    [emad.components.2]
+    id = "1"
+    name = "The Promise of a Troll"
+
+    [emad.components.3]
+    id = "2"
+    name = "A Bhaalspawn's Best Friend"
+
+    [emad.components.4]
+    id = "3"
+    name = "Under Her Spell"
+
+    [emad.components.5]
+    id = "5"
+    name = "Character Medley"
 
 [emily]
 archive = "emily.tar.gz"
@@ -12625,7 +12672,7 @@ tp2 = "rr/setup-rr.tp2"
 url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 
     [rr.compat.1]
-    after = ["beyond_the_law", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "song_and_silence", "spell_rev", "tod"]
+    after = ["btl", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "song_and_silence", "spell_rev", "tod"]
     before = ["atweaks", "eet_tweaks", "stratagems", "virtue"]
 
     [rr.components.1]

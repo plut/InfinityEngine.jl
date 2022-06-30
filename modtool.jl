@@ -604,7 +604,7 @@ end
 Assuming that this mod is extracted, update all mod info available from
 extracted files: tp2 file, readme, languages, list of mod components.
 """
-function update(m::Mod)
+function update(m::Mod; moddb=moddb)
 	id = m.id
 	printsim("updating mod $id...")
 	cd(MODS) do
@@ -672,6 +672,7 @@ function update(m::Mod)
 	m.lastupdate = Date(unix2datetime(maximum(mtime(joinpath(root, f))
 		for (root,_,files) in walkdir(joinpath(MODS, m.id))
 		for f in files if endswith(f, r"\.tp[2ah]"i); init=0)))
+	ini_data(m; moddb)
 	true
 end
 function readme(mod::Mod)
@@ -909,7 +910,7 @@ function display_tree(io::IO, root, level=1;
 		display_tree(io, c, level+1; selection, moddb, installed, order)
 	end
 end
-function write_selection(io::IO; selection=selection, moddb=moddb,
+function save(io::IO; selection=selection, moddb=moddb,
 		stack=stack, order=installorder(selection))
 	installed = stack_installed(stack)
 	println(io, selection_preamble)
@@ -934,9 +935,9 @@ function write_selection(io::IO; selection=selection, moddb=moddb,
 	end
 	end
 end
-function write_selection(filename::AbstractString = SELECTION; kwargs...)
+function save(filename::AbstractString = SELECTION; kwargs...)
 	printlog("writing selection: $filename")
-	open(filename, "w") do io; write_selection(io; kwargs...); end
+	open(filename, "w") do io; save(io; kwargs...); end
 end
 """    edit()
 
@@ -950,7 +951,7 @@ This is built of two parts:
 function edit(;file=SELECTION, selection=selection, moddb=moddb,
 		 stack=stack, order = installorder(allcomponents(moddb); moddb))
 	open(file, "w") do io
-		write_selection(io; selection, moddb, stack, order)
+		save(io; selection, moddb, stack, order)
 	end
 	component_editor(file; selection)
 end
@@ -1012,13 +1013,13 @@ function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 			printwarn(isnothing(c) ? "$k (not found)" : "$k ($(description(c)))")
 		end
 		ask(==('y'), "update selection? (yn)") && 
-			(selection[id] = Set(now_installed); write_selection())
+			(selection[id] = Set(now_installed); save())
 	end
 end
 function uninstall(mod::Mod; selection=selection, write=false, kwargs...)
 	delete!(selection, mod.id)
 	install(mod; write, kwargs...)
-	write && write_selection()
+	write && save()
 end
 function uninstall(n::Integer=-1 ; moddb=moddb, stack=stack, simulate=false,
 		upto=nothing, confirm=true, write=false)
@@ -1043,7 +1044,7 @@ function uninstall(n::Integer=-1 ; moddb=moddb, stack=stack, simulate=false,
 				simulate && return
 				cd(GAMEDIR[modgame(m)]) do; run(ignorestatus(cmd)); end
 				write && ask(==('y'), "update selection? (yn)") &&
-					(setdiff!(selection[prev], clist); write_selection())
+					(setdiff!(selection[prev], clist); save())
 			end
 			!isnothing(upto) && (delete!(upto, prev); isempty(upto) && break)
 		end

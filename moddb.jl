@@ -1,11 +1,9 @@
 #! /usr/bin/env julia
 # todo:
-# fullplate
-# c0warlock
+# sodrtd
 # yoshimosremorse
 # yoshimoromance
 # 7c-yoshi
-# a7#improvedshamanicdance
 # a7-banteraccelerator
 # a7-golemconstruction
 modtool_no_init = true
@@ -113,7 +111,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	# Spellhold Studios ««2
 	mkmod("saradas_magic", "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip", "Saradas Magic", "Items")
 	mkmod("saradas_magic_2", "github:SpellholdStudios/Saradas_Magic_for_BG2", "Saradas BG2", "Spells")
-	mkmod("beyond_the_law", "github:SpellholdStudios/Beyond_the_Law", "Beyond the Law", "NPC")
+	mkmod("btl", "github:SpellholdStudios/Beyond_the_Law", "Beyond the Law", "NPC")
 	mkmod("kiara-zaiya", "github:SpellholdStudios/Kiara_Zaiya", "Kiara Zaiya NPCs", "NPC")
 	mkmod("iylos", "github:SpellholdStudios/Iylos", "Iylos (ToB monk)", "NPC")
 	mkmod("firkraag", "github:SpellholdStudios/Super_Firkraag", "Super Firkraag", "Quests")
@@ -1870,8 +1868,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		for (id, mod) in (simulate ? Iterators.take(moddb, 20) : moddb)
 # 		for (id, mod) in Iterators.take(moddb, 20)
 			if isextracted(mod)
-				update(mod)
-				ini_data(mod; moddb)
+				update(mod; moddb)
 			end
 			for f in id.*(".tar.gz", ".zip", ".7z", ".rar")
 				isfile(joinpath(DOWN, f)) && (mod.archive = f; break)

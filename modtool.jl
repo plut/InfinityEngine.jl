@@ -225,7 +225,7 @@ else m.tool_lang = m.game_lang = 0; end
 	Dict(k => Set(c.id for c in moddb[k].components) for (k,v) in moddb)
 @inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
 @inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
-const mod_fields=(:id,:url,:class,:description,:archive,:readme,:languages,:tp2)
+const mod_fields=(:url,:class,:description,:archive,:readme,:languages,:tp2)
 function merge_moddb(filename = MODDB; moddb = moddb)
 	dict = TOML.parsefile(filename)
 	for (id, d) in dict

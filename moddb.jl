@@ -106,7 +106,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	# Argent77 ««2
 	mkmod("a7-convenienteenpcs", "github:Argent77/A7-NoEENPCs",
 		"Convenient EE NPCs", "NPC-Related")
-	mkmod("extraexpandedencounters", "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip", "Extra Expanded Encounters", "Quests")
+	mkmod("extraexpandedenhancedencounters", "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip", "Extra Expanded Encounters", "Quests")
 	# ArtemiusI ««2
 	mkmod("housetweaks", "github:ArtemiusI/House-Rule-Tweaks",
 		"House Rule Tweaks", "Tweak")
@@ -421,10 +421,12 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		50 => (path=["Skills", "Bhaalspawn"],),
 		60 => (path=["NPC"],),
 		61 => (path=["NPC"],),
-		1000 => (path=["Story", "ToB"],), # FIXME, should have Tactics instead
+# 		1000 => (path=["Story", "ToB"],), # FIXME, should have Tactics instead
 		2200 => (path=["NPC"],),
+		2000 => (path=["Cosmetic", "Portraits"],),
 		2100 => (path=["Cosmetic", "Portraits"],),
 		2300 => (path=["Cosmetic", "Portraits"],),
+		2400 => (path=["Story", "ToB"],),
 	)
 	setmod!("atweaks",
 		"" => (after = ["rr", "stratagems"],),
@@ -544,6 +546,25 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		 160 => (path=["Cosmetic", "Portraits"],),
 		 200 => (path=["NPC"],),
 	),
+	setmod!("c#endlessbg1",
+		0 => (path=["Story", "BG1", "Ending"],),
+		1 => (path=["Story", "BG1", "Ending"],),
+		2 => (path=["Story", "BG1", "Ending"],),
+		3 => (path=["Story", "BG1", "Ending"],),
+		4 => (path=["Story", "BG1", "Ending"],),
+		5 => (path=["Story", "BG1", "Ending"],),
+		6 => (path=["Story", "BG1", "Ending"],),
+		7 => (path=["Story", "BG1", "Ending"],),
+		8 => (path=["Story", "BG1", "Ending"],),
+		9 => (path=["Story", "BG1", "Ending"],),
+		10 => (path=["Story", "BG1", "Ending"],),
+		11 => (path=["Story", "BG1", "Ending"],),
+		12 => (path=["Story", "BG1", "Ending"],),
+		13 => (path=["Story", "BG1", "Ending"],),
+		14 => (path=["Story", "SoD"],),
+		15 => (path=["Story", "SoD"],),
+		16 => (path=["Story", "SoD"],),
+	)
 	setmod!("c#sodboabri",
 		0 => (path=["Story", "SoD"],),
 		1 => (path=["Story", "SoD"],),
@@ -1800,7 +1821,8 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		71 => (path=["Story", "BG1", "Ending",],),
 		72 => (path=["Story", "BG1", "Ending",],),
 		73 => (path=["Story", "BG1", "Ending",],),
-		80 => (path=["Story", "SoD", "Ending",],),
+		80 => (path=["Story", "BG1", "Ending",],),
+		130 => (path=["Story", "SoD", "Ending",],),
 		140 => (path=["Story", "BG2", "Ending",],),
 	)
 	setmod!("ub",
@@ -1839,6 +1861,10 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		6 => (path = ["NPC", "Xan"],),
 	)
 	setmod!("xanbg1friend", 0 => (path = ["NPC", "Xan"],))
+	setmod!("yeslicknpc",
+		0 => (path=["NPC", "Yeslick"],),
+		1 => (path=["NPC", "Yeslick"],),
+	)
 	setmod!("yoshimo", 0 => (path = ["NPC", "Yoshimo"],))
 		# extract data from already downloaded/extracted mods
 		for (id, mod) in (simulate ? Iterators.take(moddb, 20) : moddb)

@@ -3019,18 +3019,22 @@ url = "github:Gibberlings3/The_Boareskyr_Bridge_Scene"
     ["c#sodboabri".components.1]
     id = "0"
     name = "Scene at Boareskyr Bridge will be Acknowledged: Add NPC Reactions"
+    path = ["Story", "SoD"]
 
     ["c#sodboabri".components.2]
     id = "1"
     name = "Add Description Text to Original Scene at Bridge"
+    path = ["Story", "SoD"]
 
     ["c#sodboabri".components.3]
     id = "2"
     name = "Bridge Scene has Different Choices"
+    path = ["Story", "SoD"]
 
     ["c#sodboabri".components.4]
     id = "3"
     name = "Add Stat Changes to Choices at Bridge"
+    path = ["Story", "SoD"]
 
 ["c#solaufein"]
 class = "NPC"
@@ -3079,6 +3083,7 @@ url = "github:ArtemiusI/Warlock"
     [c0warlock.components.1]
     id = "0"
     name = "Warlock Kit"
+    path = ["Classes"]
 
 [calin]
 archive = "calin-v1.5.zip"
@@ -5427,7 +5432,7 @@ url = "http://mods.pocketplane.net/win-questpack-v34.zip"
     exclusive = ["cutc7g.bcs", "hellgen2.cre", "hellself.cre", "hellself.eff", "sphl001.spl", "sphl002.spl", "sphl003.spl", "sphl004.spl", "sphl005.spl", "spin747.spl", "spin749.spl", "spin751.spl", "spin753.spl", "spin755.spl"]
     id = "10"
     name = "Revised Hell Trials"
-    path = ["Story", "BG2"]
+    path = ["Story", "BG2", "Ending"]
 
     [d0questpack.components.13]
     exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"]
@@ -5447,29 +5452,23 @@ url = "http://mods.pocketplane.net/win-questpack-v34.zip"
     exclusive = ["pirmur02.cre", "pirmur05.cre", "ppsanik.cre"]
     id = "13"
     name = "Saving Sanik In Brynnlaw"
-    path = ["Story", "BG2"]
+    path = ["Story", "BG2", "Brynnlaw"]
 
     [d0questpack.components.16]
     id = "14"
     name = "Burglary Of The Bookkeeper"
 
     [d0questpack.components.17]
-    exclusive = ["sudryad.cre", "sufake.bam", "sufake.itm", "suinvis.cre", "sumound.cre", "sutear.bam", "sutear.itm"]
     id = "15"
     name = "New Fate For The Dryads' Acorns"
-    path = ["Quests", "BG2"]
 
     [d0questpack.components.18]
-    exclusive = ["baisera.cre", "besamen.cre"]
     id = "16"
     name = "The Tragedy Of Besamen"
-    path = ["Quests", "BG2"]
 
     [d0questpack.components.19]
-    exclusive = ["kamir.cre"]
     id = "17"
     name = "Further Slaver Involvement"
-    path = ["Quests", "BG2"]
 
     [d0questpack.components.2]
     id = "1"
@@ -5481,22 +5480,16 @@ url = "http://mods.pocketplane.net/win-questpack-v34.zip"
     name = "Sending The Solamnic Knights Home"
 
     [d0questpack.components.21]
-    exclusive = ["ar2402.are"]
     id = "19"
     name = "Nazariel The Lich"
-    path = ["Quests", "BG2"]
 
     [d0questpack.components.22]
-    exclusive = ["spin671.spl"]
     id = "20"
     name = "Reward Negotiation"
-    path = ["Quests", "BG2"]
 
     [d0questpack.components.23]
-    exclusive = ["ar0530.are", "ar0530.bcs"]
     id = "21"
     name = "Infernal Thievery"
-    path = ["Quests", "BG2"]
 
     [d0questpack.components.3]
     id = "2"
@@ -6970,7 +6963,7 @@ class = "Initial"
 description = "Enhanced Edition Trilogy"
 id = "eet"
 languages = ["English", "Polski (Polish)", "Spanish", "French", "Czech", "Russian", "Deutsch (German)"]
-lastupdate = 2022-06-24
+lastupdate = 2022-06-30
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/EET/readme-EET.html"
 tp2 = "eet/eet.tp2"
 url = "github:Gibberlings3/EET"
@@ -7006,8 +6999,8 @@ url = "Manual"
     [eet_end.components.1]
     id = "0"
     name = "Standard installation"
-    subgroup = "EET end (last mod in install order)"
     path = ["EET"]
+    subgroup = "EET end (last mod in install order)"
 
     [eet_end.components.2]
     id = "1"
@@ -7060,11 +7053,20 @@ lastupdate = 1970-01-01
 url = "https://www.dropbox.com/s/km6ly9tlexfvuv2/SendNPCInnEET.zip?dl=1"
 
 [eet_swo]
+archive = "eet_swo.tar.gz"
 class = "NPC-Related"
 description = "The Sword of Chaos (Tamoko)"
 id = "eet_swo"
-lastupdate = 1970-01-01
+languages = ["English", "Deutsch", "Russian (by arcanecoast.ru)"]
+lastupdate = 2022-06-30
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/eet_swo/Tamoko_readme.txt"
+tp2 = "eet_swo/eet_swo.tp2"
 url = "github:RoxanneSHS/Tamoko"
+
+    [eet_swo.components.1]
+    id = "0"
+    name = "The Sword of Chaos"
+    path = ["Story", "BG1", "Ending"]
 
 [eet_tweaks]
 archive = "eet_tweaks.tar.gz"
@@ -8572,6 +8574,7 @@ url = "http://www.mediafire.com/download/726ji7jzgomi1vq/fullplate-v2.2.zip"
     [fullplate.components.1]
     id = "1"
     name = "Full Plate And Packing Steel: Between You And Harm (alternate armour system)"
+    path = ["Fighting", "Armor"]
 
     [fullplate.components.2]
     id = "102"
@@ -9359,12 +9362,12 @@ url = "github:RoxanneSHS/Asylum"
     [impasylum.components.1]
     id = "0"
     name = "Improved Asylum Mod"
-    path = ["Story", "BG2"]
+    path = ["Story", "BG2", "Brynnlaw"]
 
     [impasylum.components.2]
     id = "1"
     name = "Spellhold Lich"
-    path = ["Story", "BG2"]
+    path = ["Story", "BG2", "Brynnlaw"]
 
 [indinpc]
 archive = "indinpc.tar.gz"
@@ -10141,8 +10144,68 @@ url = "https://www.dropbox.com/s/cse9995k76knitr/KaraTur.rar?dl=1"
 class = "NPC-Related"
 description = "Keldorn Romance"
 id = "keldorn_rom"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2021-09-28
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/keldorn_rom/docs/readme-keldorn_rom.txt"
+tp2 = "keldorn_rom/keldorn_rom.tp2"
 url = "github:Gibberlings3/Keldorn_Romance"
+
+    [keldorn_rom.compat.1]
+    after = ["eet"]
+    before = ["cdtweaks", "eet_end"]
+
+    [keldorn_rom.components.1]
+    id = "0"
+    name = "berelinde's Keldorn Romance"
+
+    [keldorn_rom.components.10]
+    id = "9"
+    name = "Speed: minimum 45 minutes (SoA)/60 minutes (ToB) real time between dialogues"
+    subgroup = "Select Keldorn's dialogue timer:"
+
+    [keldorn_rom.components.11]
+    id = "10"
+    name = "Speed: minimum 1 hour (SoA)/1.5 hour (ToB) real time between dialogues"
+    subgroup = "Select Keldorn's dialogue timer:"
+
+    [keldorn_rom.components.2]
+    id = "1"
+    name = "Romance is available to LG/NG protagonists only (Recommended)"
+    subgroup = "Romance Match"
+
+    [keldorn_rom.components.3]
+    id = "2"
+    name = "Romance is available to LG/NG/CG protagonists"
+    subgroup = "Romance Match"
+
+    [keldorn_rom.components.4]
+    id = "3"
+    name = "Romance is available to LG/NG/CG/LN protagonists"
+    subgroup = "Romance Match"
+
+    [keldorn_rom.components.5]
+    id = "4"
+    name = "Romance is available to LG/NG/CG/LN/N protagonists"
+    subgroup = "Romance Match"
+
+    [keldorn_rom.components.6]
+    id = "5"
+    name = "More youthful-looking portrait by Senka"
+
+    [keldorn_rom.components.7]
+    id = "6"
+    name = "Speed: minimum 10 minutes (SoA)/15 minutes (ToB) real time between dialogues"
+    subgroup = "Select Keldorn's dialogue timer:"
+
+    [keldorn_rom.components.8]
+    id = "7"
+    name = "Speed: minimum 20 minutes (SoA)/30 minutes (ToB) real time between dialogues"
+    subgroup = "Select Keldorn's dialogue timer:"
+
+    [keldorn_rom.components.9]
+    id = "8"
+    name = "Speed (Default): minimum 30 minutes (SoA)/45 minutes (ToB) real time between dialogues"
+    subgroup = "Select Keldorn's dialogue timer:"
 
 [kelsey]
 archive = "KelseyV5.zip"
@@ -11692,41 +11755,49 @@ url = "github:AngelGryph/MadeInHeaven_SpellPack"
     [mih_sp.components.1]
     id = "0"
     name = "Made in Heaven: Spell Restorations"
+    path = ["Spells"]
 
     [mih_sp.components.10]
     group = "Spell Effect Tweaks"
     id = "9"
     name = "No Elemental Mind Battle"
+    path = ["Spells", "Conjuration"]
 
     [mih_sp.components.11]
     group = "Spell Effect Tweaks"
     id = "10"
     name = "True Meteor Swarm (EXPERIMENTAL)"
+    path = ["Spells", "Evocation"]
 
     [mih_sp.components.12]
     group = "Spell Effect Tweaks"
     id = "11"
     name = "Prevent damage during Timestop"
+    path = ["Spells", "Alteration"]
 
     [mih_sp.components.13]
     group = "Spell Effect Tweaks"
     id = "12"
     name = "Remove All Time Stop Immunity"
+    path = ["Spells", "Alteration"]
 
     [mih_sp.components.14]
     group = "Spell Effect Tweaks"
     id = "13"
     name = "Spell Improvements (see readme)"
+    path = ["Spells"]
 
     [mih_sp.components.15]
     group = "Spell Availability Tweaks"
     id = "14"
     name = "Revised Spell Learning XP"
+    path = ["Tables", "Bonus XP"]
 
     [mih_sp.components.16]
     group = "Spell Availability Tweaks"
     id = "15"
     name = "Expanded Temple Services"
+    path = ["Items", "Stores"]
 
     [mih_sp.components.17]
     group = "Spell Availability Tweaks"
@@ -11737,41 +11808,50 @@ url = "github:AngelGryph/MadeInHeaven_SpellPack"
     group = "Spell Availability Tweaks"
     id = "17"
     name = "Sixth Circle Spell Scrolls in Siege of Dragonspear"
+    path = ["Items", "Scrolls"]
 
     [mih_sp.components.2]
     id = "1"
     name = "Made in Heaven: Arcane Spellpack"
+    path = ["Spells"]
 
     [mih_sp.components.3]
     id = "2"
     name = "Made in Heaven: Divine Spellpack"
+    path = ["Spells"]
 
     [mih_sp.components.4]
     id = "3"
     name = "Made in Heaven: Epic Spellpack"
+    path = ["Spells"]
 
     [mih_sp.components.5]
     id = "4"
     name = "Revised Paladin Powers"
+    path = ["Classes", "Paladin"]
 
     [mih_sp.components.6]
     id = "5"
     name = "Revised Bhaalspawn Powers (EXPERIMENTAL)"
+    path = ["Skills", "Bhaalspawn"]
 
     [mih_sp.components.7]
     group = "Spell Effect Tweaks"
     id = "6"
     name = "Revised Animate Dead (EXPERIMENTAL)"
+    path = ["Spells", "Conjuration"]
 
     [mih_sp.components.8]
     group = "Spell Effect Tweaks"
     id = "7"
     name = "Revised Monster/Animal Summoning"
+    path = ["Spells", "Conjuration"]
 
     [mih_sp.components.9]
     group = "Spell Effect Tweaks"
     id = "8"
     name = "Revised Dispel Magic (EXPERIMENTAL)"
+    path = ["Spells", "Abjuration"]
 
 [militiaofficer]
 archive = "militiaofficer.tar.gz"
@@ -15352,42 +15432,52 @@ url = "github:lzenner/themed_tweaks"
     [themed_tweaks.components.1]
     id = "60"
     name = "SoD - Give Imoen a special wand for palace attack scene"
+    path = ["Story", "SoD"]
 
     [themed_tweaks.components.10]
     id = "200"
     name = "BG2EE - Use Irenicus in hell movie as dream to restore Bhaalspawn powers"
+    path = ["Story", "BG2", "Ending"]
 
     [themed_tweaks.components.2]
     id = "70"
     name = "SoD - Allow PC to give aid to Imoen after attack in palace"
+    path = ["Story", "SoD"]
 
     [themed_tweaks.components.3]
     id = "80"
     name = "SoD - Stat-based observations and quest options"
+    path = ["Story", "SoD"]
 
     [themed_tweaks.components.4]
     id = "90"
     name = "SoD - Ditch Tour-Guide Corwin Schael"
+    path = ["Story", "SoD"]
 
     [themed_tweaks.components.5]
     id = "100"
     name = "SoD - Quest: Scouting the Coast Way Crossing"
+    path = ["Story", "SoD"]
 
     [themed_tweaks.components.6]
     id = "140"
     name = "SoD/BG2EE - Add a little snark to dialogues"
+    path = ["Story", "SoD"]
 
     [themed_tweaks.components.7]
     id = "150"
     name = "SoD/BG2EE - Remove cut scenes that the PC shouldn't be privy to"
+    path = ["Story", "SoD"]
 
     [themed_tweaks.components.8]
     id = "160"
     name = "SoD/BG2EE - Move dreams about Irenicus from SoD to BG2EE"
+    path = ["Story", "SoD"]
 
     [themed_tweaks.components.9]
     id = "180"
     name = "BG2EE - Give Imoen innnate Magic Missiles for attack scene"
+    path = ["Story", "BG2"]
 
 [thepicturestandard]
 class = "UI"
@@ -16303,43 +16393,52 @@ url = "github:Gibberlings3/transitions"
     [transitions.components.1]
     id = "0"
     name = "Main component: Allow continued play after Sarevok and/or Irenicus is defeated"
-    path = ["Story", "BG1"]
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.10]
     id = "200"
     name = "Close quests and rumors that can't be finished after Sarevok is defeated"
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.11]
     id = "40"
     name = "Clean up the town folk chatter with regard to Sarevok"
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.12]
     id = "50"
     name = "Clean up the wounded from the thieves' maze"
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.13]
     id = "60"
     name = "Elminster makes an appearance outside of the Ducal Palace"
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.14]
     id = "70"
     name = "Duke Eltan's reward option: House near Ducal Palace"
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.15]
     id = "71"
     name = "Duke Eltan's reward option: Cabin in High Hedge"
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.16]
     id = "72"
     name = "Duke Eltan's reward option: Gray house in NW Beregost"
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.17]
     id = "73"
     name = "Duke Eltan's reward option: House across from Flaming Fist compound"
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.18]
     id = "80"
     name = "Add Waves of Refugees to Baldur's Gate"
+    path = ["Story", "SoD", "Ending"]
 
     [transitions.components.19]
     id = "130"
@@ -16348,45 +16447,53 @@ url = "github:Gibberlings3/transitions"
     [transitions.components.2]
     id = "10"
     name = "Use BGI ending movie as a dream and give new bhaal-spawn power at first rest"
-    path = ["Story", "BG1"]
+    path = ["Story", "BG1", "Ending"]
 
     [transitions.components.20]
     id = "140"
     name = "Use Irenicus in hell movie to restore Bhaal-spawn powers after he is defeated"
+    path = ["Story", "BG2", "Ending"]
 
     [transitions.components.3]
     id = "20"
     name = "Equipped"
+    path = ["Story", "BG1", "Ending"]
     subgroup = "Give Sarevok his armor, helm, and sword"
 
     [transitions.components.4]
     id = "21"
     name = "In inventory only"
+    path = ["Story", "BG1", "Ending"]
     subgroup = "Give Sarevok his armor, helm, and sword"
 
     [transitions.components.5]
     id = "22"
     name = "Use EndlessBG1's handling of Sarevok's equipment, if available, else use Option 2"
+    path = ["Story", "BG1", "Ending"]
     subgroup = "Give Sarevok his armor, helm, and sword"
 
     [transitions.components.6]
     id = "30"
     name = "Those supporters that are still alive when Sarevok dies immediately flee the area (to give more clean-up quests)"
+    path = ["Story", "BG1", "Ending"]
     subgroup = "Clean-up Quests"
 
     [transitions.components.7]
     id = "31"
     name = "Behavior of the Sarevok's supporters in the final BGI battle is unchanged"
+    path = ["Story", "BG1", "Ending"]
     subgroup = "Clean-up Quests"
 
     [transitions.components.8]
     id = "32"
     name = "Option 1 and use gentler Tamoko quest"
+    path = ["Story", "BG1", "Ending"]
     subgroup = "Clean-up Quests"
 
     [transitions.components.9]
     id = "33"
     name = "Option 2 and use gentler Tamoko quest"
+    path = ["Story", "BG1", "Ending"]
     subgroup = "Clean-up Quests"
 
 [travellers]
@@ -16616,6 +16723,7 @@ url = "github:AngelGryph/UnfinishedBusiness"
     [ub.components.4]
     id = "3"
     name = "\"Cat and Mouse\" (Bodhi hunts you in Spellhold) by Ghreyfain"
+    path = ["Story", "BG2", "Brynnlaw"]
 
     [ub.components.5]
     id = "4"

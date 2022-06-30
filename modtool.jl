@@ -12,10 +12,12 @@ See also `moddb.jl` for initializing configuration files.
 module ModTool
 # Preamble ««1
 # TODO ««
+#  - work around possible SEGV in weidu calls: retry up to 3 times
+#   - encapsulate this in a weidu() function (also doing the cd())
 #  + check that status() shows enough mods
 #  + update modtool.jl to write correct compat packets
-#  - indicate both lanthorn mods in db
-#  - uninstall(n), uninstall(upto=m)
+#  + indicate both lanthorn mods in db
+#  + uninstall(n), uninstall(upto=m)
 #  + status() shows out-of-order components
 #   (i.e. those installed before something that should come after)
 # mod-specific fixes:
@@ -25,16 +27,17 @@ module ModTool
 #  - spstuff: remove unicode BOM from ee.tra
 #  - Keto SoAv5 vs SoAv6
 #  - mih_ip fails to download
-# - Generic installation order
+#  - npckit is a .exe archive
+# + Generic installation order
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
 # - use labels like ProjectInfinity
 # - provide a simple way to add a mod to the db with minimal input info
-#   - use ProjectInfinity's *.ini files if available
-#    - needs extracting mods before (re)computing install order
-#    - including readme if needed (still prefer local readme)
+#   + use ProjectInfinity's *.ini files if available
+#    + needs extracting mods before (re)computing install order
+#    + including readme if needed (still prefer local readme)
 #   - for github urls:: auto-guess mod dir + name
-#   - use this in moddb.jl
-# - do a complete EET installation routine
+#   + use this in moddb.jl
+# + do a complete EET installation routine
 # + add the following characteristics at a component-level:
 #  + before/after: declare install order
 #  - depends/conflicts: declare relations
@@ -565,7 +568,7 @@ where:
  - `d` indicates installation status (either `'+'` if some components needs to be installed, `'-'` if they need to be removed, `'#'` if both are true, or `'.'` if nothing needs to be done);
  - `e` indicates if the mod was installed too early (`v`), too late (`^`), both (`x`), or none.
  """
-function status(mod::Mod, k; selection=selection, selected=nothing, stack=stack,
+function status(mod::Mod, k=1; selection=selection, selected=nothing, stack=stack,
 		bad=())
 	sel, ins = (getcompat(x,mod.id,k) for x ∈ (selection, stack_installed(stack)))
 	s = !isempty(sel)
@@ -616,7 +619,7 @@ function update(m::Mod)
 	if isempty(m.languages)
 		printlog("  $id: determine languages")
 		# m.languages
-		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-languages $(m.tp2)`)
+		for line in tryreadlines(`weidu --game $(GAMEDIR.bg2) --list-languages $(m.tp2)`)
 			x = match(r"^(\d+):(.*)$", line); isnothing(x) && continue
 			@assert parse(Int, x.captures[1]) == length(m.languages)
 			push!(m.languages, fixutf8(x.captures[2]))
@@ -627,7 +630,7 @@ function update(m::Mod)
 		printlog("  $id: determine components")
 		prop = Dict(c.id => c for c in m.components) # store properties
 		empty!(m.components) # we will store them in WeiDU-order
-		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-components-json $(m.tp2) $(m.tool_lang)`)
+		for line in tryreadlines(`weidu --game $(GAMEDIR.bg2) --list-components-json $(m.tp2) $(m.tool_lang)`)
 			startswith(line, "[{") || continue
 			for x in JSON.parse(line)
 				k = string(x["number"])
@@ -646,7 +649,7 @@ function update(m::Mod)
 	end#»»
 	if isempty(m.readme) # no hardcoded readme provided
 		printlog("  $id: determine readme")
-		for line in eachline(`weidu --game $(GAMEDIR.bg2) --list-readme $(m.tp2) $(m.tool_lang)`)
+		for line in tryreadlines(ignorestatus(`weidu --game $(GAMEDIR.bg2) --list-readme $(m.tp2) $(m.tool_lang)`))
 			x = match(r"^R (.*)", line); isnothing(x) && continue
 			isfile(x.captures[1]) && (m.readme = joinpath(MODS, x.captures[1]); break)
 		end
@@ -733,7 +736,20 @@ function ini_data(m::Mod; moddb = moddb)
 	end
 end
 
-# WeiDU status««1
+# WeiDU calls««1
+function tryreadlines(cmd::Cmd, n::Integer = 3)
+	# this is useful because weidu sometimes throws a SEGV on us
+	for i in 1:n
+		try
+			return readlines(cmd)
+		catch e
+			i == n && rethrow(e)
+		end
+	end
+end
+	
+weidu(mod::Mod, args...) = cd(GAMEDIR[modgame(mod)]) do
+end
 @inline function weidu_filter(line)
 	m = match(r"^~(.*)~\s+#(\d+)\s+#(\d+)\s*", line)
 	isnothing(m) && return nothing
@@ -805,7 +821,7 @@ sy match modSel /^s[12][.p] .*$/|hi link modSel DiffChange
 sy match modGrp /^# .*$/|hi link modGrp ModeMsg
 sy match modSub /^## .*$/|hi link modSub Title
 sy match modFold /[⟦⟧]\d\+$/ containedin=ALL |hi link modFold SpecialKey
-nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>
+nmap <buffer> <silent> <Space> :keepp s/^s/¤/e<cr>:keepp s/^\./s/e<cr>:keepp s/^¤/./e<cr>
 normal j
 finish "⟧5 """
 
@@ -903,10 +919,8 @@ function write_selection(io::IO; selection=selection, moddb=moddb,
 	println(io, "# ⟧1\n")
 	header = ["" for _ in 1:4]
 	for class in MOD_CLASSES
-		list = filter(x->moddb[x].class == class, first.(order))
-		isempty(list) && continue
-		for id in list
-# 	for (id,_) in order
+		for (id,k) in order
+			(k == 1 && moddb[id].class == class) || continue
 		m = moddb[id]; g = ""; h = "";
 # 		isempty(get(selection, id, ())) || extract(m)
 		for c in components(m)
@@ -987,7 +1001,9 @@ function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 		simulate && return
 		run(ignorestatus(cmd))
 	end
-	now_installed = get(weidu_installed(gamedir), id, String[])
+	global stack = weidu_stack(GAMEDIR)
+	installed = stack_installed(stack)
+	now_installed = get(installed, id, Set{String}())
 	not_installed = setdiff(selected, now_installed)
 	if !isempty(not_installed)
 		printwarn("warning: the following components were not installed:")
@@ -999,13 +1015,13 @@ function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 			(selection[id] = Set(now_installed); write_selection())
 	end
 end
-function uninstall(mod::Mod; selection=selection, write=true, kwargs...)
+function uninstall(mod::Mod; selection=selection, write=false, kwargs...)
 	delete!(selection, mod.id)
 	install(mod; write, kwargs...)
 	write && write_selection()
 end
-function uninstall(n::Integer=-1 ; moddb=moddb, stack=stack, simulate=true,
-		upto=nothing, confirm=true)
+function uninstall(n::Integer=-1 ; moddb=moddb, stack=stack, simulate=false,
+		upto=nothing, confirm=true, write=false)
 	prev = ""; clist = String[]; i = 0
 	(n < 0) && (n = isnothing(upto) ? 1 : typemax(n))
 	if upto isa String
@@ -1013,6 +1029,7 @@ function uninstall(n::Integer=-1 ; moddb=moddb, stack=stack, simulate=true,
 	elseif upto == early_late
 		upto = Set([([x[1][1], x[2][1]] for x ∈ early_late())...;])
 	end
+	installed = stack_installed(stack)
 	for (id, k) in reverse([stack...;])
 		j = component_compat(moddb[id], k)
 		id == prev && (push!(clist, k); continue)
@@ -1020,15 +1037,20 @@ function uninstall(n::Integer=-1 ; moddb=moddb, stack=stack, simulate=true,
 			m = moddb[prev]
 			i+=1; i > n && break
 			@assert !isempty(clist)
-			cmd = `weinstall $prev --language $(m.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-uninstall-list $clist`
-			printsim(cmd)
-			!simulate && (!confirm || ask(==('y'), "confirm?")) &&
+			if !confirm || ask(==('y'), "uninstall $prev:"*join(clist, ' ')*'?')
+				cmd = `weinstall $prev --language $(m.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-uninstall-list $clist`
+				printsim(cmd)
+				simulate && return
 				cd(GAMEDIR[modgame(m)]) do; run(ignorestatus(cmd)); end
+				write && ask(==('y'), "update selection? (yn)") &&
+					(setdiff!(selection[prev], clist); write_selection())
+			end
 			!isnothing(upto) && (delete!(upto, prev); isempty(upto) && break)
 		end
 		clist = [k]
 		prev = id
 	end
+	global stack = weidu_stack(GAMEDIR)
 end
 # Global routines««1
 function do_all(f; class=nothing, pause=false, limit=typemax(Int),

@@ -804,6 +804,7 @@ sy match modDel /^\.[12][.p] .*$/ contains=modComp |hi link modDel DiffDelete
 sy match modSel /^s[12][.p] .*$/|hi link modSel DiffChange
 sy match modGrp /^# .*$/|hi link modGrp ModeMsg
 sy match modSub /^## .*$/|hi link modSub Title
+sy match modFold /[⟦⟧]\d\+$/ containedin=ALL |hi link modFold SpecialKey
 nmap <buffer> <silent> <Space> :s/^s/¤/e<cr>:s/^\./s/e<cr>:s/^¤/./e<cr>
 normal j
 finish "⟧5 """
@@ -885,7 +886,6 @@ function display_tree(io::IO, root, level=1;
 		m = moddb[id]
 # 		extract(m);
 		c = component(m, k); isnothing(c)&&(printerr("'$id:$k' not found");continue)
-		println("$id $k")
 		printcomp(io, m, c; selection, installed, moddb)
 	end
 	for (s, c) in sort(collect(root.children); by=first)

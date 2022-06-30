@@ -412,7 +412,7 @@ function check_conflicts(;selection = selection, moddb=moddb)
 	end
 	for (x, v) in owners; length(v) ≤ 1 && continue
 		printwarn("tag \"$x\" is owned by the following components:")
-		for (id, c) in v; println("  ", id, ":", c); end
+		for (id, c) in v; printwarn("  ", id, ":", c); end
 	end
 end
 
@@ -547,7 +547,7 @@ function early_late(;moddb=moddb, stack=stack)
 	for (i2, j2) in pairs(ilist), (i1, j1) in pairs(view(ilist, 1:i2-1))
 		# check that there does not exist an arrow i2->i1
 		(j2, j1) ∈ arrows || continue
-		println("$(list[i2]) should be before $(list[i1])")
+		printwarn("$(list[i2]) should be before $(list[i1])")
 		push!(bad, (list[i1], list[i2]))
 	end
 	return bad # set of early/late pairs
@@ -901,7 +901,6 @@ function write_selection(io::IO; selection=selection, moddb=moddb,
 	display_tree(io, build_tree(;moddb); selection, moddb, installed, order)
 	# Then unsorted
 	println(io, "# ⟧1\n")
-	println(first(order))
 	header = ["" for _ in 1:4]
 	for class in MOD_CLASSES
 		list = filter(x->moddb[x].class == class, first.(order))
@@ -948,7 +947,7 @@ end
 function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 		selection=selection, gamedirs=GAMEDIR, stack = stack,
 		order = installorder(selection), write=false)
-	println("install: $(mod.id)/$index")
+	printlog("install: $(compatname(mod, index))")
 	extract(mod) || return
 	id = mod.id
 
@@ -1051,7 +1050,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 		s = !isempty(get(selection, mod.id, Int[]))
 		selected ∈ (s, nothing) || continue 
 		if f == status
-			(mod.class ≠ c) && (c = mod.class; println("\e[1m$c\e[m"))
+			(mod.class ≠ c) && (c = mod.class; printlog("\e[1m$c\e[m"))
 		else
 			printlog("\e[1m($n/$(length(selection)) $id)\e[m")
 		end

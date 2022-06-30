@@ -963,8 +963,8 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	setmod!("bg2eetrans", 0 => (path = ["EET",],),)
 	setmod!("bgsodde", 0 => (path = ["EET",],),)
 	setmod!("eet_end",
+		0 => (path = ["EET",],),
 		1 => (path = ["EET",],),
-		2 => (path = ["EET",],),
 	)
 	setmod!("eet_fix", 0=>(path=["EET"],),)
 	setmod!("epicthieving",

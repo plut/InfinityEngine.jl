@@ -898,23 +898,27 @@ function write_selection(io::IO; selection=selection, moddb=moddb,
 	installed = stack_installed(stack)
 	println(io, selection_preamble)
 	# First: sorted components
-	println("order is $order")
-	println("tree has $(length(build_tree(;moddb).children)) children")
 	display_tree(io, build_tree(;moddb); selection, moddb, installed, order)
 	# Then unsorted
-	println(io, "# Individual, unsorted components ⟦1")
-	i = ""
-	for (id,_) in order
+	println(io, "# ⟧1\n")
+	println(first(order))
+	header = ["" for _ in 1:4]
+	for class in MOD_CLASSES
+		list = filter(x->moddb[x].class == class, first.(order))
+		isempty(list) && continue
+		for id in list
+# 	for (id,_) in order
 		m = moddb[id]; g = ""; h = "";
 # 		isempty(get(selection, id, ())) || extract(m)
 		for c in components(m)
 			isempty(c.path) || continue
-			id ≠ i && (i=id; println(io, "## ", i, " ⟦2"))
-			g ≠ c.group && (g = c.group; println(io, "### ", g, "⟦3"))
-			h ≠ c.subgroup &&
-				(h=c.subgroup; println(io,"#### ",h,isempty(h) ? "⟧4" : "⟦4"))
+			for (i,x) in zip(eachindex(header), (class, id, c.group, c.subgroup))
+				header[i] == x && continue; header[i] = x
+				println(io, '#'^i, ' ', x, i==4 && isempty(x) ? '⟧' : '⟦', i)
+			end
 			printcomp(io, m, c; selection, installed, moddb)
 		end
+	end
 	end
 end
 function write_selection(filename::AbstractString = SELECTION; kwargs...)

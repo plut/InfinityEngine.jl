@@ -7007,6 +7007,7 @@ url = "Manual"
     id = "0"
     name = "Standard installation"
     subgroup = "EET end (last mod in install order)"
+    path = ["EET"]
 
     [eet_end.components.2]
     id = "1"

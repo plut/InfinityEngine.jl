@@ -1,17 +1,15 @@
 #! /usr/bin/env julia
 # todo:
-# sodrtd
-# yoshimosremorse
 # yoshimoromance
-# 7c-yoshi
 # a7-banteraccelerator
-# a7-golemconstruction
+#
+# hotpatch to sod2bg2_iu: https://www.gibberlings3.net/forums/topic/31088-bugs-issues-or-suggestions/page/6/
 modtool_no_init = true
 module ModDB
 include("modtool.jl")
 using .ModTool: Mod, ModComponent, ModCompat,
-	findmod, addmods!,extract, isextracted, update, ini_data,
-	write_moddb, maybe_rewrite_moddb, read_moddb, write_selection,
+	findmod, addmods!,extract, isextracted, update,
+	write_moddb, maybe_rewrite_moddb, read_moddb, save,
 	printlog, printwarn, printsim, printerr,
 	MODDB, MODS, DOWN, TEMP, SELECTION
 using HTTP
@@ -109,11 +107,11 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	mkmod("housetweaks", "github:ArtemiusI/House-Rule-Tweaks",
 		"House Rule Tweaks", "Tweak")
 	# Spellhold Studios ««2
-	mkmod("saradas_magic", "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip", "Saradas Magic", "Items")
+	mkmod("saradas_magic", "https://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip", "Saradas Magic", "Items")
 	mkmod("saradas_magic_2", "github:SpellholdStudios/Saradas_Magic_for_BG2", "Saradas BG2", "Spells")
 	mkmod("btl", "github:SpellholdStudios/Beyond_the_Law", "Beyond the Law", "NPC")
-	mkmod("kiara-zaiya", "github:SpellholdStudios/Kiara_Zaiya", "Kiara Zaiya NPCs", "NPC")
-	mkmod("iylos", "github:SpellholdStudios/Iylos", "Iylos (ToB monk)", "NPC")
+	mkmod("kiara-zaiya", "github:SpellholdStudios/Kiara-Zaiya", "Kiara Zaiya (CG HE wild mage, NE human monk)", "NPC")
+# 	mkmod("iylos", "github:SpellholdStudios/Iylos", "Iylos (ToB monk)", "NPC")
 	mkmod("firkraag", "github:SpellholdStudios/Super_Firkraag", "Super Firkraag", "Quests")
 	mkmod("ruad", "github:SpellholdStudios/RuadRofhessaItemUpgrade", "Ruad Ro'fhessa Item Upgrade", "Items")
 	mkmod("bolsa", "github:SpellholdStudios/Bolsa", "Bolsa (merchant)", "Items")
@@ -158,21 +156,51 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	mkmod("khalidbg2", "weaselmods:khalid-bg2", "Khalid BG2", "NPC")
 	mkmod("gahesh", "weaselmods:gahesh", "Gahesh (LG half-orc sorcerer)", "NPC")
 	# Misc. ««2
-	mkmod("mortis", "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip", "Mortis Mini Mod", "Items")
+	mkmod("mortis", "https://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip", "Mortis Mini Mod", "Items")
 	mkmod("unique_items", "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip", "BGEE/SOD Item replacement fun pack", "Items")
 	mkmod("arcanearcher", "www.shsforums.net/files/download/994-arcane-archer/", "Arcane Archer", "Kits")
 	#»»2
 	printlog("  now $(length(moddb)) mods stored")
 	# Tweak mod descriptions««
-	moddb["finchnpc"].description = "Finch (NG gnome cleric)"
-	moddb["vienxay"].description = "Vienxay (NE elf shadow-mage)"
-	moddb["adrian"].description = "Adrian (LE half-elf mage)"
 	moddb["acbre"].description = "Breagar (LG dwarf blacksmith)"
+	moddb["adrian"].description = "Adrian (LE half-elf mage)"
 	moddb["amber"].description = "Amber (CG tiefling rogue)"
 	moddb["angelo"].description = "Angelo (CN human fighter)"
 	moddb["anishai"].description = "Anishai (CN/LE human monk)"
 	moddb["aranw"].description = "Aran Whitehand (human fighter)"
 	moddb["arath_eet"].description = "Arath (human druid)"
+	moddb["ariena"].description = "Ariena (Aasimar half-orc)"
+	moddb["aura_bg1"].description = "Aura (LG gnome artificer)"
+	moddb["aurenaseph"].description = "Auren Aseph (fighter)"
+	moddb["asharnpc"].description = "Ashar (half-orc barbarian)"
+	moddb["calin"].description = "Calin (NG human Blade Master)"
+	moddb["chloe"].description = "Chloe (N human kensai)"
+	moddb["drake"].description = "Drake (priest of Tyr)"
+	moddb["ehlastra"].description = "Ehlastra (LE human berserker)"
+	moddb["evandra"].description = "Evandra (N elven illusionist)"
+	moddb["faren"].description = "Faren (TN Fighter/Thief)"
+	moddb["finchnpc"].description = "Finch (NG gnome cleric)"
+	moddb["gavin"].description = "Gavin (cleric of Lathander): BG1 content"
+	moddb["gavin_bg2"].description = "Gavin (clefic of Lathander): BG2 content"
+	moddb["haldamir"].description = "Haldamir (CN elven fighter)"
+	moddb["indinpc"].description = "Indira (LG half-elf fighter/mage)"
+	moddb["isra"].description = "Isra (paladin of Sune): BG1 content"
+	moddb["isra_bg2"].description = "Isra (paladin of Sune): BG2 content"
+	moddb["keto"].description = "Keto (NG human Bard)"
+	moddb["kido"].description = "Kido (CE Jester)"
+	moddb["lena"].description = "Lena (E tiefling warrior)"
+	moddb["luxleysoa"].description = "Luxley family (CN playwright, LN monk)"
+	moddb["mur'neth"].description = "Mur'Neth (CE Ghaunadan/ooze thief)"
+	moddb["nathaniel"].description = "Nathaniel (LG human fighter)"
+	moddb["ninde_eet"].description = "Ninde (NE elven necromancer)"
+	moddb["orelios"].description = "Orelios (monk)"
+	moddb["sirene"].description = "Sirene (tiefling paladin of Ilmater)"
+	moddb["star"].description = "Silver Star (NE elf assassin)"
+	moddb["thebeaurinlegacy"].description = "The Beaurin Legacy (NE elven Enchanter/Thief)"
+	moddb["theundying"].description = "The Undying (CE elven berserker, LN elven fighter/mage)"
+	moddb["vienxay"].description = "Vienxay (NE elf shadow-mage)"
+	moddb["vynd"].description = "Vynd (evil drow assassin)"
+	moddb["white"].description = "White (CN human barbarian)"
 #»»
 	# Tweak mod urls ««
 	for (k, v) in (
@@ -234,10 +262,10 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	"petsy" => "weaselmods:petsy",
 	"varshoon" => "weaselmods:varshoon",
 	"quayle" => "weaselmods:quayle-bg2",
-	"nathaniel" => "http://dl.spellholdstudios.net/nathaniel",
-	"faren" => "http://dl.spellholdstudios.net/faren",
+	"nathaniel" => "http://www.shsforums.net/files/download/734-nathaniel/",
+	"faren" => "http://www.shsforums.net/files/download/1125-faren/",
 	"npckit" => "https://www.gibberlings3.net/files/file/793-npc-kitpack",
-	"sagaman" => "http://www.blackwyrmlair.net/~rabain/SagaMaster/Ulrien-SagaMaster.zip",
+	"sagaman" => "https://www.blackwyrmlair.net/~rabain/SagaMaster/Ulrien-SagaMaster.zip",
 	); moddb[k].url = v; end
 	#»»
 	# Tweak mod classes ««
@@ -260,6 +288,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	moddb["item_rev"].class="Items"
 	moddb["kelsey"].class="NPC"
 	moddb["paintbg"].class="UI"
+	moddb["ntotsc"].class="Quests"
 	moddb["rr"].class="Tweak"
 	moddb["spell_rev"].class="Spells"
 	moddb["stratagems"].class="Late"
@@ -268,10 +297,11 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	moddb["turnabout"].class="Quests"
 	moddb["vienxay"].class="NPC"
 	moddb["kivan"].class="NPC-Related"
+	moddb["wtpfamiliars"].class="Tweak"
 	# »»
 		# Tweak mod readme««
 	printlog("hardcoding mod readme")
-	moddb["bggoeet"].readme = "http://www.shsforums.net/topic/56410-what-is-it/"
+	moddb["bggoeet"].readme = "https://www.shsforums.net/topic/56410-what-is-it/"
 	moddb["bom"].readme = "https://sorcerers.net/Games/BG2/bomip-docs/index.html"
 	moddb["faiths_and_powers"].readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
 	moddb["tnt"].readme = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks/tree/master/docs"
@@ -281,9 +311,12 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	moddb["artisanskitpack"].readme = "https://artisans-corner.com/the-artisans-kitpack/"
 	moddb["monasticorders"].readme = "https://forums.beamdog.com/discussion/18620/mod-beta-monastic-orders-of-faerun"
 	moddb["mercenary"].readme = "https://forums.beamdog.com/discussion/68151/fighter-kit-mercenary-v3-1-iwdee-eet-bgee-bg2ee"
+	moddb["kale"].readme = "https://forums.beamdog.com/discussion/74630/v1-67-kale-a-halfling-barbarian-for-bg-ee-sod-and-eet"
 	moddb["karatur"].readme = "https://forums.beamdog.com/discussion/15959/mod-twas-a-slow-boat-from-kara-tur-queststorenew-items-release-90/p1"
 	moddb["vaulteet"].readme = "https://www.angelfire.com/rpg2/azenmod/ReadMe-Vault.htm"
 	moddb["verrsza"].readme = "https://forums.beamdog.com/discussion/60614/mod-verrsza-npc-for-bgee-and-sod"
+	moddb["ninde_eet"].readme = "https://spellholdstudios.github.io/readmes/ninde-readme-english.html"
+	moddb["vampiretales"].readme = "https://mods.chosenofmystra.net/vampiretales/"
 	moddb["unique_items"].readme = "https://forums.beamdog.com/discussion/47005/bgee-sod-item-replacement-fun-pack-v2-1-completed"
 	moddb["npc_strongholds"].readme = "https://gibberlings3.github.io/Documentation/readmes/readme-npc_strongholds.html"
 	#»»
@@ -321,6 +354,10 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 			end
 		end
 	end
+	setmod!("7c-yoshi",
+		5 => (path=["NPC", "Yoshimo"],),
+		10	 => (path=["NPC", "Yoshimo"],),
+	)
 	setmod!("a7#improvedarcher",
 		0 => (path=["Classes", "Ranger"],),
 		10 => (path=["Classes", "Fighter"],),
@@ -354,6 +391,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		0 => (path=["Classes", "Ranger"],),
 	)
 	setmod!("arcanearcher", 0 => (path=["Classes", "Ranger"],))
+	setmod!("ariena", "" => (after = ["Kido"],))
 	setmod!("artisanskitpack",
 		"" => (after=["emily", "skitianpcs", "ajantisbg1", "ajantisbg2", ],),
 		1 => (path=["Classes", "Restrictions"],),
@@ -544,6 +582,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		 160 => (path=["Cosmetic", "Portraits"],),
 		 200 => (path=["NPC"],),
 	),
+	setmod!("branwen", 0 => (path = ["NPC", "Branwen"],))
 	setmod!("c#endlessbg1",
 		0 => (path=["Story", "BG1", "Ending"],),
 		1 => (path=["Story", "BG1", "Ending"],),
@@ -627,6 +666,14 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		1226 => (path = ["Items", "Upgrades"],),
 		1227 => (path = ["Items", "Upgrades"],),
 		1230 => (path = ["Items", "Upgrades"],),
+		1251 => (path = ["NPC", "Alora"],),
+		1252 => (path = ["NPC", "Eldoth"],),
+		1253 => (path = ["NPC", "Quayle"],),
+		1254 => (path = ["NPC", "Shar-Teel"],),
+		1255 => (path = ["NPC", "Tiax"],),
+		1256 => (path = ["NPC", "Viconia"],),
+		1260 => (path = ["Skills", "Reputation"],),
+		1270 => (path = ["Story", "BG1"],),
 		1340 => (path = ["Story", "BG2", "Stronghold"],),
 		1341 => (path = ["Story", "BG2", "Stronghold"],),
 		1342 => (path = ["Story", "BG2", "Stronghold"],),
@@ -681,6 +728,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		2295 => (exclusive = "mxspldrd.2da", path=["Tables", "Spell slots"]),
 		2296 => (exclusive = "mxspldrd.2da", path=["Tables", "Spell slots"]),
 		2297 => (exclusive = "mxspldrd.2da", path=["Tables", "Spell slots"]),
+		2540 => (path = ["Story", "BG2", "Stronghold"],),
 		2580 => (path = ["Tables", "Spell slots"],),
 		2581 => (path = ["Tables", "Spell slots"],),
 		2300 => (exclusive = ["lufmc.2da", "lufmt.2da"], path=["Tables", "HLA"]),
@@ -754,6 +802,8 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		3124 => (path = ["NPC", "Happy patch"],),
 		3125 => (path = ["NPC", "Happy patch"],),
 		3130 => (path = ["Skills", "Thieving"],),
+		3140 => (path = ["Story", "BG1"],),
+		3141 => (path = ["Story", "BG1"],),
 		3160 => (path = ["Items"],),
 		3170 => (path = ["Cosmetic", "Sprites"],),
 		3200 => (path = ["Items", "Stores"],),
@@ -994,40 +1044,6 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	)
 	setmod!("eet_fix", 0=>(path=["EET"],),)
 	setmod!("eet_swo", 0=>(path=["Story","BG1", "Ending"],),)
-	setmod!("epicthieving",
-		0 => (path = ["Skills", "Thieving"],),
-		100 => (path = ["Skills", "Thieving"],),
-		200 => (path = ["Skills", "Thieving"],),
-		300 => (path = ["Skills", "Thieving"],),
-		400 => (path = ["Skills", "Thieving"],),
-		500 => (path = ["Items", "Potions"],),
-		600 => (path = ["Skills", "Thieving"],),
-	)
-	setmod!("faiths_and_powers",
-		"" => (after = ["divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
-			before = ["fnp_multiclass", "might_and_guile", "scales_of_balance", "stratagems", "cdtweaks"],),
-			21 => (path = ["Spells", "Sphere system"],),
-			22 => (path = ["Spells", "Sphere system"],),
-			23 => (path = ["Spells", "Sphere system"],),
-			24 => (path = ["Spells", "Sphere system"],),
-			25 => (path = ["Spells", "Sphere system"],),
-			30 => (path = ["Spells"],),
-			31 => (path = ["Classes", "Cleric"],),
-			33 => (path = ["Classes", "Druid"],),
-			35 => (path = ["Classes", "Paladin"],),
-			37 => (path = ["Classes", "Ranger"],),
-			75 => (path = ["Classes", "Cleric"],),
-			80 => (path = ["Spells", "Sphere system"],),
-			85 => (path = ["NPC"],),
-	)
-	setmod!("fnp_multiclass",
-		"" => (after = ["fnp", "divine_remix", "deitiesoffaerun", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
-			before = ["scales_of_balance", "stratagems", "cdtweaks"],),
-		91 => (path = ["Classes", "Druid"],),
-		92 => (path = ["Classes", "Shaman"],),
-		95 => (path = ["Classes", "Cleric"],),
-		99 => (path = ["NPC"],)
-	)
 	setmod!("eet_tweaks",
 		1000 => (path = ["NPC", "Edwin", "Appearance"],),
 		1001 => (path = ["NPC", "Edwin", "Appearance"],),
@@ -1124,6 +1140,44 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		431 => (exclusive = ["ar1900.bcs", "impshad.bcs"],),
 		432 => (exclusive = ["ar1900.bcs", "impshad.bcs"],),
 		440 => (exclusive = ["giafir.itm", "ysg2.cre", "ysfire01.cre", "ysguar01.cre"],),
+	)
+	setmod!("epicthieving",
+		0 => (path = ["Skills", "Thieving"],),
+		100 => (path = ["Skills", "Thieving"],),
+		200 => (path = ["Skills", "Thieving"],),
+		300 => (path = ["Skills", "Thieving"],),
+		400 => (path = ["Skills", "Thieving"],),
+		500 => (path = ["Items", "Potions"],),
+		600 => (path = ["Skills", "Thieving"],),
+	)
+	setmod!("faiths_and_powers",
+		"" => (after = ["divine_remix", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
+			before = ["fnp_multiclass", "might_and_guile", "scales_of_balance", "stratagems", "cdtweaks"],),
+			21 => (path = ["Spells", "Sphere system"],),
+			22 => (path = ["Spells", "Sphere system"],),
+			23 => (path = ["Spells", "Sphere system"],),
+			24 => (path = ["Spells", "Sphere system"],),
+			25 => (path = ["Spells", "Sphere system"],),
+			30 => (path = ["Spells"],),
+			31 => (path = ["Classes", "Cleric"],),
+			33 => (path = ["Classes", "Druid"],),
+			35 => (path = ["Classes", "Paladin"],),
+			37 => (path = ["Classes", "Ranger"],),
+			75 => (path = ["Classes", "Cleric"],),
+			80 => (path = ["Spells", "Sphere system"],),
+			85 => (path = ["NPC"],),
+	)
+	setmod!("faldornbg2",
+		0 => (path=["NPC", "Faldorn"],),
+		1 => (path=["NPC", "Faldorn"],),
+	)
+	setmod!("fnp_multiclass",
+		"" => (after = ["fnp", "divine_remix", "deitiesoffaerun", "item_rev", "iwdification", "monasticorders", "spell_rev", "tomeandblood" ],
+			before = ["scales_of_balance", "stratagems", "cdtweaks"],),
+		91 => (path = ["Classes", "Druid"],),
+		92 => (path = ["Classes", "Shaman"],),
+		95 => (path = ["Classes", "Cleric"],),
+		99 => (path = ["NPC"],)
 	)
 	setmod!("fullplate",
 		1 => (path = ["Fighting", "Armor"],),
@@ -1239,28 +1293,9 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	setmod!("janquest", 0 => (path = ["NPC", "Jan"],))
 	setmod!("k9sharteelnpc", 0 => (path = ["NPC", "Shar-Teel"],))
 	setmod!("keto", "" => (after = ["kelsey"],),)
-	setmod!("skills-and-abilities",
-		601 => (path = ["Classes", "Ranger"],),
-		602 => (path = ["Classes", "Ranger"],),
-		610 => (path = ["Classes", "Fighter"],),
-		11 => (path = ["Classes", "Bard"],),
-		12 => (path = ["Classes", "Bard"],),
-		130 => (path = ["Classes", "Bard"],),
-		20 => (path = ["Classes", "Monk"],),
-		70 => (path = ["Classes", "Monk"],),
-		40 => (path = ["Classes", "Ranger"],),
-		50 => (path = ["Classes", "Fighter"],),
-		80 => (path = ["Classes", "Paladin"],),
-		60 => (path = ["Classes", "Paladin"],),
-		100 => (path = ["Classes", "Paladin"],),
-		120 => (path = ["Classes", "Cleric"],),
-		91 => (path = ["Tables", "HLA"],),
-		92 => (path = ["Tables", "HLA"],),
-		300 => (path=["Fighting", "Proficiencies"],),
-		311 => (path=["Fighting", "Proficiencies"],),
-		312 => (path=["Fighting", "Proficiencies"],),
-		313 => (path=["Fighting", "Proficiencies"],),
-		400 => (path=["Fighting", "Proficiencies"],),
+	setmod!("khalidbg2",
+		0 => (path=["NPC", "Khalid"],),
+		1 => (path=["NPC", "Khalid"],),
 	)
 	setmod!("kivan",
 		100 => (path = ["NPC", "Kivan"],),
@@ -1530,7 +1565,41 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		4 => (path = ["NPC", "Skie"],),
 		5 => (path = ["NPC", "Skie"],),
 	)
+	setmod!("skills-and-abilities",
+		601 => (path = ["Classes", "Ranger"],),
+		602 => (path = ["Classes", "Ranger"],),
+		610 => (path = ["Classes", "Fighter"],),
+		11 => (path = ["Classes", "Bard"],),
+		12 => (path = ["Classes", "Bard"],),
+		130 => (path = ["Classes", "Bard"],),
+		20 => (path = ["Classes", "Monk"],),
+		70 => (path = ["Classes", "Monk"],),
+		40 => (path = ["Classes", "Ranger"],),
+		50 => (path = ["Classes", "Fighter"],),
+		80 => (path = ["Classes", "Paladin"],),
+		60 => (path = ["Classes", "Paladin"],),
+		100 => (path = ["Classes", "Paladin"],),
+		120 => (path = ["Classes", "Cleric"],),
+		91 => (path = ["Tables", "HLA"],),
+		92 => (path = ["Tables", "HLA"],),
+		300 => (path=["Fighting", "Proficiencies"],),
+		311 => (path=["Fighting", "Proficiencies"],),
+		312 => (path=["Fighting", "Proficiencies"],),
+		313 => (path=["Fighting", "Proficiencies"],),
+		400 => (path=["Fighting", "Proficiencies"],),
+	)
 	setmod!("sodbanter", 0 => (path = ["NPC", "Banter"],),)
+	setmod!("sodrtd",
+		0 => (path=["Story", "SoD"],),
+		10 => (path=["Story", "SoD"],),
+		20 => (path=["Story", "SoD"],),
+		30 => (path=["Story", "SoD"],),
+		40 => (path=["Story", "SoD"],),
+		50 => (path=["Story", "SoD"],),
+		60 => (path=["Story", "SoD"],),
+		70 => (path=["Story", "SoD"],),
+		80 => (path=["Story", "SoD"],),
+	)
 	setmod!("song_and_silence",
 		0 => (path=["Classes"],),
 		1 => (path=["Items", "Stores"],),
@@ -1704,6 +1773,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 	setmod!("therune",
 		"" => (after = ["cowledmenace"],),
 	)
+	setmod!("thevanishingofskiesilvershield", 0 => (path=["NPC", "Eldoth"],))
 	setmod!("tnt",
 		"" => (after = ["ctb",],),
 		0 => (exclusive = ["fmcat.cre", "fmmep.cre", "fmfae.cre", "fmfer.cre", "fmimp.cre", "fmqua.cre", "fmrab.cre", "famps.cre", "fmspd.cre", ], path=["Skills", "Familiar"],), # familiars
@@ -1849,6 +1919,7 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		5 => (path=["Spells", "Alteration"],),
 	)
 	setmod!("wilsonchronicles", 0 => (path = ["NPC", "Wilson"],))
+	setmod!("wtpfamiliars", 0 => (path = ["Skills", "Familiar"],))
 	setmod!("xan",
 		0 => (path = ["NPC", "Xan"],),
 		1 => (path = ["NPC", "Xan"],),
@@ -1864,6 +1935,11 @@ function import_bws_moddb(source = BWS_MODDB, dest = MODDB,
 		1 => (path=["NPC", "Yeslick"],),
 	)
 	setmod!("yoshimo", 0 => (path = ["NPC", "Yoshimo"],))
+	setmod!("yoshimosremorse",
+		0 => (path = ["NPC", "Yoshimo"],),
+		1 => (path = ["NPC", "Yoshimo"],),
+		2 => (path = ["NPC", "Yoshimo"],),
+	)
 		# extract data from already downloaded/extracted mods
 		for (id, mod) in (simulate ? Iterators.take(moddb, 20) : moddb)
 # 		for (id, mod) in Iterators.take(moddb, 20)
@@ -1906,7 +1982,7 @@ function import_bws_selection((source, dest) = BWS_USER => SELECTION)#««
 			isextracted(m) || extract(m)
 		end
 	end
-	write_selection(dest; moddb, selection)
+	save(dest; moddb, selection)
 end#»»
 
 end

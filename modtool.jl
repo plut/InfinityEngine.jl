@@ -160,7 +160,8 @@ end
 @inline dict(c::ModCompat) = Dict(string(k)=>toml_field(getfield(c, k))
 	for k in (:components, :after, :before) if !isempty(getfield(c, k)))
 	
-@inline Base.in(i::Integer, c::ModCompat) = any(i ∈ r for r ∈ c.ranges)
+@inline Base.in(i::Integer, c::ModCompat) =
+	isempty(c.ranges) || any(i ∈ r for r ∈ c.ranges)
 @inline Base.in(i::AbstractString, c::ModCompat) = parse(Int, i) ∈ c
 # Mod ««2
 mutable struct Mod
@@ -186,20 +187,19 @@ mutable struct Mod
 		end
 end
 "returns the index of compatibility structure matching component k of mod."
-function component_compat(m::Mod, k)
-	i = parse(Int, k)
-	return something(findfirst(x->i ∈ x, m.compat), 1)
-end
+@inline component_compat(m::Mod, k::Integer) = findlast(x->k ∈ x, m.compat)
+@inline component_compat(m::Mod, k::AbstractString) =
+	component_compat(m, parse(Int, k))
 "returns only components in this compatibility class."
-@inline getcompat(db, id, k; moddb=moddb) =
-	filter(x->component_compat(moddb[id],x) == k, get(db, id,Set{String}()))
+@inline getcompat(db, id, j; moddb=moddb) =
+	filter(x->component_compat(moddb[id],x) == j, get(db, id,Set{String}()))
 "parses a string 'id:comp' as (mod id, compat index)."
 function compat_parse(str; moddb=moddb)
 	contains(str, ':') || return (str, 1)
-	(id, k) = split(str, ':'; limit=2)
-	return (id, component_compat(moddb[id], k))
+	(id, j) = split(str, ':'; limit=2)
+	return (id, component_compat(moddb[id], j))
 end
-@inline compatname(m::Mod, k) = k ≤ 1 ? m.id : m.id*'/'*m.compat[k].components
+@inline compatname(m::Mod, j) = j ≤ 1 ? m.id : m.id*'/'*m.compat[j].components
 @inline modgame(m::Mod; moddb=moddb) =
 	m.id ∈ moddb["eet"].compat[1].after ? :bg1 : :bg2
 @inline components(m::Mod) = (m.components)
@@ -209,10 +209,10 @@ end
 	if fail; error("mod '$(mod.id)': component '$k' not found")
 	else return nothing; end
 end
-@inline function component!(m::Mod, i, c)
-	i = something(i, length(m.components)+1)
-	resize!(m.components, max(length(m.components), i))
-	m.components[i] = c
+@inline function component!(m::Mod, k, c)
+	k = something(k, length(m.components)+1)
+	resize!(m.components, max(length(m.components), k))
+	m.components[k] = c
 end
 "setlang: recompute mod languages; call this each time languages might change"
 @inline setlang!(m::Mod) = if !isempty(m.languages)
@@ -222,7 +222,7 @@ else m.tool_lang = m.game_lang = 0; end
 
 # Mod DB handling ««1
 @inline allcomponents(moddb=moddb) =
-	Dict(k => Set(c.id for c in moddb[k].components) for (k,v) in moddb)
+	Dict(i => Set(c.id for c in m.components) for (i,m) in moddb)
 @inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
 @inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
 const mod_fields=(:url,:class,:description,:archive,:readme,:languages,:tp2)
@@ -275,8 +275,8 @@ function write_moddb(filename::AbstractString = MODDB; moddb=moddb)
 end
 
 @inline function findmod(id::Union{Symbol,String}; moddb = moddb)
-	k = get(moddb, lowercase(string(id)), nothing)
-	isnothing(k) || return k
+	m = get(moddb, lowercase(string(id)), nothing)
+	isnothing(m) || return m
 	error("mod '$id' not found")
 end
 @inline findmod(pattern::Regex; moddb = moddb) =
@@ -421,9 +421,9 @@ end
 
 # Pre-extraction functions: download, status ««1
 function updateurl(mod::Mod)
-	printlog("get latest release for $(mod.url)")
 	repo = mod.url[8:end]
 	api = "https://api.github.com/repos/$repo/releases/latest";
+	printlog("parse ", api)
 	req = HTTP.get(api; status_exception=false)
 # 	proc = run(pipeline(ignorestatus(`wget https://api.github.com/repos/$repo/releases/latest -O -`), stdout=fd))
 	req.status ≠ 200 && (printwarn("failed to download $api"); return nothing)
@@ -803,6 +803,8 @@ function merge_selection(io; selection=selection, verbose=true)
 	for (k, v) in to_add; printlog("\e[32m+", k, ": ", join(v, ", "), "\e[m");end
 	isempty(to_del) || printlog("Removed:")
 	for (k, v) in to_del; printlog("\e[31m-", k, ": ", join(v, ", "), "\e[m");end
+	isempty(to_add) && isempty(to_del) ||
+		(ask(==('y'), "Save selection?") && save())
 	return selection
 end
 @inline read_selection(filename; kwargs...) =
@@ -858,6 +860,7 @@ status of each component.
 """
 function edit(mod::Mod; moddb=moddb, selection=selection, stack=stack,
 		installed=stack_installed(stack), edit=true)
+	extract(mod)
 	filename = joinpath(TEMP, "selection-"*mod.id*".txt")
 	io = edit ? open(filename, "w") : stdout
 	edit && println(io, selection_preamble)
@@ -936,7 +939,7 @@ function save(io::IO; selection=selection, moddb=moddb,
 	end
 end
 function save(filename::AbstractString = SELECTION; kwargs...)
-	printlog("writing selection: $filename")
+	printlog("saving selection: $filename")
 	open(filename, "w") do io; save(io; kwargs...); end
 end
 """    edit()
@@ -970,19 +973,18 @@ function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 	installed = stack_installed(stack)
 	current = get(installed, mod.id, String[])
 	warned = false
-	for (i1, k1) in order; i1 == id && break
-		isempty(symdiff(get(installed,i1,[]), get(selection,i1,[]))) && continue
-		printwarn("warning: mod '$i1/$k1' should probably be installed before '$id'")
+	for (i1, j1) in order; (i1,j1) == (id,index) && break
+		m1 = moddb[i1];
+		isempty(symdiff(getcompat(installed,i1,j1), getcompat(selection,i1,j1))) &&
+			continue
+		printwarn("warning: mod '$(compatname(m1,j1))' should probably be installed before '$id'")
 		warned = true
 	end
 	warned && (ask(==('y'), "proceed anyway? (yn)") || return)
-	selected = uninstall ? Set(String[]) : get!(selection, id, Set(String[]))
+	selected = uninstall ? Set(String[]) : getcompat(selection, id, index)
 
-	to_add, to_del = String[], String[] # compute set difference in weidu order:
-	for c in mod.components; k = c.id
-		if k ∈ selected; k ∉ current && push!(to_add, k)
-		else; k ∈ current && push!(to_del, k); end
-	end
+	to_add = setdiff(selected, current)
+	to_del = setdiff(current, get(selection, id, Set{String}[]))
 	isempty(to_add) && isempty(to_del) && (printlog("nothing to do"); return)
 	if !isempty(to_add) # create symlink
 		for file in ("$id.tp2", "setup-$id.tp2", "$id")
@@ -996,7 +998,7 @@ function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 		end
 	end
 	cd(gamedir) do
-		cmd = `weinstall $(mod.id) --language $(mod.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $to_add --force-uninstall-list $to_del`
+		cmd = `weinstall $(mod.id) --language $(mod.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $(collect(to_add)) --force-uninstall-list $(collect(to_del))`
 # 		id == "eet" && (cmd = `weinstall eet --skip-at-view --noautoupdate --no-exit-pause --force-install-list 0 $(gamedirs.bg1)`)
 		printsim(cmd)
 		simulate && return
@@ -1006,7 +1008,7 @@ function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 	installed = stack_installed(stack)
 	now_installed = get(installed, id, Set{String}())
 	not_installed = setdiff(selected, now_installed)
-	if !isempty(not_installed)
+	if !simulate && !isempty(not_installed)
 		printwarn("warning: the following components were not installed:")
 		for k in not_installed
 			c = component(mod, k)

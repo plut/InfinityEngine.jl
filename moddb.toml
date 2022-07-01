@@ -79,8 +79,20 @@ url = "https://www.dropbox.com/s/ryw4tn3r1vuohkn/7c%23sartweak_v1.2.zip?dl=1"
 archive = "7C-Yoshi-latest.zip"
 class = "NPC-Related"
 description = "Keeping Yoshimo"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2016-09-16
+tp2 = "7c-yoshi/7c-yoshi.tp2"
 url = "http://lynxlynx.info/ie/modhub.php?CrevsDaak/7C-Yoshi&pre"
+
+    [7c-yoshi.components.1]
+    id = "5"
+    name = "Keeping Yoshimo after Spellhold"
+    path = ["NPC", "Yoshimo"]
+
+    [7c-yoshi.components.2]
+    id = "10"
+    name = "Make Yoshimo Chaotic Good"
+    path = ["NPC", "Yoshimo"]
 
 ["a7#improvedarcher"]
 archive = "A7-ImprovedArcher-master.zip"
@@ -178,8 +190,533 @@ url = "github:Argent77/A7-ChaosSorcerer"
 archive = "a7-convenienteenpcs.zip"
 class = "NPC-Related"
 description = "Convenient EE NPCs"
-lastupdate = 1970-01-01
-url = "https://github.com/Argent77/A7-NoEENPCs/releases/download/latest/a7-convenienteenpcs.zip"
+languages = ["English", "Francais (traduction: Gwendolyne)", "Deutsch", "Polski (tlumaczenie: Cahir)", "Russian (translation: Arkie)"]
+lastupdate = 2021-06-04
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/A7-ConvenientEENPCs/readme/readme.html"
+tp2 = "a7-convenienteenpcs/a7-convenienteenpcs.tp2"
+url = "github:Argent77/A7-NoEENPCs"
+
+    [a7-convenienteenpcs.compat.1]
+    after = ["a7-chaossorcerer", "divine_remix", "eet", "shadowadept"]
+    before = ["eet_end"]
+
+    [a7-convenienteenpcs.components.1]
+    group = "Appearance"
+    id = "1"
+    name = "Disable all NPCs"
+    subgroup = "Modify Enhanced Edition NPCs"
+
+    [a7-convenienteenpcs.components.10]
+    group = "Appearance"
+    id = "204"
+    name = "Make Neera passive"
+    subgroup = "Modify individually: Neera"
+
+    [a7-convenienteenpcs.components.11]
+    group = "Appearance"
+    id = "105"
+    name = "Disable Rasaad"
+    subgroup = "Modify individually: Rasaad"
+
+    [a7-convenienteenpcs.components.12]
+    group = "Appearance"
+    id = "205"
+    name = "Make Rasaad passive"
+    subgroup = "Modify individually: Rasaad"
+
+    [a7-convenienteenpcs.components.13]
+    group = "Appearance"
+    id = "301"
+    name = "Make NPC-specific items available for everyone"
+
+    [a7-convenienteenpcs.components.14]
+    group = "Portraits"
+    id = "400"
+    name = "Alternate version"
+    subgroup = "Change portrait: Baeloth"
+
+    [a7-convenienteenpcs.components.15]
+    group = "Portraits"
+    id = "401"
+    name = "Alternate version, in BG2 only"
+    subgroup = "Change portrait: Baeloth"
+
+    [a7-convenienteenpcs.components.16]
+    group = "Portraits"
+    id = "410"
+    name = "BG2 style"
+    subgroup = "Change portrait: Dorn"
+
+    [a7-convenienteenpcs.components.17]
+    group = "Portraits"
+    id = "411"
+    name = "BG2 style, in BG2 only"
+    subgroup = "Change portrait: Dorn"
+
+    [a7-convenienteenpcs.components.18]
+    group = "Portraits"
+    id = "420"
+    name = "Change portrait: Hexxat (BG2 style)"
+
+    [a7-convenienteenpcs.components.19]
+    group = "Portraits"
+    id = "430"
+    name = "BG2 style"
+    subgroup = "Change portrait: Neera"
+
+    [a7-convenienteenpcs.components.2]
+    group = "Appearance"
+    id = "2"
+    name = "Make all NPCs passive"
+    subgroup = "Modify Enhanced Edition NPCs"
+
+    [a7-convenienteenpcs.components.20]
+    group = "Portraits"
+    id = "431"
+    name = "BG2 style, in BG2 only"
+    subgroup = "Change portrait: Neera"
+
+    [a7-convenienteenpcs.components.21]
+    group = "Portraits"
+    id = "440"
+    name = "BG2 style"
+    subgroup = "Change portrait: Rasaad"
+
+    [a7-convenienteenpcs.components.22]
+    group = "Portraits"
+    id = "441"
+    name = "BG2 style, in BG2 only"
+    subgroup = "Change portrait: Rasaad"
+
+    [a7-convenienteenpcs.components.23]
+    group = "Portraits"
+    id = "450"
+    name = "Improved portrait: Wilson"
+
+    [a7-convenienteenpcs.components.24]
+    group = "Class changes"
+    id = "500"
+    name = "Reset level only"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.25]
+    group = "Class changes"
+    id = "501"
+    name = "Choose your class"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.26]
+    group = "Class changes"
+    id = "502"
+    name = "Mage"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.27]
+    group = "Class changes"
+    id = "503"
+    name = "Abjurer"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.28]
+    group = "Class changes"
+    id = "504"
+    name = "Conjurer"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.29]
+    group = "Class changes"
+    id = "505"
+    name = "Diviner"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.3]
+    group = "Appearance"
+    id = "3"
+    name = "Decide for each NPC individually"
+    subgroup = "Modify Enhanced Edition NPCs"
+
+    [a7-convenienteenpcs.components.30]
+    group = "Class changes"
+    id = "506"
+    name = "Enchanter"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.31]
+    group = "Class changes"
+    id = "507"
+    name = "Illusionist"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.32]
+    group = "Class changes"
+    id = "508"
+    name = "Invoker"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.33]
+    group = "Class changes"
+    id = "509"
+    name = "Necromancer"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.34]
+    group = "Class changes"
+    id = "510"
+    name = "Transmuter"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.35]
+    group = "Class changes"
+    id = "511"
+    name = "Wild Mage"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.36]
+    group = "Class changes"
+    id = "512"
+    name = "Dragon Disciple"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.37]
+    group = "Class changes"
+    id = "513"
+    name = "Chaos Sorcerer"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.38]
+    group = "Class changes"
+    id = "514"
+    name = "Shadow Adept"
+    subgroup = "Change class/kit: Baeloth"
+
+    [a7-convenienteenpcs.components.39]
+    group = "Class changes"
+    id = "520"
+    name = "Reset level only"
+    subgroup = "Change class/kit: Dorn"
+
+    [a7-convenienteenpcs.components.4]
+    group = "Appearance"
+    id = "101"
+    name = "Disable Baeloth"
+    subgroup = "Modify individually: Baeloth"
+
+    [a7-convenienteenpcs.components.40]
+    group = "Class changes"
+    id = "540"
+    name = "Reset level only"
+    subgroup = "Change class/kit: Neera"
+
+    [a7-convenienteenpcs.components.41]
+    group = "Class changes"
+    id = "541"
+    name = "Choose your class"
+    subgroup = "Change class/kit: Neera"
+
+    [a7-convenienteenpcs.components.42]
+    group = "Class changes"
+    id = "542"
+    name = "Chaos Sorcerer"
+    subgroup = "Change class/kit: Neera"
+
+    [a7-convenienteenpcs.components.43]
+    group = "Class changes"
+    id = "560"
+    name = "Reset level only"
+    subgroup = "Change class/kit: Rasaad"
+
+    [a7-convenienteenpcs.components.44]
+    group = "Class changes"
+    id = "561"
+    name = "Choose your class"
+    subgroup = "Change class/kit: Rasaad"
+
+    [a7-convenienteenpcs.components.45]
+    group = "Class changes"
+    id = "562"
+    name = "Monk"
+    subgroup = "Change class/kit: Rasaad"
+
+    [a7-convenienteenpcs.components.46]
+    group = "Class changes"
+    id = "563"
+    name = "Silverstar of Selune"
+    subgroup = "Change class/kit: Rasaad"
+
+    [a7-convenienteenpcs.components.47]
+    group = "Class changes"
+    id = "580"
+    name = "Reset level only"
+    subgroup = "Change class/kit: M'Khiin"
+
+    [a7-convenienteenpcs.components.48]
+    group = "Class changes"
+    id = "600"
+    name = "Reset level only"
+    subgroup = "Change class/kit: Glint"
+
+    [a7-convenienteenpcs.components.49]
+    group = "Class changes"
+    id = "601"
+    name = "Choose your class"
+    subgroup = "Change class/kit: Glint"
+
+    [a7-convenienteenpcs.components.5]
+    group = "Appearance"
+    id = "201"
+    name = "Make Baeloth passive"
+    subgroup = "Modify individually: Baeloth"
+
+    [a7-convenienteenpcs.components.50]
+    group = "Class changes"
+    id = "602"
+    name = "Cleric"
+    subgroup = "Change class/kit: Glint"
+
+    [a7-convenienteenpcs.components.51]
+    group = "Class changes"
+    id = "603"
+    name = "Fighter/Cleric"
+    subgroup = "Change class/kit: Glint"
+
+    [a7-convenienteenpcs.components.52]
+    group = "Class changes"
+    id = "604"
+    name = "Cleric/Illusionist"
+    subgroup = "Change class/kit: Glint"
+
+    [a7-convenienteenpcs.components.53]
+    group = "Class changes"
+    id = "620"
+    name = "Reset level only"
+    subgroup = "Change class/kit: Voghiln"
+
+    [a7-convenienteenpcs.components.54]
+    group = "Class changes"
+    id = "621"
+    name = "Choose your class"
+    subgroup = "Change class/kit: Voghiln"
+
+    [a7-convenienteenpcs.components.55]
+    group = "Class changes"
+    id = "622"
+    name = "Bard"
+    subgroup = "Change class/kit: Voghiln"
+
+    [a7-convenienteenpcs.components.56]
+    group = "Class changes"
+    id = "623"
+    name = "Blade"
+    subgroup = "Change class/kit: Voghiln"
+
+    [a7-convenienteenpcs.components.57]
+    group = "Class changes"
+    id = "624"
+    name = "Thief"
+    subgroup = "Change class/kit: Voghiln"
+
+    [a7-convenienteenpcs.components.58]
+    group = "Class changes"
+    id = "625"
+    name = "Swashbuckler"
+    subgroup = "Change class/kit: Voghiln"
+
+    [a7-convenienteenpcs.components.59]
+    group = "Class changes"
+    id = "640"
+    name = "Reset level only"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.6]
+    group = "Appearance"
+    id = "102"
+    name = "Disable Dorn"
+
+    [a7-convenienteenpcs.components.60]
+    group = "Class changes"
+    id = "641"
+    name = "Choose your class"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.61]
+    group = "Class changes"
+    id = "642"
+    name = "Ranger"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.62]
+    group = "Class changes"
+    id = "643"
+    name = "Stalker"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.63]
+    group = "Class changes"
+    id = "644"
+    name = "Fighter"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.64]
+    group = "Class changes"
+    id = "645"
+    name = "Wizard Slayer"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.65]
+    group = "Class changes"
+    id = "646"
+    name = "Cleric"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.66]
+    group = "Class changes"
+    id = "647"
+    name = "Priest of Tyr"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.67]
+    group = "Class changes"
+    id = "648"
+    name = "Priest of Helm"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.68]
+    group = "Class changes"
+    id = "649"
+    name = "Paladin"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.69]
+    group = "Class changes"
+    id = "650"
+    name = "Cavalier"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.7]
+    group = "Appearance"
+    id = "103"
+    name = "Disable Hexxat"
+    subgroup = "Modify individually: Hexxat"
+
+    [a7-convenienteenpcs.components.70]
+    group = "Class changes"
+    id = "651"
+    name = "Inquisitor"
+    subgroup = "Change class/kit: Corwin"
+
+    [a7-convenienteenpcs.components.71]
+    group = "Class changes"
+    id = "660"
+    name = "Reset level only"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.72]
+    group = "Class changes"
+    id = "661"
+    name = "Choose your class"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.73]
+    group = "Class changes"
+    id = "662"
+    name = "Assassin"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.74]
+    group = "Class changes"
+    id = "663"
+    name = "Shadowdancer"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.75]
+    group = "Class changes"
+    id = "664"
+    name = "Mage/Thief"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.76]
+    group = "Class changes"
+    id = "665"
+    name = "Mage/Assassin"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.77]
+    group = "Class changes"
+    id = "666"
+    name = "Mage/Shadowdancer"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.78]
+    group = "Class changes"
+    id = "667"
+    name = "Necromancer/Thief"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.79]
+    group = "Class changes"
+    id = "668"
+    name = "Fighter/Thief"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.8]
+    group = "Appearance"
+    id = "203"
+    name = "Make Hexxat passive"
+    subgroup = "Modify individually: Hexxat"
+
+    [a7-convenienteenpcs.components.80]
+    group = "Class changes"
+    id = "669"
+    name = "Fighter/Assassin"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.81]
+    group = "Class changes"
+    id = "670"
+    name = "Fighter/Shadowdancer"
+    subgroup = "Change class/kit: Hexxat"
+
+    [a7-convenienteenpcs.components.82]
+    group = "Class changes"
+    id = "680"
+    name = "Reset level only"
+    subgroup = "Change class/kit: Clara"
+
+    [a7-convenienteenpcs.components.83]
+    group = "Class changes"
+    id = "681"
+    name = "Choose your class"
+    subgroup = "Change class/kit: Clara"
+
+    [a7-convenienteenpcs.components.84]
+    group = "Class changes"
+    id = "682"
+    name = "Bounty Hunter"
+    subgroup = "Change class/kit: Clara"
+
+    [a7-convenienteenpcs.components.85]
+    group = "Class changes"
+    id = "683"
+    name = "Swashbuckler"
+    subgroup = "Change class/kit: Clara"
+
+    [a7-convenienteenpcs.components.86]
+    group = "Class changes"
+    id = "684"
+    name = "Shadowdancer"
+    subgroup = "Change class/kit: Clara"
+
+    [a7-convenienteenpcs.components.87]
+    group = "Class changes"
+    id = "685"
+    name = "Bard"
+    subgroup = "Change class/kit: Clara"
+
+    [a7-convenienteenpcs.components.9]
+    group = "Appearance"
+    id = "104"
+    name = "Disable Neera"
+    subgroup = "Modify individually: Neera"
 
 [a7-customkits]
 archive = "A7-Spellsword-v1.5.zip"
@@ -397,14 +934,81 @@ url = "github:Gitjas/Ascalons_Questpack"
 [acbre]
 class = "NPC"
 description = "Breagar (LG dwarf blacksmith)"
-lastupdate = 1970-01-01
+languages = ["Deutsch", "English", "Russian (by AlexKaran & Arcanecoast team)"]
+lastupdate = 2022-06-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/acbre/ACBre_Readme.English.txt"
+tp2 = "acbre/acbre.tp2"
 url = "github:Gitjas/Ascalons_Breagar"
+
+    [acbre.compat.1]
+    after = ["ac_quest", "alternatives", "amber", "aurenaseph", "bgqe", "dsotsc", "eet", "transitions"]
+    before = ["c#brandock", "eet_end"]
+
+    [acbre.components.1]
+    id = "0"
+    name = "Breagar: Contents"
+
+    [acbre.components.2]
+    id = "2"
+    name = "Breagar: Crossmods and PID"
+
+    [acbre.components.3]
+    id = "10"
+    name = "45 minutes real time between talks"
+    subgroup = "Change Breagar's dialog timer? (Default is 30 minutes between dialogues.)"
+
+    [acbre.components.4]
+    id = "11"
+    name = "1 hour real time between talks"
+    subgroup = "Change Breagar's dialog timer? (Default is 30 minutes between dialogues.)"
+
+    [acbre.components.5]
+    id = "12"
+    name = "15 minutes real time between talks"
+    subgroup = "Change Breagar's dialog timer? (Default is 30 minutes between dialogues.)"
+
+    [acbre.components.6]
+    id = "13"
+    name = "1 hour 30 minutes real time between talks"
+    subgroup = "Change Breagar's dialog timer? (Default is 30 minutes between dialogues.)"
 
 [adrian]
 class = "NPC"
 description = "Adrian (LE half-elf mage)"
-lastupdate = 1970-01-01
+languages = ["English", "Francais (Traduction : Ixyon)"]
+lastupdate = 2020-03-08
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/adrian/readme/adrian-readme-english.html"
+tp2 = "adrian/adrian.tp2"
 url = "github:SpellholdStudios/Adrian_NPC"
+
+    [adrian.components.1]
+    id = "0"
+    name = "Adrian is a Sorcerer"
+    subgroup = "Adrian for BGII"
+
+    [adrian.components.2]
+    id = "1"
+    name = "Change Adrian's class to Cleric/Mage"
+    subgroup = "Adrian for BGII"
+
+    [adrian.components.3]
+    id = "2"
+    name = "Change Adrian's class to Mage/Thief"
+    subgroup = "Adrian for BGII"
+
+    [adrian.components.4]
+    id = "10"
+    name = "Phaelin's soundset"
+    subgroup = "Install optional soundset for Adrian (only in English)"
+
+    [adrian.components.5]
+    id = "11"
+    name = "Tatterdemalion's soundset"
+    subgroup = "Install optional soundset for Adrian (only in English)"
+
+    [adrian.components.6]
+    id = "20"
+    name = "Crossmod content"
 
 [ajantisbg1]
 archive = "ajantisbg1.tar.gz"
@@ -706,9 +1310,12 @@ url = "https://www.dropbox.com/s/e532jdc6p01hpnv/ARPv8-4.zip?dl=1"
 
 [ariena]
 class = "NPC"
-description = "Ariena NPC"
+description = "Ariena (Aasimar half-orc)"
 lastupdate = 1970-01-01
 url = "github:RoxanneSHS/ArienaEE"
+
+    [ariena.compat.1]
+    after = ["Kido"]
 
 [artaport]
 class = "UI"
@@ -1065,7 +1672,7 @@ url = "github:InfinityMods/Ascension"
 
     [ascension.compat.1]
     after = ["eet"]
-    before = ["eet_end", "iylos", "spell_rev", "stratagems", "wheels"]
+    before = ["eet_end", "spell_rev", "stratagems", "wheels"]
 
     [ascension.components.1]
     group = "Ascension"
@@ -1180,9 +1787,16 @@ url = "github:InfinityMods/Ascension"
 [asharnpc]
 archive = "AsharNPC_v131.rar"
 class = "NPC"
-description = "Ashar"
-lastupdate = 1970-01-01
+description = "Ashar (half-orc barbarian)"
+languages = ["Polski", "English"]
+lastupdate = 2021-08-11
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/asharnpc/Readme_AsharNPC.txt"
+tp2 = "asharnpc/setup-asharnpc.tp2"
 url = "http://www.shsforums.net/files/download/1203-ashar-npc/"
+
+    [asharnpc.components.1]
+    id = "0"
+    name = "Ashar NPC"
 
 [assassinations]
 class = "Quests"
@@ -1576,14 +2190,81 @@ url = "https://www.dropbox.com/s/hs3besqzichlru0/atweaks-v453.zip?dl=1"
     subgroup = "Allow Mages to scribe memorized spells onto scrolls"
 
 [aura_bg1]
+archive = "aura_bg1.tar.gz"
 class = "NPC"
-description = "Aura"
-lastupdate = 1970-01-01
+description = "Aura (LG gnome artificer)"
+languages = ["English"]
+lastupdate = 2022-06-30
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/aura_bg1/Readme-Aura_BG1.html"
+tp2 = "aura_bg1/setup-aura_bg1.tp2"
 url = "github:ArtemiusI/Aura_BG1"
+
+    [aura_bg1.components.1]
+    id = "0"
+    name = "Aura NPC for Baldur's Gate: Enhanced Edition"
+
+    [aura_bg1.components.10]
+    id = "9"
+    name = "Original BG1 Default (Lava Del'Vortel)"
+    subgroup = "Choose a portrait for Aura:"
+
+    [aura_bg1.components.11]
+    id = "10"
+    name = "Second BG1 Default (Lava Del'Vortel)"
+    subgroup = "Choose a portrait for Aura:"
+
+    [aura_bg1.components.12]
+    id = "11"
+    name = "Original BG2 Default (The Artisan)"
+    subgroup = "Choose a portrait for Aura:"
+
+    [aura_bg1.components.13]
+    id = "12"
+    name = "Pre-version 3.4 soundset for Aura by Kait"
+
+    [aura_bg1.components.2]
+    id = "1"
+    name = "Artificer (Thief)"
+    subgroup = "Choose a class for Aura:"
+
+    [aura_bg1.components.3]
+    id = "2"
+    name = "Illusionist / Artificer (Mage / Thief)"
+    subgroup = "Choose a class for Aura:"
+
+    [aura_bg1.components.4]
+    id = "3"
+    name = "Priestess / Artificer (Cleric / Thief)"
+    subgroup = "Choose a class for Aura:"
+
+    [aura_bg1.components.5]
+    id = "4"
+    name = "BG1 Default (The Artisan)"
+    subgroup = "Choose a portrait for Aura:"
+
+    [aura_bg1.components.6]
+    id = "5"
+    name = "BG2 Default (The Artisan)"
+    subgroup = "Choose a portrait for Aura:"
+
+    [aura_bg1.components.7]
+    id = "6"
+    name = "Alternate 1 (Omar Diaz)"
+    subgroup = "Choose a portrait for Aura:"
+
+    [aura_bg1.components.8]
+    id = "7"
+    name = "Alternate 2 (Pantalion)"
+    subgroup = "Choose a portrait for Aura:"
+
+    [aura_bg1.components.9]
+    id = "8"
+    name = "Alternate 3 (The Artisan, edited from Neverwinter Nights)"
+    subgroup = "Choose a portrait for Aura:"
 
 [aurenaseph]
 class = "NPC"
-description = "Auren Aseph NPC"
+description = "Auren Aseph (fighter)"
 languages = ["English", "Deutsch", "Russian", "Francais", "Spanish"]
 lastupdate = 2021-09-28
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/AurenAseph/Readme-Auren.html"
@@ -2665,7 +3346,7 @@ archive = "bggoeet.tar.gz"
 class = "UI"
 description = "Baldur's Gate Graphics Overhaul for EET and BGT"
 lastupdate = 2022-06-28
-readme = "http://www.shsforums.net/topic/56410-what-is-it/"
+readme = "https://www.shsforums.net/topic/56410-what-is-it/"
 tp2 = "bggoeet/bggoeet.tp2"
 url = "github:BigWorldProject/BGGOEET"
 
@@ -2837,6 +3518,10 @@ description = "Branwen BG2 NPC"
 lastupdate = 1970-01-01
 url = "github:Pocket-Plane-Group/Branwen_for_BGII"
 
+    [branwen.components.1]
+    id = "0"
+    path = ["NPC", "Branwen"]
+
 [bridgesblock]
 archive = "bridgesblock.zip"
 class = "SmallQuests"
@@ -2866,14 +3551,17 @@ url = "https://downloads.weaselmods.net/download/bristlelick/?wpdmdl=406"
     name = "Bristlelick—the gnoll companion for BGEE"
 
 [btl]
-archive = "beyond-the-law-v2.0.0.zip"
 class = "NPC"
 description = "Beyond the Law"
 languages = ["English"]
 lastupdate = 2021-10-26
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/btl/readme/btl-readme-english.html"
 tp2 = "btl/btl.tp2"
-url = "https://github.com/SpellholdStudios/Beyond_the_Law/releases/download/v2.0.0/beyond-the-law-v2.0.0.zip"
+url = "github:SpellholdStudios/Beyond_the_Law"
+
+    [btl.compat.1]
+    after = ["eet"]
+    before = ["eet_end"]
 
     [btl.components.1]
     id = "0"
@@ -2911,87 +3599,160 @@ url = "github:Gitjas/Brages_Redemption"
 ["c#brandock"]
 class = "NPC"
 description = "Brandock the Mage"
-lastupdate = 1970-01-01
+languages = ["English", "Deutsch"]
+lastupdate = 2022-04-05
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/C#Brandock/readme.brandock.english.html"
+tp2 = "c#brandock/c#brandock.tp2"
 url = "github:Gitjas/Brandock_the_Mage"
 
+    ["c#brandock".compat.1]
+    after = ["alternatives", "bg1npc", "bgqe", "c#brage", "c#endlessbg1", "c#solaufein", "eet", "gavin", "npc_strongholds", "sirinescall", "thecalling", "transitions", "valerie"]
+    before = ["eet_end"]
+
+    ["c#brandock".components.1]
+    id = "0"
+    name = "Brandock the Mage"
+
+    ["c#brandock".components.10]
+    id = "50"
+    name = "Use Short Cutscene in Thalantyr's Abode"
+
+    ["c#brandock".components.2]
+    id = "10"
+    name = "Brandock the Mage: Crossmod Content"
+
+    ["c#brandock".components.3]
+    id = "20"
+    name = "Alternative #1: Friendly, by Acifer"
+    subgroup = "Install Alternate Portrait"
+
+    ["c#brandock".components.4]
+    id = "21"
+    name = "Alternative #2: Mischievous, by Acifer"
+    subgroup = "Install Alternate Portrait"
+
+    ["c#brandock".components.5]
+    id = "22"
+    name = "Alternative #3: Juvenile, by Acifer"
+    subgroup = "Install Alternate Portrait"
+
+    ["c#brandock".components.6]
+    id = "23"
+    name = "Default Portrait: Insecure, by Acifer (is included in the main component)"
+    subgroup = "Install Alternate Portrait"
+
+    ["c#brandock".components.7]
+    id = "30"
+    name = "Use Dialogue Style for Brandock's Banter in SoD"
+
+    ["c#brandock".components.8]
+    id = "40"
+    name = "Cosmetic: integrate without changing original scribe scroll possibilities"
+    subgroup = "Integrate aTweaks \"Allow Mages to scribe memorized spells onto scrolls\" possibilities into Brandock's Scribe Scroll Ability"
+
+    ["c#brandock".components.9]
+    id = "41"
+    name = "Substantial: integrate with changing original ability so Brandock can only scribe spells he knows (NOT recommended for classic BG2/BGT)"
+    subgroup = "Integrate aTweaks \"Allow Mages to scribe memorized spells onto scrolls\" possibilities into Brandock's Scribe Scroll Ability"
+
 ["c#endlessbg1"]
-archive = "cendlessbg1-11.zip"
 class = "Quests"
 description = "Endless BG1"
 languages = ["English", "Deutsch", "Russian (by Austin, Arkie & Arcanecoast.ru)", "Polski", "Francais", "Italiano"]
 lastupdate = 2022-06-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/c#endlessbg1/readme.c#endlessbg1.english.txt"
 tp2 = "c#endlessbg1/c#endlessbg1.tp2"
-url = "https://github.com/Gibberlings3/EndlessBG1/releases/download/v11/cendlessbg1-11.zip"
+url = "github:Gibberlings3/EndlessBG1"
+
+    ["c#endlessbg1".compat.1]
+    after = ["eet"]
+    before = ["acbre", "ajantisbg1", "atweaks", "bg1re", "c#brage", "c#brandock", "cdtweaks", "eet_end", "transitions"]
 
     ["c#endlessbg1".components.1]
     id = "0"
     name = "Endless BG1: Main Component (Required)"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.10]
     id = "9"
     name = "Restored BG1 Text"
+    path = ["Story", "BG1", "Ending"]
     subgroup = "Elminster Makes an Appearance"
 
     ["c#endlessbg1".components.11]
     id = "10"
     name = "First Refugees Come to Baldur's Gate"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.12]
     id = "11"
     name = "Ophyllis the Treasurer is Inside Palace Dungeon"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.13]
     id = "12"
     name = "Denkod in Thieves' Guild Comments on Sarevok's Death"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.14]
     id = "13"
     name = "Skip Thieves' Maze Once After Sarevok's Death"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.15]
     id = "14"
     name = "Korlasz' Dungeon is in BG1"
+    path = ["Story", "SoD"]
 
     ["c#endlessbg1".components.16]
     id = "15"
     name = "Fenster the Palace Healer Is in the Palace"
+    path = ["Story", "SoD"]
 
     ["c#endlessbg1".components.17]
     id = "16"
     name = "Captain Corwin Is in the Palace"
+    path = ["Story", "SoD"]
 
     ["c#endlessbg1".components.2]
     id = "1"
     name = "More Flavor to Hero of Baldur's Gate (Includes PC's Residence Inside Palace)"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.3]
     id = "2"
     name = "Short Public Hero Tribute"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.4]
     id = "3"
     name = "Sarevok's Unique Items"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.5]
     id = "4"
     name = "Sarevok's Sword"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.6]
     id = "5"
     name = "Imoen and Duke Jannath (Imoen Gets Residence Inside Palace)"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.7]
     id = "6"
     name = "Duke Eltan Is in the Palace"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.8]
     id = "7"
     name = "Flaming Fist After Final Fight"
+    path = ["Story", "BG1", "Ending"]
 
     ["c#endlessbg1".components.9]
     id = "8"
     name = "jastey's Version"
+    path = ["Story", "BG1", "Ending"]
     subgroup = "Elminster Makes an Appearance"
 
 ["c#sb_silber"]
@@ -3090,9 +3851,40 @@ url = "github:ArtemiusI/Warlock"
 [calin]
 archive = "calin-v1.5.zip"
 class = "NPC"
-description = "Calin NPC"
-lastupdate = 1970-01-01
+description = "Calin (NG human Blade Master)"
+lastupdate = 2019-08-20
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/calin/readme-calin.txt"
+tp2 = "calin/calin.tp2"
 url = "https://www.dropbox.com/s/5h6f10aik02ygho/calin-v1.5.zip?dl=1"
+
+    [calin.components.1]
+    id = "0"
+    name = "Calin for BG2"
+
+    [calin.components.2]
+    id = "102"
+    name = "15 minutes real time minimum between dialogues"
+    subgroup = "Select Calin's dialogue timer: (default is one hour; please note that only timered talks are affected by this)"
+
+    [calin.components.3]
+    id = "103"
+    name = "30 minutes real time minimum between dialogues"
+    subgroup = "Select Calin's dialogue timer: (default is one hour; please note that only timered talks are affected by this)"
+
+    [calin.components.4]
+    id = "104"
+    name = "45 minutes real time minimum between dialogues"
+    subgroup = "Select Calin's dialogue timer: (default is one hour; please note that only timered talks are affected by this)"
+
+    [calin.components.5]
+    id = "105"
+    name = "1 hour 30 minutes real time minimum between dialogues"
+    subgroup = "Select Calin's dialogue timer: (default is one hour; please note that only timered talks are affected by this)"
+
+    [calin.components.6]
+    id = "106"
+    name = "2 hours real time between dialogues"
+    subgroup = "Select Calin's dialogue timer: (default is one hour; please note that only timered talks are affected by this)"
 
 [candlemem]
 class = "BigQuests"
@@ -3720,6 +4512,7 @@ url = "github:Gibberlings3/Tweaks-Anthology"
     group = "Rule Changes"
     id = "2540"
     name = "Speed Up de'Arnise Keep Stronghold Quests"
+    path = ["Story", "BG2", "Stronghold"]
 
     [cdtweaks.components.173]
     group = "Rule Changes"
@@ -4069,12 +4862,14 @@ url = "github:Gibberlings3/Tweaks-Anthology"
     group = "Convenience Tweaks/Cheats"
     id = "3140"
     name = "Originals from Ease-of-Use mod [Karzak, Blucher, aVENGER, Weimer]"
+    path = ["Story", "BG1"]
     subgroup = "Faster Chapter One and Two Cutscenes and Dreams"
 
     [cdtweaks.components.217]
     group = "Convenience Tweaks/Cheats"
     id = "3141"
     name = "Non-silly version"
+    path = ["Story", "BG1"]
     subgroup = "Faster Chapter One and Two Cutscenes and Dreams"
 
     [cdtweaks.components.218]
@@ -5001,16 +5796,19 @@ url = "github:Gibberlings3/Tweaks-Anthology"
     group = "Content Changes"
     id = "1251"
     name = "Move NPCs to Convenient Locations: Move Alora to Gullykin"
+    path = ["NPC", "Alora"]
 
     [cdtweaks.components.78]
     group = "Content Changes"
     id = "1252"
     name = "Move NPCs to Convenient Locations: Move Eldoth to the Coast Way"
+    path = ["NPC", "Eldoth"]
 
     [cdtweaks.components.79]
     group = "Content Changes"
     id = "1253"
     name = "Move NPCs to Convenient Locations: Move Quayle to the Nashkel Carnival"
+    path = ["NPC", "Quayle"]
 
     [cdtweaks.components.8]
     group = "Cosmetic Changes"
@@ -5022,26 +5820,31 @@ url = "github:Gibberlings3/Tweaks-Anthology"
     group = "Content Changes"
     id = "1254"
     name = "Move NPCs to Convenient Locations: Move Shar-Teel to North Nashkel Road"
+    path = ["NPC", "Shar-Teel"]
 
     [cdtweaks.components.81]
     group = "Content Changes"
     id = "1255"
     name = "Move NPCs to Convenient Locations: Move Tiax to Beregost"
+    path = ["NPC", "Tiax"]
 
     [cdtweaks.components.82]
     group = "Content Changes"
     id = "1256"
     name = "Move NPCs to Convenient Locations: Move Viconia to South Beregost Road"
+    path = ["NPC", "Viconia"]
 
     [cdtweaks.components.83]
     group = "Content Changes"
     id = "1260"
     name = "Bardic Reputation Adjustment"
+    path = ["Skills", "Reputation"]
 
     [cdtweaks.components.84]
     group = "Content Changes"
     id = "1270"
     name = "Change Cloakwood Mine Chapter End Change Trigger to Non-TotSC Behavior [plainab]"
+    path = ["Story", "BG1"]
 
     [cdtweaks.components.85]
     group = "Content Changes"
@@ -5229,7 +6032,7 @@ url = "github:AstroBryGuy/ChattyImoen"
 
 [chloe]
 class = "NPC"
-description = "Chloe NPC"
+description = "Chloe (N human kensai)"
 lastupdate = 1970-01-01
 url = "github:RoxanneSHS/ChloeEET"
 
@@ -5270,8 +6073,19 @@ url = "github:MattyGroove/ConvinientAmmunition"
 archive = "Coran_v6.zip"
 class = "NPC"
 description = "Coran NPC for BG2"
-lastupdate = 1970-01-01
+languages = ["English", "Russian"]
+lastupdate = 2019-02-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/Coran/Readme-Coran.txt"
+tp2 = "coran/coran.tp2"
 url = "github:Pocket-Plane-Group/Coran_for_BGII"
+
+    [coran.components.1]
+    id = "0"
+    name = "Coran NPC MOD for Baldur's Gate II"
+
+    [coran.components.2]
+    id = "1"
+    name = "Delete old Coran from the Forest of Tethyr (RECOMMENDED)"
 
 [coranbgfriend]
 class = "NPC-Related"
@@ -6787,7 +7601,7 @@ url = "github:anongit/DragonspearUI"
 [drake]
 archive = "Drake-master.zip"
 class = "NPC"
-description = "Drake NPC"
+description = "Drake (priest of Tyr)"
 languages = ["English"]
 lastupdate = 2019-07-09
 tp2 = "drake/setup-drake.tp2"
@@ -8056,7 +8870,7 @@ url = "github:r-e-d/EEUITweaks"
 
 [ehlastra]
 class = "NPC"
-description = "Ehlastra"
+description = "Ehlastra (LE human berserker)"
 lastupdate = 1970-01-01
 url = "github:RoxanneSHS/Ehlastra"
 
@@ -8212,12 +9026,12 @@ url = "https://www.dropbox.com/s/4rnre1nw386f47s/EternalImoen_v6.3.zip?dl=1"
 [evandra]
 archive = "evandra-v2.2.zip"
 class = "NPC"
-description = "Evandra"
+description = "Evandra (N elven illusionist)"
 lastupdate = 1970-01-01
 url = "github:MattyGroove/Evandra"
 
 [extraexpandedenhancedencounters]
-archive = "extraexpandedencounters.zip"
+archive = "extraexpandedenhancedencounters.zip"
 class = "Quests"
 description = "Extra Expanded Encounters"
 lastupdate = 1970-01-01
@@ -8346,15 +9160,220 @@ url = "github:UnearthedArcana/Faiths_and_Powers"
 archive = "faldornbg2.zip"
 class = "NPC"
 description = "Faldorn BG2"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2022-05-22
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/faldornbg2/readme.txt"
+tp2 = "faldornbg2/faldornbg2.tp2"
 url = "https://downloads.weaselmods.net/download/faldorn-bg2ee/?wpdmdl=480"
 
+    [faldornbg2.components.1]
+    id = "0"
+    name = "Faldorn NPC for BG2EE"
+    path = ["NPC", "Faldorn"]
+
+    [faldornbg2.components.2]
+    id = "1"
+    name = "Faldorn NPC for BG2EE: Player-Initiated Dialogues (PIDs)"
+    path = ["NPC", "Faldorn"]
+
 [faren]
-archive = "Faren_V4.zip"
+archive = "faren.zip"
 class = "NPC"
-description = "Faren NPC"
-lastupdate = 1970-01-01
-url = "http://dl.spellholdstudios.net/faren"
+description = "Faren (TN Fighter/Thief)"
+languages = ["English"]
+lastupdate = 2015-05-23
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/Faren/FarenReadme.html"
+tp2 = "faren/setup-faren.tp2"
+url = "http://www.shsforums.net/files/download/1125-faren/"
+
+    [faren.components.1]
+    id = "0"
+    name = "Faren NPC for Baldur's Gate II"
+
+    [faren.components.10]
+    group = "Crossmod Content"
+    id = "9"
+    name = "Beyond the Law Content"
+
+    [faren.components.11]
+    group = "Crossmod Content"
+    id = "10"
+    name = "Branwen Content"
+
+    [faren.components.12]
+    group = "Crossmod Content"
+    id = "11"
+    name = "Chloe Content (Shadows of Amn content only)"
+
+    [faren.components.13]
+    group = "Crossmod Content"
+    id = "12"
+    name = "Coran Content"
+
+    [faren.components.14]
+    group = "Crossmod Content"
+    id = "13"
+    name = "Dace Linton Content"
+
+    [faren.components.15]
+    group = "Crossmod Content"
+    id = "14"
+    name = "Darian Content"
+
+    [faren.components.16]
+    group = "Crossmod Content"
+    id = "15"
+    name = "de'Arnise Romance Content (Shadows of Amn content only)"
+
+    [faren.components.17]
+    group = "Crossmod Content"
+    id = "16"
+    name = "Edwin Romance Content (Shadows of Amn content only)"
+
+    [faren.components.18]
+    group = "Crossmod Content"
+    id = "17"
+    name = "Fade Content"
+
+    [faren.components.19]
+    group = "Crossmod Content"
+    id = "18"
+    name = "Haldamir Content"
+
+    [faren.components.2]
+    id = "1"
+    name = "Martial configuration"
+    subgroup = "Choose Faren's weapon proficiency skillset"
+
+    [faren.components.20]
+    group = "Crossmod Content"
+    id = "19"
+    name = "Isra Content"
+
+    [faren.components.21]
+    group = "Crossmod Content"
+    id = "20"
+    name = "Iylos Content"
+
+    [faren.components.22]
+    group = "Crossmod Content"
+    id = "21"
+    name = "Kelsey Content"
+
+    [faren.components.23]
+    group = "Crossmod Content"
+    id = "22"
+    name = "Keto Content (Shadows of Amn content only)"
+
+    [faren.components.24]
+    group = "Crossmod Content"
+    id = "23"
+    name = "Luxley Family Content (Shadows of Amn content only)"
+
+    [faren.components.25]
+    group = "Crossmod Content"
+    id = "24"
+    name = "Nathaniel Content"
+
+    [faren.components.26]
+    group = "Crossmod Content"
+    id = "25"
+    name = "Nephele Content"
+
+    [faren.components.27]
+    group = "Crossmod Content"
+    id = "26"
+    name = "Ninde Content"
+
+    [faren.components.28]
+    group = "Crossmod Content"
+    id = "27"
+    name = "Romantic Encounters Content (can be installed before or after Romantic Encounters)"
+
+    [faren.components.29]
+    group = "Crossmod Content"
+    id = "28"
+    name = "Saerileth Content"
+
+    [faren.components.3]
+    id = "2"
+    name = "Rogue configuration"
+    subgroup = "Choose Faren's weapon proficiency skillset"
+
+    [faren.components.30]
+    group = "Crossmod Content"
+    id = "29"
+    name = "Sarah Content"
+
+    [faren.components.31]
+    group = "Crossmod Content"
+    id = "30"
+    name = "Solaufein Content"
+
+    [faren.components.32]
+    group = "Crossmod Content"
+    id = "31"
+    name = "Tashia Content"
+
+    [faren.components.33]
+    group = "Crossmod Content"
+    id = "32"
+    name = "Tiax Content"
+
+    [faren.components.34]
+    group = "Crossmod Content"
+    id = "33"
+    name = "Tsujatha Content"
+
+    [faren.components.35]
+    group = "Crossmod Content"
+    id = "34"
+    name = "Xan Content"
+
+    [faren.components.36]
+    group = "Crossmod Content"
+    id = "35"
+    name = "Xulaye Content"
+
+    [faren.components.37]
+    group = "Crossmod Content"
+    id = "36"
+    name = "Yasraena Content"
+
+    [faren.components.38]
+    group = "Crossmod Content"
+    id = "37"
+    name = "Yeslick Content (Shadows of Amn content only)"
+
+    [faren.components.4]
+    group = "Crossmod Content"
+    id = "3"
+    name = "Adrian Content"
+
+    [faren.components.5]
+    group = "Crossmod Content"
+    id = "4"
+    name = "Ajantis Content"
+
+    [faren.components.6]
+    group = "Crossmod Content"
+    id = "5"
+    name = "Amber Content (Shadows of Amn content only)"
+
+    [faren.components.7]
+    group = "Crossmod Content"
+    id = "6"
+    name = "Angelo Content"
+
+    [faren.components.8]
+    group = "Crossmod Content"
+    id = "7"
+    name = "Arath Content"
+
+    [faren.components.9]
+    group = "Crossmod Content"
+    id = "8"
+    name = "Auren Aseph Content"
 
 [finchnpc]
 archive = "finchnpc.tar.gz"
@@ -8568,7 +9587,7 @@ url = "github:Gibberlings3/Garricks_Infatuation"
 
 [gavin]
 class = "NPC"
-description = "Gavin NPC"
+description = "Gavin (cleric of Lathander): BG1 content"
 languages = ["English", "French", "Deutsch (Teildeutsche Version, der Rest ist auf Englisch)"]
 lastupdate = 2022-06-23
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/gavin/readme-gavin.html"
@@ -8629,9 +9648,60 @@ url = "github:Gibberlings3/Gavin_BG"
 
 [gavin_bg2]
 class = "NPC"
-description = "Gavin NPC for BG2:ToB"
-lastupdate = 1970-01-01
+description = "Gavin (clefic of Lathander): BG2 content"
+languages = ["English"]
+lastupdate = 2022-06-30
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/gavin_bg2/readme-gavin_bg2.html"
+tp2 = "gavin_bg2/setup-gavin_bg2.tp2"
 url = "github:Gibberlings3/Gavin_BG2"
+
+    [gavin_bg2.components.1]
+    id = "0"
+    name = "Gavin for BG2"
+
+    [gavin_bg2.components.10]
+    id = "9"
+    name = "Dragon Age style portrait by berelinde"
+    subgroup = "Alternate Portrait Selection (Default portrait is already installed)"
+
+    [gavin_bg2.components.2]
+    id = "1"
+    name = "Gavin heals the PC when below 50% health (Can be disabled or enabled via player-initiated dialogue)"
+
+    [gavin_bg2.components.3]
+    id = "2"
+    name = "Normal romance kills"
+    subgroup = "Multi-romance cheat"
+
+    [gavin_bg2.components.4]
+    id = "3"
+    name = "No romance kills"
+    subgroup = "Multi-romance cheat"
+
+    [gavin_bg2.components.5]
+    id = "4"
+    name = "Dawnbringer, by Amaurea"
+    subgroup = "Alternate Portrait Selection (Default portrait is already installed)"
+
+    [gavin_bg2.components.6]
+    id = "5"
+    name = "Dawn skies, by Kaeloree"
+    subgroup = "Alternate Portrait Selection (Default portrait is already installed)"
+
+    [gavin_bg2.components.7]
+    id = "6"
+    name = "Grey skies, by Kaeloree"
+    subgroup = "Alternate Portrait Selection (Default portrait is already installed)"
+
+    [gavin_bg2.components.8]
+    id = "7"
+    name = "Red tunic, by Miloch"
+    subgroup = "Alternate Portrait Selection (Default portrait is already installed)"
+
+    [gavin_bg2.components.9]
+    id = "8"
+    name = "Original alternate, by Kaeloree"
+    subgroup = "Alternate Portrait Selection (Default portrait is already installed)"
 
 [glamnpcpack]
 archive = "GlamNPCPack-v3.1.zip"
@@ -8684,7 +9754,7 @@ url = "github:MattyGroove/haerdalisromance"
 
 [haldamir]
 class = "NPC"
-description = "Haldamir NPC"
+description = "Haldamir (CN elven fighter)"
 lastupdate = 1970-01-01
 url = "github:Gibberlings3/Haldamir"
 
@@ -9282,7 +10352,7 @@ url = "github:RoxanneSHS/Asylum"
 [indinpc]
 archive = "indinpc.tar.gz"
 class = "NPC"
-description = "Indira NPC"
+description = "Indira (LG half-elf fighter/mage)"
 languages = ["English", "Italiano", "Francais", "Polski", "Espanol", "Deutsch", "Russian"]
 lastupdate = 2022-06-23
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/indinpc/Docs/indi_readme.html"
@@ -9421,7 +10491,7 @@ url = "weaselmods:i-shall-never-forget"
 
 [isra]
 class = "NPC"
-description = "Isra NPC"
+description = "Isra (paladin of Sune): BG1 content"
 languages = ["English", "Russian (Translation: JamesMaxwell & Arcanecoast.ru)", "Italiano (traduzione di Coland)"]
 lastupdate = 2021-06-06
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/isra/readme/isra-readme-english.html"
@@ -9446,9 +10516,20 @@ url = "github:SpellholdStudios/Isra_NPC"
 
 [isra_bg2]
 class = "NPC"
-description = "Isra BG2 NPC"
-lastupdate = 1970-01-01
+description = "Isra (paladin of Sune): BG2 content"
+languages = ["English"]
+lastupdate = 2020-03-30
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/isra_bg2/readme/isra_bg2-readme-english.html"
+tp2 = "isra_bg2/isra_bg2.tp2"
 url = "github:SpellholdStudios/Isra_NPC_BG2"
+
+    [isra_bg2.components.1]
+    id = "0"
+    name = "Isra for BGII"
+
+    [isra_bg2.components.2]
+    id = "1"
+    name = "Isra Crossmod Content"
 
 [item_patcher]
 archive = "Manual"
@@ -9854,17 +10935,18 @@ description = "IWD item pack"
 lastupdate = 1970-01-01
 url = "github:GwendolyneFreddy/IWD_Item_Pack"
 
-[iylos]
-class = "NPC"
-description = "Iylos (ToB monk)"
-lastupdate = 1970-01-01
-url = "github:SpellholdStudios/Iylos"
-
 [iylos_eet]
+archive = "iylos_eet.tar.gz"
 class = "NPC"
 description = "Iylos"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2022-06-30
+tp2 = "iylos_eet/iylos_eet.tp2"
 url = "github:RoxanneSHS/IylosEET"
+
+    [iylos_eet.components.1]
+    id = "0"
+    name = "Iylos NPC for EET"
 
 [jaheirarecast]
 archive = "AstroBryGuy-JaheiraRecast-v3.0-0-g501290c.zip"
@@ -10001,6 +11083,7 @@ class = "NPC"
 description = "Kale"
 languages = ["English"]
 lastupdate = 2022-06-24
+readme = "https://forums.beamdog.com/discussion/74630/v1-67-kale-a-halfling-barbarian-for-bg-ee-sod-and-eet"
 tp2 = "kale/kale.tp2"
 url = "github:Skitia/Kale-BG1"
 
@@ -10142,7 +11225,7 @@ url = "github:Pocket-Plane-Group/Kelsey"
 [keto]
 archive = "Keto-SOAv5.zip"
 class = "NPC"
-description = "Keto NPC (SoA)"
+description = "Keto (NG human Bard)"
 languages = ["English", "French (Galathee of the d'Oghmatiques)"]
 lastupdate = 2020-08-03
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/keto/KetoReadme.txt"
@@ -10168,18 +11251,74 @@ url = "github:Pocket-Plane-Group/Keto"
 archive = "khalidbg2.zip"
 class = "NPC"
 description = "Khalid BG2"
-lastupdate = 1970-01-01
+lastupdate = 2022-02-15
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/khalidbg2/readme.txt"
+tp2 = "khalidbg2/khalidbg2.tp2"
 url = "https://downloads.weaselmods.net/download/khalid-bg2/?wpdmdl=449"
+
+    [khalidbg2.compat.1]
+    before = ["eet_end"]
+
+    [khalidbg2.components.1]
+    id = "0"
+    name = "Khalid for BG2EE"
+    path = ["NPC", "Khalid"]
+
+    [khalidbg2.components.2]
+    id = "1"
+    name = "Khalid for BG2EE: Player-Initiated Dialogues"
+    path = ["NPC", "Khalid"]
 
 [kiara-zaiya]
 class = "NPC"
-description = "Kiara Zaiya NPCs"
-lastupdate = 1970-01-01
-url = "github:SpellholdStudios/Kiara_Zaiya"
+description = "Kiara Zaiya (CG HE wild mage, NE human monk)"
+languages = ["American English", "Francais (par Elgaern, Bloody.Mary et Lothringen des d'Oghmatiques)", "Espanol (traduccion por Saemon)", "Deutsch (Uebersetzung von Leonardo Watson)", "Russian (Gingerrr & aerie.ru. Updated by Prowler)"]
+lastupdate = 2021-11-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/kiara-zaiya/readme/kiara_zaiya-readme-english.html"
+tp2 = "kiara-zaiya/kiara-zaiya.tp2"
+url = "github:SpellholdStudios/Kiara-Zaiya"
+
+    [kiara-zaiya.compat.1]
+    after = ["eet"]
+    before = ["eet_end"]
+
+    [kiara-zaiya.components.1]
+    id = "0"
+    name = "Kiara-Zaiya for BG2 with vanilla sound sets"
+    subgroup = "Kiara-Zaiya for BG2"
+
+    [kiara-zaiya.components.2]
+    id = "1"
+    name = "Kiara-Zaiya for BG2 with custom sound sets (English only)"
+    subgroup = "Kiara-Zaiya for BG2"
+
+    [kiara-zaiya.components.3]
+    id = "2"
+    name = "Alternate Monk High level abilities by TG Maestro"
+
+    [kiara-zaiya.components.4]
+    id = "3"
+    name = "Original Amaralis battles"
+
+    [kiara-zaiya.components.5]
+    id = "4"
+    name = "Tougher Kiara vampire"
+
+    [kiara-zaiya.components.6]
+    id = "5"
+    name = "Revised Suldalanessar"
+
+    [kiara-zaiya.components.7]
+    id = "6"
+    name = "Jao and party for SOA: another tough fight"
+
+    [kiara-zaiya.components.8]
+    id = "7"
+    name = "Tougher Irenicus at the Tree of life"
 
 [kido]
 class = "NPC"
-description = "Kido NPC"
+description = "Kido (CE Jester)"
 lastupdate = 1970-01-01
 url = "github:RoxanneSHS/KidoEE"
 
@@ -10639,7 +11778,7 @@ url = "github:SpellholdStudios/KorganFriendship"
 
 [lena]
 class = "NPC"
-description = "Lena"
+description = "Lena (E tiefling warrior)"
 lastupdate = 1970-01-01
 url = "github:gungorenu/bg2-npcmod-lena"
 
@@ -10743,9 +11882,28 @@ url = "github:SpellholdStudios/Lucy_the_Wyvern"
 
 [luxleysoa]
 class = "NPC"
-description = "Luxley Family"
-lastupdate = 1970-01-01
+description = "Luxley family (CN playwright, LN monk)"
+languages = ["English"]
+lastupdate = 2021-06-17
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/luxleysoa/readme/luxleysoa-readme-english.html"
+tp2 = "luxleysoa/luxleysoa.tp2"
 url = "github:SpellholdStudios/The_Luxley_Family"
+
+    [luxleysoa.compat.1]
+    after = ["eet", "nathaniel"]
+    before = ["eet_end"]
+
+    [luxleysoa.components.1]
+    id = "0"
+    name = "Luxley Family Mod for BGII:SoA"
+
+    [luxleysoa.components.2]
+    id = "1"
+    name = "Portraits for non-joinable NPCs"
+
+    [luxleysoa.components.3]
+    id = "2"
+    name = "Nathaniel Crossmod content"
 
 [m7multikit]
 archive = "CrevsDaak-m7multikit-v0.27.11-0-gdaf5de8.zip"
@@ -11784,7 +12942,7 @@ languages = ["English", "French (by BohemianReader)"]
 lastupdate = 2019-08-03
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/mortis/ENGLISH-README.html"
 tp2 = "mortis/setup-mortis.tp2"
-url = "http://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip"
+url = "https://download1648.mediafire.com/7plvylpx6xbg/lspfz2ctae51735/Mortis+Mini+Mod+2.33.zip"
 
     [mortis.components.1]
     id = "0"
@@ -11934,7 +13092,7 @@ url = "github:Renegade0/msfm"
 
 ["mur'neth"]
 class = "NPC"
-description = "Mur'Neth NPC"
+description = "Mur'Neth (CE Ghaunadan/ooze thief)"
 lastupdate = 1970-01-01
 url = "github:RoxanneSHS/Murneth"
 
@@ -11946,11 +13104,41 @@ lastupdate = 1970-01-01
 url = "github:GwendolyneFreddy/Nanstein"
 
 [nathaniel]
-archive = "nathaniel_v5.zip"
+archive = "nathaniel.rar"
 class = "NPC"
-description = "Nathaniel NPC"
-lastupdate = 1970-01-01
-url = "http://dl.spellholdstudios.net/nathaniel"
+description = "Nathaniel (LG human fighter)"
+languages = ["English"]
+lastupdate = 2013-11-11
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/Nathaniel/NathanielReadme.htm"
+tp2 = "nathaniel/setup-nathaniel.tp2"
+url = "http://www.shsforums.net/files/download/734-nathaniel/"
+
+    [nathaniel.components.1]
+    id = "0"
+    name = "Nathaniel NPC Mod for BGII"
+
+    [nathaniel.components.2]
+    id = "1"
+    name = "Default portrait by Feuille"
+    subgroup = "Choose a portrait for Nathaniel"
+
+    [nathaniel.components.3]
+    id = "2"
+    name = "Alternate portrait by K'aeloree (NWN remake)"
+    subgroup = "Choose a portrait for Nathaniel"
+
+    [nathaniel.components.4]
+    id = "3"
+    name = "Alternate portrait by Amaurea (Milo Ventimiglia)"
+    subgroup = "Choose a portrait for Nathaniel"
+
+    [nathaniel.components.5]
+    id = "4"
+    name = "Solaufein Conflict"
+
+    [nathaniel.components.6]
+    id = "5"
+    name = "Kelsey Content"
 
 [neera]
 class = "NPC-Related"
@@ -11997,10 +13185,18 @@ url = "github:SpellholdStudios/Nephele_NPC"
     name = "Install Haer'Dalis Romance crossmod content"
 
 [ninde_eet]
+archive = "ninde_eet.tar.gz"
 class = "NPC"
-description = "Ninde"
-lastupdate = 1970-01-01
+description = "Ninde (NE elven necromancer)"
+languages = ["English"]
+lastupdate = 2022-06-30
+readme = "https://spellholdstudios.github.io/readmes/ninde-readme-english.html"
+tp2 = "ninde_eet/ninde_eet.tp2"
 url = "github:RoxanneSHS/NindeEET"
+
+    [ninde_eet.components.1]
+    id = "0"
+    name = "Ninde NPC Mod"
 
 [ninja]
 archive = "EENinja.zip"
@@ -12076,7 +13272,7 @@ lastupdate = 1970-01-01
 url = "https://www.gibberlings3.net/files/file/793-npc-kitpack"
 
 [ntotsc]
-class = "NPC"
+class = "Quests"
 description = "Northern Tales of the Sword Coast"
 languages = ["English", "German (translation by Leonardo Watson)", "Italian (translation by ilot)", "Polish", "Russian"]
 lastupdate = 2022-06-21
@@ -12189,7 +13385,7 @@ archive = "ooze.zip"
 class = "SmallQuests"
 description = "Oozes Lounge"
 languages = ["English", "Chinese by merzbau", "Polish by memory", "Russian by tipun", "French by deratiseur and Mornagest", "Korean by Pinkpanther", "Italian by improbabile"]
-lastupdate = 2022-06-29
+lastupdate = 2022-06-30
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/ooze/readme.txt"
 tp2 = "ooze/ooze.tp2"
 url = "weaselmods:oozes-lounge"
@@ -12201,15 +13397,26 @@ url = "weaselmods:oozes-lounge"
 [orelios]
 archive = "OreliosNPC.zip"
 class = "NPC"
-description = "Orelios NPC"
+description = "Orelios (monk)"
 lastupdate = 1970-01-01
 url = "github:PaulaMigrate/Orelios"
 
 [paina]
+archive = "paina.tar.gz"
 class = "NPC"
 description = "Pai Na"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2022-06-30
+tp2 = "paina/paina.tp2"
 url = "github:ArtemiusI/Pai-Na-NPC-mod-for-BG2-EE"
+
+    [paina.components.1]
+    id = "0"
+    name = "Pai'Na NPC for BG:EE"
+
+    [paina.components.2]
+    id = "1"
+    name = "Alternate Portrait"
 
 [paintbg]
 archive = "PaintBG(EE) v2.1.zip"
@@ -12421,11 +13628,11 @@ lastupdate = 1970-01-01
 url = "github:Gibberlings3/Romantic_Encounters_BG2"
 
 [recoloredbuttons]
-archive = "A7-recoloredbuttons-master.zip"
+archive = "lin-A7-recoloredbuttons-v4.2.zip"
 class = "UI"
 description = "Recolored Toolbar Buttons"
 lastupdate = 1970-01-01
-url = "github:Argent77/A7-recoloredbuttons"
+url = "https://github.com/Argent77/A7-recoloredbuttons/releases/download/v4.2/lin-A7-recoloredbuttons-v4.2.zip"
 
 [recorder]
 archive = "recorder.tar.gz"
@@ -12672,7 +13879,7 @@ tp2 = "rr/setup-rr.tp2"
 url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 
     [rr.compat.1]
-    after = ["btl", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "song_and_silence", "spell_rev", "tod"]
+    after = ["beyond_the_law", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "song_and_silence", "spell_rev", "tod"]
     before = ["atweaks", "eet_tweaks", "stratagems", "virtue"]
 
     [rr.components.1]
@@ -12827,7 +14034,7 @@ description = "Ulrien Of Cormyr, Saga Master"
 lastupdate = 2007-09-22
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/sagaman/BWLSagaManReadme.htm"
 tp2 = "sagaman/setup-sagaman.tp2"
-url = "http://www.blackwyrmlair.net/~rabain/SagaMaster/Ulrien-SagaMaster.zip"
+url = "https://www.blackwyrmlair.net/~rabain/SagaMaster/Ulrien-SagaMaster.zip"
 
     [sagaman.components.1]
     id = "0"
@@ -12867,7 +14074,7 @@ class = "Items"
 description = "Saradas Magic"
 lastupdate = 2013-11-14
 tp2 = "saradas_magic/saradas_magic.tp2"
-url = "http://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip"
+url = "https://www.mediafire.com/download/rg5cyypji1om22o/Saradas%2520Magic%2520ENG%2520V_1.1.zip"
 
     [saradas_magic.components.1]
     id = "0"
@@ -13232,7 +14439,7 @@ url = "github:RoxanneSHS/Sime"
 [sirene]
 archive = "sirene.tar.gz"
 class = "NPC"
-description = "Sirene NPC for BG1:EE"
+description = "Sirene (tiefling paladin of Ilmater)"
 languages = ["English"]
 lastupdate = 2022-06-23
 tp2 = "sirene/setup-sirene.tp2"
@@ -13870,38 +15077,47 @@ url = "github:Gibberlings3/Road_To_Discovery_for_SoD"
     [sodrtd.components.1]
     id = "80"
     name = "SoD - Stat-based observations and quest options from Lauriel's Themed Tweaks Mod"
+    path = ["Story", "SoD"]
 
     [sodrtd.components.2]
     id = "0"
     name = "Main Component: Tracking System"
+    path = ["Story", "SoD"]
 
     [sodrtd.components.3]
     id = "10"
     name = "Consistency Changes to Game Dialogues"
+    path = ["Story", "SoD"]
 
     [sodrtd.components.4]
     id = "20"
     name = "Officers Are Aware"
+    path = ["Story", "SoD"]
 
     [sodrtd.components.5]
     id = "30"
     name = "Give PC Informed Reply Options"
+    path = ["Story", "SoD"]
 
     [sodrtd.components.6]
     id = "40"
     name = "PC Can Tell the Officers"
+    path = ["Story", "SoD"]
 
     [sodrtd.components.7]
     id = "50"
     name = "Add Officers Reactions"
+    path = ["Story", "SoD"]
 
     [sodrtd.components.8]
     id = "60"
     name = "Additional Info Points"
+    path = ["Story", "SoD"]
 
     [sodrtd.components.9]
     id = "70"
     name = "Add Additional Communication with Officers"
+    path = ["Story", "SoD"]
 
 [sodrus]
 class = "Fixes"
@@ -13993,7 +15209,7 @@ archive = "sotsc.zip"
 class = "Quests"
 description = "Shades of the Sword Coast"
 languages = ["English", "Italian by improbabile", "Korean by Pinkpanther", "Russian by tipun"]
-lastupdate = 2022-06-29
+lastupdate = 2022-06-30
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/SotSC/readme.txt"
 tp2 = "sotsc/sotsc.tp2"
 url = "weaselmods:shades-of-the-sword-coast"
@@ -14132,7 +15348,7 @@ url = "https://www.dropbox.com/s/b58zr6nuehrluff/spstuff-v11.zip?dl=1"
 [star]
 archive = "Silverstar.zip"
 class = "NPC"
-description = "Silver Star"
+description = "Silver Star (NE elf assassin)"
 lastupdate = 1970-01-01
 url = "github:SpellholdStudios/Silver_Star_NPC"
 
@@ -15124,11 +16340,37 @@ lastupdate = 1970-01-01
 url = "https://www.dropbox.com/s/dcs9dgiy0vcvgby/TheHorde_1.2.zip?dl=1"
 
 [thebeaurinlegacy]
-archive = "TheBeaurinLegacy.zip"
+archive = "thebeaurinlegacy.zip"
 class = "NPC"
-description = "The Beaurin Legacy"
-lastupdate = 1970-01-01
+description = "The Beaurin Legacy (NE elven Enchanter/Thief)"
+languages = ["English", "Russian", "French"]
+lastupdate = 2022-06-17
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/thebeaurinlegacy/TheBeaurinLegacy-ReadMe.html"
+tp2 = "thebeaurinlegacy/thebeaurinlegacy.tp2"
 url = "https://www.dropbox.com/s/cl4oj311z1gmib7/TheBeaurinLegacy.zip?dl=1"
+
+    [thebeaurinlegacy.components.1]
+    id = "1000"
+    name = "The Beaurin Legacy for BG2:SoA & ToB & BGII:EE"
+
+    [thebeaurinlegacy.components.2]
+    id = "2000"
+    name = "Change Minyae's class to Enchanter (from Enchanter/Thief)"
+
+    [thebeaurinlegacy.components.3]
+    id = "3010"
+    name = "Change Minyae's portrait to alternative by TamikaProud at DeviantArt"
+    subgroup = "Minyae's Portrait"
+
+    [thebeaurinlegacy.components.4]
+    id = "3020"
+    name = "Change Minyae's Portrait to alternative by ErisForan at DeviantArt"
+    subgroup = "Minyae's Portrait"
+
+    [thebeaurinlegacy.components.5]
+    id = "3030"
+    name = "Change Minyae's Portrait to alternative by Aerwindale at DeviantArt"
+    subgroup = "Minyae's Portrait"
 
 [thecalling]
 class = "SmallQuests"
@@ -15251,7 +16493,7 @@ url = "github:RoxanneSHS/The-Rune"
 [theundying]
 archive = "TheUndying2_53.rar"
 class = "NPC"
-description = "The Undying"
+description = "The Undying (CE elven berserker, LN elven fighter/mage)"
 languages = ["english", "german"]
 lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/theundying/readme-ctu.htm"
@@ -15270,8 +16512,16 @@ url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downf
 archive = "thevanishingofskiesilvershield.zip"
 class = "NPC"
 description = "The vanishing of Skie Silvershield"
-lastupdate = 1970-01-01
+languages = ["English", "Russian, by Alisia & Austin", "Polish, by Cahir"]
+lastupdate = 2021-11-15
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/TheVanishingOfSkieSilvershield/readme.txt"
+tp2 = "thevanishingofskiesilvershield/thevanishingofskiesilvershield.tp2"
 url = "https://downloads.weaselmods.net/download/the-vanishing-of-skie-silvershield/?wpdmdl=402"
+
+    [thevanishingofskiesilvershield.components.1]
+    id = "0"
+    name = "The Vanishing of Skie Silvershield – a new quest for BGEE that lets Eldoth and Skie join your party sooner"
+    path = ["NPC", "Eldoth"]
 
 [thoghma]
 archive = "ThOghma_v1.8.zip"
@@ -16567,10 +17817,18 @@ lastupdate = 1970-01-01
 url = "http://www.shsforums.net/files/download/1195-vampire-world-for-eet/"
 
 [vampiretales]
+archive = "vampiretales.tar.gz"
 class = "NPC"
 description = "Vampire Tales"
-lastupdate = 1970-01-01
+languages = ["English", "Espanol (Traducido por Lisandro)", "Italian (Translation by ilot)", "Russian (Translation by yota13)"]
+lastupdate = 2022-06-30
+readme = "https://mods.chosenofmystra.net/vampiretales/"
+tp2 = "vampiretales/setup-vampiretales.tp2"
 url = "github:RoxanneSHS/Miriam"
+
+    [vampiretales.components.1]
+    id = "0"
+    name = "Vampire Tales 2.0 (rework for EET compatibility)"
 
 [varshoon]
 archive = "Varshoon v7.1.zip"
@@ -16655,7 +17913,7 @@ url = "github:Skitia/Vienxay-BG1"
 [vynd]
 archive = "Vynd-v2.exe"
 class = "NPC"
-description = "Vynd NPC"
+description = "Vynd (evil drow assassin)"
 lastupdate = 1970-01-01
 url = "https://www.dropbox.com/s/43era1wkgnm9eb4/vynd-v2.exe?dl=1"
 
@@ -16720,7 +17978,7 @@ url = "github:Gibberlings3/WheelsOfProphecy"
 [white]
 archive = "white.zip"
 class = "NPC"
-description = "White NPC"
+description = "White (CN human barbarian)"
 languages = ["English"]
 lastupdate = 2021-07-30
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/white/readme.txt"
@@ -16888,10 +18146,19 @@ lastupdate = 1970-01-01
 url = "https://www.dropbox.com/s/pt2gpnqi8dmp4ux/wsr_v114.zip?dl=1"
 
 [wtpfamiliars]
-class = "NPC"
+archive = "wtpfamiliars.tar.gz"
+class = "Tweak"
 description = "WTP Familiars"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2022-06-30
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/WTPFamiliars/readme-wtpfamiliars.html"
+tp2 = "wtpfamiliars/setup-wtpfamiliars.tp2"
 url = "github:flamewing/WTPFamiliars"
+
+    [wtpfamiliars.components.1]
+    id = "0"
+    name = "WTP Familiars (Requires ToB, BGT, BGEE, BG2EE, IWDEE, or EET)"
+    path = ["Skills", "Familiar"]
 
 [xan]
 class = "NPC-Related"
@@ -16999,23 +18266,24 @@ url = "github:RoxanneSHS/YasraenaEET"
     name = "Yasraena"
 
 [yeslicknpc]
-archive = "yeslick-npc-v5.0.zip"
 class = "NPC-Related"
 description = "Yeslick for SoA/ToB"
 languages = ["English"]
 lastupdate = 2020-09-17
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/yeslicknpc/readme/yeslicknpc-readme-english.html"
 tp2 = "yeslicknpc/yeslicknpc.tp2"
-url = "https://github.com/SpellholdStudios/Yeslick_NPC/releases/download/v5.0/yeslick-npc-v5.0.zip"
+url = "github:SpellholdStudios/Yeslick_NPC"
 
     [yeslicknpc.components.1]
     id = "0"
     name = "Yeslick is a regular Fighter-Cleric"
+    path = ["NPC", "Yeslick"]
     subgroup = "Yeslick NPC for BGII: SoA & ToB"
 
     [yeslicknpc.components.2]
     id = "1"
     name = "Yeslick is a Fighter-Alaghor of Clangeddin (cleric kit)"
+    path = ["NPC", "Yeslick"]
     subgroup = "Yeslick NPC for BGII: SoA & ToB"
 
 [yoshimo]
@@ -17047,8 +18315,28 @@ url = "weaselmods:yoshimo-romance"
 archive = "YoshimosRemorse_v3.0.zip"
 class = "NPC-Related"
 description = "Yoshimo's Remorse"
-lastupdate = 1970-01-01
+languages = ["English", "Russian by Arkie", "Polish by GoForTheEyes"]
+lastupdate = 2021-10-17
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/YoshimosRemorse/ReadMe-YR.html"
+tp2 = "yoshimosremorse/yoshimosremorse.tp2"
 url = "https://www.dropbox.com/s/0aie0iftr1dl7sg/YoshimosRemorse_v3.0.zip?dl=1"
+
+    [yoshimosremorse.components.1]
+    id = "0"
+    name = "Yoshimo's Remorse"
+    path = ["NPC", "Yoshimo"]
+
+    [yoshimosremorse.components.2]
+    id = "1"
+    name = "Bounty Hunter 10 / Fighter"
+    path = ["NPC", "Yoshimo"]
+    subgroup = "Yoshimo's Remorse: Fighter/Thief Dual-Class (Only if Yoshimo was never recruited before)"
+
+    [yoshimosremorse.components.3]
+    id = "2"
+    name = "Bounty Hunter 13 / Fighter"
+    path = ["NPC", "Yoshimo"]
+    subgroup = "Yoshimo's Remorse: Fighter/Thief Dual-Class (Only if Yoshimo was never recruited before)"
 
 [yvette]
 archive = "yvette.zip"

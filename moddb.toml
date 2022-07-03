@@ -16358,6 +16358,32 @@ url = "https://www.dropbox.com/s/gan64pocpqrphn3/Tashia_V17.zip?dl=1"
     name = "Baldurized Dialogues"
     subgroup = "Tashia Add-on Pack by Bri and Lord Ernie (English only, Tashia ToB Required)"
 
+["tb#quest"]
+archive = "tb#quest.tar.gz"
+class = "Unknown"
+description = "TheBigg quest pack"
+languages = ["English", "Castellano (traducido por Clan REO)", "Russian"]
+lastupdate = 2022-07-03
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/tb#quest/readme-TB#Quest.htm"
+tp2 = "tb#quest/tb#quest.tp2"
+url = "https://github.com/vbigiani/tb-quest/blob/master/tb%23quest/readme-tb%23quest.htm"
+
+    ["tb#quest".components.1]
+    id = "0"
+    name = "The curse of Mprolla the spammer"
+
+    ["tb#quest".components.2]
+    id = "1"
+    name = "The curse of Mprolla the cheater"
+
+    ["tb#quest".components.3]
+    id = "2"
+    name = "A large battle"
+
+    ["tb#quest".components.4]
+    id = "3"
+    name = "Underdark Mage Duel"
+
 ["tb#tweaks"]
 archive = "tb#tweaks.tar.gz"
 class = "Tweak"

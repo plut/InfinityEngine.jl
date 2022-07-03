@@ -846,6 +846,17 @@ function stack_installed(stack=stack)
 end
 
 # Mod components ««1
+function stats(;moddb=moddb, selection=selection, stack=stack)
+	nsel = sum(length.(values(selection)))
+	installed = stack_installed(stack)
+	nins = sum(length.(values(installed)))
+	nx = count(k ∈ get(installed, id, []) for (id, v) in selection for k in v)
+	println("""
+$nsel components selected, of which
+  $nx installed
+  $(nsel-nx) not installed
+$(nins-nx) components to remove""")
+end
 function printcomp(io::IO, m, c::ModComponent; selection, installed, moddb)
 	@printf(io, "%c%c%c `%s:%s` %s\n",
 		c.id ∈ get(selection, m.id,[]) ? 's' : '.',

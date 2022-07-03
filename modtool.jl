@@ -12,6 +12,10 @@ See also `moddb.jl` for initializing configuration files.
 module ModTool
 # Preamble ««1
 # TODO ««
+#  - use Content-Disposition: attachment; filename="..." header to
+#  determine archive name
+#  - bggoeet: ln -s linux unix
+#  - better: use Content-Type: and just use $modid.$extension
 #  - work around possible SEGV in weidu calls: retry up to 3 times
 #   - encapsulate this in a weidu() function (also doing the cd())
 #  + check that status() shows enough mods
@@ -48,6 +52,7 @@ using Printf
 using Dates
 using TOML
 using JSON
+using Base64
 using IniFile
 using DataStructures
 using HTTP
@@ -224,7 +229,7 @@ else m.tool_lang = m.game_lang = 0; end
 @inline allcomponents(moddb=moddb) =
 	Dict(i => Set(c.id for c in m.components) for (i,m) in moddb)
 @inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
-@inline addmods!(moddb, mods...) = for m in mods; moddb[m.id] = m; end
+@inline add!(mods::Mod...; moddb=moddb)= for m in mods; moddb[m.id] = m; end
 const mod_fields=(:url,:class,:description,:archive,:readme,:languages,:tp2)
 function merge_moddb(filename = MODDB; moddb = moddb)
 	dict = TOML.parsefile(filename)
@@ -307,7 +312,6 @@ as pairs (i, j) of indices in the list."
 	end
 	return arrows
 end
-
 # Mod classes for install order#««
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
 # (this is somewhat different from EE Mod Setup's ordering)
@@ -324,6 +328,7 @@ const MOD_CLASSES = split(replace("""
 	NPC
 	SmallNPC
 	NPC-Related
+	Unknown
 	Spells
 	Items
 	Kits
@@ -420,71 +425,95 @@ function check_conflicts(;selection = selection, moddb=moddb)
 end
 
 # Pre-extraction functions: download, status ««1
-function updateurl(mod::Mod)
-	repo = mod.url[8:end]
-	api = "https://api.github.com/repos/$repo/releases/latest";
-	printlog("parse ", api)
+function githubapi(repo, api)
+	api = "https://api.github.com/repos/"*repo*'/'*api
 	req = HTTP.get(api; status_exception=false)
-# 	proc = run(pipeline(ignorestatus(`wget https://api.github.com/repos/$repo/releases/latest -O -`), stdout=fd))
 	req.status ≠ 200 && (printwarn("failed to download $api"); return nothing)
-	for line in split(String(req.body), '\n')
-		m = match(r"\"browser_download_url\"\s*:\s*\"([^\"]*\.(zip|rar|7z|tar\.gz)*)\"", line)
-		m ≠ nothing && (mod.archive=basename(m.captures[1]);
-		return m.captures[1])
-		m = match(r"\"tarball_url\"\s*:\s*\"([^\"]*)\"", line)
-		m ≠ nothing && (mod.archive=mod.id*".tar.gz"; return m.captures[1])
+	return JSON.parse(String(req.body))
+end
+@inline githubrepo(f::Function, url) =
+	(m = match(r"^(?:https?://)?(?:www.)?github.com/([^/]*/[^/]*)", url);
+	isnothing(m) ? false : f(m.captures[1]))
+@inline githubapi(f::Function, repo, api) =
+	(x = githubapi(repo, api); isnothing(x) ? false : f(x))
+function urlmod(url; id = "", description = "", class = "Unknown", lastupdate=Date(1970))
+	githubrepo(url) do repo
+		printlog("parsing github repository ", repo)
+		isempty(id) && githubapi(repo, "contents") do obj
+			obj = filter(x->!startswith(x["name"],'.') && x["type"]=="dir", obj)
+			isone(length(obj)) || error("impossible to determine name for ", repo)
+			id = lowercase(obj[1]["name"])
+			printlog("  found id: ", id)
+		end
+		isempty(description) && githubapi(repo, "contents/README.md") do readme
+			readme = String(base64decode(readme["content"]))
+			m = match(r"^\s*#\s*(\S[^\n]*\S)\s*\n", readme)
+			m != nothing && (description = m.captures[1];
+				printlog("  found description: ", description))
+		end
+		# release and archive while we're at it
+		githubapi(repo, "releases/latest") do latest
+			lastupdate = Date(latest["created_at"][1:10])
+			printlog("  found last update: ", lastupdate)
+		end
 	end
+	return Mod(;id, url, description, class, lastupdate)
+end
+"""    add!(url; moddb, class, description, ...)
+
+Adds a new mod to moddb.
+Information is determined from URL as automatically as possible
+(currently only for github URLs)."""
+@inline function  add!(url::AbstractString; moddb=moddb, kwargs...)
+	m  = urlmod(url; kwargs...)
+	ask(==('y'), "add this to moddb? (yn)") || return
+	add!(m; moddb); write_moddb(); m
+end
+function download_url(url, archive; simulate=false)
+	file = joinpath(DOWN, archive)
+	while !isfile(file) || iszero(filesize(file))
+		printsim("download $file <= $url")
+		simulate && return true
+		req = HTTP.get(url; status_exception = false)
+		req.status == 200 && (open(file, "w") do io; write(io, req.body);end;break)
+		printask("Failed to download $url\n(o)ther address, (a)bort, local (f)ile")
+		action = readline(); isempty(action) && continue
+		if lowercase(action[1] == 'o') || startswith(action, r"https?://")
+			url = replace(action, r"^o\s*"i => "")
+		elseif lowercase(action[1] == 'f')
+			f = replace(action, r"^f\s*"i => "")
+			isfile(f) && (file = f)
+		else
+			return false
+		end
+	end
+	true
 end
 function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 	mod.url ∈ ("Manual", "") && return true # do nothing
 	url = mod.url
-	printsim("downloading $(mod.id) from $url")
-	if startswith(mod.url, "github:")
-		if isempty(mod.archive)
-			url = updateurl(mod)
-		elseif isfile(mod.archive)
-			return true
-		else
-			url = "https://github.com/$(mod.url[8:end])/releases/download/latest/$(mod.archive)"
-# 			printlog("  $(mod.id): computing new url=$url")
-		end
-	end
-	if isnothing(url)
-		printlog("  $(mod.id): release not found, cloning from github")
-		url = mod.url
-		mod.archive = mod.id*".tar.gz"
-		archive = joinpath(down, mod.archive)
-		moddir = joinpath(mods, mod.id)
-		(isdir(mod.id) && !isempty(readdir(mod.id))) ||
-			mktempdir(TEMP) do(dir); cd(dir) do
-			close(LibGit2.clone("https://github.com/"*mod.url[8:end], "."))
+	githubrepo(url) do repo
+		printsim("try to obtain latest release from ", repo)
+		githubapi(repo, "releases/latest") do latest
+			# avoid cloning if we can have a tarball url first
+			download_url(latest["tarball_url"], mod.id*".tar.gz"; simulate)
+# 			assets = latest["assets"];
+# 			i = findfirst(x->endswith(x["name"], r"\.(tar\.gz|zip|rar)"), assets)
+# 			isnothing(i) &&
+# 				(printsim("release contains no assets, cloning instead"); return false)
+# 			mod.archive = assets[i]["name"]
+# 			download_url(assets[i]["browser_download_url"], mod.archive; simulate)
+		end || mktempdir(TEMP) do dir; cd(dir) do
+			printsim("no release found, cloning ", repo)
+			close(LibGit2.clone("https://github.com/"*repo, "."))
 			files = [ f for f in readdir(".") if endswith(f, r"\.tp2"i) ]
 			push!(files, mod.id)
-			run(`tar cvzf $archive $files`)
-			for f in files; mv(f, joinpath(mods, f); force=true); end
+			mod.archive = mod.id*".tar.gz"
+			run(`tar cvzf $(joinpath(DOWN,mod.archive)) $files`)
+			for f in files; mv(f, joinpath(MODS, f); force=true); end
+			true
 		end end
-	else
-		archive = joinpath(down, mod.archive)
-		while !isfile(archive) || iszero(filesize(archive))
-			printsim("download $url to $archive")
-			simulate && return true
-			req = HTTP.get(url; status_exception = false)
-			req.status == 200 &&
-				(open(archive, "w") do io; write(io, req.body); end; break)
-			printask("Failed to download $url\n(o)ther address, (a)bort, local (f)ile")
-			action = readline()
-			if action[1] == 'o' || startswith(action, r"https?://")
-				url = replace(action, r"^o\s*"i => "")
-			elseif action[1] == 'f'
-				file = replace(action, r"^f\s*"i => "")
-				ispath(file) && cp(file, archive)
-			else
-				return false
-			end
-		end
-	end
-	mod.url = url
-	true
+	end || download_url(mod.url, mod.archive; simulate)
 end
 @inline isextracted(mod::Mod) = isdir(joinpath(MODS, mod.id))
 function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)
@@ -1116,7 +1145,7 @@ for f in list1; @eval begin
 	@inline $f(n::Integer; kwargs...) = do_first($f, n; kwargs...)
 end end
 # interactive commands are allowed only *one* mod (but can be a symbol)
-list2 = (list1..., :readme, :tp2, :show, :status, :edit)
+list2 = (list1..., :readme, :tp2, :show, :status, :edit, :uninstall)
 for f in list2; @eval begin
 	@inline $f(idlist::Union{String,Symbol}...; kwargs...) =
 	for id in idlist; $f(findmod(id); kwargs...); end

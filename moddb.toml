@@ -1153,8 +1153,31 @@ url = "https://www.dropbox.com/s/bw66infn2czuelv/MCAlcool.zip?dl=1"
 archive = "AllThingsMazzy_3.05.zip"
 class = "BigQuests"
 description = "All Things Mazzy"
-lastupdate = 1970-01-01
+languages = ["English", "Russian"]
+lastupdate = 2021-12-26
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/AllThingsMazzy/Megamod-readme.txt"
+tp2 = "allthingsmazzy/setup-allthingsmazzy.tp2"
 url = "https://www.dropbox.com/s/j34zn57yzbx0l02/AllThingsMazzy_3.05.zip?dl=1"
+
+    [allthingsmazzy.components.1]
+    id = "0"
+    name = "All Things Mazzy"
+
+    [allthingsmazzy.components.2]
+    id = "1"
+    name = "For the Evil: Additional content that might disturb a truly good player."
+
+    [allthingsmazzy.components.3]
+    id = "2"
+    name = "For the Good: Additional content that might annoy a truly evil player."
+
+    [allthingsmazzy.components.4]
+    id = "3"
+    name = "Do NOT allow multiple TOB epiloques: If you install this component, AllThingsMazzy epilogues will override existing game epilogues and most mod epilogues. If you do not install this component, the game will allow multiple NPC epilogues where applicable."
+
+    [allthingsmazzy.components.5]
+    id = "4"
+    name = "Optional Soundset for Clara NPC"
 
 [alora]
 archive = "AloraEE.zip"
@@ -2610,6 +2633,15 @@ url = "github:RoxanneSHS/AzengaardEE"
     [azengaard.components.2]
     id = "1"
     name = "Enhanced Trademeet Crypt"
+
+[b_spells]
+archive = "b_spells.tar.gz"
+class = "Spells"
+description = "New and Revised Spells"
+lastupdate = 2022-07-03
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/b_spells/B_Spells_README.html"
+tp2 = "b_spells/setup-b_spells.tp2"
+url = "https://github.com/UnearthedArcana/B_Spells"
 
 [backbrynnlaw]
 archive = "BackBrynnlaw_v7.zip"
@@ -8540,7 +8572,7 @@ archive = "eeuitweaks.tar.gz"
 class = "UI"
 description = "EEUITweaks"
 languages = ["English"]
-lastupdate = 2022-06-24
+lastupdate = 2022-07-01
 readme = "https://github.com/r-e-d/EEUITweaks/blob/master/README.md"
 tp2 = "eeuitweaks/eeuitweaks.tp2"
 url = "github:r-e-d/EEUITweaks"
@@ -9485,7 +9517,7 @@ url = "github:Gibberlings3/Forgotten-Armament"
 [foundling]
 archive = "foundling.zip"
 class = "NPC"
-description = "Foundling: Between the Shades"
+description = "Foundling: Between the Shades (NE Shadow Adept)"
 languages = ["English", "Polish (Translated by Astharoshe)", "Russian (Translated by Ulpian, Bullfer & yota13)"]
 lastupdate = 2022-01-06
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/foundling/ReadMe.txt"
@@ -13435,7 +13467,7 @@ url = "http://www.baldursgate-refugium.de/download.php?dat=Mal%20des%20Vampirism
 [petsy]
 archive = "petsy.zip"
 class = "NPC"
-description = "Petsy Chattertone NPC"
+description = "Petsy Chattertone (halfling bard)"
 languages = ["English"]
 lastupdate = 2022-02-05
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Petsy/Readme.txt"

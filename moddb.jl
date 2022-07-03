@@ -4,6 +4,7 @@
 # a7-banteraccelerator
 #
 # hotpatch to sod2bg2_iu: https://www.gibberlings3.net/forums/topic/31088-bugs-issues-or-suggestions/page/6/
+println("moddb.jl is now modified by hand, we don't want to lose info");exit(0)
 modtool_no_init = true
 module ModDB
 include("modtool.jl")

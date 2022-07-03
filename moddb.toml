@@ -2638,10 +2638,26 @@ url = "github:RoxanneSHS/AzengaardEE"
 archive = "b_spells.tar.gz"
 class = "Spells"
 description = "New and Revised Spells"
+languages = ["English"]
 lastupdate = 2022-07-03
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/b_spells/B_Spells_README.html"
 tp2 = "b_spells/setup-b_spells.tp2"
 url = "https://github.com/UnearthedArcana/B_Spells"
+
+    [b_spells.components.1]
+    id = "101"
+    name = "Install All new spells (including IWDEE spells if applicable)"
+    subgroup = "Add New Spells"
+
+    [b_spells.components.2]
+    id = "102"
+    name = "Install IWDEE Spells only"
+    subgroup = "Add New Spells"
+
+    [b_spells.components.3]
+    id = "103"
+    name = "Install New Spells only"
+    subgroup = "Add New Spells"
 
 [backbrynnlaw]
 archive = "BackBrynnlaw_v7.zip"
@@ -12004,6 +12020,12 @@ url = "github:RoxanneSHS/Magestronghold"
     [magestronghold_eet.components.1]
     id = "0"
     name = "Expanded Mage Stronghold EET"
+
+[magic_battles_revised]
+archive = "magic_battles_revised.tar.gz"
+class = "Spells"
+lastupdate = 2022-04-19
+url = "https://github.com/UnearthedArcana/magic_battles_revised"
 
 [maltese]
 class = "BigQuests"

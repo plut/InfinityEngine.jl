@@ -496,7 +496,8 @@ function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 		printsim("try to obtain latest release from ", repo)
 		githubapi(repo, "releases/latest") do latest
 			# avoid cloning if we can have a tarball url first
-			download_url(latest["tarball_url"], mod.id*".tar.gz"; simulate)
+			mod.archive = mod.id*".tar.gz"
+			download_url(latest["tarball_url"], mod.archive; simulate)
 # 			assets = latest["assets"];
 # 			i = findfirst(x->endswith(x["name"], r"\.(tar\.gz|zip|rar)"), assets)
 # 			isnothing(i) &&

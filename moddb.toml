@@ -12024,8 +12024,18 @@ url = "github:RoxanneSHS/Magestronghold"
 [magic_battles_revised]
 archive = "magic_battles_revised.tar.gz"
 class = "Spells"
-lastupdate = 2022-04-19
+languages = ["English", "Français"]
+lastupdate = 2022-07-03
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/magic_battles_revised/readme-Magic_Battles_Revised.html"
+tp2 = "magic_battles_revised/magic_battles_revised.tp2"
 url = "https://github.com/UnearthedArcana/magic_battles_revised"
+
+    [magic_battles_revised.compat.1]
+    after = ["iwdification", "spell_rev", "stratagems"]
+
+    [magic_battles_revised.components.1]
+    id = "10"
+    name = "Revised Magic Battles"
 
 [maltese]
 class = "BigQuests"

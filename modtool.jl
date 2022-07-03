@@ -1113,7 +1113,7 @@ function do_all(f; class=nothing, pause=false, limit=typemax(Int),
 	end
 end
 "returns the first n (mod, compat) pairs for which some installation needs to be done."
-function nextmods(n; moddb=moddb, selection=selection, stack=stack,
+function nextmods(n=10; moddb=moddb, selection=selection, stack=stack,
 		order=installorder(selection;moddb))
 	installed = stack_installed(stack)
 	ret = Tuple{String,Int}[]

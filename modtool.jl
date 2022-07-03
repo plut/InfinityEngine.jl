@@ -459,6 +459,48 @@ function urlmod(url; id = "", description = "", class = "Unknown", lastupdate=Da
 	end
 	return Mod(;id, url, description, class, lastupdate)
 end
+function mergepaths(io)
+	changed = false
+	for line in eachline(io)
+		x = match(r"^\s*`([^`:]*):(\d+)`.*\|\s*([^|]*?)\s*$", line)
+		isnothing(x) && continue
+		id, k = x.captures[1], x.captures[2]
+		c = component(moddb[id], k)
+		isnothing(c) && continue
+		path = filter(!isempty, split(x.captures[3], r"\s*/\s*"))
+		if !isempty(c.path) && c.path ≠ path
+			ask(==('y'), "$id:$k ($(description(c))) : replace "*join(c.path, '/')*
+				" by "*join(path, '/')*" ?") || continue
+		end
+		c.path = path; changed = true
+	end
+	changed && write_moddb()
+end
+function path(m::Mod)
+	extract(m)
+	filename = joinpath(TEMP, "components-"*m.id*".txt")
+	open(filename, "w") do io
+		println(io, raw"""
+" ⟦5
+se fencs=utf8 cms= ft= fdm=marker fmr=⟦,⟧ fo-=t
+sy match modComp /\`[^\`]*\`/|hi link modComp Constant
+sy match modPath /|.*$/ | hi link modPath Comment
+sy match modGrp /^# .*$/|hi link modGrp ModeMsg
+sy match modSub /^## .*$/|hi link modSub Title
+normal j
+finish "⟧5""")
+		g = "\0"; h = ""
+		for c in components(m)
+			g ≠ c.group && (g = c.group; println(io, "# ", g, "⟦1"))
+			h ≠ c.subgroup &&
+				(h = c.subgroup; println(io,"## ",h, isempty(h) ? "⟧2" : "⟦2"))
+			@printf(io, "`%s:%s` %s |%s\n",
+				m.id, c.id, description(c), join(c.path,'/'))
+		end
+	end
+	run(`vim -c 'so %' $filename`)
+	mergepaths(filename)
+end
 """    add!(url; moddb, class, description, ...)
 
 Adds a new mod to moddb.
@@ -1145,7 +1187,7 @@ for f in list1; @eval begin
 	@inline $f(n::Integer; kwargs...) = do_first($f, n; kwargs...)
 end end
 # interactive commands are allowed only *one* mod (but can be a symbol)
-list2 = (list1..., :readme, :tp2, :show, :status, :edit, :uninstall)
+list2 = (list1..., :readme, :tp2, :show, :status, :edit, :uninstall, :path)
 for f in list2; @eval begin
 	@inline $f(idlist::Union{String,Symbol}...; kwargs...) =
 	for id in idlist; $f(findmod(id); kwargs...); end

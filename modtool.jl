@@ -785,8 +785,7 @@ end
 	m = match(r"^~(.*)~\s+#(\d+)\s+#(\d+)\s*", line)
 	isnothing(m) && return nothing
 	(tp2, lang, comp) = m.captures
-	id = lowercase(tp2[1:end-4])
-	k = findlast('/', id); !isnothing(k) && (id = id[k+1:end])
+	id = lowercase(basename(tp2[1:end-4]))
 	startswith(id, "setup-") && (id = id[7:end])
 	return (id, String(comp))
 end

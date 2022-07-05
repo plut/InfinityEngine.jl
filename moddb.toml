@@ -173,11 +173,92 @@ url = "https://github.com/Argent77/A7-ImprovedShamanicDance"
     path = ["Items"]
 
 [a7-banteraccelerator]
-archive = "A7-BanterAccelerator-master.zip"
+archive = "a7-banteraccelerator.tar.gz"
 class = "Tweak"
 description = "Banter Accelerator for Enhanced Edition games"
-lastupdate = 1970-01-01
+languages = ["English", "French (Translation by Gwendolyne)", "German"]
+lastupdate = 2022-07-03
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/a7-banteraccelerator/readme/readme.txt"
+tp2 = "a7-banteraccelerator/a7-banteraccelerator.tp2"
 url = "https://github.com/Argent77/A7-BanterAccelerator"
+
+    [a7-banteraccelerator.components.1]
+    id = "10"
+    name = "Frequency: 60 seconds, Probability: 10%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.10]
+    id = "40"
+    name = "Frequency: 10 seconds, Probability: 10%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.11]
+    id = "41"
+    name = "Frequency: 10 seconds, Probability: 25%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.12]
+    id = "42"
+    name = "Frequency: 10 seconds, Probability: 50%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.13]
+    id = "99"
+    name = "User-defined"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.2]
+    id = "11"
+    name = "Frequency: 60 seconds, Probability: 25%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.3]
+    id = "12"
+    name = "Frequency: 60 seconds, Probability: 50%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.4]
+    id = "20"
+    name = "Frequency: 40 seconds, Probability: 10% (default)"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.5]
+    id = "21"
+    name = "Frequency: 40 seconds, Probability: 25%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.6]
+    id = "22"
+    name = "Frequency: 40 seconds, Probability: 50%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.7]
+    id = "30"
+    name = "Frequency: 30 seconds, Probability: 10%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.8]
+    id = "31"
+    name = "Frequency: 30 seconds, Probability: 25%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
+
+    [a7-banteraccelerator.components.9]
+    id = "32"
+    name = "Frequency: 30 seconds, Probability: 50%"
+    path = ["NPC", "Banter"]
+    subgroup = "Banter Accelerator"
 
 [a7-chaossorcerer]
 archive = "A7-ChaosSorcerer-master.zip"
@@ -1299,6 +1380,7 @@ lastupdate = 1970-01-01
 url = "https://github.com/cmorganbg/Aran-Whitehand"
 
 [arath_eet]
+archive = "arath_eet.tar.gz"
 class = "NPC"
 description = "Arath (human druid)"
 lastupdate = 1970-01-01
@@ -6907,7 +6989,7 @@ url = "https://github.com/SpellholdStudios/Darron"
     name = "Darron"
 
 [dc]
-archive = "DungeonCrawl_v11.zip"
+archive = "dc.tar.gz"
 class = "Quests"
 description = "Dungeon Crawl"
 lastupdate = 1970-01-01
@@ -9080,11 +9162,50 @@ lastupdate = 1970-01-01
 url = "https://github.com/MattyGroove/Evandra"
 
 [extraexpandedenhancedencounters]
-archive = "extraexpandedenhancedencounters.zip"
+archive = "extraexpandedenhancedencounters.tar.gz"
 class = "Quests"
 description = "Extra Expanded Encounters"
-lastupdate = 1970-01-01
-url = "https://forums.beamdog.com/uploads/editor/ta/auj7pwad39pd.zip"
+languages = ["English"]
+lastupdate = 2022-07-05
+readme = "https://github.com/GraionDilach/ExtraExpandedEnhancedEncounters"
+tp2 = "extraexpandedenhancedencounters/extraexpandedenhancedencounters.tp2"
+url = "https://github.com/GraionDilach/ExtraExpandedEnhancedEncounters"
+
+    [extraexpandedenhancedencounters.compat.1]
+    after = ["ac_quest", "eet"]
+    before = ["eet_end"]
+
+    [extraexpandedenhancedencounters.components.1]
+    id = "0"
+    name = "EEEE: Melia Quicknight, Crossroads"
+
+    [extraexpandedenhancedencounters.components.2]
+    id = "1"
+    name = "EEEE: Bimmy's Badgering Bandits"
+
+    [extraexpandedenhancedencounters.components.3]
+    id = "2"
+    name = "EEEE: Reinforced Gnoll Stronghold"
+
+    [extraexpandedenhancedencounters.components.4]
+    id = "3"
+    name = "EEEE: Bear Encounter near the Gnoll Stronghold"
+
+    [extraexpandedenhancedencounters.components.5]
+    id = "4"
+    name = "EEEE: Xan's New Grove (new items in Mulahey's cave)"
+
+    [extraexpandedenhancedencounters.components.6]
+    id = "5"
+    name = "EEEE: Daenni's Bridge Bandits"
+
+    [extraexpandedenhancedencounters.components.7]
+    id = "6"
+    name = "EEEE: The Fire Drake in the Wyvern Cave"
+
+    [extraexpandedenhancedencounters.components.8]
+    id = "7"
+    name = "EEEE: Undercity Magma Bulwark Encounter; Red Skeleton-(U.M.B.E.R.S.)"
 
 [fade]
 class = "NPC"
@@ -16797,10 +16918,325 @@ url = "https://github.com/lzenner/themed_tweaks"
     path = ["Story", "BG2"]
 
 [thepicturestandard]
+archive = "thepicturestandard.tar.gz"
 class = "UI"
 description = "The Picture Standard"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2022-07-03
+readme = "https://github.com/MattyGroove/ThePictureStandard"
+tp2 = "thepicturestandard/thepicturestandard.tp2"
 url = "https://github.com/MattyGroove/ThePictureStandard"
+
+    [thepicturestandard.components.1]
+    id = "1000"
+    name = "Vanilla"
+    subgroup = "Main"
+
+    [thepicturestandard.components.10]
+    id = "5000"
+    name = "Vanilla"
+    subgroup = "Drizzt Saga"
+
+    [thepicturestandard.components.11]
+    id = "5500"
+    name = "Lore Alternative"
+    subgroup = "Drizzt Saga"
+
+    [thepicturestandard.components.12]
+    id = "6000"
+    name = "Vanilla"
+    subgroup = "Dark Side of the Sword Coast"
+
+    [thepicturestandard.components.13]
+    id = "6500"
+    name = "Lore Alternative"
+    subgroup = "Dark Side of the Sword Coast"
+
+    [thepicturestandard.components.14]
+    id = "7000"
+    name = "Vanilla"
+    subgroup = "Eilistraee's Song"
+
+    [thepicturestandard.components.15]
+    id = "7500"
+    name = "Lore Alternative"
+    subgroup = "Eilistraee's Song"
+
+    [thepicturestandard.components.16]
+    id = "8000"
+    name = "Vanilla"
+    subgroup = "Innershade"
+
+    [thepicturestandard.components.17]
+    id = "8500"
+    name = "Lore Alternative"
+    subgroup = "Innershade"
+
+    [thepicturestandard.components.18]
+    id = "9000"
+    name = "Vanilla"
+    subgroup = "I Shall Never Forget"
+
+    [thepicturestandard.components.19]
+    id = "9500"
+    name = "Lore Alternative"
+    subgroup = "I Shall Never Forget"
+
+    [thepicturestandard.components.2]
+    id = "1500"
+    name = "Lore Alternative"
+    subgroup = "Main"
+
+    [thepicturestandard.components.20]
+    id = "10000"
+    name = "Vanilla"
+    subgroup = "Rogue Rebalancing"
+
+    [thepicturestandard.components.21]
+    id = "10500"
+    name = "Lore Alternative"
+    subgroup = "Rogue Rebalancing"
+
+    [thepicturestandard.components.22]
+    id = "11000"
+    name = "Vanilla"
+    subgroup = "Sellswords"
+
+    [thepicturestandard.components.23]
+    id = "11500"
+    name = "Lore Alternative"
+    subgroup = "Sellswords"
+
+    [thepicturestandard.components.24]
+    id = "12000"
+    name = "Vanilla"
+    subgroup = "Tales Of The Deep Gardens"
+
+    [thepicturestandard.components.25]
+    id = "12500"
+    name = "Lore Alternative"
+    subgroup = "Tales Of The Deep Gardens"
+
+    [thepicturestandard.components.26]
+    id = "13000"
+    name = "Vanilla"
+    subgroup = "T'was A Slow Boat"
+
+    [thepicturestandard.components.27]
+    id = "13500"
+    name = "Lore Alternative"
+    subgroup = "T'was A Slow Boat"
+
+    [thepicturestandard.components.28]
+    id = "14000"
+    name = "Vanilla"
+    subgroup = "Finch"
+
+    [thepicturestandard.components.29]
+    id = "14500"
+    name = "Alternative"
+    subgroup = "Finch"
+
+    [thepicturestandard.components.3]
+    id = "2000"
+    name = "Vanilla"
+    subgroup = "Followers"
+
+    [thepicturestandard.components.30]
+    id = "15000"
+    name = "Vanilla"
+    subgroup = "Gavin"
+
+    [thepicturestandard.components.31]
+    id = "15500"
+    name = "Alternative"
+    subgroup = "Gavin"
+
+    [thepicturestandard.components.32]
+    id = "16000"
+    name = "Indira"
+
+    [thepicturestandard.components.33]
+    id = "17000"
+    name = "Isra"
+
+    [thepicturestandard.components.34]
+    id = "18000"
+    name = "Valerie"
+
+    [thepicturestandard.components.35]
+    id = "19000"
+    name = "Vanilla"
+    subgroup = "The White Queen"
+
+    [thepicturestandard.components.36]
+    id = "19500"
+    name = "Lore Alternative"
+    subgroup = "The White Queen"
+
+    [thepicturestandard.components.37]
+    id = "20000"
+    name = "Vanilla"
+    subgroup = "The Darkest Day"
+
+    [thepicturestandard.components.38]
+    id = "20500"
+    name = "Lore Alternative"
+    subgroup = "The Darkest Day"
+
+    [thepicturestandard.components.39]
+    id = "21000"
+    name = "Tower of Deception"
+
+    [thepicturestandard.components.4]
+    id = "2300"
+    name = "Variant A"
+    subgroup = "Followers"
+
+    [thepicturestandard.components.40]
+    id = "22000"
+    name = "Vanilla"
+    subgroup = "Siege of Dragonspear"
+
+    [thepicturestandard.components.41]
+    id = "22500"
+    name = "Lore Alternative"
+    subgroup = "Siege of Dragonspear"
+
+    [thepicturestandard.components.42]
+    id = "23000"
+    name = "Vanilla"
+    subgroup = "Tortured Souls"
+
+    [thepicturestandard.components.43]
+    id = "23500"
+    name = "Lore Alternative"
+    subgroup = "Tortured Souls"
+
+    [thepicturestandard.components.44]
+    id = "80000"
+    name = "BG1 Edwin"
+    subgroup = "Standardized Edwin"
+
+    [thepicturestandard.components.45]
+    id = "80300"
+    name = "BG2 Edwin"
+    subgroup = "Standardized Edwin"
+
+    [thepicturestandard.components.46]
+    id = "80600"
+    name = "Variant A"
+    subgroup = "Standardized Edwin"
+
+    [thepicturestandard.components.47]
+    id = "80900"
+    name = "Variant B"
+    subgroup = "Standardized Edwin"
+
+    [thepicturestandard.components.48]
+    id = "81000"
+    name = "BG1 Iomen"
+    subgroup = "Standardized Iomen"
+
+    [thepicturestandard.components.49]
+    id = "81100"
+    name = "BG2 Iomen"
+    subgroup = "Standardized Iomen"
+
+    [thepicturestandard.components.5]
+    id = "2600"
+    name = "Variant B"
+    subgroup = "Followers"
+
+    [thepicturestandard.components.50]
+    id = "81200"
+    name = "SoD Iomen"
+    subgroup = "Standardized Iomen"
+
+    [thepicturestandard.components.51]
+    id = "81300"
+    name = "Variant A"
+    subgroup = "Standardized Iomen"
+
+    [thepicturestandard.components.52]
+    id = "81400"
+    name = "Variant B"
+    subgroup = "Standardized Iomen"
+
+    [thepicturestandard.components.53]
+    id = "81500"
+    name = "Immersive Iomen Variant"
+    subgroup = "Standardized Iomen"
+
+    [thepicturestandard.components.54]
+    id = "82000"
+    name = "BG1 Jaheira"
+    subgroup = "Standardized Jaheira"
+
+    [thepicturestandard.components.55]
+    id = "82300"
+    name = "BG2 Jaheira"
+    subgroup = "Standardized Jaheira"
+
+    [thepicturestandard.components.56]
+    id = "82600"
+    name = "Variant"
+    subgroup = "Standardized Jaheira"
+
+    [thepicturestandard.components.57]
+    id = "83000"
+    name = "BG1 Minsc"
+    subgroup = "Standardized Minsc"
+
+    [thepicturestandard.components.58]
+    id = "83500"
+    name = "BG2 Minsc"
+    subgroup = "Standardized Minsc"
+
+    [thepicturestandard.components.59]
+    id = "84000"
+    name = "BG1 Viconia"
+    subgroup = "Standardized Viconia"
+
+    [thepicturestandard.components.6]
+    id = "3000"
+    name = "Vanilla"
+    subgroup = "BG1NPC"
+
+    [thepicturestandard.components.60]
+    id = "84100"
+    name = "BG2 Viconia"
+    subgroup = "Standardized Viconia"
+
+    [thepicturestandard.components.61]
+    id = "84200"
+    name = "SoD Viconia"
+    subgroup = "Standardized Viconia"
+
+    [thepicturestandard.components.62]
+    id = "84300"
+    name = "Variant A"
+    subgroup = "Standardized Viconia"
+
+    [thepicturestandard.components.63]
+    id = "84400"
+    name = "Variant B"
+    subgroup = "Standardized Viconia"
+
+    [thepicturestandard.components.7]
+    id = "3500"
+    name = "Lore Alternative"
+    subgroup = "BG1NPC"
+
+    [thepicturestandard.components.8]
+    id = "4000"
+    name = "Vanilla"
+    subgroup = "Dark Horizons"
+
+    [thepicturestandard.components.9]
+    id = "4500"
+    name = "Lore Alternative"
+    subgroup = "Dark Horizons"
 
 [therune]
 archive = "therune.tar.gz"

@@ -516,8 +516,11 @@ function download_url(url, archive; simulate=false)
 	while !isfile(file) || iszero(filesize(file))
 		printsim("download $file <= $url")
 		simulate && return true
-		req = HTTP.get(url; status_exception = false)
-		req.status == 200 && (open(file, "w") do io; write(io, req.body);end;break)
+		# to show progress, we use wget instead
+		run(ignorestatus(`wget $url -O $file`))
+		isfile(file) && !iszero(filesize(file)) && break
+# 		req = HTTP.get(url; status_exception = false)
+# 		req.status == 200 && (open(file, "w") do io; write(io, req.body);end;break)
 		printask("Failed to download $url\n(o)ther address, (a)bort, local (f)ile")
 		action = readline(); isempty(action) && continue
 		if lowercase(action[1] == 'o') || startswith(action, r"https?://")
@@ -755,7 +758,7 @@ function readme(mod::Mod)
 	end
 	extract(mod) || return false
 	printlog("showing readme file '$(mod.readme)'")
-	if endswith(mod.readme, r".html?"i)
+	if endswith(mod.readme, r".html?"i) ||  startswith(mod.readme, r"https?://"i)
 		if occursin('#', mod.readme)
 		# cannot call w3m directly, it fails with mesh sign in filename
 		# don't run -dump — there might be links to supplemental info
@@ -1179,17 +1182,22 @@ function nextmods(n=10; moddb=moddb, selection=selection, stack=stack,
 end
 function topmods(n; selection=selection, dir=GAMEDIR.bg2)
 end
-function do_first(f, n=1; moddb=moddb, selection=selection,
+function do_first(f, n=1; moddb=moddb, selection=selection, ask=true,
 		kwargs...)
 	order = installorder(selection)
 	for (id,k) in nextmods(n; selection, order)
-		ask("call function $f($(compatname(moddb[id],k)))? (ynqrc)") do r
-			r == 'r' && (readme(moddb[id]); return true)
-			r == 'c' && (edit(moddb[id]); return true)
-			r == 'q' && return false
-			r == 'y' && (f(moddb[id], k; order, kwargs...); return true)
-			r == 'n' && return true
-		end || break
+		if !ask
+			printsim("call $f($(compatname(moddb[id],k)))")
+			f(moddb[id], k; order, kwargs...)
+		else
+			ModTool.ask("call function $f($(compatname(moddb[id],k)))? (ynqrc)") do r
+				r == 'r' && (readme(moddb[id]); return true)
+				r == 'c' && (edit(moddb[id]); return true)
+				r == 'q' && return false
+				r == 'y' && (f(moddb[id], k; order, kwargs...); return true)
+				r == 'n' && return true
+			end || break
+		end
 	end
 end
 list1 = (:download, :extract, :install, :status, :update)

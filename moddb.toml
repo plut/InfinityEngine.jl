@@ -3,7 +3,7 @@ archive = "3ed.tar.gz"
 class = "Tweak"
 description = "Baldur`s Gate DnD 3.5 (New)"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "https://github.com/Holic75/Baldurs-gate-dnd-3.5#readme"
 tp2 = "3ed/3ed.tp2"
 url = "https://github.com/Holic75/Baldurs-gate-dnd-3.5"
@@ -72,8 +72,30 @@ url = "https://github.com/Holic75/Baldurs-gate-dnd-3.5"
 archive = "7c#sartweak_v1.2.zip"
 class = "NPC-Related"
 description = "Sarevok related tweaks"
-lastupdate = 1970-01-01
+lastupdate = 2015-01-21
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/7c#sartweak/readme.txt"
+tp2 = "7c#sartweak/7c#sartweak.tp2"
 url = "https://www.dropbox.com/s/ryw4tn3r1vuohkn/7c%23sartweak_v1.2.zip?dl=1"
+
+    ["7c#sartweak".components.1]
+    id = "100"
+    name = "Make Sarevok as exact as possible with his non-TotSC version (Warning: lowers some of his stats)"
+    subgroup = "Change Sarevok back to his BG1, non-TotSC version"
+
+    ["7c#sartweak".components.2]
+    id = "101"
+    name = "Only give Sarevok bonuses (eg. don't lower his Saving Throws)"
+    subgroup = "Change Sarevok back to his BG1, non-TotSC version"
+
+    ["7c#sartweak".components.3]
+    id = "250"
+    name = "Give him a Two-Handed Sword +2"
+    subgroup = "Give Sarevok a better weapon"
+
+    ["7c#sartweak".components.4]
+    id = "251"
+    name = "Give him Ascension's Final Battle Sarevok's sword"
+    subgroup = "Give Sarevok a better weapon"
 
 [7c-yoshi]
 archive = "7C-Yoshi-latest.zip"
@@ -134,11 +156,11 @@ url = "https://github.com/Argent77/A7-ImprovedArcher"
     path = ["Items", "Ammunition"]
 
 ["a7#improvedshamanicdance"]
-archive = "a7#improvedshamanicdance.tar.gz"
+archive = "a7#improvedshamanicdance.zip"
 class = "Kits"
 description = "Improved Shamanic Dance"
 languages = ["English", "French (Translation by LamaPatate & Gwendolyne)", "German", "Italian (Translation by Aedan)", "Polish (Translation by Cahir)", "Russian (Translation by dim-chek)"]
-lastupdate = 2022-06-23
+lastupdate = 2021-08-07
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/A7#ImprovedShamanicDance/readme/readme.txt"
 tp2 = "a7#improvedshamanicdance/a7#improvedshamanicdance.tp2"
 url = "https://github.com/Argent77/A7-ImprovedShamanicDance"
@@ -173,11 +195,11 @@ url = "https://github.com/Argent77/A7-ImprovedShamanicDance"
     path = ["Items"]
 
 [a7-banteraccelerator]
-archive = "a7-banteraccelerator.tar.gz"
+archive = "a7-banteraccelerator.zip"
 class = "Tweak"
 description = "Banter Accelerator for Enhanced Edition games"
 languages = ["English", "French (Translation by Gwendolyne)", "German"]
-lastupdate = 2022-07-03
+lastupdate = 2021-01-04
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/a7-banteraccelerator/readme/readme.txt"
 tp2 = "a7-banteraccelerator/a7-banteraccelerator.tp2"
 url = "https://github.com/Argent77/A7-BanterAccelerator"
@@ -261,11 +283,34 @@ url = "https://github.com/Argent77/A7-BanterAccelerator"
     subgroup = "Banter Accelerator"
 
 [a7-chaossorcerer]
-archive = "A7-ChaosSorcerer-master.zip"
+archive = "a7-chaossorcerer.zip"
 class = "Kits"
 description = "Chaos Sorcerer Kit"
+languages = ["English", "Deutsch", "Polski (by Cahir)", "Russian (by Saigon1983)", "Francais (by Deratiseur)"]
 lastupdate = 1970-01-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/A7-ChaosSorcerer/readme/readme.txt"
+tp2 = "a7-chaossorcerer/a7-chaossorcerer.tp2"
 url = "https://github.com/Argent77/A7-ChaosSorcerer"
+
+    [a7-chaossorcerer.compat.1]
+    after = ["eet", "spell_rev"]
+    before = ["eet_end"]
+
+    [a7-chaossorcerer.components.1]
+    id = "0"
+    name = "\"Chaos Sorcerer\" kit"
+
+    [a7-chaossorcerer.components.2]
+    id = "10"
+    name = "Recreate \"Chaos Weave\" spell selection lists"
+
+    [a7-chaossorcerer.components.3]
+    id = "20"
+    name = "Make \"Wild Mage\" kit unavailable for character creation"
+
+    [a7-chaossorcerer.components.4]
+    id = "30"
+    name = "Add \"Primordial Artifacts\""
 
 [a7-convenienteenpcs]
 archive = "a7-convenienteenpcs.zip"
@@ -803,15 +848,28 @@ url = "https://github.com/Argent77/A7-NoEENPCs"
 archive = "A7-Spellsword-v1.5.zip"
 class = "Kits"
 description = "Spellsword Custom Kit"
-lastupdate = 1970-01-01
+languages = ["English", "Deutsch", "French (Thanks to Deratiseur)"]
+lastupdate = 2018-11-04
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/A7-CustomKits/readme.txt"
+tp2 = "a7-customkits/setup-a7-customkits.tp2"
 url = "https://www.dropbox.com/s/gpxkd39wcqf6ew3/A7-Spellsword-v1.5.zip?dl=1"
 
+    [a7-customkits.components.1]
+    id = "0"
+    name = "Nerfed version"
+    subgroup = "Spellsword Kit"
+
+    [a7-customkits.components.2]
+    id = "1"
+    name = "Original version"
+    subgroup = "Spellsword Kit"
+
 [a7-golemconstruction]
-archive = "a7-golemconstruction.tar.gz"
+archive = "a7-golemconstruction.zip"
 class = "Tweak"
 description = "Golem Construction for Spellcasters"
 languages = ["English", "Francais (traduction: Gwendolyne)", "Deutsch", "Italiano (Traduzione: Luke93 & Elia Danelli)", "Polski (tlumaczenie: Cahir)", "Russian (Translation: Arkie)"]
-lastupdate = 2022-06-23
+lastupdate = 2020-09-13
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/A7-GolemConstruction/readme/readme.html"
 tp2 = "a7-golemconstruction/setup-a7-golemconstruction.tp2"
 url = "https://github.com/Argent77/A7-GolemConstruction"
@@ -1092,11 +1150,11 @@ url = "https://github.com/SpellholdStudios/Adrian_NPC"
     name = "Crossmod content"
 
 [ajantisbg1]
-archive = "ajantisbg1.tar.gz"
+archive = "ajantisbg1.zip"
 class = "NPC-Related"
 description = "Ajantis BG1 Expansion"
 languages = ["English", "Francais", "Deutsch"]
-lastupdate = 2022-06-23
+lastupdate = 2022-03-19
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/AjantisBG1/docs/readme.ajantisbg1.English.txt"
 tp2 = "ajantisbg1/setup-ajantisbg1.tp2"
 url = "https://github.com/Gibberlings3/Ajantis_BG1_Expansion"
@@ -1181,7 +1239,7 @@ archive = "ajocmod.tar.gz"
 class = "Quests"
 description = "Loron's Return (Ajocmod)"
 languages = ["English", "Spanish (translation by Clan REO)", "Russian (translation by \u0081à®¤ï£ , Alex & AERIE.RU)", "Deutsch (Uebersetzung von Rumpelstilz)", "Italian (translation by Ilot)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/ajocmod/AjocMod-Readme.txt"
 tp2 = "ajocmod/setup-ajocmod.tp2"
 url = "https://github.com/RoxanneSHS/AjocMod"
@@ -1289,11 +1347,12 @@ url = "https://github.com/Gibberlings3/Alternatives"
     name = "Alternatives"
 
 [amber]
-archive = "amber.tar.gz"
+archive = "amber.zip"
 class = "NPC"
 description = "Amber (CG tiefling rogue)"
 languages = ["English", "Deutsch", "Spanish"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/MattyGroove/Amber"
 tp2 = "amber/setup-amber.tp2"
 url = "https://github.com/MattyGroove/Amber"
 
@@ -1342,7 +1401,7 @@ archive = "animalcompanions.tar.gz"
 class = "Tweak"
 description = "Animal Companions"
 languages = ["English", "Deutsch", "Francais] [translation by Gwendolyne", "Polski] [translation by Cahir", "Italiano] [translation by Alessandro Nosenzo, proofreading by Aedan"]
-lastupdate = 2022-06-23
+lastupdate = 2018-12-26
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/AnimalCompanions/AnimalCompanions.pdf"
 tp2 = "animalcompanions/setup-animalcompanions.tp2"
 url = "https://github.com/thisisulb/AnimalCompanions"
@@ -1376,11 +1435,173 @@ url = "http://lynxlynx.info/ie/modhub.php?Gibberlings3/Anishai"
 archive = "aranw.tar.gz"
 class = "NPC"
 description = "Aran Whitehand (human fighter)"
+languages = ["English"]
 lastupdate = 1970-01-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/aranw/docs/readme-aranw.html"
+tp2 = "aranw/aranw.tp2"
 url = "https://github.com/cmorganbg/Aran-Whitehand"
 
+    [aranw.components.1]
+    id = "0"
+    name = "Install Aran Whitehand for SoA and ToB"
+
+    [aranw.components.10]
+    group = "Customize Aran Whitehand"
+    id = "520"
+    name = "Content Speed: minimum 30 minutes real time between dialogues"
+    subgroup = "Customize Aran Whitehand: Timers"
+
+    [aranw.components.11]
+    group = "Customize Aran Whitehand"
+    id = "530"
+    name = "Content Speed: minimum 45 minutes real time between dialogues"
+    subgroup = "Customize Aran Whitehand: Timers"
+
+    [aranw.components.12]
+    group = "Customize Aran Whitehand"
+    id = "540"
+    name = "Content Speed: minimum 1 hour 30 minutes real time between dialogues"
+    subgroup = "Customize Aran Whitehand: Timers"
+
+    [aranw.components.13]
+    group = "Customize Aran Whitehand"
+    id = "550"
+    name = "Content Speed: minimum 2 hours real time between dialogues"
+    subgroup = "Customize Aran Whitehand: Timers"
+
+    [aranw.components.14]
+    group = "Customize Aran Whitehand"
+    id = "900"
+    name = "Nix's \"Default\" portrait (fair hair, fair complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.15]
+    group = "Customize Aran Whitehand"
+    id = "905"
+    name = "Peachplum's \"Latest\" portrait (fair hair, fair complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.16]
+    group = "Customize Aran Whitehand"
+    id = "910"
+    name = "Berelinde's \"Boromir\" (dark brown hair, fair complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.17]
+    group = "Customize Aran Whitehand"
+    id = "915"
+    name = "Berelinde's \"Dragon Age\" (dark hair, dark complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.18]
+    group = "Customize Aran Whitehand"
+    id = "920"
+    name = "Berelinde's \"Scruffy\"(light brown hair, fair complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.19]
+    group = "Customize Aran Whitehand"
+    id = "925"
+    name = "Macmazey's \"Don Pedro\" (dark hair, dark complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.2]
+    group = "Customize Aran Whitehand"
+    id = "300"
+    name = "Aran Whitehand, Mage Dual-Class stats (Tinker)"
+    subgroup = "Customize Aran Whitehand: Class"
+
+    [aranw.components.20]
+    group = "Customize Aran Whitehand"
+    id = "930"
+    name = "Macmazey's \"Fantasy Photo\" (long brown hair, light complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.21]
+    group = "Customize Aran Whitehand"
+    id = "935"
+    name = "Macmazey's\"Bearded\" (dark hair, light complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.22]
+    group = "Customize Aran Whitehand"
+    id = "940"
+    name = "Macmazey's \"No Beard\" (dark hair, light complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.23]
+    group = "Customize Aran Whitehand"
+    id = "945"
+    name = "Macmazey's \"Horatio Photo\" (dark hair, light complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.24]
+    group = "Customize Aran Whitehand"
+    id = "950"
+    name = "Peachplum's \"Young Fighter\" (red hair, fair comlpexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.25]
+    group = "Customize Aran Whitehand"
+    id = "955"
+    name = "piper's \"Stalwort Bearded Young\" (light brown hair, fair complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.26]
+    group = "Customize Aran Whitehand"
+    id = "960"
+    name = "piper's \"Mature Bearded\" (dark brown hair, medium complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.27]
+    group = "Customize Aran Whitehand"
+    id = "965"
+    name = "piper's \"Stalwort Young\" (light brown hair, fair complexion)"
+    subgroup = "Customize Aran Whitehand: Portraits"
+
+    [aranw.components.3]
+    group = "Customize Aran Whitehand"
+    id = "310"
+    name = "Aran Whitehand, Cleric Dual-Class stats (Tailor)"
+    subgroup = "Customize Aran Whitehand: Class"
+
+    [aranw.components.4]
+    group = "Customize Aran Whitehand"
+    id = "320"
+    name = "Aran Whitehand, Fighter Single Class Stats, default (Soldier)"
+    subgroup = "Customize Aran Whitehand: Class"
+
+    [aranw.components.5]
+    group = "Customize Aran Whitehand"
+    id = "330"
+    name = "Aran Whitehand, Thief Dual-Class stats, (Spy)"
+    subgroup = "Customize Aran Whitehand: Class"
+
+    [aranw.components.6]
+    group = "Customize Aran Whitehand"
+    id = "400"
+    name = "Replace Guitar Music with Midaevil Music"
+    subgroup = "Customize Aran Whitehand: Music"
+
+    [aranw.components.7]
+    group = "Customize Aran Whitehand"
+    id = "410"
+    name = "Replace Guitar Music with Brass Ensemble Music"
+    subgroup = "Customize Aran Whitehand: Music"
+
+    [aranw.components.8]
+    group = "Customize Aran Whitehand"
+    id = "500"
+    name = "Content Speed: minimum 1 hour real time between dialogues (Default, recommended)"
+    subgroup = "Customize Aran Whitehand: Timers"
+
+    [aranw.components.9]
+    group = "Customize Aran Whitehand"
+    id = "510"
+    name = "Content Speed: minimum 15 minutes real time between dialogues"
+    subgroup = "Customize Aran Whitehand: Timers"
+
 [arath_eet]
-archive = "arath_eet.tar.gz"
 class = "NPC"
 description = "Arath (human druid)"
 lastupdate = 1970-01-01
@@ -1433,7 +1654,7 @@ url = "https://github.com/Eltamin/artaport"
 archive = "artisanskitpack.tar.gz"
 class = "Kits"
 description = "Artisans Kitpack"
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "https://artisans-corner.com/the-artisans-kitpack/"
 tp2 = "artisanskitpack/artisanskitpack.tp2"
 url = "https://github.com/ArtemiusI/The-Artisan-s-Kitpack"
@@ -2300,7 +2521,7 @@ archive = "aura_bg1.tar.gz"
 class = "NPC"
 description = "Aura (LG gnome artificer)"
 languages = ["English"]
-lastupdate = 2022-06-30
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/aura_bg1/Readme-Aura_BG1.html"
 tp2 = "aura_bg1/setup-aura_bg1.tp2"
 url = "https://github.com/ArtemiusI/Aura_BG1"
@@ -2400,7 +2621,7 @@ archive = "aurora.tar.gz"
 class = "Items"
 description = "Aurora's shoes and boots"
 languages = ["English", "Francais", "Italiano", "Russian"]
-lastupdate = 2022-06-24
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/aurora/aurora-english.html"
 tp2 = "aurora/setup-aurora.tp2"
 url = "https://github.com/Sampsca/Auroras-Shoes-and-Boots"
@@ -2705,7 +2926,8 @@ archive = "azengaard.tar.gz"
 class = "Quests"
 description = "Azengaard Encounters"
 languages = ["English", "Russian (update by Serdrick)", "Deutsch"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
+readme = "https://github.com/RoxanneSHS/AzengaardEE"
 tp2 = "azengaard/setup-azengaard.tp2"
 url = "https://github.com/RoxanneSHS/AzengaardEE"
 
@@ -2718,11 +2940,11 @@ url = "https://github.com/RoxanneSHS/AzengaardEE"
     name = "Enhanced Trademeet Crypt"
 
 [b_spells]
-archive = "b_spells.tar.gz"
+archive = "b_spells.zip"
 class = "Spells"
 description = "New and Revised Spells"
 languages = ["English"]
-lastupdate = 2022-07-03
+lastupdate = 2018-10-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/b_spells/B_Spells_README.html"
 tp2 = "b_spells/setup-b_spells.tp2"
 url = "https://github.com/UnearthedArcana/B_Spells"
@@ -2747,7 +2969,7 @@ archive = "BackBrynnlaw_v7.zip"
 class = "Quests"
 description = "Back to Brynnlaw"
 languages = ["English", "Russian", "Deutsch", "Chinese", "French", "Polish"]
-lastupdate = 2021-05-15
+lastupdate = 2019-02-02
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/BackBrynnlaw/Readme-BackBrynnlaw.txt"
 tp2 = "backbrynnlaw/backbrynnlaw.tp2"
 url = "https://github.com/Pocket-Plane-Group/Back_to_Brynnlaw"
@@ -2761,7 +2983,7 @@ archive = "Bank_of_Baldurs_Gate_v0.2.zip"
 class = "SmallQuests"
 description = "Bank of Baldurs Gate"
 languages = ["English", "Russian (translation by yota13)", "Francais (traduction : Gwendolyne)"]
-lastupdate = 2021-11-07
+lastupdate = 2018-06-29
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/bank_of_baldurs_gate/readme/bank_of_baldurs_gate-readme-english.txt"
 tp2 = "bank_of_baldurs_gate/bank_of_baldurs_gate.tp2"
 url = "https://github.com/SpellholdStudios/Bank_of_Baldurs_Gate"
@@ -2779,7 +3001,7 @@ archive = "BanterPacksV16.zip"
 class = "NPC-Related"
 description = "Banter Packs"
 languages = ["English", "Espanol (Traducido por Clan DLAN)", "Deutsch (Uebersetzung durch rosenranken.de)", "Francais (Translated by Mathrim Cauthon)", "Polski (Translated by Damian Staniszewski)", "Italian (Translated by Xeno.Team and others, updated by Ilot)", "Russian (Translated by Prowler)", "Korean (Translated by Tannedbear)", "Chinese (Translated by Merzbau)"]
-lastupdate = 2021-09-17
+lastupdate = 2018-03-17
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/banterpack/BANTER-README.txt"
 tp2 = "banterpack/setup-banterpack.tp2"
 url = "https://github.com/Pocket-Plane-Group/Banter_Pack"
@@ -2835,6 +3057,7 @@ url = "https://www.dropbox.com/s/7obd7oopktkl5jv/BG1AerieV12.zip?dl=1"
     path = ["NPC", "Aerie"]
 
 [bg1npc]
+archive = "bg1npc.zip"
 class = "NPC-Related"
 description = "BG1 NPC Project"
 languages = ["English", "Espanol (traducido por Clan DLAN)", "Francais (traduit par les d'Oghmatiques)", "Polski (Tlumaczenie przez Children of Bhaal)", "Deutsch (Teiluebersetzung vom Kerzenburgforum, teilweise noch in englisch)", "Russian (by Aerie Team & Arcanecoast Team)", "Italian (by Coland)"]
@@ -3188,8 +3411,154 @@ url = "https://github.com/Gibberlings3/bg1npcmusic"
 archive = "BG1NPC SoAToB_v13.5.rar"
 class = "NPC-Related"
 description = "BG1 NPCs for SoA"
-lastupdate = 1970-01-01
+languages = ["English", "Russian, by Arcanecoast Team (Austin, yota13 & MacksimSl)"]
+lastupdate = 2022-02-27
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/bg1npcsoa/readme/BG1ReadMe.pdf"
+tp2 = "bg1npcsoa/bg1npcsoa.tp2"
 url = "https://www.dropbox.com/s/mub3ozbrj1tiews/BG1NPC%20SoAToB_v13.5.rar?dl=1"
+
+    [bg1npcsoa.components.1]
+    group = "Main Mod"
+    id = "0"
+    name = "Water Gardens. New Athkatla's district & new quests"
+
+    [bg1npcsoa.components.10]
+    group = "Main Mod"
+    id = "30"
+    name = "Store with crazy amount of magical items"
+    subgroup = "Kagain's Corner (SoA & ToB)"
+
+    [bg1npcsoa.components.11]
+    group = "Main Mod"
+    id = "35"
+    name = "Store with Vanilla Items Only"
+    subgroup = "Kagain's Corner (SoA & ToB)"
+
+    [bg1npcsoa.components.12]
+    group = "Main Mod"
+    id = "40"
+    name = "Faldorn's New Leaf (SoA & ToB)"
+
+    [bg1npcsoa.components.13]
+    group = "Main Mod"
+    id = "45"
+    name = "Xzar and Monty Murder Mysteries (SoA & ToB)"
+
+    [bg1npcsoa.components.14]
+    group = "Main Mod"
+    id = "50"
+    name = "Gnomes in the City: Quayle & Tiax (SoA & ToB)"
+
+    [bg1npcsoa.components.15]
+    group = "Main Mod"
+    id = "55"
+    name = "Expanded cirqus quest (Standard difficulty)"
+    subgroup = "Expanded cirqus quest"
+
+    [bg1npcsoa.components.16]
+    group = "Main Mod"
+    id = "56"
+    name = "Expanded cirqus quest - VERY difficult battles in circus (EXTREME difficulty)"
+    subgroup = "Expanded cirqus quest"
+
+    [bg1npcsoa.components.17]
+    group = "Main Mod"
+    id = "60"
+    name = "Ajantis (SoA & ToB)"
+
+    [bg1npcsoa.components.18]
+    group = "Unfinished NPCs (little content in components!!!)"
+    id = "65"
+    name = "Dynaheir (SoA)"
+
+    [bg1npcsoa.components.19]
+    group = "Unfinished NPCs (little content in components!!!)"
+    id = "70"
+    name = "Kivan (SoA & ToB)"
+
+    [bg1npcsoa.components.2]
+    group = "Main Mod"
+    id = "2"
+    name = "Shar-Teel NPC in BG2. \"Nightbringer of Shar\" (SoA)"
+
+    [bg1npcsoa.components.20]
+    group = "Unfinished NPCs (little content in components!!!)"
+    id = "75"
+    name = "Xan (SoA & ToB)"
+
+    [bg1npcsoa.components.21]
+    group = "Change NPC Kits"
+    id = "80"
+    name = "Make Branwen a Priest of Tempus"
+
+    [bg1npcsoa.components.22]
+    group = "Change NPC Kits"
+    id = "81"
+    name = "Make Eldoth a Jester"
+
+    [bg1npcsoa.components.23]
+    group = "Change NPC Kits"
+    id = "82"
+    name = "Make Faldorn an Avenger"
+
+    [bg1npcsoa.components.24]
+    group = "Change NPC Kits"
+    id = "83"
+    name = "Make Garrick a Skald"
+
+    [bg1npcsoa.components.25]
+    group = "Change NPC Kits"
+    id = "84"
+    name = "Make Montaron an Assasin"
+
+    [bg1npcsoa.components.26]
+    group = "Change NPC Kits"
+    id = "85"
+    name = "Make Safana a Swashbuckler"
+
+    [bg1npcsoa.components.27]
+    group = "Change NPC Kits"
+    id = "86"
+    name = "Make Skie a Shadowdancer"
+
+    [bg1npcsoa.components.28]
+    id = "87"
+    name = "Inter Component Banter Pack"
+
+    [bg1npcsoa.components.3]
+    group = "Main Mod"
+    id = "4"
+    name = "Yeslick Orothiar NPC in BG2 (SoA)"
+
+    [bg1npcsoa.components.4]
+    group = "Main Mod"
+    id = "6"
+    name = "Brave Sir Garrick NPC in BG2 (SoA)"
+
+    [bg1npcsoa.components.5]
+    group = "Main Mod"
+    id = "8"
+    name = "Skie & Eldoth NPCs in BG2 (SoA)"
+
+    [bg1npcsoa.components.6]
+    group = "Main Mod"
+    id = "10"
+    name = "Branwen NPC in BG2 (SoA)"
+
+    [bg1npcsoa.components.7]
+    group = "Main Mod"
+    id = "11"
+    name = "ToB-part for Shar-Teel or/and Yeslick, Garrick, Branwen, Skie, Eldoth"
+
+    [bg1npcsoa.components.8]
+    group = "Main Mod"
+    id = "20"
+    name = "Coran & Safana Chronicles (SoA & ToB)"
+
+    [bg1npcsoa.components.9]
+    group = "Main Mod"
+    id = "25"
+    name = "Alora (SoA & ToB)"
 
 [bg1re]
 class = "NPC-Related"
@@ -3476,10 +3845,10 @@ url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downf
 archive = "bggoeet.tar.gz"
 class = "UI"
 description = "Baldur's Gate Graphics Overhaul for EET and BGT"
-lastupdate = 2022-06-28
+lastupdate = 1970-01-01
 readme = "https://www.shsforums.net/topic/56410-what-is-it/"
 tp2 = "bggoeet/bggoeet.tp2"
-url = "https://github.com/BigWorldProject/BGGOEET"
+url = "https://github.com/InfinityMods/BGGOEET"
 
     [bggoeet.components.1]
     id = "0"
@@ -3496,10 +3865,11 @@ url = "https://github.com/BigWorldProject/BGGOEET"
     name = "Use extended BG1 areas for TDDz"
 
 [bgqe]
+archive = "bgqe.zip"
 class = "Quests"
 description = "BG1 Mini Quests and Encounters"
 languages = ["English", "Deutsch", "Francais", "Italiano", "Russian", "Polski"]
-lastupdate = 2022-06-15
+lastupdate = 2022-07-08
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/bgqe/readmes/english.bgqe.txt"
 tp2 = "bgqe/setup-bgqe.tp2"
 url = "https://github.com/Gibberlings3/BG_Quests_And_Encounters"
@@ -3621,7 +3991,7 @@ archive = "bonehilleet.tar.gz"
 class = "BigQuests"
 description = "Secret of Bone Hill (EET)"
 languages = ["English", "German - Translated by Leonardo", "Italian - Translated by Ilot", "Russian - Translated by Badgert, Aldark, Prowler, Orlangur", "Spanish - Translated by Ancalagon el Negro", "Francais - Traduit par Lothringen (des d'Oghmatiques)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/bonehilleet/Language/english/Readme-Bonehill.html"
 tp2 = "bonehilleet/setup-bonehilleet.tp2"
 url = "https://github.com/RoxanneSHS/BoneHill"
@@ -3644,13 +4014,22 @@ lastupdate = 1970-01-01
 url = "https://www.dropbox.com/s/pdluvpg37olb2sg/worldmapRU.zip?dl=1"
 
 [branwen]
+archive = "branwen.tar.gz"
 class = "NPC"
 description = "Branwen BG2 NPC"
+languages = ["English", "Russian (by Jericho2)", "French (by Shamou, JohnBob and jazira)"]
 lastupdate = 1970-01-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/Branwen/Readme-Branwen.txt"
+tp2 = "branwen/branwen.tp2"
 url = "https://github.com/Pocket-Plane-Group/Branwen_for_BGII"
+
+    [branwen.compat.1]
+    after = ["eet"]
+    before = ["crossmodbg2", "eet_end"]
 
     [branwen.components.1]
     id = "0"
+    name = "Branwen BG2 NPC mod for players and modders"
     path = ["NPC", "Branwen"]
 
 [bridgesblock]
@@ -3661,7 +4040,7 @@ languages = ["English", "Polish by GoForTheEyes", "German by Morywen", "Russian 
 lastupdate = 2022-05-10
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/BridgesBlock/readme.txt"
 tp2 = "bridgesblock/bridgesblock.tp2"
-url = "weaselmods:bridges-block"
+url = "https://downloads.weaselmods.net/download/bridges-block"
 
     [bridgesblock.components.1]
     id = "0"
@@ -3722,10 +4101,30 @@ lastupdate = 1970-01-01
 url = "https://www.dropbox.com/s/apbyp6nod47pprw/EE-Mod-Fixpack-master.zip?dl=1"
 
 ["c#brage"]
+archive = "c#brage.tar.gz"
 class = "NPC"
 description = "Brage's Redemption"
-lastupdate = 1970-01-01
+languages = ["English", "Deutsch", "Italiano"]
+lastupdate = 2022-07-10
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/c#brage/readme.brage.english.html"
+tp2 = "c#brage/c#brage.tp2"
 url = "https://github.com/Gitjas/Brages_Redemption"
+
+    ["c#brage".compat.1]
+    after = ["bgqe", "c#endlessbg1", "transitions"]
+    before = ["bg1npc", "c#brandock", "eet_end"]
+
+    ["c#brage".components.1]
+    id = "0"
+    name = "Brage's Redemption - Brage Joinable NPC for Baldur's Gate"
+
+    ["c#brage".components.2]
+    id = "1"
+    name = "Assign the mod's portrait and soundset to the original Brage in game."
+
+    ["c#brage".components.3]
+    id = "10"
+    name = "Brage's Redemption: Crossmod Content"
 
 ["c#brandock"]
 class = "NPC"
@@ -3901,10 +4300,11 @@ url = "https://www.baldurs-gate.de/index.php?resources/adalons-blood-silberdrach
     name = "Adalon's Blood - Modification for BGII by Gandalf the white"
 
 ["c#sodboabri"]
+archive = "c#sodboabri.zip"
 class = "Quests"
 description = "The Boareskyr Bridge Scene"
 languages = ["English", "Deutsch", "Francais", "Italiano"]
-lastupdate = 2022-06-02
+lastupdate = 2022-06-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/c#sodboabri/readme.c#sodboabri.english.txt"
 tp2 = "c#sodboabri/c#sodboabri.tp2"
 url = "https://github.com/Gibberlings3/The_Boareskyr_Bridge_Scene"
@@ -3966,11 +4366,12 @@ url = "https://github.com/Gitjas/Solaufeins_Rescue_NPC"
     name = "Install Detection for Drow PC"
 
 [c0warlock]
-archive = "c0warlock.tar.gz"
+archive = "c0warlock.zip"
 class = "Kits"
 description = "Warlock"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 2021-01-19
+readme = "https://github.com/ArtemiusI/Warlock"
 tp2 = "c0warlock/c0warlock.tp2"
 url = "https://github.com/ArtemiusI/Warlock"
 
@@ -4027,7 +4428,7 @@ url = "https://github.com/RoxanneSHS/CandlekeepMemories"
 class = "Tweak"
 description = "Lore From Learning"
 languages = ["English", "Polski (Cahir)", "Russian (yota13)"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/cdlore/readme-cdlore.html"
 tp2 = "cdlore/cdlore.tp2"
 url = "https://github.com/Gibberlings3/Lore_From_Learning"
@@ -4059,10 +4460,11 @@ lastupdate = 1970-01-01
 url = "https://github.com/Gibberlings3/Continuous_NPC_Portraits"
 
 [cdtweaks]
+archive = "cdtweaks.zip"
 class = "Tweak"
 description = "Tweaks Anthology"
 languages = ["English", "Czech (Translation by Razfallow, Vlasák)", "Francais (Translation by Anomaly, Elgaern the Dragon Slayer, elminster, Isaya, mickabouille)", "Deutsch (Uebersetzung von Caswallon, Jester, Leonardo Watson)", "Italiano (translation by Andrea Colombo, ilot, improb@bile; original EoU by Antonio Favata)", "Korean (Translation by web2air)", "Polski (Translation by Artanis, Cuttoth, dragionian, Evendur, Grjgori, Neminus, yarpen)", "Russian (Translation by abalabokhin, aerie.ru, arcanecoast.ru, Creepin, Domi, Kulyok, prowler, Saigon1983, Serdrick, yota13)", "Espanol (traducido por Clan DLAN, Bhasbuto, Ghildrean, Immortality, Januskza)", "Simplified Chinese (Translation by c4_angel, distance20; oriignal BG2 Tweaks by Miranda)"]
-lastupdate = 2022-06-19
+lastupdate = 2022-06-03
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/cdtweaks/readme-cdtweaks.html"
 tp2 = "cdtweaks/setup-cdtweaks.tp2"
 url = "https://github.com/Gibberlings3/Tweaks-Anthology"
@@ -6078,10 +6480,11 @@ url = "https://github.com/Gibberlings3/Tweaks-Anthology"
     path = ["Skills", "Thieving"]
 
 [celestials]
+archive = "celestials.zip"
 class = "Tweak"
 description = "P&P Celestials"
 languages = ["English", "Francais (Translation by Mathrim Cauthon, Isaya)", "Deutsch(Translation by Telperion)", "Polski (Translation by yarpen)", "Russian (Translation by Prowler, Tierno, and A.E.R.I.E. team)", "Italian (Translation by Aedan)"]
-lastupdate = 2022-06-23
+lastupdate = 2019-02-23
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/celestials/readme-celestials.html"
 tp2 = "celestials/setup-celestials.tp2"
 url = "https://github.com/Gibberlings3/PnP_Celestials"
@@ -6110,7 +6513,8 @@ archive = "charlatan.tar.gz"
 class = "Kits"
 description = "Charlatan (Bard Kit)"
 languages = ["English", "Francais (traduction: Gwendolyne)", "Russkiy (Perevod: Saigon1983)"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/Raduziel/Charlatan-Kit"
 tp2 = "charlatan/charlatan.tp2"
 url = "https://github.com/Raduziel/Charlatan-Kit"
 
@@ -6188,10 +6592,11 @@ lastupdate = 1970-01-01
 url = "http://www.baldursgatemods.com/forums/index.php?action=downloads;sa=downfile&id=53"
 
 [convinientammunition]
-archive = "convinientammunition.tar.gz"
+archive = "convinientammunition.zip"
 class = "Items"
 description = "Convenient Ammunition"
-lastupdate = 2022-06-23
+lastupdate = 2019-08-22
+readme = "https://github.com/MattyGroove/ConvinientAmmunition"
 tp2 = "convinientammunition/setup-convinientammunition.tp2"
 url = "https://github.com/MattyGroove/ConvinientAmmunition"
 
@@ -6219,10 +6624,22 @@ url = "https://github.com/Pocket-Plane-Group/Coran_for_BGII"
     name = "Delete old Coran from the Forest of Tethyr (RECOMMENDED)"
 
 [coranbgfriend]
+archive = "coranbgfriend.zip"
 class = "NPC-Related"
 description = "Coran's BG Extended Friendship Talks"
-lastupdate = 1970-01-01
+languages = ["English", "Deutsch", "Russian"]
+lastupdate = 2021-07-13
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/coranbgfriend/readme-coranbg.html"
+tp2 = "coranbgfriend/coranbgfriend.tp2"
 url = "https://github.com/Gibberlings3/CoranBGFriend"
+
+    [coranbgfriend.compat.1]
+    after = ["bg1npc", "eet"]
+    before = ["eet_end"]
+
+    [coranbgfriend.components.1]
+    id = "0"
+    name = "Coran's Extended BG Friendship Talks"
 
 [corthalaromantique]
 class = "NPC-Related"
@@ -6235,7 +6652,7 @@ archive = "corwineet.tar.gz"
 class = "NPC-Related"
 description = "Corwin NPC for BG1"
 languages = ["English", "Deutsch", "Russian (by tipun & p_zombie)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/corwineet/readme.txt"
 tp2 = "corwineet/corwineet.tp2"
 url = "https://github.com/RoxanneSHS/Corwin"
@@ -6250,7 +6667,7 @@ archive = "cowledmenace.tar.gz"
 class = "Quests"
 description = "Cowled Menace"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 2022-07-10
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/cowledmenace/style/g3readme.css"
 tp2 = "cowledmenace/setup-cowledmenace.tp2"
 url = "https://github.com/Maltodaxtrin/CowledMenace"
@@ -6281,16 +6698,16 @@ url = "https://github.com/Maltodaxtrin/CowledMenace"
     subgroup = "Use pre-EE Spell Deflection Globe (EE only)"
 
 [crossmodbg2]
+archive = "crossmodbg2.zip"
 class = "NPC-Related"
-description = "Crossmod Banter Pack"
 languages = ["English", "Deutsch (Teildeutsche Version, der Rest ist in Englisch)"]
-lastupdate = 2022-06-23
+lastupdate = 2021-10-14
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/crossmodbg2/readme-crossmodbg2.html"
 tp2 = "crossmodbg2/setup-crossmodbg2.tp2"
 url = "https://github.com/Gibberlings3/Crossmod_Banter_Pack_for_Baldurs_Gate_II"
 
     [crossmodbg2.compat.1]
-    after = ["adrian", "ajantisbg1", "ajantisbg2", "alternatives", "amber", "angelo", "aranw", "arath_eet", "aurenaseph", "branwen", "c#solaufein", "coran", "coranbgfriend", "dace_eet", "fade", "faren", "foundling", "gahesh", "gavin", "gavin_bg2", "haerdalis_friendship", "haerdalisromance", "haldamir", "hephernaanbg2", "hubelpot", "isra", "iylos", "keldorn_rom", "kelsey", "keto", "khalidbg2", "kido", "kindrek", "kitanya", "kivan", "longerroadee", "luxleysoa", "nathaniel", "neh'taniel", "nephele", "ninde_eet", "paina", "petsy", "quayle", "saerileth", "sarahtob", "sirene", "skiecost", "solaufein", "tashia", "thebeaurinlegacy", "tiax", "totdg", "tsujatha", "varshoon", "verrbg2", "verrsza", "willowisp", "xan", "xanbg1friend", "xulaye_eet", "yasraena", "yoshimoromance", "yoshimosremorse", "yvette"]
+    after = ["adrian", "ajantisbg2", "alternatives", "amber", "angelo", "aranw", "aurenaseph", "branwen", "c#solaufein", "coran", "fade", "faren", "foundling", "gahesh", "gavin_bg2", "haerdalis_friendship", "haldamir", "hephernaanbg2", "hubelpot", "isra", "keldorn_rom", "kelsey", "keto", "khalidbg2", "kido", "kindrek", "kitanya", "kivan", "luxleysoa", "nathaniel", "neh'taniel", "nephele", "paina", "petsy", "quayle", "saerileth", "sarahtob", "sirene", "skiecost", "solaufein", "tashia", "thebeaurinlegacy", "tiax", "totdg", "tsujatha", "varshoon", "verrbg2", "willowisp", "xan", "yasraena", "yoshimoromance", "yoshimosremorse", "yvette"]
 
     [crossmodbg2.components.1]
     id = "0"
@@ -6321,136 +6738,6 @@ class = "BigQuests"
 description = "Check the Bodies Master Vampire"
 lastupdate = 1970-01-01
 url = "https://github.com/RoxanneSHS/MasterVampire"
-
-[d0questpack]
-archive = "Win-QuestPack-v34.zip"
-class = "Quests"
-description = "Ding0's Quest Pack"
-languages = ["English", "Spanish", "German", "French", "Italian", "Russian"]
-lastupdate = 2018-05-19
-readme = "/home/jerome/jeux/ciopfs/modtool/mods/questpack/readme.html"
-tp2 = "setup-d0questpack.tp2"
-url = "http://mods.pocketplane.net/win-questpack-v34.zip"
-
-    [d0questpack.compat.1]
-    after = ["kelsey", "keto", "ub"]
-
-    [d0questpack.components.1]
-    exclusive = ["AI"]
-    id = "0"
-    name = "General AI Improvements"
-
-    [d0questpack.components.10]
-    exclusive = ["ar0812.are", "ar1515.bcs", "thumb.cre"]
-    id = "8"
-    name = "Intrigue In The Copper Coronet"
-    path = ["Story", "BG2"]
-
-    [d0questpack.components.11]
-    exclusive = ["potn33.itm", "potn38.itm", "spwi106.spl", "spwi815.spl"]
-    id = "9"
-    name = "Rahul Kanakia's Potion Quest"
-    path = ["Story", "BG2"]
-
-    [d0questpack.components.12]
-    exclusive = ["cutc7g.bcs", "hellgen2.cre", "hellself.cre", "hellself.eff", "sphl001.spl", "sphl002.spl", "sphl003.spl", "sphl004.spl", "sphl005.spl", "spin747.spl", "spin749.spl", "spin751.spl", "spin753.spl", "spin755.spl"]
-    id = "10"
-    name = "Revised Hell Trials"
-    path = ["Story", "BG2", "Ending"]
-
-    [d0questpack.components.13]
-    exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"]
-    id = "11"
-    name = "IO2 Dialogue & Combat Enhancement"
-    path = ["Areas", "BG2", "Oasis"]
-    subgroup = "Improved Oasis II"
-
-    [d0questpack.components.14]
-    exclusive = ["Oasis", "ar6300.are"]
-    id = "12"
-    name = "IO2 Dialogue Enhancement Only"
-    path = ["Areas", "BG2", "Oasis"]
-    subgroup = "Improved Oasis II"
-
-    [d0questpack.components.15]
-    exclusive = ["pirmur02.cre", "pirmur05.cre", "ppsanik.cre"]
-    id = "13"
-    name = "Saving Sanik In Brynnlaw"
-    path = ["Story", "BG2", "Brynnlaw"]
-
-    [d0questpack.components.16]
-    id = "14"
-    name = "Burglary Of The Bookkeeper"
-
-    [d0questpack.components.17]
-    id = "15"
-    name = "New Fate For The Dryads' Acorns"
-
-    [d0questpack.components.18]
-    id = "16"
-    name = "The Tragedy Of Besamen"
-
-    [d0questpack.components.19]
-    id = "17"
-    name = "Further Slaver Involvement"
-
-    [d0questpack.components.2]
-    id = "1"
-    name = "All Creature & Area Improvements"
-    subgroup = "Creature & Area Improvements"
-
-    [d0questpack.components.20]
-    id = "18"
-    name = "Sending The Solamnic Knights Home"
-
-    [d0questpack.components.21]
-    id = "19"
-    name = "Nazariel The Lich"
-
-    [d0questpack.components.22]
-    id = "20"
-    name = "Reward Negotiation"
-
-    [d0questpack.components.23]
-    id = "21"
-    name = "Infernal Thievery"
-
-    [d0questpack.components.3]
-    id = "2"
-    name = "All Creature Improvements"
-    subgroup = "Creature & Area Improvements"
-
-    [d0questpack.components.4]
-    id = "3"
-    name = "Boss Improvements Only"
-    subgroup = "Creature & Area Improvements"
-
-    [d0questpack.components.5]
-    id = "4"
-    name = "With Additional Random Encounters"
-    subgroup = "Miscellaneous Enhancements"
-
-    [d0questpack.components.6]
-    exclusive = ["reddeath.bcs", "sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre"]
-    id = "401"
-    name = "Without Additonal Random Encounters"
-    subgroup = "Miscellaneous Enhancements"
-
-    [d0questpack.components.7]
-    exclusive = ["ar0300.are", "ar0300.bcs", "aran.cre", "aran02.cre", "arnfgt03.cre", "arnfgt04.cre", "c6kach.cre", "c6tanov.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "renal.cre", "tassa.cre", "thief1.cre", "vvtanov.cre"]
-    id = "5"
-    name = "Additional Shadow Thieves Content"
-    path = ["Story", "BG2"]
-
-    [d0questpack.components.8]
-    exclusive = ["sw1h50.itm"]
-    id = "6"
-    name = "Alternative Harper/Xzar Plot"
-    path = ["Story", "BG2"]
-
-    [d0questpack.components.9]
-    id = "7"
-    name = "Extended Reynald Sequence"
 
 [d0tweak]
 class = "Tweak"
@@ -6546,11 +6833,11 @@ lastupdate = 1970-01-01
 url = "https://github.com/D2-mods/D2-WEAPON"
 
 [d5_random_tweaks]
-archive = "d5_random_tweaks.tar.gz"
+archive = "d5_random_tweaks.zip"
 class = "Tweak"
 description = "SD's Random Tweaks"
 languages = ["English", "Français"]
-lastupdate = 2022-06-21
+lastupdate = 2022-04-25
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/d5_random_tweaks/readme-d5_random_tweaks.html"
 tp2 = "d5_random_tweaks/d5_random_tweaks.tp2"
 url = "https://github.com/subtledoctor/d5_Random_Tweaks"
@@ -6992,8 +7279,19 @@ url = "https://github.com/SpellholdStudios/Darron"
 archive = "dc.tar.gz"
 class = "Quests"
 description = "Dungeon Crawl"
+languages = ["English", "Russian", "German (Translated by Gerri)", "Italian (Translated by Ilot)", "Polish (Translated by Aristo)", "Chinese (Translated by Merzbau)", "French (Translated by deratiseur)"]
 lastupdate = 1970-01-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/DC/Readme-DC.txt"
+tp2 = "dc/dc.tp2"
 url = "https://github.com/Pocket-Plane-Group/Dungeon_Crawl"
+
+    [dc.compat.1]
+    after = ["eet"]
+    before = ["atweaks", "cdtweaks", "eet_end"]
+
+    [dc.components.1]
+    id = "0"
+    name = "Dungeon Crawl"
 
 [dearnise]
 class = "NPC-Related"
@@ -7002,11 +7300,11 @@ lastupdate = 1970-01-01
 url = "https://github.com/PaulaMigrate/NaliaEE"
 
 [deepgnomes]
-archive = "deepgnomes.tar.gz"
+archive = "deepgnomes.zip"
 class = "Quests"
 description = "Deepgnomes on the Sword Coast"
 languages = ["English", "Russian (by Arcanecoast.ru)"]
-lastupdate = 2022-06-23
+lastupdate = 2020-06-28
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/deepgnomes/readme.txt"
 tp2 = "deepgnomes/setup-deepgnomes.tp2"
 url = "https://github.com/RoxanneSHS/DeepgnomesEET"
@@ -7020,13 +7318,13 @@ archive = "deitiesoffaerun.tar.gz"
 class = "Kits"
 description = "Deities of Faerun"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/DeitiesOfFaerun/readme/readme.txt"
 tp2 = "deitiesoffaerun/deitiesoffaerun.tp2"
 url = "https://github.com/Raduziel/Deities-Of-Faerun"
 
     [deitiesoffaerun.compat.1]
-    after = ["allthingsmazzy", "branwen", "drake", "dsotsc", "eet", "finchnpc", "gavin", "glamnpcpack", "iwdification", "k9sharteelnpc", "nephele", "quayle", "raduzielsuniversalspells", "tenyathermidor", "tiax", "yeslicknpc", "yvette"]
+    after = ["allthingsmazzy", "b_spells", "branwen", "drake", "dsotsc", "eet", "finchnpc", "gavin", "glamnpcpack", "iwdification", "k9sharteelnpc", "nephele", "quayle", "raduzielsuniversalspells", "tenyathermidor", "tiax", "yeslicknpc", "yvette"]
     before = ["eet_end", "ihateundead", "tomeandblood"]
 
     [deitiesoffaerun.components.1]
@@ -7377,11 +7675,11 @@ lastupdate = 1970-01-01
 url = "https://github.com/RoxanneSHS/CivilDisobedience"
 
 [divine_remix]
-archive = "divine_remix.tar.gz"
+archive = "divine_remix.zip"
 class = "Tweak"
 description = "Divine Remix"
 languages = ["English", "Francais (by Sanctifer)"]
-lastupdate = 2022-06-22
+lastupdate = 2022-07-10
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/divine_remix/readme-divine_remix.html"
 tp2 = "divine_remix/setup-divine_remix.tp2"
 url = "https://github.com/Gibberlings3/Divine_Remix"
@@ -7606,7 +7904,7 @@ tp2 = "djinnicompanion/djinnicompanion.tp2"
 url = "https://github.com/Argent77/DjinniCompanion"
 
     [djinnicompanion.compat.1]
-    after = ["a7-golemconstruction", "ascension", "d0questpack", "eet", "ub", "wheels"]
+    after = ["a7-golemconstruction", "ascension", "eet", "questpack", "ub", "wheels"]
     before = ["eet_end"]
 
     [djinnicompanion.components.1]
@@ -7702,10 +8000,18 @@ url = "https://www.dropbox.com/s/506xpdt75hpkqrn/A7-DlcMerger-master.zip?dl=1"
     subgroup = "Merge DLC into game"
 
 [dorn]
+archive = "dorn.zip"
 class = "NPC-Related"
 description = "Dorn Romance Expansion"
+languages = ["English"]
 lastupdate = 1970-01-01
+readme = "https://github.com/trinit2/Bg2Dorn"
+tp2 = "dorn/setup-dorn.tp2"
 url = "https://github.com/trinit2/Bg2Dorn"
+
+    [dorn.components.1]
+    id = "0"
+    name = "Dorn expanded romance by trinit"
 
 [dr8_hotfix]
 archive = "dr8_hotfix.zip"
@@ -7764,7 +8070,7 @@ url = "https://github.com/RoxanneSHS/DrowLibrary"
 archive = "druidgrovemakeover.tar.gz"
 class = "UI"
 description = "Druid Grove Makeover"
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/druidgrovemakeover/readme.pdf"
 tp2 = "druidgrovemakeover/setup-druidgrovemakeover.tp2"
 url = "https://github.com/thisisulb/DruidGroveMakeover"
@@ -7780,11 +8086,11 @@ lastupdate = 1970-01-01
 url = "https://github.com/Gibberlings3/Geomantic_Sorcerer"
 
 [dsotsc]
-archive = "dsotsc.tar.gz"
+archive = "dsotsc.zip"
 class = "BigQuests"
 description = "Dark Side of the Sword Coast for EET"
 languages = ["English", "Castilian (translation updated by Lisandro & Unknow_error)", "Italian (translation Ilot (rtt.altervista.org) in collaboration with Kelvan, reaper_cuts and Andariel (bgcommunity.forumfree.net) & Turambar)", "Russian (translation of v2 by aVoddle, Alex, Badgert & aerie.ru & prowler, completion of v4.0 by Arkie & p_zombie)", "Polish (translation Black Dragon & Promilus, corrections by Roberciiik)"]
-lastupdate = 2022-06-23
+lastupdate = 2020-12-13
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/DSotSC/docs/readme.english.dsotsc.txt"
 tp2 = "dsotsc/dsotsc.tp2"
 url = "https://github.com/SpellholdStudios/DSotSC"
@@ -7861,7 +8167,7 @@ archive = "eet.zip"
 class = "Initial"
 description = "Enhanced Edition Trilogy"
 languages = ["English", "Polski (Polish)", "Spanish", "French", "Czech", "Russian", "Deutsch (German)"]
-lastupdate = 2022-06-30
+lastupdate = 2021-09-13
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/EET/readme-EET.html"
 tp2 = "eet/eet.tp2"
 url = "https://github.com/Gibberlings3/EET"
@@ -7879,8 +8185,14 @@ url = "https://github.com/Gibberlings3/EET"
 archive = "EET-ARE_fix-v2.zip"
 class = "Fixes"
 description = "V25 Area patch"
-lastupdate = 1970-01-01
+lastupdate = 2018-04-26
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/eet-are_fix/readme.txt"
+tp2 = "eet-are_fix/setup-eet-are_fix.tp2"
 url = "https://us.v-cdn.net/5019558/uploads/editor/nh/tbuoytpm7px8.zip"
+
+    [eet-are_fix.components.1]
+    id = "0"
+    name = "EET preparation: Fix ARE actor offsets"
 
 [eet_end]
 archive = "Manual"
@@ -7909,7 +8221,8 @@ archive = "eet_fix.tar.gz"
 class = "Fixes"
 description = "EET Fixpack"
 languages = ["English", "Russian"]
-lastupdate = 2022-06-26
+lastupdate = 1970-01-01
+readme = "https://github.com/EE-Mod-Setup/EET_Fixpack"
 tp2 = "eet_fix/eet_fix.tp2"
 url = "https://github.com/EE-Mod-Setup/EET_Fixpack"
 
@@ -7950,7 +8263,7 @@ archive = "eet_swo.tar.gz"
 class = "NPC-Related"
 description = "The Sword of Chaos (Tamoko)"
 languages = ["English", "Deutsch", "Russian (by arcanecoast.ru)"]
-lastupdate = 2022-06-30
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/eet_swo/Tamoko_readme.txt"
 tp2 = "eet_swo/eet_swo.tp2"
 url = "https://github.com/RoxanneSHS/Tamoko"
@@ -7965,7 +8278,7 @@ archive = "eet_tweaks.tar.gz"
 class = "Tweak"
 description = "EET (Enhanced Edition Trilogy) Tweaks"
 languages = ["English", "Polski (Polish)", "Czech"]
-lastupdate = 2022-06-21
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/EET_Tweaks/readme-EET_Tweaks.html"
 tp2 = "eet_tweaks/eet_tweaks.tp2"
 url = "https://github.com/K4thos/EET_Tweaks"
@@ -8638,7 +8951,8 @@ archive = "eetgbthfkp.tar.gz"
 class = "Quests"
 description = "Expanded Thief Stronghold"
 languages = ["English", "Deutsch (Uebersetzung von Dyara)", "Español (translation by Dufroise and Immortality)", "Russian (Aerie.ru + prowler)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
+readme = "https://github.com/RoxanneSHS/EET_Expanded_Thief_Stronghold"
 tp2 = "eetgbthfkp/eetgbthfkp.tp2"
 url = "https://github.com/RoxanneSHS/EET_Expanded_Thief_Stronghold"
 
@@ -8671,7 +8985,7 @@ archive = "eeuitweaks.tar.gz"
 class = "UI"
 description = "EEUITweaks"
 languages = ["English"]
-lastupdate = 2022-07-01
+lastupdate = 1970-01-01
 readme = "https://github.com/r-e-d/EEUITweaks/blob/master/README.md"
 tp2 = "eeuitweaks/eeuitweaks.tp2"
 url = "https://github.com/r-e-d/EEUITweaks"
@@ -9013,7 +9327,7 @@ languages = ["English", "French (by Lothringen)", "Russian (by Fess, posted by Q
 lastupdate = 2022-05-11
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Eilistraee/ReadMe.txt"
 tp2 = "eilistraee/setup-eilistraee.tp2"
-url = "weaselmods:eilistraees-song"
+url = "https://downloads.weaselmods.net/download/eilistraees-song"
 
     [eilistraee.components.1]
     id = "0"
@@ -9060,7 +9374,8 @@ archive = "emily.tar.gz"
 class = "NPC"
 description = "Emily"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/Skitia/Emily-BG1"
 tp2 = "emily/emily.tp2"
 url = "https://github.com/Skitia/Emily-BG1"
 
@@ -9094,7 +9409,7 @@ archive = "epicthieving.tar.gz"
 class = "Tweak"
 description = "Epic Thieving"
 languages = ["English"]
-lastupdate = 2022-06-21
+lastupdate = 1970-01-01
 readme = "https://forums.beamdog.com/discussion/74158/v3-5-epic-thieving-more-benefits-from-high-thieving-skills"
 tp2 = "epicthieving/epicthieving.tp2"
 url = "https://github.com/OlvynChuru/Epic-Thieving"
@@ -9142,9 +9457,11 @@ lastupdate = 1970-01-01
 url = "https://www.dropbox.com/s/k91vhhek3892ed7/eseries_V3.zip?dl=1"
 
 [etamin_soundsets]
+archive = "etamin_soundsets.zip"
 class = "UI"
 description = "Etamin's Extra Soundsets"
 lastupdate = 1970-01-01
+readme = "https://github.com/Eltamin/etamin-soundsets"
 url = "https://github.com/Eltamin/etamin-soundsets"
 
 [eternalimoen]
@@ -9166,7 +9483,7 @@ archive = "extraexpandedenhancedencounters.tar.gz"
 class = "Quests"
 description = "Extra Expanded Encounters"
 languages = ["English"]
-lastupdate = 2022-07-05
+lastupdate = 2022-07-10
 readme = "https://github.com/GraionDilach/ExtraExpandedEnhancedEncounters"
 tp2 = "extraexpandedenhancedencounters/extraexpandedenhancedencounters.tp2"
 url = "https://github.com/GraionDilach/ExtraExpandedEnhancedEncounters"
@@ -9233,7 +9550,7 @@ archive = "Fadingpromises-master.zip"
 class = "Quests"
 description = "Fading Promises"
 languages = ["English", "Espanol", "Deutsch", "Italiano", "Russian", "Francais"]
-lastupdate = 2020-12-23
+lastupdate = 2020-03-05
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/fadingpromises/readmefadingpromises.html"
 tp2 = "fadingpromises/setup-fadingpromises.tp2"
 url = "https://github.com/SpellholdStudios/Fading_Promises"
@@ -9247,7 +9564,7 @@ archive = "faiths_and_powers.tar.gz"
 class = "Kits"
 description = "Faiths and Powers"
 languages = ["English"]
-lastupdate = 2022-06-21
+lastupdate = 1970-01-01
 readme = "https://www.gibberlings3.net/forums/topic/30792-unearthed-arcana-presents-faiths-powers-gods-of-the-realms/"
 tp2 = "faiths_and_powers/faiths_and_powers.tp2"
 url = "https://github.com/UnearthedArcana/Faiths_and_Powers"
@@ -9355,6 +9672,9 @@ lastupdate = 2015-05-23
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Faren/FarenReadme.html"
 tp2 = "faren/setup-faren.tp2"
 url = "http://www.shsforums.net/files/download/1125-faren/"
+
+    [faren.compat.1]
+    after = ["adrian", "ajantisbg1", "ajantisbg2", "amber", "angelo", "arath_eet", "aurenaseph", "branwen", "btl", "chloe", "coran", "dace_eet", "dearnise", "edwinromance", "fade", "haldamir", "isra", "iylos", "kelsey", "keto", "luxleysoa", "nathaniel", "nephele", "ninde", "re", "saerileth", "sarah", "solaufein", "tashia", "tiax", "tsujatha", "xan", "xulaye", "yasraena", "yeslicknpc"]
 
     [faren.components.1]
     id = "0"
@@ -9546,11 +9866,11 @@ url = "http://www.shsforums.net/files/download/1125-faren/"
     name = "Auren Aseph Content"
 
 [finchnpc]
-archive = "finchnpc.tar.gz"
+archive = "finchnpc.zip"
 class = "NPC"
 description = "Finch (NG gnome cleric)"
 languages = ["English", "Francais", "Espanol", "German", "Russian"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/finchnpc/FinchReadMe.html"
 tp2 = "finchnpc/finchnpc.tp2"
 url = "https://github.com/RoxanneSHS/Finch"
@@ -9566,11 +9886,11 @@ lastupdate = 1970-01-01
 url = "https://github.com/SpellholdStudios/Super_Firkraag"
 
 [fishingfortrouble]
-archive = "fishingfortrouble.tar.gz"
+archive = "fishingfortrouble.zip"
 class = "Quests"
 description = "Fishing for Trouble"
 languages = ["English (Yovaneth)", "Russian (by subzero400, updated by AGKanevchev)"]
-lastupdate = 2022-06-23
+lastupdate = 2022-02-28
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/fishingfortrouble/FishingForTrouble-Readme.html"
 tp2 = "fishingfortrouble/fishingfortrouble.tp2"
 url = "https://github.com/RoxanneSHS/FishingForTrouble"
@@ -9588,7 +9908,7 @@ archive = "manual"
 class = "Tweak"
 description = "Faith and Powers Multiclass Clerics"
 languages = ["English"]
-lastupdate = 2022-06-21
+lastupdate = 1971-01-01
 tp2 = "fnp_multiclass/fnp_multiclass.tp2"
 url = "manual"
 
@@ -9621,7 +9941,7 @@ archive = "forgotten-armament.tar.gz"
 class = "Items"
 description = "Forgotten Armament"
 languages = ["English", "French"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/forgotten-armament/readme.html"
 tp2 = "forgotten-armament/forgotten-armament.tp2"
 url = "https://github.com/Gibberlings3/Forgotten-Armament"
@@ -9660,7 +9980,7 @@ languages = ["English", "Polish (Translated by Astharoshe)", "Russian (Translate
 lastupdate = 2022-01-06
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/foundling/ReadMe.txt"
 tp2 = "foundling/foundling.tp2"
-url = "weaselmods:foundling-between-the-shades"
+url = "https://downloads.weaselmods.net/download/foundling-between-the-shades"
 
     [foundling.components.1]
     id = "0"
@@ -9716,10 +10036,11 @@ url = "http://www.mediafire.com/download/726ji7jzgomi1vq/fullplate-v2.2.zip"
     path = ["Skills", "Backstab"]
 
 [g3anniversary]
+archive = "g3anniversary.zip"
 class = "SmallQuests"
 description = "Anniversary"
 languages = ["English", "Russian"]
-lastupdate = 2022-06-23
+lastupdate = 2021-07-13
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/g3anniversary/readme-g3anniversary.html"
 tp2 = "g3anniversary/setup-g3anniversary.tp2"
 url = "https://github.com/Gibberlings3/g3anniversary"
@@ -9756,10 +10077,11 @@ lastupdate = 1970-01-01
 url = "https://github.com/Gibberlings3/Garricks_Infatuation"
 
 [gavin]
+archive = "gavin.zip"
 class = "NPC"
 description = "Gavin (cleric of Lathander): BG1 content"
 languages = ["English", "French", "Deutsch (Teildeutsche Version, der Rest ist auf Englisch)"]
-lastupdate = 2022-06-23
+lastupdate = 2019-02-22
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/gavin/readme-gavin.html"
 tp2 = "gavin/gavin.tp2"
 url = "https://github.com/Gibberlings3/Gavin_BG"
@@ -9820,7 +10142,7 @@ url = "https://github.com/Gibberlings3/Gavin_BG"
 class = "NPC"
 description = "Gavin (clefic of Lathander): BG2 content"
 languages = ["English"]
-lastupdate = 2022-06-30
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/gavin_bg2/readme-gavin_bg2.html"
 tp2 = "gavin_bg2/setup-gavin_bg2.tp2"
 url = "https://github.com/Gibberlings3/Gavin_BG2"
@@ -9908,11 +10230,11 @@ url = "https://github.com/SpellholdStudios/HaerdalisFriendship"
     path = ["NPC", "Haer'dalis"]
 
 [haerdalisromance]
-archive = "haerdalisromance.tar.gz"
+archive = "haerdalisromance.zip"
 class = "NPC-Related"
 description = "Haer'Dalis Romance"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 2019-08-22
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/haerdalisromance/translations/english/haerdalisromance_readme.html"
 tp2 = "haerdalisromance/haerdalisromance.tp2"
 url = "https://github.com/MattyGroove/haerdalisromance"
@@ -9977,11 +10299,12 @@ url = "https://github.com/SpellholdStudios/HeartOfTheWood"
     name = "Heart of the Wood (WeiDU version)"
 
 [helga]
-archive = "helga.tar.gz"
+archive = "helga.zip"
 class = "NPC"
 description = "Helga"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/Skitia/Helga-BG1"
 tp2 = "helga/setup-helga.tp2"
 url = "https://github.com/Skitia/Helga-BG1"
 
@@ -9996,7 +10319,7 @@ description = "Hephernaan NPC"
 lastupdate = 2022-01-30
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/hephernaanbg2/readme.txt"
 tp2 = "hephernaanbg2/hephernaanbg2.tp2"
-url = "weaselmods:hephernaan-bg2"
+url = "https://downloads.weaselmods.net/download/hephernaan-bg2"
 
     [hephernaanbg2.components.1]
     id = "0"
@@ -10259,7 +10582,108 @@ archive = "housetweaks.tar.gz"
 class = "Tweak"
 description = "House Rule Tweaks"
 lastupdate = 1970-01-01
+readme = "https://github.com/ArtemiusI/House-Rule-Tweaks"
+tp2 = "housetweaks/housetweaks.tp2"
 url = "https://github.com/ArtemiusI/House-Rule-Tweaks"
+
+    [housetweaks.components.1]
+    id = "0"
+    name = "House Tweaks: Expanded Racial Enemies"
+
+    [housetweaks.components.10]
+    id = "9"
+    name = "Constitution Bonuses for All Classes Only"
+    subgroup = "House Tweaks: Increased Constitution Bonuses"
+
+    [housetweaks.components.11]
+    id = "10"
+    name = "House Tweaks: INT/WIS/CHA-based Bonus Spell Slots"
+
+    [housetweaks.components.12]
+    id = "11"
+    name = "House Tweaks: Warrior HLAs"
+
+    [housetweaks.components.13]
+    id = "12"
+    name = "House Tweaks: Improved Dialogues (BG:EE)"
+
+    [housetweaks.components.14]
+    id = "13"
+    name = "House Tweaks: Not-So-Indestructible Rats"
+
+    [housetweaks.components.15]
+    id = "14"
+    name = "House Tweaks: Good-Aligned Roleplay Rewards (BG2:EE)"
+
+    [housetweaks.components.16]
+    id = "15"
+    name = "House Tweaks: Cloak of Dragomir only decreases stats in daylight"
+
+    [housetweaks.components.17]
+    id = "16"
+    name = "House Tweaks: Give Stat Bonuses to EENPCs in BG2 (except Hexxat)"
+
+    [housetweaks.components.18]
+    id = "17"
+    name = "House Tweaks: Useful Plot Items"
+
+    [housetweaks.components.19]
+    id = "18"
+    name = "House Tweaks: Faster Troll Unconsciousness"
+
+    [housetweaks.components.2]
+    id = "1"
+    name = "House Tweaks: Expanded Shapeshifting"
+
+    [housetweaks.components.20]
+    id = "19"
+    name = "House Tweaks: Restore Reputation Increase Sound Effect for BG2"
+
+    [housetweaks.components.21]
+    id = "20"
+    name = "House Tweaks: Race Text Patch"
+
+    [housetweaks.components.22]
+    id = "21"
+    name = "House Tweaks: Hoodless Thief Avatars"
+
+    [housetweaks.components.23]
+    id = "22"
+    name = "House Tweaks: NPC Soundsets for Icewind Dale"
+
+    [housetweaks.components.24]
+    id = "23"
+    name = "House Tweaks: Reputation Bonuses for Icewind Dale"
+
+    [housetweaks.components.3]
+    id = "2"
+    name = "House Tweaks: Expanded Racial Bonuses"
+
+    [housetweaks.components.4]
+    id = "3"
+    name = "House Tweaks: Rebalanced Proficiencies"
+
+    [housetweaks.components.5]
+    id = "4"
+    name = "House Tweaks: Rebalanced Weapon Styles"
+
+    [housetweaks.components.6]
+    id = "5"
+    name = "House Tweaks: Monk Can Use Quarterstaves"
+
+    [housetweaks.components.7]
+    id = "6"
+    name = "House Tweaks: Backstab With Any Melee Weapon"
+
+    [housetweaks.components.8]
+    id = "7"
+    name = "Constitution Bonuses for All Classes + Regeneration Changes"
+    subgroup = "House Tweaks: Increased Constitution Bonuses"
+
+    [housetweaks.components.9]
+    id = "8"
+    name = "Regeneration Changes Only"
+    subgroup = "House Tweaks: Increased Constitution Bonuses"
 
 [hq_soundclips_bg2ee]
 archive = "HQ-SoundClips-BG2EE-master.zip"
@@ -10391,7 +10815,7 @@ archive = "ihateundead.tar.gz"
 class = "Kits"
 description = "I Hate Undead Kitpack"
 languages = ["English", "Francais (traduction: Gwendolyne)", "Russkiy (Perevod: Saigon1983)"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/IHateUndead/readme/readme.txt"
 tp2 = "ihateundead/ihateundead.tp2"
 url = "https://github.com/Raduziel/I-Hate-Undead-Kitpack"
@@ -10463,15 +10887,35 @@ url = "https://github.com/Raduziel/I-Hate-Undead-Kitpack"
 archive = "iispellsystemadjustmentsv7.1.zip"
 class = "Tweak"
 description = "igi's Spell System Adjustments"
-lastupdate = 1970-01-01
+languages = ["English", "Russian"]
+lastupdate = 2011-11-26
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/iiSpellSystemAdjustments/Readme.txt"
+tp2 = "iispellsystemadjustments/setup-iispellsystemadjustments.tp2"
 url = "https://www.dropbox.com/s/pbl4vy4j2lw8nk0/iispellsystemadjustmentsv7.1.zip?dl=1"
+
+    [iispellsystemadjustments.components.1]
+    id = "0"
+    name = "Arcane Spell Refreshment"
+
+    [iispellsystemadjustments.components.2]
+    id = "1"
+    name = "Divine Spell Refreshment"
+
+    [iispellsystemadjustments.components.3]
+    id = "2"
+    name = "XP for casting Arcane Spells"
+
+    [iispellsystemadjustments.components.4]
+    id = "3"
+    name = "XP for casting Divine Spells"
 
 [imnesvale]
 archive = "imnesvale.tar.gz"
 class = "Quests"
 description = "Imnesvale Invasion"
 languages = ["English", "Russian (translation Viom & aerie.ru update by Serdrick)", "Deutsch"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
+readme = "https://github.com/RoxanneSHS/ImnesvaleEE"
 tp2 = "imnesvale/setup-imnesvale.tp2"
 url = "https://github.com/RoxanneSHS/ImnesvaleEE"
 
@@ -10501,11 +10945,12 @@ lastupdate = 1970-01-01
 url = "http://www.blindmonkey.org/imoen/files/Imoen%20Romance.zip"
 
 [impasylum]
-archive = "impasylum.tar.gz"
+archive = "impasylum.zip"
 class = "Quests"
 description = "Improved Asylum"
 languages = ["English", "French", "German", "Russian (by Serdick, Alina & A.E.R.I.E. Team)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
+readme = "https://github.com/RoxanneSHS/Asylum"
 tp2 = "impasylum/setup-impasylum.tp2"
 url = "https://github.com/RoxanneSHS/Asylum"
 
@@ -10520,11 +10965,11 @@ url = "https://github.com/RoxanneSHS/Asylum"
     path = ["Story", "BG2", "Brynnlaw"]
 
 [indinpc]
-archive = "indinpc.tar.gz"
+archive = "indinpc.zip"
 class = "NPC"
 description = "Indira (LG half-elf fighter/mage)"
 languages = ["English", "Italiano", "Francais", "Polski", "Espanol", "Deutsch", "Russian"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/indinpc/Docs/indi_readme.html"
 tp2 = "indinpc/setup-indinpc.tp2"
 url = "https://github.com/RoxanneSHS/Indira"
@@ -10541,7 +10986,7 @@ languages = ["English", "French by Lothringen of the d'Oghmatiques", "Polish by 
 lastupdate = 2022-05-09
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Innershade/+Documents+/Innershade_readme.html"
 tp2 = "innershade/setup-innershade.tp2"
-url = "weaselmods:innershade"
+url = "https://downloads.weaselmods.net/download/innershade"
 
     [innershade.components.1]
     id = "0"
@@ -10653,7 +11098,7 @@ languages = ["English", "Polish (by Aristo)", "French (by Lothringen)", "Deutsch
 lastupdate = 2022-06-19
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/ISNF/ReadMe.txt"
 tp2 = "isnf/isnf.tp2"
-url = "weaselmods:i-shall-never-forget"
+url = "https://downloads.weaselmods.net/download/i-shall-never-forget"
 
     [isnf.components.1]
     id = "0"
@@ -10709,10 +11154,11 @@ lastupdate = 1970-01-01
 url = "Manual"
 
 [item_rev]
+archive = "item_rev.zip"
 class = "Items"
 description = "Item Revisions"
 languages = ["English", "French", "Russian"]
-lastupdate = 2022-06-22
+lastupdate = 2015-12-31
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/item_rev/readme-item_rev.html"
 tp2 = "item_rev/item_rev.tp2"
 url = "https://github.com/Gibberlings3/ItemRevisions"
@@ -10924,11 +11370,11 @@ url = "https://github.com/Gibberlings3/ItemRevisions"
     subgroup = "Allow Spellcasting in Armor"
 
 [itemupgrade]
-archive = "itemupgrade.tar.gz"
+archive = "itemupgrade.zip"
 class = "Items"
 description = "Item Upgrade"
 languages = ["American English", "Francais (traduction de Artemidore et Cocobard et Sanctifer, (d'Oghmatiques))", "Deutsche (Uebersetzung durch Maus & Norbert Frischauf & Patrick Lainer)", "Espanol (hecha por Clan DLAN, Bhasbuto & Immortality & Neil Sharp (FWP)", "Polish (by Nastian & SoM - part of CoB Clan; Cahir)", "Russian (Iogan, prowler, hawkmoon & AERIE.RU)", "Korean (web2air)"]
-lastupdate = 2022-06-23
+lastupdate = 2022-05-21
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/itemupgrade/readme-itemupgrades.txt"
 tp2 = "itemupgrade/itemupgrade.tp2"
 url = "https://github.com/Pocket-Plane-Group/Item_Upgrade"
@@ -10973,10 +11419,11 @@ lastupdate = 1970-01-01
 url = "https://drive.google.com/u/0/uc?export=download&confirm=0nC5&id=1zmy3x9DqgOoxghNSXM4C66S1OyYkzSRH"
 
 [iwdification]
+archive = "iwdification.zip"
 class = "Tweak"
 description = "IWDification"
 languages = ["English", "French", "Spanish"]
-lastupdate = 2022-06-21
+lastupdate = 2022-05-10
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/iwdification/readme-iwdification.html"
 tp2 = "iwdification/setup-iwdification.tp2"
 url = "https://github.com/Gibberlings3/iwdification"
@@ -11106,11 +11553,12 @@ lastupdate = 1970-01-01
 url = "https://github.com/GwendolyneFreddy/IWD_Item_Pack"
 
 [iylos_eet]
-archive = "iylos_eet.tar.gz"
+archive = "iylos_eet.zip"
 class = "NPC"
 description = "Iylos"
 languages = ["English"]
-lastupdate = 2022-06-30
+lastupdate = 1971-01-01
+readme = "https://github.com/RoxanneSHS/IylosEET"
 tp2 = "iylos_eet/iylos_eet.tp2"
 url = "https://github.com/RoxanneSHS/IylosEET"
 
@@ -11223,11 +11671,25 @@ url = "https://www.dropbox.com/s/cui863b6rgesfe0/JiniRomancev3.0.zip?dl=1"
 archive = "JKits V7.zip"
 class = "Kits"
 description = "JKits"
-lastupdate = 1970-01-01
+lastupdate = 2018-03-17
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/jkits/readme.txt"
+tp2 = "jkits/setup-jkits.tp2"
 url = "https://us.v-cdn.net/5019558/uploads/editor/zo/hcv698q6oaev.zip"
 
+    [jkits.components.1]
+    id = "0"
+    name = "Kenshei"
+
+    [jkits.components.2]
+    id = "1"
+    name = "Undead Eliminator"
+
+    [jkits.components.3]
+    id = "2"
+    name = "Amazon"
+
 [k9roughworld]
-archive = "k9roughworld.zip"
+archive = "k9roughworld.rar"
 class = "Tweak"
 description = "Rough World"
 lastupdate = 1970-01-01
@@ -11248,11 +11710,11 @@ url = "https://www.dropbox.com/s/tjyghy37av8gw5a/k9SharteelNPC%20-%201.4.rar?dl=
     path = ["NPC", "Shar-Teel"]
 
 [kale]
-archive = "kale.tar.gz"
+archive = "kale.zip"
 class = "NPC"
 description = "Kale"
 languages = ["English"]
-lastupdate = 2022-06-24
+lastupdate = 1971-01-01
 readme = "https://forums.beamdog.com/discussion/74630/v1-67-kale-a-halfling-barbarian-for-bg-ee-sod-and-eet"
 tp2 = "kale/kale.tp2"
 url = "https://github.com/Skitia/Kale-BG1"
@@ -11350,9 +11812,9 @@ archive = "KelseyV5.zip"
 class = "NPC"
 description = "Kelsey NPC"
 languages = ["English", "Espanol (Traducido por Clan DLAN)", "German (Translated by Beaz and Beyshaliban)", "Russian (Translated by Prowler)"]
-lastupdate = 2020-01-12
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/kelsey/docs/readme.html"
-tp2 = "kelsey/kelsey.tp2"
+tp2 = "kelsey.tp2"
 url = "https://github.com/Pocket-Plane-Group/Kelsey"
 
     [kelsey.components.1]
@@ -11497,7 +11959,8 @@ archive = "kimpirate.tar.gz"
 class = "NPC"
 description = "Kim the Pirate"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
+readme = "https://github.com/RoxanneSHS/Kim_Pirate"
 tp2 = "kimpirate/kimpirate.tp2"
 url = "https://github.com/RoxanneSHS/Kim_Pirate"
 
@@ -11526,10 +11989,11 @@ lastupdate = 1970-01-01
 url = "https://www.dropbox.com/s/auuuyz5pc45jx4h/Kittomesv201.zip?dl=1"
 
 [kivan]
+archive = "kivan.zip"
 class = "NPC-Related"
 description = "Kivan and Deheriana Companions (Bugged)"
 languages = ["English", "Russian (by klichko86, paladin84, Jericho2, Staylos and Kirian from arcanecoast.ru)"]
-lastupdate = 2022-06-23
+lastupdate = 2022-05-02
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Kivan/readme-kivan-new.html"
 tp2 = "kivan/setup-kivan.tp2"
 url = "https://github.com/Gibberlings3/Kivan_and_Deheriana"
@@ -11957,7 +12421,7 @@ archive = "lenshunt.tar.gz"
 class = "Quests"
 description = "The Broken Lanthorn"
 languages = ["English", "Russian (by Austin)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/lenshunt/Readme.txt"
 tp2 = "lenshunt/lenshunt.tp2"
 url = "https://github.com/RoxanneSHS/LensHunt"
@@ -11972,7 +12436,7 @@ archive = "leui.tar.gz"
 class = "UI"
 description = "lefreut's enhanced UI (requires game version 2.6)"
 languages = ["English"]
-lastupdate = 2022-06-24
+lastupdate = 1970-01-01
 readme = "https://github.com/r-e-d/LeUI/blob/master/README.md"
 tp2 = "leui/leui.tp2"
 url = "https://github.com/r-e-d/LeUI"
@@ -12023,7 +12487,7 @@ archive = "longerroadee.tar.gz"
 class = "NPC"
 description = "Longer Road EET"
 languages = ["English", "Espanol (Traducido cerca Immortality y compana)", "Francais (Traduction de Erszebeth)", "Polski (Tlumaczenie Cuttooth)", "Russian (by Arcanecoast.ru)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/longerroadee/LongerRoadEE-ReadMe.md"
 tp2 = "longerroadee/longerroadee.tp2"
 url = "https://github.com/RoxanneSHS/LongerRoadEE"
@@ -12041,9 +12505,9 @@ archive = "Lucy4.1.zip"
 class = "SmallQuests"
 description = "Lucy the Wyvern"
 languages = ["English", "Deutsch (Uebersetzung von Jarl)", "Russian (translation by aerie.ru)", "Espanol (traduccion por Lisandro)", "Italiano (traduzione di ilot)", "Francais (Traduction : Le Marquis, des d'Oghmatiques)", "Polski (translation by Cahir)"]
-lastupdate = 2020-04-04
+lastupdate = 2019-10-17
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/lucy/readme/lucy-readme-english.html"
-tp2 = "lucy/lucy.tp2"
+tp2 = "lucy/setup-lucy.tp2"
 url = "https://github.com/SpellholdStudios/Lucy_the_Wyvern"
 
     [lucy.components.1]
@@ -12087,7 +12551,7 @@ archive = "m7tweaks.tar.gz"
 class = "Tweak"
 description = "Flamewing's Tweaks"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/m7tweaks/readme.md"
 tp2 = "m7tweaks/m7tweaks.tp2"
 url = "https://github.com/flamewing/m7tweaks"
@@ -12131,11 +12595,12 @@ url = "https://github.com/flamewing/m7tweaks"
     name = "Fix uncharming of Glaicas (De'Arnise Hold)"
 
 [magestronghold_eet]
-archive = "magestronghold_eet.tar.gz"
+archive = "magestronghold_eet.zip"
 class = "Quests"
 description = "Mage Stronghold"
 languages = ["English", "Russian (adapted by Serdrick)"]
-lastupdate = 2022-06-23
+lastupdate = 2022-03-24
+readme = "https://github.com/RoxanneSHS/Magestronghold"
 tp2 = "magestronghold_eet/setup-magestronghold_eet.tp2"
 url = "https://github.com/RoxanneSHS/Magestronghold"
 
@@ -12145,9 +12610,9 @@ url = "https://github.com/RoxanneSHS/Magestronghold"
 
 [magic_battles_revised]
 archive = "magic_battles_revised.tar.gz"
-class = "Spells"
+class = "Tweak"
 languages = ["English", "Français"]
-lastupdate = 2022-07-03
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/magic_battles_revised/readme-Magic_Battles_Revised.html"
 tp2 = "magic_battles_revised/magic_battles_revised.tp2"
 url = "https://github.com/UnearthedArcana/magic_battles_revised"
@@ -12190,7 +12655,7 @@ archive = "mercenary.tar.gz"
 class = "Kits"
 description = "Mercenary (Fighter Kit)"
 languages = ["English", "Francais (traduction: Gwendolyne)"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "https://forums.beamdog.com/discussion/68151/fighter-kit-mercenary-v3-1-iwdee-eet-bgee-bg2ee"
 tp2 = "mercenary/mercenary.tp2"
 url = "https://github.com/Raduziel/Mercenary-Kit"
@@ -12214,7 +12679,8 @@ url = "https://github.com/Raduziel/Mercenary-Kit"
 archive = "metweaks.tar.gz"
 class = "Tweak"
 description = "Olvyn Tweaks"
-lastupdate = 2022-06-22
+lastupdate = 1970-01-01
+readme = "https://github.com/OlvynChuru/METweaks"
 tp2 = "metweaks/metweaks.tp2"
 url = "https://github.com/OlvynChuru/METweaks"
 
@@ -12425,11 +12891,11 @@ url = "https://github.com/OlvynChuru/METweaks"
     subgroup = "Make it so that clerics and/or monks require only 160000 experience to get to level 9"
 
 [might_and_guile]
-archive = "might_and_guile.tar.gz"
+archive = "might_and_guile.zip"
 class = "Kits"
 description = "Might and Guile"
 languages = ["English"]
-lastupdate = 2022-06-24
+lastupdate = 2022-05-18
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/might_and_guile/readme-M_n_G.html"
 tp2 = "might_and_guile/might_and_guile.tp2"
 url = "https://github.com/UnearthedArcana/Might_and_Guile"
@@ -12829,7 +13295,7 @@ archive = "mih_ip.tar.gz"
 class = "Items"
 description = "Made In Heaven Item Pack"
 languages = ["English"]
-lastupdate = 2022-06-24
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/mih_ip/docs/readme-mih_ip.html"
 tp2 = "mih_ip/setup-mih_ip.tp2"
 url = "https://github.com/AngelGryph/MadeInHeaven_ItemPack"
@@ -12942,7 +13408,7 @@ url = "https://github.com/AngelGryph/MadeInHeaven_ItemPack"
 class = "Spells"
 description = "Made In Heaven: Spell Pack"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/mih_sp/docs/readme-mih_sp.html"
 tp2 = "mih_sp/setup-mih_sp.tp2"
 url = "https://github.com/AngelGryph/MadeInHeaven_SpellPack"
@@ -13049,11 +13515,12 @@ url = "https://github.com/AngelGryph/MadeInHeaven_SpellPack"
     path = ["Spells", "Abjuration"]
 
 [militiaofficer]
-archive = "militiaofficer.tar.gz"
+archive = "militiaofficer.zip"
 class = "Kits"
 description = "Militia Officer (Fighter Kit)"
 languages = ["English", "Francais (traduction: Gwendolyne)"]
-lastupdate = 2022-06-23
+lastupdate = 2019-03-17
+readme = "https://github.com/Raduziel/MilitiaOfficer-Kit"
 tp2 = "militiaofficer/militiaofficer.tp2"
 url = "https://github.com/Raduziel/MilitiaOfficer-Kit"
 
@@ -13090,7 +13557,7 @@ archive = "monasticorders.tar.gz"
 class = "Kits"
 description = "Monastic Orders"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "https://forums.beamdog.com/discussion/18620/mod-beta-monastic-orders-of-faerun"
 tp2 = "monasticorders/setup-monasticorders.tp2"
 url = "https://github.com/aquadrizzt/MonasticOrders"
@@ -13139,7 +13606,7 @@ archive = "msfm.tar.gz"
 class = "Items"
 description = "More Style for Mages"
 languages = ["English", "Polski (by Cahir)", "Russian (by Saigon1983)"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/msfm/readme.txt"
 tp2 = "msfm/msfm.tp2"
 url = "https://github.com/Renegade0/msfm"
@@ -13277,16 +13744,29 @@ url = "https://github.com/Renegade0/msfm"
     subgroup = "Add ranged attack and a tweak to the Staff of the Magi"
 
 ["mur'neth"]
+archive = "mur'neth.zip"
 class = "NPC"
 description = "Mur'Neth (CE Ghaunadan/ooze thief)"
-lastupdate = 1970-01-01
+languages = ["English", "French par Egrevyn des D'Oghmatiques", "Polish (Yarpen)", "Spanish (Saemon, Clan DLAN)", "German (Leonardo Watson)", "Italian (Ilot)", "Russian (yota13 & p_zombie)"]
+lastupdate = 2021-03-28
+readme = "https://github.com/RoxanneSHS/Murneth"
+tp2 = "mur'neth/mur'neth.tp2"
 url = "https://github.com/RoxanneSHS/Murneth"
+
+    ["mur'neth".components.1]
+    id = "0"
+    name = "The Mur'Neth NPC Mod"
+
+    ["mur'neth".components.2]
+    id = "1"
+    name = "Remove Rare selection sounds"
 
 [nanstein]
 archive = "nanstein.tar.gz"
 class = "Items"
 description = "Nanstein item upgrade"
 lastupdate = 1970-01-01
+readme = "https://github.com/GwendolyneFreddy/Nanstein"
 url = "https://github.com/GwendolyneFreddy/Nanstein"
 
 [nathaniel]
@@ -13327,17 +13807,85 @@ url = "http://www.shsforums.net/files/download/734-nathaniel/"
     name = "Kelsey Content"
 
 [neera]
+archive = "neera.zip"
 class = "NPC-Related"
 description = "Neera Expansion for BG:EE"
-lastupdate = 1970-01-01
+languages = ["English", "Russian (Translation by Austin)"]
+lastupdate = 2021-07-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/neera/readme/neera-expansion-readme-english.html"
+tp2 = "neera/neera.tp2"
 url = "https://github.com/SpellholdStudios/Neera_Expansion"
 
+    [neera.compat.1]
+    after = ["eet"]
+    before = ["eet_end"]
+
+    [neera.components.1]
+    group = "Neera Expansion content"
+    id = "0"
+    name = "Neera Expansion"
+
+    [neera.components.2]
+    group = "Neera Expansion content"
+    id = "1"
+    name = "15 minutes"
+    subgroup = "How much time would you like between talks (approximately)?"
+
+    [neera.components.3]
+    group = "Neera Expansion content"
+    id = "2"
+    name = "30 minutes"
+    subgroup = "How much time would you like between talks (approximately)?"
+
+    [neera.components.4]
+    group = "Neera Expansion content"
+    id = "3"
+    name = "1 hour"
+    subgroup = "How much time would you like between talks (approximately)?"
+
+    [neera.components.5]
+    group = "Neera Expansion content"
+    id = "4"
+    name = "1.5 hours (default)"
+    subgroup = "How much time would you like between talks (approximately)?"
+
+    [neera.components.6]
+    group = "Neera Expansion content"
+    id = "5"
+    name = "2 hours"
+    subgroup = "How much time would you like between talks (approximately)?"
+
+    [neera.components.7]
+    group = "Game romance tweaks"
+    id = "6"
+    name = "Make Neera romanceable by women"
+
+    [neera.components.8]
+    group = "Game romance tweaks"
+    id = "7"
+    name = "Make Rasaad romanceable by men"
+
 [neerabanters]
-archive = "AstroBryGuy-NeeraBanters-v0.9.1-0-g7124366.zip"
+archive = "neerabanters.zip"
 class = "NPC-Related"
 description = "Neera Banters for BG:EE"
-lastupdate = 1970-01-01
-url = "http://lynxlynx.info/ie/modhub.php?AstroBryGuy/NeeraBanters"
+languages = ["English"]
+lastupdate = 2017-11-08
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/neerabanters/readme.html"
+tp2 = "neerabanters/neerabanters.tp2"
+url = "https://github.com/AstroBryGuy/NeeraBanters"
+
+    [neerabanters.components.1]
+    id = "10"
+    name = "Neera Banters: Dialogue Banters and Interjections"
+
+    [neerabanters.components.2]
+    id = "20"
+    name = "Neera Banters: Interaction Banters"
+
+    [neerabanters.components.3]
+    id = "30"
+    name = "Neera Banters: DLC Portrait"
 
 ["neh'taniel"]
 archive = "Nehtaniel_V7.zip"
@@ -13375,7 +13923,7 @@ archive = "ninde_eet.tar.gz"
 class = "NPC"
 description = "Ninde (NE elven necromancer)"
 languages = ["English"]
-lastupdate = 2022-06-30
+lastupdate = 1971-01-01
 readme = "https://spellholdstudios.github.io/readmes/ninde-readme-english.html"
 tp2 = "ninde_eet/ninde_eet.tp2"
 url = "https://github.com/RoxanneSHS/NindeEET"
@@ -13401,15 +13949,41 @@ url = "https://github.com/thisisulb/NoSoDSound"
 archive = "npc_ee.tar.gz"
 class = "Kits"
 description = "NPCs Enhanced for Everyone"
+languages = ["English"]
 lastupdate = 1970-01-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/npc_ee/readme-NPC_EE.html"
+tp2 = "npc_ee/npc_ee.tp2"
 url = "https://github.com/UnearthedArcana/NPC_EE"
+
+    [npc_ee.compat.1]
+    after = ["cdtweaks", "scales_of_balance", "stratagems"]
+
+    [npc_ee.components.1]
+    id = "1010"
+    name = "Remove dual-class flag from Imoen (warning, see Readme)"
+
+    [npc_ee.components.2]
+    id = "1020"
+    name = "Remove dual-class flag from Nalia (warning, see Readme)"
+
+    [npc_ee.components.3]
+    id = "1030"
+    name = "Remove dual-class flag from Anomen (warning, see Readme)"
+
+    [npc_ee.components.4]
+    id = "1200"
+    name = "Remove dual-class flag from all other NPCs (warning, see Readme)"
+
+    [npc_ee.components.5]
+    id = "2000"
+    name = "NPC class/stat/kit choices"
 
 [npc_strongholds]
 archive = "NPCStrongholds_V14.zip"
 class = "Tweak"
 description = "NPC Strongholds"
 languages = ["American", "Russian"]
-lastupdate = 2022-06-23
+lastupdate = 2020-05-02
 readme = "https://gibberlings3.github.io/Documentation/readmes/readme-npc_strongholds.html"
 tp2 = "npc_strongholds/setup-npc_strongholds.tp2"
 url = "https://www.gibberlings3.net/files/file/959-npc-strongholds/"
@@ -13458,6 +14032,7 @@ lastupdate = 1970-01-01
 url = "https://www.gibberlings3.net/files/file/793-npc-kitpack"
 
 [ntotsc]
+archive = "ntotsc.zip"
 class = "Quests"
 description = "Northern Tales of the Sword Coast"
 languages = ["English", "German (translation by Leonardo Watson)", "Italian (translation by ilot)", "Polish", "Russian"]
@@ -13571,10 +14146,10 @@ archive = "ooze.zip"
 class = "SmallQuests"
 description = "Oozes Lounge"
 languages = ["English", "Chinese by merzbau", "Polish by memory", "Russian by tipun", "French by deratiseur and Mornagest", "Korean by Pinkpanther", "Italian by improbabile"]
-lastupdate = 2022-06-30
+lastupdate = 2022-05-13
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/ooze/readme.txt"
 tp2 = "ooze/ooze.tp2"
-url = "weaselmods:oozes-lounge"
+url = "https://downloads.weaselmods.net/download/oozes-lounge"
 
     [ooze.components.1]
     id = "0"
@@ -13588,11 +14163,12 @@ lastupdate = 1970-01-01
 url = "https://github.com/PaulaMigrate/Orelios"
 
 [paina]
-archive = "paina.tar.gz"
+archive = "paina.zip"
 class = "NPC"
 description = "Pai Na"
 languages = ["English"]
-lastupdate = 2022-06-30
+lastupdate = 2021-10-28
+readme = "https://github.com/ArtemiusI/Pai-Na-NPC-mod-for-BG2-EE"
 tp2 = "paina/paina.tp2"
 url = "https://github.com/ArtemiusI/Pai-Na-NPC-mod-for-BG2-EE"
 
@@ -13615,8 +14191,15 @@ url = "http://www.shsforums.net/files/getdownload/5035-paintbg-for-bgee/"
 archive = "Mal-des-Vampirismus v1.1.7z"
 class = "Quests"
 description = "Mal des Vampirismus"
-lastupdate = 1970-01-01
+languages = ["Deutsch", "English"]
+lastupdate = 2014-08-27
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/pcvamp/Readme.html"
+tp2 = "pcvamp/setup-pcvamp.tp2"
 url = "http://www.baldursgate-refugium.de/download.php?dat=Mal%20des%20Vampirismus&version=v1.1"
+
+    [pcvamp.components.1]
+    id = "0"
+    name = "Dawn of Vampirism"
 
 [petsy]
 archive = "petsy.zip"
@@ -13626,7 +14209,7 @@ languages = ["English"]
 lastupdate = 2022-02-05
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Petsy/Readme.txt"
 tp2 = "petsy/petsy.tp2"
-url = "weaselmods:petsy"
+url = "https://downloads.weaselmods.net/download/petsy"
 
     [petsy.components.1]
     id = "0"
@@ -13647,7 +14230,7 @@ archive = "ppe.tar.gz"
 class = "UI"
 description = "Portraits Portraits Everywhere"
 languages = ["English", "Russian", "French"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/ppe/Readme.txt"
 tp2 = "ppe/setup-ppe.tp2"
 url = "https://github.com/DaftHunk/Portraits-Portraits-Everywhere"
@@ -13786,13 +14369,144 @@ archive = "Quayle BG2 v6.2.zip"
 class = "NPC"
 description = "Quayle ReDone"
 lastupdate = 1970-01-01
-url = "weaselmods:quayle-bg2"
+url = "https://downloads.weaselmods.net/download/quayle-bg2"
+
+[questpack]
+archive = "Win-QuestPack-v34.zip"
+class = "Quests"
+description = "Ding0's Quest Pack"
+languages = ["English", "Spanish", "German", "French", "Italian", "Russian"]
+lastupdate = 2018-05-19
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/questpack/readme.html"
+tp2 = "setup-d0questpack.tp2"
+url = "http://mods.pocketplane.net/win-questpack-v34.zip"
+
+    [questpack.compat.1]
+    after = ["kelsey", "keto", "ub"]
+
+    [questpack.components.1]
+    exclusive = ["AI"]
+    id = "0"
+    name = "General AI Improvements"
+
+    [questpack.components.10]
+    exclusive = ["ar0812.are", "ar1515.bcs", "thumb.cre"]
+    id = "8"
+    name = "Intrigue In The Copper Coronet"
+    path = ["Story", "BG2"]
+
+    [questpack.components.11]
+    exclusive = ["potn33.itm", "potn38.itm", "spwi106.spl", "spwi815.spl"]
+    id = "9"
+    name = "Rahul Kanakia's Potion Quest"
+    path = ["Story", "BG2"]
+
+    [questpack.components.12]
+    exclusive = ["cutc7g.bcs", "hellgen2.cre", "hellself.cre", "hellself.eff", "sphl001.spl", "sphl002.spl", "sphl003.spl", "sphl004.spl", "sphl005.spl", "spin747.spl", "spin749.spl", "spin751.spl", "spin753.spl", "spin755.spl"]
+    id = "10"
+    name = "Revised Hell Trials"
+    path = ["Story", "BG2", "Ending"]
+
+    [questpack.components.13]
+    exclusive = ["amtarc01.cre", "amtcap01.cre", "amtcle01.cre", "amtgen01.cre", "amtmag01.cre", "amtpik01.cre"]
+    id = "11"
+    name = "IO2 Dialogue & Combat Enhancement"
+    path = ["Areas", "BG2", "Oasis"]
+    subgroup = "Improved Oasis II"
+
+    [questpack.components.14]
+    exclusive = ["Oasis", "ar6300.are"]
+    id = "12"
+    name = "IO2 Dialogue Enhancement Only"
+    path = ["Areas", "BG2", "Oasis"]
+    subgroup = "Improved Oasis II"
+
+    [questpack.components.15]
+    exclusive = ["pirmur02.cre", "pirmur05.cre", "ppsanik.cre"]
+    id = "13"
+    name = "Saving Sanik In Brynnlaw"
+    path = ["Story", "BG2", "Brynnlaw"]
+
+    [questpack.components.16]
+    id = "14"
+    name = "Burglary Of The Bookkeeper"
+
+    [questpack.components.17]
+    id = "15"
+    name = "New Fate For The Dryads' Acorns"
+
+    [questpack.components.18]
+    id = "16"
+    name = "The Tragedy Of Besamen"
+
+    [questpack.components.19]
+    id = "17"
+    name = "Further Slaver Involvement"
+
+    [questpack.components.2]
+    id = "1"
+    name = "All Creature & Area Improvements"
+    subgroup = "Creature & Area Improvements"
+
+    [questpack.components.20]
+    id = "18"
+    name = "Sending The Solamnic Knights Home"
+
+    [questpack.components.21]
+    id = "19"
+    name = "Nazariel The Lich"
+
+    [questpack.components.22]
+    id = "20"
+    name = "Reward Negotiation"
+
+    [questpack.components.23]
+    id = "21"
+    name = "Infernal Thievery"
+
+    [questpack.components.3]
+    id = "2"
+    name = "All Creature Improvements"
+    subgroup = "Creature & Area Improvements"
+
+    [questpack.components.4]
+    id = "3"
+    name = "Boss Improvements Only"
+    subgroup = "Creature & Area Improvements"
+
+    [questpack.components.5]
+    id = "4"
+    name = "With Additional Random Encounters"
+    subgroup = "Miscellaneous Enhancements"
+
+    [questpack.components.6]
+    exclusive = ["reddeath.bcs", "sukiss1.cre", "sukissk.wav", "sumist.cre", "suspyim.cre"]
+    id = "401"
+    name = "Without Additonal Random Encounters"
+    subgroup = "Miscellaneous Enhancements"
+
+    [questpack.components.7]
+    exclusive = ["ar0300.are", "ar0300.bcs", "aran.cre", "aran02.cre", "arnfgt03.cre", "arnfgt04.cre", "c6kach.cre", "c6tanov.bcs", "maevar.cre", "mvguard1.cre", "mvpries.cre", "renal.cre", "tassa.cre", "thief1.cre", "vvtanov.cre"]
+    id = "5"
+    name = "Additional Shadow Thieves Content"
+    path = ["Story", "BG2"]
+
+    [questpack.components.8]
+    exclusive = ["sw1h50.itm"]
+    id = "6"
+    name = "Alternative Harper/Xzar Plot"
+    path = ["Story", "BG2"]
+
+    [questpack.components.9]
+    id = "7"
+    name = "Extended Reynald Sequence"
 
 [raduzielsuniversalspells]
 archive = "raduzielsuniversalspells.tar.gz"
 class = "Tweak"
 description = "Universal Wizard Spells"
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/Raduziel/Raduziels-Universal-Wizard-Spells"
 tp2 = "raduzielsuniversalspells/raduzielsuniversalspells.tp2"
 url = "https://github.com/Raduziel/Raduziels-Universal-Wizard-Spells"
 
@@ -13825,7 +14539,8 @@ archive = "recorder.tar.gz"
 class = "NPC"
 description = "Recorder"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/Skitia/Recorder-BG1"
 tp2 = "recorder/setup-recorder.tp2"
 url = "https://github.com/Skitia/Recorder-BG1"
 
@@ -13843,7 +14558,7 @@ archive = "refinements.tar.gz"
 class = "Tweak"
 description = "Refinements"
 languages = ["English", "French, by Sir Crapouilleau and Anomaly", "Japanese, by Kuroukome Veland", "Polish, by Yarpen and picollo", "Russian, by Aerie.ru, Prowler, Deneiris, Austin & Arcanecoast.ru"]
-lastupdate = 2022-06-21
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Refinements/README-Refinements.htm"
 tp2 = "refinements/setup-refinements.tp2"
 url = "https://github.com/UnearthedArcana/refinements"
@@ -13997,7 +14712,7 @@ archive = "Reunion_v4.zip"
 class = "Quests"
 description = "Reunion"
 languages = ["English", "Francais (traduit par Le Marquis des d'Oghmatiques)", "Chinese (translation by Merzbau)", "Russian (translation by Austin)", "Polish (translation by Stars of Mystra)"]
-lastupdate = 2021-05-15
+lastupdate = 2019-03-24
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Reunion/Readme-Reunion.txt"
 tp2 = "reunion/reunion.tp2"
 url = "https://github.com/Pocket-Plane-Group/Reunion"
@@ -14010,8 +14725,14 @@ url = "https://github.com/Pocket-Plane-Group/Reunion"
 archive = "RGenie_30.zip"
 class = "Items"
 description = "Ribald's Genie"
-lastupdate = 1970-01-01
+languages = ["English", "Espanol", "Russian", "Czech", "Polish", "Italian", "German", "French"]
+lastupdate = 2020-09-29
+tp2 = "rgenie/setup-rgenie.tp2"
 url = "https://www.dropbox.com/s/8irrveuglmlxjkf/RGenie_30.zip?dl=1"
+
+    [rgenie.components.1]
+    id = "0"
+    name = "Ribald's Genie"
 
 [rjali]
 archive = "Rjali Romance-v12.0.zip"
@@ -14025,7 +14746,7 @@ archive = "rolles.tar.gz"
 class = "Items"
 description = "Rolles Safyer"
 languages = ["Russian", "English", "French (traduction : La Voix 2 la Sagesse)", "Italiano (traduzione di ilot)", "Polski (tlumaczenie: Aristo)"]
-lastupdate = 2022-06-24
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/rolles/readme/rolles-readme-english.txt"
 tp2 = "rolles/rolles.tp2"
 url = "https://github.com/SpellholdStudios/Rolles"
@@ -14043,10 +14764,18 @@ url = "https://github.com/SpellholdStudios/Rolles"
     name = "Bag of Holding in Irenicus Dungeon"
 
 [rosere]
+archive = "rosere.zip"
 class = "NPC"
 description = "Rose NPC Resurrected for EET"
-lastupdate = 1970-01-01
+languages = ["English", "Russian (by Arcanecoast.ru)"]
+lastupdate = 1971-01-01
+readme = "https://github.com/RoxanneSHS/RoseRE"
+tp2 = "rosere/setup-rosere.tp2"
 url = "https://github.com/RoxanneSHS/RoseRE"
+
+    [rosere.components.1]
+    id = "0"
+    name = "Rose NPC for EET"
 
 [roterror]
 class = "BigQuests"
@@ -14065,7 +14794,7 @@ tp2 = "rr/setup-rr.tp2"
 url = "https://www.dropbox.com/s/6dzjuampvx6kw9t/rr-493.zip?dl=1"
 
     [rr.compat.1]
-    after = ["beyond_the_law", "ctb", "d0questpack", "divine_remix", "eetact2", "item_rev", "song_and_silence", "spell_rev", "tod"]
+    after = ["beyond_the_law", "ctb", "divine_remix", "eetact2", "item_rev", "questpack", "song_and_silence", "spell_rev", "tod"]
     before = ["atweaks", "eet_tweaks", "stratagems", "virtue"]
 
     [rr.components.1]
@@ -14178,7 +14907,7 @@ archive = "rupert.tar.gz"
 class = "Items"
 description = "Rupert the Dye Merchant"
 languages = ["English", "Spanish (by Lisandro)", "Italian (by ilot)", "German (by Meresin, some parts of 2.2 are machine translated)"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/rupert/readme.html"
 tp2 = "rupert/setup-rupert.tp2"
 url = "https://github.com/MarkVadasz/Rupert"
@@ -14198,7 +14927,7 @@ archive = "saerileth.tar.gz"
 class = "NPC"
 description = "Saerileth NPC"
 languages = ["English", "Deutsch (Uebersetzung von kerzenburg.baldurs-gate.eu)", "Francais (par Klint-ultimate)", "Espa�ol (Traducido por clandlan.net)", "Russian (translation by Alex, Pilferer, Serdrick & Aerie.ru)", "Cesky"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/saerileth/Saerileth-ReadMe-ENG.html"
 tp2 = "saerileth/setup-saerileth.tp2"
 url = "https://github.com/PaulaMigrate/Saerileth"
@@ -14317,11 +15046,11 @@ url = "https://www.dropbox.com/s/pifofoz21t15zph/Sarevok%20Romance%20v1.4.zip?dl
     path = ["NPC", "Sarevok"]
 
 [scales_of_balance]
-archive = "scales_of_balance.tar.gz"
+archive = "scales_of_balance.zip"
 class = "Tweak"
 description = "Scales of Balance"
 languages = ["English", "Polski (Translation by etamin)"]
-lastupdate = 2022-06-21
+lastupdate = 2022-05-18
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/scales_of_balance/readme-sob.html"
 tp2 = "scales_of_balance/scales_of_balance.tp2"
 url = "https://github.com/UnearthedArcana/Scales_of_Balance"
@@ -14526,7 +15255,7 @@ archive = "seatower.tar.gz"
 class = "Quests"
 description = "Balduran's Sea Tower"
 languages = ["English", "Russian (by tipun)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/seatower/Readme.txt"
 tp2 = "seatower/setup-seatower.tp2"
 url = "https://github.com/RoxanneSHS/Balduran-s-Sea-Tower"
@@ -14559,15 +15288,52 @@ url = "https://github.com/RoxanneSHS/Balduran-s-Sea-Tower"
 archive = "Sellswords_v7.zip"
 class = "Quests"
 description = "The Sellswords"
-lastupdate = 1970-01-01
+languages = ["English", "Russian", "German (by Gerri)", "Chinese (by Merzbau)"]
+lastupdate = 2019-03-25
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/Sellswords/Readme-Sellswords.txt"
+tp2 = "sellswords/sellswords.tp2"
 url = "https://github.com/Pocket-Plane-Group/Sellswords"
+
+    [sellswords.components.1]
+    id = "0"
+    name = "The Sellswords mod for Baldur's Gate II"
 
 [sentrizeal_aa_pack]
 archive = "SentrizealAvatarPack.zip"
 class = "UI"
 description = "Sentrizeal's Alternate Avatar Pack"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2017-06-09
+tp2 = "sentrizeal_aa_pack/setup-sentrizeal_aa_pack.tp2"
 url = "https://www.dropbox.com/s/9xi5ehosra6ptq1/SentrizealAvatarPack.zip?dl=1"
+
+    [sentrizeal_aa_pack.components.1]
+    id = "0"
+    name = "Sentrizeal's Wizard 4 Missing Animation Fix"
+
+    [sentrizeal_aa_pack.components.2]
+    id = "1"
+    name = "Sentrizeal's Elven Ranger Avatar (Female)"
+
+    [sentrizeal_aa_pack.components.3]
+    id = "2"
+    name = "Sentrizeal's Elven Ranger Avatar (Male)"
+
+    [sentrizeal_aa_pack.components.4]
+    id = "3"
+    name = "Sentrizeal's Elven Ranger Weapon Fix"
+
+    [sentrizeal_aa_pack.components.5]
+    id = "4"
+    name = "Sentrizeal's Human Gladiator Avatar (Female)"
+
+    [sentrizeal_aa_pack.components.6]
+    id = "5"
+    name = "Sentrizeal's Human Gladiator Avatar (Male)"
+
+    [sentrizeal_aa_pack.components.7]
+    id = "6"
+    name = "Sentrizeal's Human Mercenary Avatar (Female)"
 
 [shadowadept]
 class = "Kits"
@@ -14576,10 +15342,11 @@ lastupdate = 1970-01-01
 url = "https://github.com/ArtemiusI/Shadow-Magic"
 
 [shardsofice]
+archive = "shardsofice.zip"
 class = "SmallQuests"
 description = "Shards of Ice"
 languages = ["English", "Russian (translation by Gingerrr, Badgert & aerie.ru)", "French (translation by La Voix 2 la Sagesse of the d'Oghmatiques)", "Italian (translation by ilot)", "German (translation by Jarl and Leonardo Watson)"]
-lastupdate = 2022-06-23
+lastupdate = 2019-05-22
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/shardsofice/readme-shardsofice.html"
 tp2 = "shardsofice/setup-shardsofice.tp2"
 url = "https://github.com/Gibberlings3/Shards_of_Ice"
@@ -14613,7 +15380,7 @@ archive = "simenpc.tar.gz"
 class = "NPC"
 description = "Sime"
 languages = ["English", "Russian (by yota13 + p_zombie)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/simenpc/readme.txt"
 tp2 = "simenpc/simenpc.tp2"
 url = "https://github.com/RoxanneSHS/Sime"
@@ -14627,7 +15394,8 @@ archive = "sirene.tar.gz"
 class = "NPC"
 description = "Sirene (tiefling paladin of Ilmater)"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/ArtemiusI/Sirene-NPC"
 tp2 = "sirene/setup-sirene.tp2"
 url = "https://github.com/ArtemiusI/Sirene-NPC"
 
@@ -14680,7 +15448,8 @@ archive = "sirene_bg2.tar.gz"
 class = "NPC"
 description = "Sirene NPC for BG2:EE"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/ArtemiusI/Sirene-NPC-for-BG2-EE"
 tp2 = "sirene_bg2/sirene_bg2.tp2"
 url = "https://github.com/ArtemiusI/Sirene-NPC-for-BG2-EE"
 
@@ -14729,11 +15498,11 @@ url = "https://github.com/ArtemiusI/Sirene-NPC-for-BG2-EE"
     subgroup = "Choose an alternate class for Sirene?"
 
 [sirinescall]
-archive = "sirinescall.tar.gz"
+archive = "sirinescall.zip"
 class = "Quests"
 description = "Lure of the Sirine's Call"
 languages = ["English", "Castellano (Castilian/Spanish)", "Francais (French)", "Deutsch (German)", "Italiano (Italian) - by Ilot (rtt.altervista.org)", "Polski (Polish) - by Regis", "D¢¤¤\u0088\u008a\u0082 (Russian) - Badgert, iopden & aerie.ru"]
-lastupdate = 2022-06-23
+lastupdate = 2022-03-23
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/sirinescall/readme/sirine_readme.english.html"
 tp2 = "sirinescall/setup-sirinescall.tp2"
 url = "https://github.com/Pocket-Plane-Group/Lure_Of_Sirines_Call"
@@ -14758,7 +15527,7 @@ languages = ["English", "Russian - partial (by fufel007 & Arcanecoast Team)"]
 lastupdate = 2022-06-07
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/skiecost/ReadMe.txt"
 tp2 = "skiecost/skiecost.tp2"
-url = "weaselmods:skie-the-cost-of-one-girls-soul"
+url = "https://downloads.weaselmods.net/download/skie-the-cost-of-one-girls-soul"
 
     [skiecost.components.1]
     id = "0"
@@ -14795,7 +15564,7 @@ archive = "skills-and-abilities.tar.gz"
 class = "Kits"
 description = "Skills and Abilities"
 languages = ["English", "French"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/skills-and-abilities/readme.html"
 tp2 = "skills-and-abilities/skills-and-abilities.tp2"
 url = "https://github.com/Gibberlings3/Skills-and-Abilities"
@@ -14944,7 +15713,8 @@ archive = "skitianpcs.tar.gz"
 class = "NPC"
 description = "Skitia NPCs"
 languages = ["English"]
-lastupdate = 2022-06-24
+lastupdate = 1970-01-01
+readme = "https://github.com/Skitia/SkitiaNPCs"
 tp2 = "skitianpcs/setup-skitianpcs.tp2"
 url = "https://github.com/Skitia/SkitiaNPCs"
 
@@ -14967,9 +15737,9 @@ archive = "slandor.1.6.zip"
 class = "SmallQuests"
 description = "The Minotaur and Lilacor"
 languages = ["Deutsch (Uebersetzung von Gerri)", "English (translation by Yovaneth)", "Francais (Traduction : Le Marquis, des d'Oghmatiques)", "Italiano (traduzione di Ilot)", "Russian (translation by aerie.ru [prowler, hawkmoon, accolon])", "Espanol (traduccion por Lisandro)", "Polski (translation by Cahir)"]
-lastupdate = 2020-04-04
+lastupdate = 2018-10-21
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/slandor/readme/slandor-readme-english.html"
-tp2 = "slandor/slandor.tp2"
+tp2 = "slandor/setup-slandor.tp2"
 url = "https://github.com/SpellholdStudios/The_Minotaur_and_Lilacor"
 
     [slandor.components.1]
@@ -15014,7 +15784,8 @@ archive = "sod2bg2_iu.tar.gz"
 class = "Items"
 description = "SoD to SoA Item Upgrade (New)"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/Gibberlings3/SoD-to-BG2EE-Item-Upgrade"
 tp2 = "sod2bg2_iu/sod2bg2_iu.tp2"
 url = "https://github.com/Gibberlings3/SoD-to-BG2EE-Item-Upgrade"
 
@@ -15237,7 +16008,7 @@ archive = "sodbanter.tar.gz"
 class = "Tweak"
 description = "SoD Banter Restoration"
 languages = ["English", "Deutsch", "Russian(translated & adapted by arcanecoast.ru & yota13)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/sodbanter/Readme.txt"
 tp2 = "sodbanter/sodbanter.tp2"
 url = "https://github.com/RoxanneSHS/SoDBanterEET"
@@ -15318,10 +16089,11 @@ lastupdate = 1970-01-01
 url = "https://github.com/RoxanneSHS/Solaufein"
 
 [song_and_silence]
+archive = "song_and_silence.zip"
 class = "Kits"
 description = "Song and Silence"
 languages = ["English", "Francais (translated by Zayn and Lothringen of the d'Oghmatiques)", "Polish (translated by Yarpen)", "German (translated by Roter Berserker)", "Russian (translated by SubZero400 & Alisia & yota13)", "Italian (translated by Coland)"]
-lastupdate = 2022-06-23
+lastupdate = 2022-03-07
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/song_and_silence/readme-song_and_silence.html"
 tp2 = "song_and_silence/setup-song_and_silence.tp2"
 url = "https://github.com/Gibberlings3/SongAndSilence"
@@ -15395,10 +16167,10 @@ archive = "sotsc.zip"
 class = "Quests"
 description = "Shades of the Sword Coast"
 languages = ["English", "Italian by improbabile", "Korean by Pinkpanther", "Russian by tipun"]
-lastupdate = 2022-06-30
+lastupdate = 2022-06-11
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/SotSC/readme.txt"
 tp2 = "sotsc/sotsc.tp2"
-url = "weaselmods:shades-of-the-sword-coast"
+url = "https://downloads.weaselmods.net/download/shades-of-the-sword-coast"
 
     [sotsc.components.1]
     id = "0"
@@ -15412,7 +16184,7 @@ languages = ["English", "Polish (by Stars of Mystra, proofreading by Roberciiik)
 lastupdate = 2022-05-15
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/SouthernEdge/readme.txt"
 tp2 = "southernedge/southernedge.tp2"
-url = "weaselmods:southern-edge"
+url = "https://downloads.weaselmods.net/download/southern-edge"
 
     [southernedge.components.1]
     id = "0"
@@ -15425,10 +16197,11 @@ url = "weaselmods:southern-edge"
     subgroup = "Southern Edge: the new district of Athkatla"
 
 [spell_rev]
+archive = "spell_rev.zip"
 class = "Spells"
 description = "Spell Revisions v4 b18"
 languages = ["English", "Russian", "Spanish", "French"]
-lastupdate = 2022-06-22
+lastupdate = 2015-12-30
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/spell_rev/readme-spell_rev.html"
 tp2 = "spell_rev/setup-spell_rev.tp2"
 url = "https://github.com/Gibberlings3/SpellRevisions"
@@ -15476,8 +16249,15 @@ url = "https://github.com/Gibberlings3/SpellRevisions"
 archive = "spirithunter.tar.gz"
 class = "Kits"
 description = "Spirit Hunter (New)"
+languages = ["English"]
 lastupdate = 1970-01-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/spirithunter/readme.txt"
+tp2 = "spirithunter/setup-spirithunter.tp2"
 url = "https://github.com/thisisulb/SpiritHunterShamanKit"
+
+    [spirithunter.components.1]
+    id = "0"
+    name = "Spirit Hunter Shaman Kit"
 
 [spiritwalker]
 archive = "thisisulb-SpiritwalkerKit-1.3-0-g777613d.zip"
@@ -15532,11 +16312,22 @@ url = "https://www.dropbox.com/s/b58zr6nuehrluff/spstuff-v11.zip?dl=1"
     path = ["Classes", "Bard"]
 
 [star]
-archive = "Silverstar.zip"
+archive = "star.zip"
 class = "NPC"
 description = "Silver Star (NE elf assassin)"
-lastupdate = 1970-01-01
+languages = ["English", "Deutsch", "Russian (translation: Prowler)"]
+lastupdate = 2021-06-30
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/star/readme/star-readme-english.html"
+tp2 = "star/star.tp2"
 url = "https://github.com/SpellholdStudios/Silver_Star_NPC"
+
+    [star.compat.1]
+    after = ["eet"]
+    before = ["eet_end"]
+
+    [star.components.1]
+    id = "0"
+    name = "Silver Star NPC Mod for BGII:SoA"
 
 [stormcaller]
 class = "Kits"
@@ -15554,7 +16345,7 @@ tp2 = "stratagems/setup-stratagems.tp2"
 url = "https://github.com/Gibberlings3/SwordCoastStratagems"
 
     [stratagems.compat.1]
-    after = ["ascension", "d0questpack", "eetact2", "item_rev", "refinements", "spell_rev", "tactics", "wheels"]
+    after = ["ascension", "eetact2", "item_rev", "questpack", "refinements", "spell_rev", "tactics", "wheels"]
     before = ["cdtweaks", "eet_end"]
 
     [stratagems.compat.2]
@@ -16332,11 +17123,11 @@ url = "https://github.com/Gibberlings3/SwordCoastStratagems"
     name = "Improved minor encounters"
 
 [stuffofthemagi]
-archive = "stuffofthemagi.tar.gz"
+archive = "stuffofthemagi.zip"
 class = "Items"
 description = "Stuff of the Magi"
 languages = ["English", "Francais (traduction : Deratiseur)", "Russian (translation by the BWP Russian Textpack team)", "Italiano (traduzione di ilot)"]
-lastupdate = 2022-06-23
+lastupdate = 2020-07-02
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/stuffofthemagi/readme/sotm-readme-english.txt"
 tp2 = "stuffofthemagi/stuffofthemagi.tp2"
 url = "https://github.com/SpellholdStudios/StuffofTheMagi"
@@ -16365,15 +17156,28 @@ url = "https://github.com/SpellholdStudios/StuffofTheMagi"
 archive = "subrace.tar.gz"
 class = "Kits"
 description = "Subraces (New)"
+languages = ["Russian", "English", "Francais (traduction: JohnBob)"]
 lastupdate = 1970-01-01
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/subrace/readme.txt"
+tp2 = "subrace/subrace.tp2"
 url = "https://github.com/tipun81/Subrace-mod"
 
+    [subrace.components.1]
+    id = "100"
+    name = "Change subrace colors (Hair and Skin)"
+    subgroup = "Subrace mod for Baldur's Gate Enhanced Edition (BG1, BG:SoD, BG2, EET)"
+
+    [subrace.components.2]
+    id = "200"
+    name = "No change subrace colors (Hair and Skin)"
+    subgroup = "Subrace mod for Baldur's Gate Enhanced Edition (BG1, BG:SoD, BG2, EET)"
+
 [sword_and_fist]
-archive = "sword_and_fist.tar.gz"
+archive = "sword_and_fist.zip"
 class = "Kits"
 description = "Sword and Fist"
 languages = ["English", "German (by Thomas Schaefer)", "Polish (by yarpen)", "Spanish (by Ghildrean)", "French (La Voix 2 la Sagesse from the d'Oghmatiques)", "Italian (by Giuseppe)", "Russian (by Prowler and Hawkmoon)"]
-lastupdate = 2022-06-24
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/sword_and_fist/readme.txt"
 tp2 = "sword_and_fist/setup-sword_and_fist.tp2"
 url = "https://github.com/MattyGroove/Sword-and-Fist"
@@ -16444,7 +17248,7 @@ languages = ["English", "Russian (by Austin)", "Chinese (by Merzbau)", "French (
 lastupdate = 2022-05-22
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/TangledIsle/readme.txt"
 tp2 = "tangledisle/tangledisle.tp2"
-url = "weaselmods:tangled-oak-isle"
+url = "https://downloads.weaselmods.net/download/tangled-oak-isle"
 
     [tangledisle.components.1]
     id = "0"
@@ -16484,7 +17288,7 @@ archive = "tb#quest.tar.gz"
 class = "Unknown"
 description = "TheBigg quest pack"
 languages = ["English", "Castellano (traducido por Clan REO)", "Russian"]
-lastupdate = 2022-07-03
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/tb#quest/readme-TB#Quest.htm"
 tp2 = "tb#quest/tb#quest.tp2"
 url = "https://github.com/vbigiani/tb-quest/blob/master/tb%23quest/readme-tb%23quest.htm"
@@ -16509,7 +17313,7 @@ url = "https://github.com/vbigiani/tb-quest/blob/master/tb%23quest/readme-tb%23q
 archive = "tb#tweaks.tar.gz"
 class = "Tweak"
 languages = ["English", "Russian by Alexey Marshalko aka Prowler", "German by Drogan Di'Umptu and Leonardo Watson", "Spanish by Lisandro"]
-lastupdate = 2022-07-03
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/tb#tweaks/README-TB#Tweaks.htm"
 tp2 = "tb#tweaks/tb#tweaks.tp2"
 url = "https://github.com/vbigiani/tb-tweaks/blob/master/tb%23tweaks/readme-tb%23tweaks.htm"
@@ -16780,7 +17584,7 @@ archive = "thalan.tar.gz"
 class = "Items"
 description = "Thalantyr Item Upgrade"
 languages = ["English", "Russian", "Francais (Traduit par Deratiseur)", "Deutsch (Uebersetzung von Leonardo Watson)", "Espanol (traducido por Jondalar)", "Italiano (by Ilot)", "Polski (tlumaczenie: morgan)"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/thalan/readme.txt"
 tp2 = "thalan/thalan.tp2"
 url = "https://github.com/CrevsDaak/thalan"
@@ -16831,10 +17635,11 @@ url = "https://www.dropbox.com/s/cl4oj311z1gmib7/TheBeaurinLegacy.zip?dl=1"
     subgroup = "Minyae's Portrait"
 
 [thecalling]
+archive = "thecalling.zip"
 class = "SmallQuests"
 description = "The Calling"
 languages = ["English", "Czech (Translation by Razfallow and Vlasák)", "Francais (Traduction : Anomaly, Elgaern the Dragon Slayer, Isaya, elminster and JohnBob)", "Deutsch (Uebersetzung von Leonardo Watson, Caswallon und Jester)", "Italiano (translation by Andrea Colombo and improb@bile)", "Korean (Translation by web2air)", "Polski (Translation by memory, yarpen, Artanis, dragionian, Evendur, Grjgori, and Neminus)", "Russian (Translation by Creepin, Domi, Kulyok, Serdrick and aerie.ru; paladin84 and arcanecoast.ru)", "Espanol (traducido por Clan DLAN)", "Simplified Chinese (Translation from bg2_tweaks by Miranda, distance20 and c4_angel)"]
-lastupdate = 2022-06-23
+lastupdate = 2022-06-16
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/thecalling/readme-thecalling.html"
 tp2 = "thecalling/thecalling.tp2"
 url = "https://github.com/Gibberlings3/The_Calling"
@@ -16859,7 +17664,7 @@ archive = "themed_tweaks.tar.gz"
 class = "Tweak"
 description = "Themed tweaks"
 languages = ["American English"]
-lastupdate = 2022-06-24
+lastupdate = 2022-07-10
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/themed_tweaks/readme.themed_tweaks.english.txt"
 tp2 = "themed_tweaks/themed_tweaks.tp2"
 url = "https://github.com/lzenner/themed_tweaks"
@@ -16922,7 +17727,7 @@ archive = "thepicturestandard.tar.gz"
 class = "UI"
 description = "The Picture Standard"
 languages = ["English"]
-lastupdate = 2022-07-03
+lastupdate = 1970-01-01
 readme = "https://github.com/MattyGroove/ThePictureStandard"
 tp2 = "thepicturestandard/thepicturestandard.tp2"
 url = "https://github.com/MattyGroove/ThePictureStandard"
@@ -17243,7 +18048,7 @@ archive = "therune.tar.gz"
 class = "Quests"
 description = "Twisting With The Rune"
 languages = ["English", "Russian (Translated by Serdrick)"]
-lastupdate = 2022-06-24
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/therune/Readme.txt"
 tp2 = "therune/setup-therune.tp2"
 url = "https://github.com/RoxanneSHS/The-Rune"
@@ -17328,7 +18133,7 @@ archive = "tnoober.tar.gz"
 class = "Items"
 description = "Sword of Noober"
 languages = ["English", "Francais (traduction : Le Marquis)", "Francais (translation by MacksimSl)"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/tnoober/readme/tnoober-readme-english.txt"
 tp2 = "tnoober/tnoober.tp2"
 url = "https://github.com/SpellholdStudios/TheSwordofNoober"
@@ -17835,11 +18640,11 @@ url = "https://github.com/BGforgeNet/bg2-tweaks-and-tricks"
     subgroup = "Trap intuition: pause game"
 
 [toa]
-archive = "toa.tar.gz"
+archive = "toa.zip"
 class = "Quests"
 description = "Tales of Anegh"
 languages = ["Deutsch (German)", "English by Headbanger", "Italian by ilot", "Polski (Polish) by Aristo"]
-lastupdate = 2022-06-23
+lastupdate = 2021-05-11
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/toa/Readme.English.txt"
 tp2 = "toa/setup-toa.tp2"
 url = "https://github.com/RoxanneSHS/ToA"
@@ -17874,11 +18679,11 @@ url = "https://github.com/RoxanneSHS/ToA"
     name = "Item Balancing"
 
 [tod]
-archive = "tod.tar.gz"
+archive = "tod.zip"
 class = "Quests"
 description = "Tower of Deception"
 languages = ["English", "Castellano (traducido por Clan REO y RPG-Bardo.com)", "Czech (prelozil Vlasak a Jab, www.sigil.cz)", "Russian (translation Austin&Tanger Soto&www.aerie.ru)", "Italian (translated by ilot)", "German (translated by Gerri)", "Francais (traduit par Le Marquis)", "Polish (translated by Grzebul and Cuttooth)"]
-lastupdate = 2022-06-23
+lastupdate = 2020-10-04
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/tod/Readme-TOD.htm"
 tp2 = "tod/setup-tod.tp2"
 url = "https://github.com/RoxanneSHS/TowerOfDeception"
@@ -17896,11 +18701,11 @@ url = "https://github.com/RoxanneSHS/TowerOfDeception"
     name = "Encounter with Ustrain"
 
 [tomeandblood]
-archive = "tomeandblood.tar.gz"
+archive = "tomeandblood.zip"
 class = "Tweak"
 description = "Tome and Blood"
 languages = ["English"]
-lastupdate = 2022-06-22
+lastupdate = 2022-05-22
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/tomeandblood/README.txt"
 tp2 = "tomeandblood/tomeandblood.tp2"
 url = "https://github.com/subtledoctor/TomeAndBlood"
@@ -18104,7 +18909,7 @@ languages = ["English", "German (Translated by Gerri)", "French (Translated by L
 lastupdate = 2022-05-08
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/TotDG/+Documents+/totdg_readme_english.html"
 tp2 = "totdg/setup-totdg.tp2"
-url = "weaselmods:tales-of-the-deep-gardens"
+url = "https://downloads.weaselmods.net/download/tales-of-the-deep-gardens"
 
     [totdg.components.1]
     id = "0"
@@ -18248,7 +19053,7 @@ archive = "travellers.tar.gz"
 class = "Quests"
 description = "Travellers in Faerun"
 languages = ["English", "Russian (by yota13 and p_zombie)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/travellers/readme.txt"
 tp2 = "travellers/travellers.tp2"
 url = "https://github.com/RoxanneSHS/Travellers"
@@ -18266,11 +19071,11 @@ url = "https://github.com/RoxanneSHS/Travellers"
     name = "The Peddler"
 
 [tsujatha]
-archive = "tsujatha.tar.gz"
+archive = "tsujatha.zip"
 class = "NPC"
 description = "Tsujatha NPC"
 languages = ["English", "Russian (Tamethis, Tajok, Stella, Daoine Sidhe, Aldanis Darkwood, Prowler, aerie.ru)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/tsujatha/README-Tsujatha.html"
 tp2 = "tsujatha/setup-tsujatha.tp2"
 url = "https://github.com/RoxanneSHS/Tsujatha"
@@ -18280,17 +19085,33 @@ url = "https://github.com/RoxanneSHS/Tsujatha"
     name = "Tsujatha created by Sillara of the Tamari"
 
 [turnabout]
+archive = "turnabout.zip"
 class = "Quests"
 description = "Turnabout"
-lastupdate = 1970-01-01
+languages = ["English", "French"]
+lastupdate = 2022-02-20
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/turnabout/TurnaboutReadme.txt"
+tp2 = "turnabout/setup-turnabout.tp2"
 url = "https://github.com/Pocket-Plane-Group/Turnabout"
 
+    [turnabout.compat.1]
+    after = ["ascension", "eet"]
+    before = ["eet_end"]
+
+    [turnabout.components.1]
+    id = "0"
+    name = "Ascension: Turnabout"
+
+    [turnabout.components.2]
+    id = "1"
+    name = "Balthazar Epilogue Portrait, by Cliffette"
+
 [tyrisflare]
-archive = "tyrisflare.tar.gz"
+archive = "tyrisflare.zip"
 class = "NPC"
 description = "Tyris Flare NPC"
 languages = ["English"]
-lastupdate = 2022-06-24
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/TyrisFlare/readme-tyrisflare.html"
 tp2 = "tyrisflare/setup-tyrisflare.tp2"
 url = "https://github.com/RoxanneSHS/TyrisEE"
@@ -18372,11 +19193,11 @@ url = "https://github.com/BGforgeNet/bg2-uniqueartifacts"
     name = "Less magical items"
 
 [ub]
-archive = "ub.tar.gz"
+archive = "ub.zip"
 class = "Tweak"
 description = "BG2 Unfinished Business"
 languages = ["English", "French (graoumf and Les D'Oghmatiques)", "Polski (Yarpen, Cahir)", "Deutsch (Rosenranken.de)", "Español (Clan DLAN)", "Czech (yenn)", "Russian (Alex&AERIE.RU, BigMF, Hawkmoon, Regharrr. Updated by Prowler)", "Chinese (Scar_kun)", "Italian (Giuseppe Cali, Ilot)"]
-lastupdate = 2022-06-23
+lastupdate = 2022-07-10
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/ub/docs/readme-ub.html"
 tp2 = "ub/setup-ub.tp2"
 url = "https://github.com/AngelGryph/UnfinishedBusiness"
@@ -18498,7 +19319,7 @@ archive = "underrep.tar.gz"
 class = "Items"
 description = "Underrepresented Items (from Icewind Dale 2)"
 languages = ["American English", "Traduction francaise (par Mathrim Cauthon)", "Russian (SERKOS, Aerie.ru)", "Italian (Stoneangel)", "Polski (Aristo - The Stars of Mystra)"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/underrep/readme-underrep.txt"
 tp2 = "underrep/setup-underrep.tp2"
 url = "https://github.com/Pocket-Plane-Group/Under-Respresented_Items"
@@ -18527,8 +19348,42 @@ url = "https://forums.beamdog.com/uploads/editor/az/70fwogntemm8.zip"
 archive = "UnofficialItemPack_V2.7b.zip"
 class = "Items"
 description = "Unofficial Item Pack (New)"
-lastupdate = 1970-01-01
+languages = ["Cesky", "English"]
+lastupdate = 2018-09-14
+tp2 = "unofficialitempack/setup-unofficialitempack.tp2"
 url = "https://www.dropbox.com/s/g84xly9my7jj23y/UnofficialItemPack_V2.7b.zip?dl=1"
+
+    [unofficialitempack.components.1]
+    id = "0"
+    name = "Unofficial Item Pack"
+
+    [unofficialitempack.components.2]
+    id = "1"
+    name = "Scarlet Katana"
+
+    [unofficialitempack.components.3]
+    id = "2"
+    name = "Gourmet from Underdark"
+
+    [unofficialitempack.components.4]
+    id = "3"
+    name = "Holy symbols"
+
+    [unofficialitempack.components.5]
+    id = "4"
+    name = "New Items"
+
+    [unofficialitempack.components.6]
+    id = "5"
+    name = "SoD items"
+
+    [unofficialitempack.components.7]
+    id = "6"
+    name = "Better archery shop"
+
+    [unofficialitempack.components.8]
+    id = "7"
+    name = "Reworked free action"
 
 [valen]
 class = "NPC"
@@ -18554,7 +19409,7 @@ archive = "valhorn.tar.gz"
 class = "Items"
 description = "Improved Horn of Valhalla"
 languages = ["AMERICAN ENGLISH", "French (by Isaya)", "German (by Hurricane)", "Italian (by Aedan)", "Polish (by Cahir)"]
-lastupdate = 2022-06-24
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/valhorn/readme-improved_horns.html"
 tp2 = "valhorn/setup-valhorn.tp2"
 url = "https://github.com/Gibberlings3/Improved_Horns_of_Valhalla"
@@ -18565,6 +19420,7 @@ url = "https://github.com/Gibberlings3/Improved_Horns_of_Valhalla"
     path = ["Items", "Upgrades"]
 
 [valygarfriendship]
+archive = "valygarfriendship.zip"
 class = "NPC-Related"
 description = "Valygar Friendship"
 languages = ["English", "Russian (translation by Alisia Messar, Enigma-Evilkiss and Arcanecoast.ru)", "Chinese (translation by Merzbau)", "Espanol (traduccion por Magis365)"]
@@ -18590,11 +19446,11 @@ lastupdate = 1970-01-01
 url = "http://www.shsforums.net/files/download/1195-vampire-world-for-eet/"
 
 [vampiretales]
-archive = "vampiretales.tar.gz"
+archive = "vampiretales.zip"
 class = "NPC"
 description = "Vampire Tales"
 languages = ["English", "Espanol (Traducido por Lisandro)", "Italian (Translation by ilot)", "Russian (Translation by yota13)"]
-lastupdate = 2022-06-30
+lastupdate = 1971-01-01
 readme = "https://mods.chosenofmystra.net/vampiretales/"
 tp2 = "vampiretales/setup-vampiretales.tp2"
 url = "https://github.com/RoxanneSHS/Miriam"
@@ -18608,14 +19464,14 @@ archive = "Varshoon v7.1.zip"
 class = "NPC"
 description = "Varshoon an Illithid NPC"
 lastupdate = 1970-01-01
-url = "weaselmods:varshoon"
+url = "https://downloads.weaselmods.net/download/varshoon"
 
 [vaulteet]
 archive = "vaulteet.tar.gz"
 class = "Quests"
 description = "Vault"
 languages = ["English", "Francais (Traduit par les d'Oghmatiques))", "Italian (translated by Ilot)", "Espa¤ol (Traducido por Saemon de ClanDLAN.net, actualizado por Lisandro)", "Russian (translated by Silent and Aldark of arcanecoast.ru)", "Polski (Aristo)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "https://www.angelfire.com/rpg2/azenmod/ReadMe-Vault.htm"
 tp2 = "vaulteet/setup-vaulteet.tp2"
 url = "https://github.com/RoxanneSHS/VaultEE"
@@ -18638,16 +19494,28 @@ url = "https://github.com/RoxanneSHS/Velvetfoot"
 archive = "VerrBG2 v1.2.zip"
 class = "NPC"
 description = "Verr'Sza BG2"
-lastupdate = 1970-01-01
+lastupdate = 2022-03-06
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/verrbg2/readme.txt"
+tp2 = "verrbg2/verrbg2.tp2"
 url = "https://www.dropbox.com/sh/56dr4q8h2q7djri/AACD1-TgFkrb_KSUBXtqBeI4a/VERR%27SZA%20BG2EE%20NPC/VerrBG2%20v1.2.zip?dl=0"
+
+    [verrbg2.components.1]
+    id = "0"
+    name = "Verr'Sza - the rakshasa NPC for BG2EE"
 
 [verrsza]
 archive = "VerrSza (BG1EE) v5.4.zip"
 class = "NPC"
 description = "Verr'Sza NPC"
-lastupdate = 1970-01-01
+languages = ["English"]
+lastupdate = 2021-07-31
 readme = "https://forums.beamdog.com/discussion/60614/mod-verrsza-npc-for-bgee-and-sod"
-url = "weaselmods:verrsza-bg1ee"
+tp2 = "verrsza/verrsza.tp2"
+url = "https://downloads.weaselmods.net/download/verrsza-bg1ee"
+
+    [verrsza.components.1]
+    id = "0"
+    name = "Verr'Sza - the rakshasa NPC for BG1EE"
 
 [viconia]
 class = "NPC-Related"
@@ -18667,15 +19535,122 @@ url = "https://github.com/SpellholdStudios/ViconiaFriendship"
 archive = "ViconiaRevamped v7.0.zip"
 class = "NPC-Related"
 description = "Viconia Revamped"
-lastupdate = 1970-01-01
-url = "weaselmods:viconia-revamped"
+languages = ["English", "Polski", "Russian (by Alisia)"]
+lastupdate = 2022-02-07
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/ViconiaRevamped/readme/readme.txt"
+tp2 = "viconiarevamped/setup-viconiarevamped.tp2"
+url = "https://downloads.weaselmods.net/download/viconia-revamped"
+
+    [viconiarevamped.components.1]
+    id = "0"
+    name = "Dual-class: Thief/Cleric"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.10]
+    id = "14"
+    name = "Multi-class: Darkcloak of Shar"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.11]
+    id = "15"
+    name = "Multi-class: Cleric/Mage"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.12]
+    id = "50"
+    name = "Use Baldur's Gate portrait"
+    subgroup = "Portraits for Viconia"
+
+    [viconiarevamped.components.13]
+    id = "51"
+    name = "Use Baldur's Gate 2 portrait"
+    subgroup = "Portraits for Viconia"
+
+    [viconiarevamped.components.14]
+    id = "52"
+    name = "Use Siege of Dragonspear portrait"
+    subgroup = "Portraits for Viconia"
+
+    [viconiarevamped.components.15]
+    id = "53"
+    name = "Use recolored Baldur's Gate portrait (drow skin and hair)"
+    subgroup = "Portraits for Viconia"
+
+    [viconiarevamped.components.16]
+    id = "54"
+    name = "Use recolored Baldur's Gate 2 portrait (partially blue clothing)"
+    subgroup = "Portraits for Viconia"
+
+    [viconiarevamped.components.17]
+    id = "55"
+    name = "Use restored Baldur's Gate 2 Demo portrait (BG1 style)"
+    subgroup = "Portraits for Viconia"
+
+    [viconiarevamped.components.18]
+    id = "56"
+    name = "Use restored Baldur's Gate 2 Demo portrait (BG2 style)"
+    subgroup = "Portraits for Viconia"
+
+    [viconiarevamped.components.19]
+    id = "57"
+    name = "Use improved Siege of Dragonspear portrait"
+    subgroup = "Portraits for Viconia"
+
+    [viconiarevamped.components.2]
+    id = "1"
+    name = "Dual-class: Assassin/Cleric"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.20]
+    id = "60"
+    name = "Add special ability: Embrace of Shar"
+
+    [viconiarevamped.components.21]
+    id = "70"
+    name = "Apply drow penalty: Day Blindness"
+
+    [viconiarevamped.components.3]
+    id = "2"
+    name = "Dual-class: Shadowdancer/Cleric"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.4]
+    id = "3"
+    name = "Dual-class: Nightcloak of Shar"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.5]
+    id = "4"
+    name = "Dual-class: Darkcloak of Shar"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.6]
+    id = "10"
+    name = "Multi-class: Thief/Cleric"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.7]
+    id = "11"
+    name = "Multi-class: Assassin/Cleric"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.8]
+    id = "12"
+    name = "Multi-class: Shadowdancer/Cleric"
+    subgroup = "Viconia Revamped"
+
+    [viconiarevamped.components.9]
+    id = "13"
+    name = "Multi-class: Nightcloak of Shar"
+    subgroup = "Viconia Revamped"
 
 [vienxay]
 archive = "vienxay.tar.gz"
 class = "NPC"
 description = "Vienxay (NE elf shadow-mage)"
 languages = ["English"]
-lastupdate = 2022-06-23
+lastupdate = 1970-01-01
+readme = "https://github.com/Skitia/Vienxay-BG1"
 tp2 = "vienxay/vienxay.tp2"
 url = "https://github.com/Skitia/Vienxay-BG1"
 
@@ -18725,7 +19700,7 @@ languages = ["English", "Polish", "Italian", "Russian", "Chinese", "French"]
 lastupdate = 2022-02-23
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Weasels!/Readme.txt"
 tp2 = "weasels!/weasels!.tp2"
-url = "weaselmods:weasels"
+url = "https://downloads.weaselmods.net/download/weasels"
 
     ["weasels!".components.1]
     id = "0"
@@ -18736,7 +19711,7 @@ archive = "wheels.tar.gz"
 class = "Quests"
 description = "Wheels of Prophecy"
 languages = ["English", "Francais (Mornagest)", "Simplified Chinese (c4_angel)"]
-lastupdate = 2022-06-23
+lastupdate = 2022-07-10
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/wheels/readme-wheels.html"
 tp2 = "wheels/setup-wheels.tp2"
 url = "https://github.com/Gibberlings3/WheelsOfProphecy"
@@ -18756,7 +19731,7 @@ languages = ["English"]
 lastupdate = 2021-07-30
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/white/readme.txt"
 tp2 = "white/white.tp2"
-url = "weaselmods:white-npc"
+url = "https://downloads.weaselmods.net/download/white-npc"
 
     [white.components.1]
     id = "0"
@@ -18770,7 +19745,7 @@ languages = ["English", "German (by Toran and Jarl2)", "Russian (by Silent)", "P
 lastupdate = 2022-05-08
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/WhiteQueen/ReadMe.txt"
 tp2 = "whitequeen/whitequeen.tp2"
-url = "weaselmods:the-white-queen"
+url = "https://downloads.weaselmods.net/download/the-white-queen"
 
     [whitequeen.components.1]
     id = "0"
@@ -18834,7 +19809,7 @@ languages = ["English"]
 lastupdate = 2022-06-09
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/willowisp/readme.txt"
 tp2 = "willowisp/willowisp.tp2"
-url = "weaselmods:will-of-the-wisps"
+url = "https://downloads.weaselmods.net/download/will-of-the-wisps"
 
     [willowisp.components.1]
     id = "0"
@@ -18868,7 +19843,7 @@ languages = ["English", "Polish (by Stars of Mystra)", "Russian (by Austin)"]
 lastupdate = 2022-05-06
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/WilsonChronicles/WilsonChroniclesReadme-English.txt"
 tp2 = "wilsonchronicles/wilsonchronicles.tp2"
-url = "weaselmods:wilson-chronicles"
+url = "https://downloads.weaselmods.net/download/wilson-chronicles"
 
     [wilsonchronicles.components.1]
     id = "0"
@@ -18923,7 +19898,7 @@ archive = "wtpfamiliars.tar.gz"
 class = "Tweak"
 description = "WTP Familiars"
 languages = ["English"]
-lastupdate = 2022-06-30
+lastupdate = 1970-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/WTPFamiliars/readme-wtpfamiliars.html"
 tp2 = "wtpfamiliars/setup-wtpfamiliars.tp2"
 url = "https://github.com/flamewing/WTPFamiliars"
@@ -18986,7 +19961,7 @@ archive = "XanBG1Friend_v10.zip"
 class = "NPC-Related"
 description = "Xan's Friendship Path for BG1"
 languages = ["English", "Russian", "German (Translated by Steffen)", "French (Translated by Eleima)", "Italian (Translated by totuccio5)"]
-lastupdate = 2020-08-03
+lastupdate = 2017-06-13
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/XanBG1Friend/Readme-XanBG1Friend.txt"
 tp2 = "xanbg1friend/setup-xanbg1friend.tp2"
 url = "https://github.com/Pocket-Plane-Group/Xan_BG1_Friendship"
@@ -19007,15 +19982,167 @@ url = "http://mods.pocketplane.net/kulyok/XanBG1Voice_v2.zip"
 archive = "DEFJAM_v7.zip"
 class = "Tweak"
 description = "Ding0's Experience Fixer"
-lastupdate = 1970-01-01
+languages = ["English", "Polski (Damian Staniszewski)", "French (Graoumf)", "Spanish (Ghildrean of Clan DLAN)", "Deutsch (Garret)"]
+lastupdate = 2015-02-04
+readme = "/home/jerome/jeux/ciopfs/modtool/mods/xpmod/readme.txt"
+tp2 = "xpmod/setup-xpmod.tp2"
 url = "https://github.com/Pocket-Plane-Group/D0XPmod"
 
+    [xpmod.components.1]
+    id = "0"
+    name = "Reduce to 75%"
+    subgroup = "Creature XP Reduction"
+
+    [xpmod.components.10]
+    id = "9"
+    name = "Reduce to 25%"
+    subgroup = "Locks, Traps and Spells XP Reduction"
+
+    [xpmod.components.11]
+    id = "10"
+    name = "Reduce to 1/6th for solo play"
+    subgroup = "Locks, Traps and Spells XP Reduction"
+
+    [xpmod.components.12]
+    id = "11"
+    name = "Reduce to 10%"
+    subgroup = "Locks, Traps and Spells XP Reduction"
+
+    [xpmod.components.13]
+    id = "12"
+    name = "Increase to 150%"
+    subgroup = "Locks, Traps and Spells XP Reduction"
+
+    [xpmod.components.14]
+    id = "13"
+    name = "Increase to 200%"
+    subgroup = "Locks, Traps and Spells XP Reduction"
+
+    [xpmod.components.15]
+    id = "14"
+    name = "No XP for learning spells"
+
+    [xpmod.components.16]
+    id = "15"
+    name = "Reduce to 75%"
+    subgroup = "Quest XP Reduction"
+
+    [xpmod.components.17]
+    id = "16"
+    name = "Reduce to 50%"
+    subgroup = "Quest XP Reduction"
+
+    [xpmod.components.18]
+    id = "17"
+    name = "Reduce to 25%"
+    subgroup = "Quest XP Reduction"
+
+    [xpmod.components.19]
+    id = "18"
+    name = "Reduce to 1/6th for solo play"
+    subgroup = "Quest XP Reduction"
+
+    [xpmod.components.2]
+    id = "1"
+    name = "Reduce to 50%"
+    subgroup = "Creature XP Reduction"
+
+    [xpmod.components.20]
+    id = "19"
+    name = "Reduce to 10%"
+    subgroup = "Quest XP Reduction"
+
+    [xpmod.components.21]
+    id = "20"
+    name = "Increase to 150%"
+    subgroup = "Quest XP Reduction"
+
+    [xpmod.components.22]
+    id = "21"
+    name = "Increase to 200%"
+    subgroup = "Quest XP Reduction"
+
+    [xpmod.components.23]
+    id = "22"
+    name = "Reduce to 66750 XP (75%)"
+    subgroup = "SoA Starting XP Reduction"
+
+    [xpmod.components.24]
+    id = "23"
+    name = "Reduce to 44500 XP (50%)"
+    subgroup = "SoA Starting XP Reduction"
+
+    [xpmod.components.25]
+    id = "24"
+    name = "Reduce to 22250 XP (25%)"
+    subgroup = "SoA Starting XP Reduction"
+
+    [xpmod.components.26]
+    id = "25"
+    name = "Reduce to 8900 XP (10%)"
+    subgroup = "SoA Starting XP Reduction"
+
+    [xpmod.components.27]
+    id = "26"
+    name = "Reduce to 1875000 XP (75%)"
+    subgroup = "ToB Starting XP Reduction"
+
+    [xpmod.components.28]
+    id = "27"
+    name = "Reduce to 1250000 XP (50%)"
+    subgroup = "ToB Starting XP Reduction"
+
+    [xpmod.components.29]
+    id = "28"
+    name = "Reduce to 625000 XP (25%)"
+    subgroup = "ToB Starting XP Reduction"
+
+    [xpmod.components.3]
+    id = "2"
+    name = "Reduce to 25%"
+    subgroup = "Creature XP Reduction"
+
+    [xpmod.components.30]
+    id = "29"
+    name = "Reduce to 250000 XP (10%)"
+    subgroup = "ToB Starting XP Reduction"
+
+    [xpmod.components.4]
+    id = "3"
+    name = "Reduce to 1/6th for solo play"
+    subgroup = "Creature XP Reduction"
+
+    [xpmod.components.5]
+    id = "4"
+    name = "Reduce to 10%"
+    subgroup = "Creature XP Reduction"
+
+    [xpmod.components.6]
+    id = "5"
+    name = "Increase to 150%"
+    subgroup = "Creature XP Reduction"
+
+    [xpmod.components.7]
+    id = "6"
+    name = "Increase to 200%"
+    subgroup = "Creature XP Reduction"
+
+    [xpmod.components.8]
+    id = "7"
+    name = "Reduce to 75%"
+    subgroup = "Locks, Traps and Spells XP Reduction"
+
+    [xpmod.components.9]
+    id = "8"
+    name = "Reduce to 50%"
+    subgroup = "Locks, Traps and Spells XP Reduction"
+
 [xulaye_eet]
-archive = "xulaye_eet.tar.gz"
+archive = "xulaye_eet.zip"
 class = "NPC"
 description = "Xulaye"
 languages = ["English", "Russian (by Arcanecoast.ru)"]
-lastupdate = 2022-06-23
+lastupdate = 2020-07-03
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/xulaye_eet/xulaye_readme.htm"
 tp2 = "xulaye_eet/xulaye_eet.tp2"
 url = "https://github.com/RoxanneSHS/XulayeEet"
@@ -19029,7 +20156,7 @@ archive = "yasraena.tar.gz"
 class = "NPC"
 description = "Yasraena NPC"
 languages = ["English", "Deutsch (Uebersetzung von Fey)", "Français (par Ixyon)", "Español (Traducido por clandlan.net)", "Russian (Hallyafae, ArtBerserker & aerie.ru [thanks Serdrick])", "Polish (Ilphalar)"]
-lastupdate = 2022-06-23
+lastupdate = 1971-01-01
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/yasraena/README-Yasraena.html"
 tp2 = "yasraena/setup-yasraena.tp2"
 url = "https://github.com/RoxanneSHS/YasraenaEET"
@@ -19082,7 +20209,7 @@ archive = "YoshimoRomance v6.0.zip"
 class = "NPC-Related"
 description = "Yoshimo Romance"
 lastupdate = 1970-01-01
-url = "weaselmods:yoshimo-romance"
+url = "https://downloads.weaselmods.net/download/yoshimo-romance"
 
 [yoshimosremorse]
 archive = "YoshimosRemorse_v3.0.zip"
@@ -19119,7 +20246,7 @@ languages = ["English", "Russian (by AGKanevchev)"]
 lastupdate = 2021-11-12
 readme = "/home/jerome/jeux/ciopfs/modtool/mods/Yvette/Readme.txt"
 tp2 = "yvette/setup-yvette.tp2"
-url = "weaselmods:yvette-romance"
+url = "https://downloads.weaselmods.net/download/yvette-romance"
 
     [yvette.components.1]
     id = "0"

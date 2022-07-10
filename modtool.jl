@@ -10,14 +10,18 @@ ModTool.install()
 See also `moddb.jl` for initializing configuration files.
 """
 module ModTool
-# Preamble ««1
 # TODO ««
+# purge down:
+# for f in down/*; do grep "archive = " moddb.toml |fgrep -q $(basename $f) || echo $f; done
+#  - edit selection file "in-place":
+#   - don't touch lines which do not contain mod info
+#   - add new mods in the proper section (marked by *, **)
 #  - use Content-Disposition: attachment; filename="..." header to
 #  determine archive name
-#  - bggoeet: ln -s linux unix
-#  - better: use Content-Type: and just use $modid.$extension
+#   - better: use Content-Type: and just use $modid.$extension
 #  - work around possible SEGV in weidu calls: retry up to 3 times
 #   - encapsulate this in a weidu() function (also doing the cd())
+#  - bggoeet: ln -s linux unix
 #  + check that status() shows enough mods
 #  + update modtool.jl to write correct compat packets
 #  + indicate both lanthorn mods in db
@@ -25,7 +29,9 @@ module ModTool
 #  + status() shows out-of-order components
 #   (i.e. those installed before something that should come after)
 # mod-specific fixes:
-#  - questpack is very badly named
+#  - questpack has a weirdly named tp2 file:
+#    directory is named questpack (in archive)
+#    file is setup-d0questpack.tp2
 #  - mortis: tra/Francais -> tra/French
 #  - aurora: fix .sh files
 #  - spstuff: remove unicode BOM from ee.tra
@@ -48,6 +54,7 @@ module ModTool
 # - complete dependency & conflict checking
 # - try and guess readme for individual components (IMPOSSIBLE)
 #»»
+# Preamble ««1
 using Printf
 using Dates
 using TOML
@@ -67,6 +74,8 @@ const SELECTION="$PREFIX/selection"
 const DOWN="$PREFIX/down" # should be in a ciopfs
 const MODS="$PREFIX/mods" # should be in a ciopfs
 const TEMP="$PREFIX/temp" # should be in a ciopfs
+const GITHUB_USER="plut"
+const GITHUB_PASSWORD=readline("$PREFIX/token")
 
 const GAMEDIR =
 	(bg1="$HOME/jeux/ciopfs/bg1/game", bg2="$HOME/jeux/ciopfs/bg2/game")
@@ -108,6 +117,14 @@ function ask(f, message)
 		y = f(lowercase(r[1]))
 		!isnothing(y) && return y
 	end
+end
+
+function execute(cmd)
+# https://discourse.julialang.org/t/collecting-all-output-from-shell-commands/15592
+	out = Pipe()
+	process = run(pipeline(ignorestatus(cmd), stdout = out))
+	close(out.in)
+	return (code = process.exitcode, out = String(read(out)))
 end
 
 # Data structures ««1
@@ -228,7 +245,7 @@ else m.tool_lang = m.game_lang = 0; end
 # Mod DB handling ««1
 @inline allcomponents(moddb=moddb) =
 	Dict(i => Set(c.id for c in m.components) for (i,m) in moddb)
-@inline ifhaskey(f, d, k) = (x = get(d, k, nothing); isnothing(x) || f(x))
+@inline ifhaskey(f, d, k) = (x = get(d, k, nothing); !isnothing(x) && f(x))
 @inline add!(mods::Mod...; moddb=moddb)= for m in mods; moddb[m.id] = m; end
 const mod_fields=(:url,:class,:description,:archive,:readme,:languages,:tp2)
 function merge_moddb(filename = MODDB; moddb = moddb)
@@ -285,7 +302,7 @@ end
 	error("mod '$id' not found")
 end
 @inline findmod(pattern::Regex; moddb = moddb) =
-	[ id for id in keys(moddb) if occursin(pattern, id) ]
+	[ id for id in keys(moddb) if contains(id, pattern) ]
 @inline function Base.setproperty!(m::Mod, k::Symbol, v)
 	x = getfield(m, k)
 	v == x && return
@@ -339,8 +356,8 @@ const MOD_CLASSES = split(replace("""
 	AI
 	Sounds
 	Late
-	UI
 	Final
+	UI
 	BADCLASS
 """, r"#[^\n]*\n" =>"\n"))# »»
 @inline modclass(m::Mod) =
@@ -427,9 +444,12 @@ end
 # Pre-extraction functions: download, status ««1
 function githubapi(repo, api)
 	api = "https://api.github.com/repos/"*repo*'/'*api
-	req = HTTP.get(api; status_exception=false)
-	req.status ≠ 200 && (printwarn("failed to download $api"); return nothing)
-	return JSON.parse(String(req.body))
+	cmd=`curl -y 1 --connect-timeout 20 --retry 2 -u $GITHUB_USER:$GITHUB_PASSWORD $api`
+	cmd=`wget --timeout=10 --user=$GITHUB_USER --password=$GITHUB_PASSWORD $api -O a`
+	printsim(cmd)
+	x = execute(cmd)
+	x.code ≠ 0 && (printwarn("failed to download $api"); return nothing)
+	return JSON.parsefile("a")
 end
 @inline githubrepo(f::Function, url) =
 	(m = match(r"^(?:https?://)?(?:www.)?github.com/([^/]*/[^/]*)", url);
@@ -517,6 +537,17 @@ function download_url(url, archive; simulate=false)
 		printsim("download $file <= $url")
 		simulate && return true
 		# to show progress, we use wget instead
+		if contains(url, "downloads.weaselmods.net") &&
+			!contains(url, "wpdmdl=")
+			req = HTTP.get(url)
+			printlog("special case: parsing weaselmods redirection...")
+			for line in split(String(req.body), '\n')
+				x = match(r"https://[^\"]*\?wpdmdl=\d+", line)
+				x  == nothing && continue
+				url = x.match; break
+			end
+			@assert contains(url, "wpdmdl=")
+		end
 		run(ignorestatus(`wget $url -O $file`))
 		isfile(file) && !iszero(filesize(file)) && break
 # 		req = HTTP.get(url; status_exception = false)
@@ -535,35 +566,39 @@ function download_url(url, archive; simulate=false)
 	true
 end
 function download(mod::Mod; down=DOWN, mods=MODS, simulate=false)
-	mod.url ∈ ("Manual", "") && return true # do nothing
+	isfile(joinpath(down, mod.archive)) && return true
 	url = mod.url
+	url ∈ ("Manual", "") && return true # do nothing
 	githubrepo(url) do repo
 		printsim("try to obtain latest release from ", repo)
 		githubapi(repo, "releases/latest") do latest
 			# avoid cloning if we can have a tarball url first
-			mod.archive = mod.id*".tar.gz"
-			download_url(latest["tarball_url"], mod.archive; simulate)
-# 			assets = latest["assets"];
-# 			i = findfirst(x->endswith(x["name"], r"\.(tar\.gz|zip|rar)"), assets)
-# 			isnothing(i) &&
-# 				(printsim("release contains no assets, cloning instead"); return false)
-# 			mod.archive = assets[i]["name"]
-# 			download_url(assets[i]["browser_download_url"], mod.archive; simulate)
+			# (prefer .zip to .tar.gz: it works better with ciopfs)
+			mod.archive = mod.id*".zip"
+			ifhaskey(latest, "created at") do x; mod.lastupdate = x[1:10]; end
+			download_url(latest["zipball_url"], mod.archive; simulate)
 		end || mktempdir(TEMP) do dir; cd(dir) do
+			githubapi(repo, "commits/master") do commit
+				mod.lastupdate = Date(commit["commit"]["commiter"]["date"][1:10])
+			end
 			printsim("no release found, cloning ", repo)
-			close(LibGit2.clone("https://github.com/"*repo, "."))
+			run(`git clone https://github.com/$repo .`)
+			mod.lastupdate=Date(readchomp(`git log -1 --format=%cd --date=iso`)[1:10])
 			files = [ f for f in readdir(".") if endswith(f, r"\.tp2"i) ]
 			push!(files, mod.id)
-			mod.archive = mod.id*".tar.gz"
-			run(`tar cvzf $(joinpath(DOWN,mod.archive)) $files`)
+			mod.archive = mod.id*".zip"
+			run(`zip -r $(joinpath(DOWN,mod.archive)) $files`)
 			for f in files; mv(f, joinpath(MODS, f); force=true); end
 			true
 		end end
-	end || download_url(mod.url, mod.archive; simulate)
+	end || begin
+		download_url(mod.url, mod.archive; simulate)
+		mod.lastupdate = Date(1970)
+	end
 end
 @inline isextracted(mod::Mod) = isdir(joinpath(MODS, mod.id))
-function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)
-	isextracted(mod) && return true
+function unpack(mod::Mod; down=DOWN, target=MODS, simulate=false, force=false)
+	!force && isextracted(mod) && return true
 	lowercase(mod.archive) == "manual" && return true
 	download(mod; down=DOWN) || return false
 	archive = joinpath(down, mod.archive)
@@ -582,8 +617,9 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 		else
 			error("unknown archive format: ", mod.archive)
 		end #»»
-		write_moddb()
+# 		write_moddb()
 		# if this contains only one directory, move its contents to tmp dir««
+		chmod(".", 0o755; recursive=true) # fixes SouthernEdge
 		files = readdir()
 		if length(files) == 1 && isdir(first(files))
 			subdir = first(files)
@@ -604,10 +640,10 @@ function do_extract(mod::Mod; down=DOWN, mods=MODS, simulate=false)
 		mod.id == "stratagems" &&
 			run(`sed -i -e 's,(3\*ability_true_level)/2,(ability_true_level+5),' stratagems/spell/inquisitor.tpa`)
 		#  - d0questpack has a badly named directory
-		mod.id == "d0questpack" &&
-			(mv("questpack", mod.id); symlink(mod.id, "questpack"))
-		# move extracted files to mods directory
-		for file in readdir(); mv(file,  joinpath(mods, file); force=true); end
+# 		mod.id == "d0questpack" &&
+# 			(mv("questpack", mod.id); symlink(mod.id, "questpack"))
+		# move extracted files to target directory
+		for file in readdir(); mv(file,  joinpath(target, file); force=true); end
 	end
 	# end
 # 	catch e
@@ -670,10 +706,7 @@ function lang_score(langname, pref_lang=GAME_LANG)
 	end
 	return typemax(Int)
 end
-function extract(m)
-	do_extract(m) && update(m)
-end
-@inline extract(m::Mod) = do_extract(m) && update(m)
+@inline extract(m::Mod; force=false) = unpack(m; force) && update(m)
 """    update(mod)
 
 Assuming that this mod is extracted, update all mod info available from
@@ -683,7 +716,7 @@ function update(m::Mod; moddb=moddb)
 	id = m.id
 	printsim("updating mod $id...")
 	cd(MODS) do
-	if isempty(m.tp2)
+	if isempty(m.tp2) || !isfile(m.tp2)
 		printlog("  $id: determine tp2")
 		for path in ("$id.tp2", "$id/$id.tp2", "$id/setup-$id.tp2", "setup-$id.tp2",
 			"setup-$id.exe", "$id/setup-$id.exe")
@@ -707,6 +740,7 @@ function update(m::Mod; moddb=moddb)
 		empty!(m.components) # we will store them in WeiDU-order
 		for line in tryreadlines(`weidu --game $(GAMEDIR.bg2) --list-components-json $(m.tp2) $(m.tool_lang)`)
 			startswith(line, "[{") || continue
+			line = replace(line, '\t' => "")
 			for x in JSON.parse(line)
 				k = string(x["number"])
 				c = get(prop, k, ModComponent(k, ""))
@@ -744,10 +778,14 @@ function update(m::Mod; moddb=moddb)
 		m.readme = x.match
 	end
 	end # cd(MODS)
-	m.lastupdate = Date(unix2datetime(maximum(mtime(joinpath(root, f))
-		for (root,_,files) in walkdir(joinpath(MODS, m.id))
-		for f in files if endswith(f, r"\.tp[2ah]"i); init=0)))
+	if m.lastupdate == Date(1970)
+		(m.lastupdate = Date(unix2datetime(maximum(mtime(joinpath(root, f))
+			for (root,_,files) in walkdir(joinpath(MODS, m.id))
+			for f in files if endswith(f, r"\.tp[2ah]"i); init=0))))
+		println("   $(m.id): set last update to $(m.lastupdate)")
+	end
 	ini_data(m; moddb)
+	write_moddb()
 	true
 end
 function readme(mod::Mod)
@@ -832,6 +870,7 @@ end
 	(tp2, lang, comp) = m.captures
 	id = lowercase(basename(tp2[1:end-4]))
 	startswith(id, "setup-") && (id = id[7:end])
+	(id == "d0questpack") && (id = "questpack") # bugware
 	return (id, String(comp))
 end
 function weidu_stack(dir::AbstractString)
@@ -839,7 +878,7 @@ function weidu_stack(dir::AbstractString)
 	isfile(file) || (file = devnull)
 	NTuple{2,String}.(filter(!isnothing, weidu_filter.(eachline(file))))
 end
-@inline weidu_stack(dirs::NamedTuple) =
+@inline weidu_stack(dirs::NamedTuple = GAMEDIR) =
 	NamedTuple{keys(dirs)}(weidu_stack.(values(dirs)))
 
 function stack_installed(stack=stack)
@@ -1071,19 +1110,27 @@ function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 	to_add = setdiff(selected, current)
 	to_del = setdiff(current, get(selection, id, Set{String}[]))
 	isempty(to_add) && isempty(to_del) && (printlog("nothing to do"); return)
-	if !isempty(to_add) # create symlink
-		for file in ("$id.tp2", "setup-$id.tp2", "$id")
-			target = joinpath(MODS, file); ispath(target) || continue
-			link = joinpath(gamedir, file); ispath(link) && continue
-			if simulate
-				printsim("create $link -> $(relpath(link, target))")
-			else
-				symlink(relpath(target, gamedir), link)
-			end
-		end
+	# in previous versions we tried to use symlinks to save disk space —
+	# but this messed up the backup directories:
+	!isempty(to_add) && for file in (mod.id, mod.tp2)
+		source, dest = joinpath.((MODS, gamedir), file)
+		ispath(dest) || cp(source, dest)
 	end
+# 	if !isempty(to_add) # copy mod data + tp2 file to game archive
+# 		for file in (mod.id, mod.tp2)
+# 
+# 		for file in ("$id.tp2", "setup-$id.tp2", "$id")
+# 			target = joinpath(MODS, file); ispath(target) || continue
+# 			link = joinpath(gamedir, file); ispath(link) && continue
+# 			if simulate
+# 				printsim("create $link -> $(relpath(link, target))")
+# 			else
+# 				symlink(relpath(target, gamedir), link)
+# 			end
+# 		end
+# 	end
 	cd(gamedir) do
-		cmd = `weinstall $(mod.id) --language $(mod.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $(collect(to_add)) --force-uninstall-list $(collect(to_del))`
+		cmd = `weidu --log setup-$(mod.id).debug $(mod.tp2) --language $(mod.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-install-list $(collect(to_add)) --force-uninstall-list $(collect(to_del))`
 # 		id == "eet" && (cmd = `weinstall eet --skip-at-view --noautoupdate --no-exit-pause --force-install-list 0 $(gamedirs.bg1)`)
 		printsim(cmd)
 		simulate && return
@@ -1094,7 +1141,7 @@ function install(mod::Mod, index::Integer; simulate=false, uninstall=false,
 	now_installed = get(installed, id, Set{String}())
 	not_installed = setdiff(selected, now_installed)
 	if !simulate && !isempty(not_installed)
-		printwarn("warning: the following components were not installed:")
+		printwarn("warning: the following components for $id were not installed:")
 		for k in not_installed
 			c = component(mod, k)
 			printwarn(isnothing(c) ? "$k (not found)" : "$k ($(description(c)))")
@@ -1126,7 +1173,7 @@ function uninstall(n::Integer=-1 ; moddb=moddb, stack=stack, simulate=false,
 			i+=1; i > n && break
 			@assert !isempty(clist)
 			if !confirm || ask(==('y'), "uninstall $prev:"*join(clist, ' ')*'?')
-				cmd = `weinstall $prev --language $(m.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-uninstall-list $clist`
+				cmd = `weidu --log setup-$prev.debug $(m.tp2) --language $(m.game_lang) --skip-at-view --noautoupdate --no-exit-pause --force-uninstall-list $clist`
 				printsim(cmd)
 				simulate && return
 				cd(GAMEDIR[modgame(m)]) do; run(ignorestatus(cmd)); end
@@ -1217,5 +1264,6 @@ end
 M=ModTool
 R=isdefined(M, :moddb) ? M.moddb["rr"] : nothing
 C=isnothing(R) ? R : R.components
+M
 nothing
 # vim: fdm=syntax fdl=1:

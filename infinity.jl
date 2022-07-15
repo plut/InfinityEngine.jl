@@ -40,7 +40,8 @@ function Format(;kwargs...)
 	return Format{NamedTuple{tuple(names...),Tuple{types...}},Tuple{kv...}}
 end
 
-function Base.show(io::IO, ::MIME"text/plain", X::Type{Format{F,T}}) where{F,T}
+@inline Base.display(X::Type{<:Format}) = display(stdout, X)
+function Base.display(io::IO, X::Type{Format{F,T}}) where{F,T}
 	o = Int32(0)
 	println(io, "Format type with fields:")
 	for kv in T.parameters
@@ -59,6 +60,17 @@ end
 
 @inline readt(io::IO, T::DataType) = only(reinterpret(T,read(io, sizeof(T))))
 
+@generated function Base.filesize(::Type{Format{F,T}}) where{F,T}
+	s = 0
+	for x in T.parameters
+		if x isa DataType
+			s+= sizeof(x.parameters[2])
+		else
+			s+= sizeof(x[2])
+		end
+	end
+	:($s)
+end
 @generated function Base.read(io::IO, X::Type{Format{F,T}}) where{F,T}
 	vars = Symbol[]
 	expr = :(begin end)
@@ -121,30 +133,30 @@ const RESTYPES = [#««
 	0x0002 => "MVE",
 	0x0004 => "WAV",
 	0x0006 => "PLT",
-	0x03E8 => "BAM",
-	0x03E9 => "WED",
-	0x03EA => "CHU",
-	0x03EB => "TIS",
-	0x03EC => "MOS",
-	0x03ED => "ITM",
-	0x03EE => "SPL",
-	0x03EF => "BCS",
-	0x03F0 => "IDS",
-	0x03F1 => "CRE",
-	0x03F2 => "ARE",
-	0x03F3 => "DLG",
-	0x03F4 => "2DA",
-	0x03F5 => "GAM",
-	0x03F6 => "STO",
-	0x03F7 => "WMP",
-	0x03F8 => "CHR",
-	0x03F9 => "BS",
-	0x03FA => "CHR",
-	0x03FB => "VVC",
-	0x03FC => "VFC",
-	0x03FD => "PRO",
-	0x03FE => "BIO",
-	0x03FF => "WBM",
+	0x03e8 => "BAM",
+	0x03e9 => "WED",
+	0x03ea => "CHU",
+	0x03eb => "TIS",
+	0x03ec => "MOS",
+	0x03ed => "ITM",
+	0x03ee => "SPL",
+	0x03ef => "BCS",
+	0x03f0 => "IDS",
+	0x03f1 => "CRE",
+	0x03f2 => "ARE",
+	0x03f3 => "DLG",
+	0x03f4 => "2DA",
+	0x03f5 => "GAM",
+	0x03f6 => "STO",
+	0x03f7 => "WMP",
+	0x03f8 => "CHR",
+	0x03f9 => "BS",
+	0x03fa => "CHR",
+	0x03fb => "VVC",
+	0x03fc => "VFC",
+	0x03fd => "PRO",
+	0x03fe => "BIO",
+	0x03ff => "WBM",
 	0x0400 => "FNT",
 	0x0402 => "GUI",
 	0x0403 => "SQL",
@@ -152,9 +164,9 @@ const RESTYPES = [#««
 	0x0405 => "GLSL",
 	0x0408 => "MENU",
 	0x0409 => "LUA",
-	0x040A => "TTF",
-	0x040B => "PNG",
-	0x044C => "BAH",
+	0x040a => "TTF",
+	0x040b => "PNG",
+	0x044c => "BAH",
 	0x0802 => "INI",
 	0x0803 => "SRC",
 ]#»»
@@ -191,8 +203,7 @@ const TLK_hdr = Files.Format(_ = b"TLK V1  ", lang = UInt16,
 const TLK_str = Files.Format(flags = UInt16, sound = Resref,
 	volume = UInt32, pitch = UInt32, offset = UInt32, length = UInt32)
 
-@inline function TlkStrings(file)
-	io = open(file, "r")
+@inline TlkStrings(filename::AbstractString) = open(filename, "r") do io
 	header = read(io, TLK_hdr)
 	strref = read(io, TLK_str, header.nstr)
 	strings = [ (string = string0(io, header.offset + s.offset, s.length),
@@ -206,7 +217,7 @@ struct TlkStringSet{X}
 	strings2::TlkStrings{X}
 end
 
-# ««1 key
+# ««1 key/bif
 
 @inline resource_name(t::Integer) =
 	ResourceType[searchsorted(ResourceType, t; by=first)] |>only|>last|>String
@@ -220,66 +231,51 @@ const KEY_bif = Files.Format(filelength=UInt32, offset=UInt32,
 const KEY_res = Files.Format(name=Resref, type=Restype, location=Resloc)
 
 struct KeyIndex{X}
+	directory::String
 	bif::Vector{String}
 	resources::Vector{X}
 	location::Dict{Tuple{Resref,Restype},Resloc}
-	function KeyIndex(bif, res::AbstractVector{X}) where{X}
+	function KeyIndex(dir, bif, res::AbstractVector{X}) where{X}
 		loc = Dict((r.name, r.type) => r.location for r in res)
-		new{X}(bif, res, loc)
+		new{X}(dir, bif, res, loc)
 	end
 end
-function KeyIndex(filename::AbstractString)
-	io = open(filename, "r")
+@inline KeyIndex(filename::AbstractString) = open(filename, "r") do io
 	header = read(io, KEY_hdr)
 	seek(io, header.bifoffset)
 	bifentries = read(io, KEY_bif, header.nbif)
 	bifnames = [ string0(io, x.offset, x.namelength) for x in bifentries ]
 	seek(io, header.resoffset)
 	resentries = read(io, KEY_res, header.nres)
-	return KeyIndex(bifnames, resentries)
+	return KeyIndex(dirname(filename), bifnames, resentries)
 end
 
 function Base.getindex(f::KeyIndex, resname::Resref, restype::Restype)
-	f.location[(resname, restype)]
+	loc = f.location[(resname, restype)]
+	file = joinpath(f.directory, f.bif[1+sourcefile(loc)])
+	return bifresource(file, resourceindex(loc))
 	# TODO: check if resname is unique w/o restype (seems false)
 end
 
-# function resource(f::KeyIndex, resname::AbstractString, restype::AbstractString)
-# 	k = (codeunits(rpad(uppercase(resname), 8, '\0')), resource_type(restype))
-# 	x = f.location[k]
-# 	return (bifindex(x), tilesetindex(x), fileindex(x))
-# end
-
-# »»1
-# ««1 bif
 const BIF_hdr = Files.Format(_ = b"BIFFV1  ",
 	nres=UInt32, ntilesets=UInt32, offset=UInt32)
+const BIF_resource = Files.Format(locator = Resloc, offset = UInt32,
+	size = UInt32, type = Restype, _ = UInt16)
+const BIF_tileset = Files.Format(locator = Resloc, offset=UInt32,
+	ntiles=UInt32, size=UInt32, type=RES_TIS, unknown=UInt16)
 
-function bif(f::AbstractString)
-	io = open(f, "r")
-	header = read_struct(io; marker = b"BIFFV1  ", nres=UInt32, ntilesets=UInt32,
-		offset=UInt32)
+bifresource(file::AbstractString, index::Integer) = open(file, "r") do io
+	header = read(io, BIF_hdr)
 	seek(io, header.offset)
-	resources = read_structs(io, header.nres;
-		locator=UInt32, offset=UInt32, size=UInt32, type=UInt16, unknown=UInt16)
-	tilesets = read_structs(io, header.ntilesets;
-		locator=UInt32, offset=UInt32, ntiles=UInt32, size=UInt32,
-		type=UInt32(0x03eb), unknown=UInt16)
-	return File{:bif}(io; header, resources, tilesets)
+	resources = read(io, BIF_resource, header.nres)
+	IOBuffer(read(seek(io, resources[index+1].offset), resources[index+1].size))
 end
 
-# @inline resource(f::File{:bif}, i::Integer) =
-# 	read(seek(f.io, f.data.resources[i].offset), f.data.resources[i].size)
-
+# »»1
 # ««1 itm
-const ItmFormat = (
-	marker = b"ITM V1  ",
-	unidentified_name=Strref,
-	identified_name=Strref,
-	replacement=Resref,
-	flags=UInt32,
-	item_type=UInt16,
-	usability=Bytes{4},
+const ITM_hdr = Files.Format(_ = b"ITM V1  ",
+	unidentified_name=Strref, identified_name=Strref, replacement=Resref,
+	flags=UInt32, item_type=UInt16, usability=UInt32,
 	animation=UInt16,
 	minlevel=UInt16,
 	minstrength=UInt16,
@@ -296,29 +292,38 @@ const ItmFormat = (
 	mincharisma=UInt16,
 	price=UInt32,
 	stackamount=UInt16,
-	inventoryicon=Bytes{8},
+	inventoryicon=Resref,
 	lore=UInt16,
-	groundicon=Bytes{8},
+	groundicon=Resref,
 	weight=UInt32,
 	unidentified_description=Strref,
 	identified_description=Strref,
-	description_icon=Bytes{8},
+	description_icon=Resref,
 	enchantment=UInt32,
 	ext_header_offset=UInt32,
 	ext_header_count=UInt16,
 	feature_offset=UInt32,
 	feature_index=UInt16,
 	feature_count=UInt16)
+const ITM_ext_hdr = Files.Format(type = UInt8, must_identify = UInt8,
+	location = UInt8, alternative_dice_sides = UInt8, use_icon = Resref,
+	target_type = UInt8, target_count = UInt8, range = UInt16,
+	launcher_required = UInt8, alternative_dice_thrown = UInt8,
+	speed_factor = UInt8, alternative_damage_bonus = UInt8,
+	thac0_bonus = UInt16, dice_sides = UInt8, primary_type = UInt8,
+	dice_thrown = UInt8, secondary_type = UInt8, damage_bonus = UInt16,
+	damage_type = UInt16, nfeatures = UInt16, idxfeatures = UInt16,
+	max_charges = UInt16, depletion = UInt16, flags = UInt32,
+	projectile_animation = UInt16,
+	overhand_chance = UInt16, backhand_chance = UInt16, thrust_chance = UInt16,
+	is_arrow = UInt16, is_bolt = UInt16, is_bullet = UInt16,
+	)
 
-function read_struct(io::IO, T::Type)
-	buf = zeros(UInt8, sizeof(T))
-	read!(io, buf)
-	return only(reinterpret(T, buf))
+
+@inline function Item(io::IO)
+	read(io, ITM_hdr)
 end
-function itm(f::AbstractString)
-	io = open(f, "r")
-	header = read_struct(io; ItmFormat...)
-end
+@inline Item(f::AbstractString) = open(Item, f, "r")
 #»»1
 end
 IE=InfinityEngine; S = IE.Files

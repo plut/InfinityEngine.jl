@@ -198,6 +198,8 @@ struct TlkStrings{X}
 	@inline TlkStrings(str::AbstractVector{X}) where{X} = new{X}(str, Dict())
 end
 
+@inline Base.getindex(f::TlkStrings, i::Strref) = f.strings[Int32(i)+1]
+
 const TLK_hdr = Files.Format(_ = b"TLK V1  ", lang = UInt16,
 	nstr = UInt32, offset = UInt32)
 const TLK_str = Files.Format(flags = UInt16, sound = Resref,
@@ -211,7 +213,6 @@ const TLK_str = Files.Format(flags = UInt16, sound = Resref,
 		for s in strref ]
 	return TlkStrings(strings)
 end
-
 struct TlkStringSet{X}
 	strings1::TlkStrings{X}
 	strings2::TlkStrings{X}
@@ -327,12 +328,6 @@ end
 #»»1
 end
 IE=InfinityEngine; S = IE.Files
-kf=S.Format(_=b"KEY V1  ", nbif=UInt32, nres=UInt32,)
-# Itm=S.Format(_ = b"ITM V1  ", un_name = IE.Strref, id_name = IE.Strref,)
 
-# tlk=IE.tlk("../bg2/game/lang/fr_FR/dialog.tlk")
-# key=IE.key("../bg2/game/chitin.key")
-# key=IE.keyfile("../bg2/game/chitin.key")
-# bif=IE.bif("../bg2/game/data/items.bif")
-# IE.fields(IE.ItmFormat)
-# IE.fields(IE.Foo)
+key=IE.KeyIndex("../bg2/game/chitin.key");
+str=IE.TlkStrings("../bg2/game/lang/fr_FR/dialog.tlk");

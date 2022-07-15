@@ -13,45 +13,32 @@ module ModTool
 # TODO ««
 # purge down:
 # for f in down/*; do grep "archive = " moddb.toml |fgrep -q $(basename $f) || echo $f; done
-#  - edit selection file "in-place":
-#   - don't touch lines which do not contain mod info
-#   - add new mods in the proper section (marked by *, **)
+#  * edit selection file "in-place":
+#   * don't touch lines which do not contain mod info
+#   * add new mods in the proper section (marked by *, **)
+#   - sort each subsection by install order?
 #  - use Content-Disposition: attachment; filename="..." header to
 #  determine archive name
 #   - better: use Content-Type: and just use $modid.$extension
-#  - work around possible SEGV in weidu calls: retry up to 3 times
-#   - encapsulate this in a weidu() function (also doing the cd())
-#  - bggoeet: ln -s linux unix
-#  + check that status() shows enough mods
-#  + update modtool.jl to write correct compat packets
-#  + indicate both lanthorn mods in db
-#  + uninstall(n), uninstall(upto=m)
-#  + status() shows out-of-order components
-#   (i.e. those installed before something that should come after)
-# mod-specific fixes:
+# ***** mod-specific fixes:
+#  - finchnpc: line 1137 in sufinch.tra, missing a tilde
+#  - mortis: tra/Francais -> tra/French (symlink works)
+#  - spstuff: remove unicode BOM from spstuff/lang/french/ee.tra
+#  sed -e '1s/^\xEF\xBB\xBF//'
+#  - sod2bg2_iu fails insert_2da_row:
+#  https://www.gibberlings3.net/forums/topic/31088-bugs-issues-or-suggestions/page/6/
+#  - forgotten-armament: missing 6 french TRA (31411 30817 30212)
 #  - questpack has a weirdly named tp2 file:
 #    directory is named questpack (in archive)
 #    file is setup-d0questpack.tp2
-#  - mortis: tra/Francais -> tra/French
+#  - bggoeet: ln -s linux unix
 #  - aurora: fix .sh files
-#  - spstuff: remove unicode BOM from ee.tra
 #  - Keto SoAv5 vs SoAv6
 #  - mih_ip fails to download
 #  - npckit is a .exe archive
 # + Generic installation order
 # (https://forums.beamdog.com/discussion/34882/list-of-bg2ee-compatible-mods)
 # - use labels like ProjectInfinity
-# - provide a simple way to add a mod to the db with minimal input info
-#   + use ProjectInfinity's *.ini files if available
-#    + needs extracting mods before (re)computing install order
-#    + including readme if needed (still prefer local readme)
-#   - for github urls:: auto-guess mod dir + name
-#   + use this in moddb.jl
-# + do a complete EET installation routine
-# + add the following characteristics at a component-level:
-#  + before/after: declare install order
-#  - depends/conflicts: declare relations
-# - complete dependency & conflict checking
 # - try and guess readme for individual components (IMPOSSIBLE)
 #»»
 # Preamble ««1
@@ -462,7 +449,7 @@ function urlmod(url; id = "", description = "", class = "Unknown", lastupdate=Da
 		isempty(id) && githubapi(repo, "contents") do obj
 			obj = filter(x->!startswith(x["name"],'.') && x["type"]=="dir", obj)
 			isone(length(obj)) || error("impossible to determine name for ", repo)
-			id = lowercase(obj[1]["name"])
+			id = lowercase(only(obj)["name"])
 			printlog("  found id: ", id)
 		end
 		isempty(description) && githubapi(repo, "contents/README.md") do readme
@@ -639,9 +626,6 @@ function unpack(mod::Mod; down=DOWN, target=MODS, simulate=false, force=false)
 		@assert isdir(mod.id)
 		mod.id == "stratagems" &&
 			run(`sed -i -e 's,(3\*ability_true_level)/2,(ability_true_level+5),' stratagems/spell/inquisitor.tpa`)
-		#  - d0questpack has a badly named directory
-# 		mod.id == "d0questpack" &&
-# 			(mv("questpack", mod.id); symlink(mod.id, "questpack"))
 		# move extracted files to target directory
 		for file in readdir(); mv(file,  joinpath(target, file); force=true); end
 	end
@@ -868,9 +852,9 @@ end
 	m = match(r"^~(.*)~\s+#(\d+)\s+#(\d+)\s*", line)
 	isnothing(m) && return nothing
 	(tp2, lang, comp) = m.captures
-	id = lowercase(basename(tp2[1:end-4]))
-	startswith(id, "setup-") && (id = id[7:end])
-	(id == "d0questpack") && (id = "questpack") # bugware
+	tp2 = lowercase(tp2)
+	id = findfirst(v->v.tp2 == tp2, moddb)
+	id == nothing && (printerr("no mod has this tp2 file: '$tp2'"))
 	return (id, String(comp))
 end
 function weidu_stack(dir::AbstractString)
@@ -906,21 +890,26 @@ function printcomp(io::IO, m, c::ModComponent; selection, installed, moddb)
 		isempty(c.path) ? '.' : 'p',
 		m.id, c.id, description(c))
 end
+function parse_selection_line(line)
+	m = match(r"^(\s*)([.s])([.12][.p])\s+`([^`:]*):(\d+)`(\s+)(\S.*)$", line)
+	isnothing(m) && return nothing
+	NamedTuple{(:indent, :selected, :flags, :id, :k, :space, :text)}(m.captures)
+end
+
 function merge_selection(io; selection=selection, verbose=true)
 	to_add = Dict{String,Set{String}}()
 	to_del = Dict{String,Set{String}}()
 	for line in eachline(io)
-		m = match(r"^([.s])[.12][.p]\s+`([^`:]*):(\d+)`\s+", line)
-		isnothing(m) && continue
-		id, k, selected = m.captures[2], m.captures[3], (m.captures[1] == "s")
-		if selected
-			set = get!(selection, id, Set{String}())
-			verbose && (k ∉ set) && push!(get!(to_add, id, Set{String}()), k)
-			push!(set, k)
+		m = parse_selection_line(line); isnothing(m) && continue
+# 		id, k, selected = m.captures[2], m.captures[3], (m.captures[1] == "s")
+		if m.selected == "s"
+			set = get!(selection, m.id, Set{String}())
+			verbose && (m.k ∉ set) && push!(get!(to_add, m.id, Set{String}()), m.k)
+			push!(set, m.k)
 		else
-			set = get!(selection, id, Set{String}())
-			verbose && (k ∈ set) && push!(get!(to_del, id, Set{String}()), k)
-			delete!(set, k)
+			set = get!(selection, m.id, Set{String}())
+			verbose && (m.k ∈ set) && push!(get!(to_del, m.id, Set{String}()), m.k)
+			delete!(set, m.k)
 		end
 	end
 	isempty(to_add) || printlog("Added:")
@@ -1037,6 +1026,46 @@ function display_tree(io::IO, root, level=1;
 		display_tree(io, c, level+1; selection, moddb, installed, order)
 	end
 end
+const UNSORTED = "— sorted by mod class/mod —"
+function save1(io::IO; input=SELECTION, selection=selection, stack=stack,
+		order=installorder(selection))
+	
+	installed = stack_installed(stack)
+	# first update existing selection file
+	done = Dict{String,Set{String}}()
+	for line in eachline(input)
+		contains(line, UNSORTED) && break
+		r = parse_selection_line(line)
+		isnothing(r) && (println(io, line); continue)
+		m = get(moddb, r.id, nothing)
+		isnothing(m) && (printerr("'$id': not found"); continue)
+		c = component(m, r.k)
+		isnothing(c) && (printerr("'$id:$k' not found"); continue)
+		printcomp(io, m, c; selection, installed, moddb)
+		push!(get!(done, r.id, Set{String}()), r.k)
+	end
+	println(io, "⟧1\n", UNSORTED)
+# 	println(io, "# ⟧1\n")
+	header = ["" for _ in 1:4]
+	for class in MOD_CLASSES, (id, k) in order
+		(k == 1 && moddb[id].class == class) || continue
+		m = moddb[id]; g = ""; h = "";
+# 		isempty(get(selection, id, ())) || extract(m)
+		for c in components(m)
+			c ∈ get(done, m.id, ()) && continue
+			for (i,x) in zip(eachindex(header), (class, id, c.group, c.subgroup))
+				header[i] == x && continue; header[i] = x
+				println(io, '#'^i, ' ', x, i==4 && isempty(x) ? '⟧' : '⟦', i)
+			end
+			printcomp(io, m, c; selection, installed, moddb)
+		end
+	end
+end
+@inline save1(file::AbstractString; kwargs...) = mktemp(TEMP) do path, io
+	save1(io; kwargs...)
+	ask(==('y'), "Move $path => $file? (yn)") && mv(path, file; force=true)
+end
+
 function save(io::IO; selection=selection, moddb=moddb,
 		stack=stack, order=installorder(selection))
 	installed = stack_installed(stack)

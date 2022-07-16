@@ -93,7 +93,6 @@ end
 # ««1 Basic types
 # ««2 Constant-length string
 using StaticArrays
-Bytes{N} = SVector{N,UInt8}
 
 # zero-terminated string (chop trailing zeroes as needed)
 @inline function string0(v::AbstractVector{UInt8})
@@ -102,32 +101,41 @@ Bytes{N} = SVector{N,UInt8}
 end
 @inline string0(io::IO, s::Integer, l::Integer) = string0(read(seek(io, s), l))
 
-# ««2 Indices: Strref, Resref
-# String reference
-primitive type Strref 32 end
-@inline Strref(x::Integer) = reinterpret(Strref,UInt32(x))
-# Base.convert(::Type{Int32}, x::Strref) = reinterpret(Int32, x)
-@inline (T::Type{<:Union{UInt32,Int32}})(x::Strref) = reinterpret(T,x)
+# ««2 Indices: Strref, Resref etc.
+# Type families:
+# - integer: Strref, Resref etc.
+# - enumerated: Restype etc.
+#
+# @StrongEnum Restype ( 0xabcd => "2da" etc.)
+#  defines Restype_2da and the show methods
+#
+# - flags: Usability etc.
+# @StrongFlags Usability (Chaotic, Evil, Good, Unaligned, etc.)
+#   defines Usability_Chaotic | Usability_Evil | ...
+#   and the show methods
 
-# Resource reference (as a name)
-struct Resref
-	x::SVector{8,UInt8}
+struct StrongInt{I<:Integer,K}
+	n::I
 end
+@inline (::Type{<:Integer})(x::StrongInt) = x.n
+@inline Base.show(io::IO, x::StrongInt{I,K}) where{I,K}=print(io, K,'(',x.n,')')
+
+const Strref = StrongInt{UInt32,:Strref}
+const Resref = StrongInt{UInt64,:Resref}
 @inline Resref(s::AbstractString) = 
 	only(reinterpret(Resref,codeunits(rpad(uppercase(s), 8, Char(0)))))
+@inline Base.string(x::Resref) =
+	string0(only(reinterpret(SVector{8,UInt8}, SA[x.n])))
+@inline Base.show(io::IO, x::Resref) = print(io, string(x))
 macro res_str(s) Resref(s) end
-@inline Base.show(io::IO, r::Resref) = print(io, string0(r.x))
 
-# Resource locator (bif indexing)
-primitive type Resloc 32 end
-@inline (T::Type{<:Union{UInt32,Int32}})(x::Resloc) = reinterpret(T,x)
+const Resloc = StrongInt{UInt32,:Resloc} # bif indexing
 @inline sourcefile(r::Resloc) = Int32(r) >> 20
 @inline tilesetindex(r::Resloc) = (Int32(r) >> 14) && 0x3f
 @inline resourceindex(r::Resloc) = Int32(r) & 0x3fff
 
-# Resource type (bif indexing)
-primitive type Restype 16 end
-@inline Restype(x::Integer) = reinterpret(Restype,UInt16(x))
+const Restype = StrongInt{UInt16,:Restype} # resource name
+
 const RESTYPES = [#««
 	0x0001 => "BMP",
 	0x0002 => "MVE",
@@ -181,15 +189,6 @@ function Base.show(io::IO, x::Restype)
 		print(io, Restype, '(', reinterpret(UInt16,x), ')')
 	end
 end
-
-
-# mutable struct File{S,X<:IO,Y<:NamedTuple}
-# 	io::X
-# 	data::Y
-# 	@inline File{S}(x::X, y::Y) where{S,X<:IO, Y<:NamedTuple} =
-# 		finalizer(x->close(x.io), new{S,X,Y}(x,y))
-# end
-# @inline File{S}(x::IO; kwargs...) where{S}= File{S}(x, NamedTuple(kwargs))
 
 # ««1 tlk
 struct TlkStrings{X}
@@ -252,10 +251,11 @@ end
 end
 
 function Base.getindex(f::KeyIndex, resname::Resref, restype::Restype)
+# Resources are not unique w.r.t the name, but only name + type
+# e.g. plangood.{bcs,cre,chr}
 	loc = f.location[(resname, restype)]
 	file = joinpath(f.directory, f.bif[1+sourcefile(loc)])
 	return bifresource(file, resourceindex(loc))
-	# TODO: check if resname is unique w/o restype (seems false)
 end
 
 const BIF_hdr = Files.Format(_ = b"BIFFV1  ",

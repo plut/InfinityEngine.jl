@@ -5,39 +5,140 @@
 =#
 
 module InfinityEngine
+
+module Blocks
 using Printf
 using StaticArrays
-using BitFlags
+abstract type AbstractBlock end
+
+reprb(x) = repr(x)
+reprb(x::Base.CodeUnits) = 'b'*repr(String(x))
+
+"""    @block BlockName begin
+      field1::type1 # ...
+      b"constant1" # ...
+    end
+
+Defines a data type `BlockName` as well as methods for `Base.read` and `Base.write` for binary I/O of this type respecting the layout.
+The fields may be either:
+ - `field::type`: (with defined length)
+ - `b"constant"`: a marker with defined size, this is checked on reading, but does not appear as a field in the data type
+ - **(TODO)** `field[pos]::type`: only a part of the field is read/written here; the next time this field appears the type should not be given.
+
+"""
+macro block(name, fields)
+# TODO:
+	type_fields = Expr[]
+	read_fields = Expr[]
+	read_vars = Symbol[]
+	field_frag = Dict{Symbol,BitVector}()
+	offset = 0
+	description = ""
+	for expr in fields.args
+		expr isa LineNumberNode && continue
+		if Meta.isexpr(expr, :ref)
+			error("not implemented")
+# 			field, r = expr.args[1], Core.eval(__module__, expr.args[2])
+# 			if Meta.isexpr(field, :(::))
+# 				field, content = expr.args[1], Core.eval(__module__, field.args[2])
+# 				@assert !haskey(field_frag, field)
+# 				field_frag[field] = falses(sizeof(content))
+# 				push!(type_fields, :($field::$(esc(content))))
+# 				push!(read_vars, v)
+# 			end
+# 			r1, r2 = first(r), last(r)
+# 			@assert r1 ≥ 1; @assert r2 ≤ sizeof(content)
+# 			@assert !any(view(field_frag[field], r1:r2))
+# 			field_frag[field][r1:r2].= true
+# 			v = Symbol(string(field)*string(r1))
+# 			if all(field_frag)
+# 			end
+		elseif Meta.isexpr(expr, :(::))
+			field, content = expr.args[1], Core.eval(__module__, expr.args[2])
+			push!(type_fields, esc(expr))
+			v = field; push!(read_vars, v)
+			push!(read_fields, :($v = readt(io, $content)))
+		else
+			field, content = reprb(expr), eval(expr)
+			push!(read_fields, :(@assert read(io, $(sizeof(content))) == $content))
+		end
+		description*= @sprintf("0x%04x %4d %s\n", offset, sizeof(content), field)
+		offset+= sizeof(content)
+	end
+	description*= "total size = "*string(offset)
+	name = esc(name)
+	block = quote
+		Base.@__doc__(struct $name <: AbstractBlock
+			$(type_fields...)
+			$name(::Type{AbstractBlock};$(read_vars...)) = new($(read_vars...))
+		end)
+		# this hook allows overriding the kwargs method:
+		@inline $name(;kwargs...) = $name(AbstractBlock; kwargs...)
+		@inline Base.show(io::IO, ::MIME"text/plain", ::Type{$name}) =
+			print(io, $description)
+		function Base.read(io::IO, ::Type{$name})
+			$(read_fields...)
+			return $name(;$(read_vars...))
+		end
+	end
+	block.head = :toplevel
+	return block
+end
+@block X begin
+	a::Int
+	foo::UInt32
+end
+
+
+@inline readt(io::IO, T::DataType) = only(reinterpret(T,read(io, sizeof(T))))
+@inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer) =
+	[ read(io, T) for _ in Base.OneTo(n) ]
+end
+using .Blocks: @block
+
+include("dottedenums.jl"); using .DottedEnums
+
+using Printf
+using StaticArrays
 
 # ««1 Basic types
-# zero-terminated string (chop trailing zeroes as needed)
+# ««2 Extract zero-terminated string from IO
 @inline function string0(v::AbstractVector{UInt8})
 	l = findfirst(iszero, v)
 	String(isnothing(l) ? v : view(v, 1:l-1))
 end
 @inline string0(io::IO, s::Integer, l::Integer) = string0(read(seek(io, s), l))
 
+# ««2 Static length strings
+struct StaticString{N} <: AbstractString
+	chars::SVector{N,UInt8}
+	@inline StaticString{N}(chars::AbstractVector{<:Integer}) where{N} =
+		new{N}(chars)
+end
+@inline Base.show(io::IO,s::StaticString) = @printf io "b\"%s\"" String(s.chars)
+@inline (::Type{String})(s::StaticString) = string0(s.chars)
+@inline (T::Type{<:StaticString{N}})(s::AbstractString) where{N} =
+	T(codeunits(rpad(uppercase(s), N, '\0')))
+
+# ««2 Type wrapper
+struct Typewrap{T,S}
+	data::T
+	@inline (::Type{Typewrap{T,S}})(args...) where{T,S} = new{T,S}(T(args...))
+end
+@inline (::Type{Typewrap{T,S}})(x::Typewrap{T,S}) where{T,S} = x
+@inline Base.show(io::IO, t::Typewrap{T,S}) where{T,S} =
+	(print(io, S, '('); show(io, t.data); print(io, ')'))
+@inline (J::Type{<:Integer})(x::Typewrap{<:Integer}) = J(x.data)
+@inline (J::Type{<:AbstractString})(x::Typewrap{<:AbstractString}) = J(x.data)
+
 # ««2 Indices: Strref, Resref etc.
 
-abstract type AbstractStrongInt end
-
-struct StrongInt{I<:Integer,K} <: AbstractStrongInt
-	n::I
-end
-@inline (::Type{<:Integer})(x::StrongInt) = x.n
-@inline Base.show(io::IO, x::StrongInt{I,K}) where{I,K} =
-	print(io, K,'(',repr(x.n),')')
-
-const Strref = StrongInt{UInt32,:Strref}
-const Resref = StrongInt{UInt64,:Resref}
-@inline Resref(s::AbstractString) = 
-	only(reinterpret(Resref,codeunits(rpad(uppercase(s), 8, Char(0)))))
-@inline Base.string(x::Resref) =
-	string0(only(reinterpret(SVector{8,UInt8}, SA[x.n])))
-@inline Base.show(io::IO, x::Resref) = print(io, string(x))
+const Resref = Typewrap{StaticString{8},:Resref}
 macro res_str(s) Resref(s) end
 
-const Resloc = StrongInt{UInt32,:Resloc} # bif indexing
+const Strref = Typewrap{UInt32, :Strref}
+
+const Resloc = Typewrap{UInt32, :Resloc} # bif indexing
 @inline sourcefile(r::Resloc) = Int32(r) >> 20
 @inline tilesetindex(r::Resloc) = (Int32(r) >> 14) && 0x3f
 @inline resourceindex(r::Resloc) = Int32(r) & 0x3fff
@@ -84,162 +185,9 @@ const Resloc = StrongInt{UInt32,:Resloc} # bif indexing
 	Restype_INI = 0x0802
 	Restype_SRC = 0x0803
 end
-
-macro dotenum(type, values)
-	typename = Meta.isexpr(type, :(::)) ? type.args[1] : type
-	newvalues = :(begin end)
-	for v in values.args
-		v isa LineNumberNode && continue
-		println("value $v")
-		if Meta.isexpr(v, :(=))
-			(x, y) = v.args; s = Symbol(string(typename)*'_'*string(x))
-			push!(newvalues.args, :($s=$y))
-		else
-			s = Symbol(string(typename)*'_'*string(v))
-			push!(newvalues.args, :($s))
-		end
-	end
-	println(newvalues)
-end
-@bitflag ItemFlags::UInt32 begin
-	ItemFlags_Unsellable
-	ItemFlags_TwoHanded
-	ItemFlags_Movable
-	ItemFlags_Displayable
-	ItemFlags_Cursed
-	ItemFlags_CannotScribe
-	ItemFlags_Magical
-	ItemFlags_LeftHanded
-	# byte 2
-	ItemFlags_Silver
-	ItemFlags_ColdIron
-	ItemFlags_OffHanded
-	ItemFlags_Conversable
-	ItemFlags_FakeTwoHanded
-	ItemFlags_ForbidOffHandAnimation
-	ItemFlags_UsableInInventory # PSTEE
-	ItemFlags_Adamantine
-	# byte 4
-	ItemFlags_Undispellable = 0x01000000
-	ItemFlags_ToggleCriticalHitAversion
-end
-@enum ItemType::UInt16 begin
-	ItemTypeMisc = 0x0000
-	ItemTypeAmulet = 0x0001
-	ItemTypeArmor = 0x0002
-  ItemTypeBelt = 0x0003
-  ItemTypeBoots = 0x0004
-  ItemTypeArrow = 0x0005
-  ItemTypeBracers = 0x0006
-  ItemTypeHeadgear = 0x0007
-  ItemTypeKeys = 0x0008 # not in IWD
-  ItemTypePotion = 0x0009
-  ItemTypeRing = 0x000a
-  ItemTypeScroll = 0x000b
-  ItemTypeShield = 0x000c
-  ItemTypeFood = 0x000d
-  ItemTypeBullet = 0x000e
-  ItemTypeBow = 0x000f
-  ItemTypeDagger = 0x0010
-  ItemTypeMace = 0x0011 # includes clubs in BG
-  ItemTypeSling = 0x0012
-  ItemTypeSmallSword = 0x0013
-  ItemTypeLargeSword = 0x0014
-  ItemTypeHammer = 0x0015
-  ItemTypeMorningstar = 0x0016
-  ItemTypeFlail = 0x0017
-  ItemTypeDart = 0x0018
-  ItemTypeAxe = 0x0019
-  ItemTypeQuarterstaff = 0x001a
-  ItemTypeCrossbow = 0x001b
-  ItemTypeFistWeapon = 0x001c
-  ItemTypeSpear = 0x001d
-  ItemTypeHalberd = 0x001e # and two-handed axes
-  ItemTypeBolt = 0x001f
-  ItemTypeCloak = 0x0020
-  ItemTypeGold = 0x0021 # for monster-dropped treasure
-  ItemTypeGem = 0x0022
-  ItemTypeWand = 0x0023
-  ItemTypeContainer = 0x0024 # eye/broken armor
-  ItemTypeBooks = 0x0025 # broken shield/bracelet
-  ItemTypeFamiliar = 0x0026 # broken sword/earrings
-  ItemTypeTattoo = 0x0027 # PST
-  ItemTypeLenses = 0x0028 # PST
-  ItemTypeBuckler = 0x0029 # teeth (PST)
-  ItemTypeCandle = 0x002a
-  ItemTypeClub = 0x002c # IWD
-  ItemTypeLargeShield = 0x002f # IWD
-  ItemTypeMediumShield = 0x0031 # IWD
-  ItemTypeNotes = 0x0032
-  ItemTypeSmallShield = 0x0035 # IWD
-  ItemTypeTelescope = 0x0037 # IWD
-  ItemTypeDrink = 0x0038 # IWD
-  ItemTypeGreatSword = 0x0039 # IWD
-  ItemTypeContainer1 = 0x003a
-  ItemTypeFur = 0x003b
-  ItemTypeLeatherArmor = 0x003c
-  ItemTypeStuddedLeatherArmor = 0x003d
-  ItemTypeChainMail = 0x003e
-  ItemTypeSplintMail = 0x003f
-  ItemTypeHalfPlate = 0x0040
-  ItemTypeFullPlate = 0x0041
-  ItemTypeHideArmor = 0x0042
-  ItemTypeRobe = 0x0043
-  ItemTypeBastardSword = 0x0045
-  ItemTypeScarf = 0x0046
-  ItemTypeFoodIWD2 = 0x0047
-  ItemTypeHat = 0x0048
-  ItemTypeGauntlet = 0x0049
-end
-@enum UsabilityFlags::UInt32 begin
-	UsabilityFlags_Chaotic
-end
+@inline Restype(t::AbstractString) = eval(Symbol("Restype_"*uppercase(t)))
 
 # Formatted blocks ««1
-
-abstract type AbstractBlock end
-
-reprb(x) = repr(x)
-reprb(x::Base.CodeUnits) = 'b'*repr(String(x))
-
-macro Block(name, fields)
-	type_fields = Expr[]
-	read_fields = Expr[]
-	read_vars = Symbol[]
-	offset = 0
-	description = ""
-	for expr in fields.args
-		expr isa LineNumberNode && continue
-		if Meta.isexpr(expr, :(::))
-			field, content = expr.args; content = eval(content)
-			push!(type_fields, expr)
-			v = gensym(); push!(read_vars, v);
-			push!(read_fields, :($v = readt(io, $content)))
-		else
-			field, content = reprb(expr), eval(expr)
-			push!(read_fields, :(@assert read(io, $(sizeof(content))) == $content))
-		end
-		description*= @sprintf("0x%04x %4d %s\n", offset, sizeof(content), field)
-		offset+= sizeof(content)
-	end
-	description*= "total size = "*string(offset)
-	name = esc(name)
-	quote
-		struct $(name) <: AbstractBlock
-			$(type_fields...)
-		end
-		@inline Base.show(io::IO, ::MIME"text/plain", ::Type{$name}) =
-			print(io, $description)
-		function Base.read(io::IO, ::Type{$name})
-			$(read_fields...)
-			return $name($(read_vars...))
-		end
-	end
-end
-
-@inline readt(io::IO, T::DataType) = only(reinterpret(T,read(io, sizeof(T))))
-@inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer) =
-	[ read(io, T) for _ in Base.OneTo(n) ]
 
 # ««1 tlk
 struct TlkStrings{X}
@@ -250,13 +198,13 @@ end
 
 @inline Base.getindex(f::TlkStrings, i::Strref) = f.strings[Int32(i)+1]
 
-@Block TLK_hdr begin
+@block TLK_hdr begin
 	b"TLK V1  "
 	lang::UInt16
 	nstr::UInt32
 	offset::UInt32
 end
-@Block TLK_str begin
+@block TLK_str begin
 	flags::UInt16
 	sound::Resref
 	volume::UInt32
@@ -279,20 +227,20 @@ struct TlkStringSet{X}
 end
 
 # ««1 key/bif
-@Block KEY_hdr begin
+@block KEY_hdr begin
 	b"KEY V1  "
 	nbif::Int32
 	nres::Int32
 	bifoffset::UInt32
 	resoffset::UInt32
 end
-@Block KEY_bif begin
+@block KEY_bif begin
 	filelength::UInt32
 	offset::UInt32
 	namelength::UInt16
 	location::UInt16
 end
-@Block KEY_res begin
+@block KEY_res begin
 	name::Resref
 	type::Restype
 	location::Resloc
@@ -318,22 +266,45 @@ end
 	return KeyIndex(dirname(filename), bifnames, resentries)
 end
 
-function Base.getindex(f::KeyIndex, resname::Resref, restype::Restype)
+const XOR_KEY = b"\x88\xa8\x8f\xba\x8a\xd3\xb9\xf5\xed\xb1\xcf\xea\xaa\xe4\xb5\xfb\xeb\x82\xf9\x90\xca\xc9\xb5\xe7\xdc\x8e\xb7\xac\xee\xf7\xe0\xca\x8e\xea\xca\x80\xce\xc5\xad\xb7\xc4\xd0\x84\x93\xd5\xf0\xeb\xc8\xb4\x9d\xcc\xaf\xa5\x95\xba\x99\x87\xd2\x9d\xe3\x91\xba\x90\xca"
+
+function decrypt(io::IO)
+	peek(io) != 0xff && return io
+	buf = collect(codeunits(read(io, String)))
+	for i in eachindex(buf)
+		buf[i] ⊻= XOR_KEY[mod1(i-2, length(XOR_KEY))]
+	end
+	return IOBuffer(buf[2:end])
+end
+function Base.getindex(f::KeyIndex, resname::Union{AbstractString,Resref},
+		restype::Union{AbstractString,Restype})
+	resname, restype = Resref(resname), Restype(restype)
 # Resources are not unique w.r.t the name, but only name + type
 # e.g. plangood.{bcs,cre,chr}
 	loc = f.location[(resname, restype)]
 	file = joinpath(f.directory, f.bif[1+sourcefile(loc)])
-	return bifresource(file, resourceindex(loc))
+	io = bifresource(file, resourceindex(loc))
+	return restype ∈ (Restype_2DA, Restype_IDS) ? decrypt(io) : io
 end
+# @inline Base.getindex(f::KeyIndex, s::AbstractString, t) = getindex(f, Resref(s), t)
+# @inline Base.getindex(f::KeyIndex, resname::Resref, t::AbstractString) =
+# 	getindex(f, resname, Restype(t))
+@inline (::Type{String})(f::KeyIndex, resname, t) = read(f[resname, t], String)
+grep(f::KeyIndex, t, s) =
+	String.(r for r in allresources(f, t) if contains(String(f,r,t), s))
+# half-orc: 53187 53213 224201 224203 265330
+@inline allresources(f::KeyIndex,t::AbstractString) = allresources(f,Restype(t))
+@inline allresources(f::KeyIndex, t::Restype) =
+	( r.name for r in f.resources if r.type == t )
 
-@Block BIF_hdr begin
+@block BIF_hdr begin
 	b"BIFFV1  "
 	nres::UInt32
 	ntilesets::UInt32
 	offset::UInt32
 end
 
-@Block BIF_resource begin
+@block BIF_resource begin
 	locator::Resloc
 	offset::UInt32
 	size::UInt32
@@ -341,12 +312,12 @@ end
 	unknown::UInt16
 end
 
-@Block BIF_tileset begin
+@block BIF_tileset begin
 	locator::Resloc
 	offset::UInt32
 	ntiles::UInt32
 	size::UInt32
-	0x03eb
+	UInt16(0x03eb)
 	unknown::UInt16
 end
 
@@ -357,18 +328,277 @@ bifresource(file::AbstractString, index::Integer) = open(file, "r") do io
 	IOBuffer(read(seek(io, resources[index+1].offset), resources[index+1].size))
 end
 
-# »»1
-# ««1 itm
+# ««1 ids
+function Ids(io::IO; debug=false)
+	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
+	line = readline(io)
+	startswith(line, "IDS") && (line = readline(io))
+	!isnothing(match(r"^[0-9]*$", line)) && (line = readline(io))
+	list = Pair{Int,String}[]
+	while true
+		line = replace(line, r"\s*$" => "")
+		if !isempty(line)
+			s = split(line, r"\s+"; limit=2)
+			length(s) ≤ 1 && error("could not split IDS line: $line")
+			push!(list, (parse(Int, s[1]) => s[2]))
+		end
+		eof(io) && break
+		line = readline(io)
+	end
+	return list
+end
+@inline Ids(key::KeyIndex, r) = Ids(key[r, Restype_IDS])
+@inline Ids(f::AbstractString) = open(Ids, f, "r")
+# ««1 2da
+struct MatrixWithHeaders{T} <: AbstractMatrix{T}
+	rows::Vector{String}
+	cols::Vector{String}
+	matrix::Matrix{T}
+	@inline MatrixWithHeaders(rows::AbstractVector{<:AbstractString},
+		cols::AbstractVector{<:AbstractString}, matrix::AbstractMatrix{T}) where{T}=
+		new{T}(rows, cols, matrix)
+end
 
-@Block ITM_hdr begin
+@inline Base.size(m::MatrixWithHeaders) = size(m.matrix)
+@inline Base.getindex(m::MatrixWithHeaders, i::Integer...) =
+	getindex(m.matrix, i...)
+function Base.getindex(m::MatrixWithHeaders,
+		s1::AbstractString, s2::AbstractString)
+	i1 = findfirst(==(s1), m.rows)
+	@assert !isnothing(i1) "Row header not found: '$s1'"
+	i2 = findfirst(==(s2), m.cols)
+	@assert !isnothing(i2) "Row header not found: '$s2'"
+	return m.matrix[i1,i2]
+end
+
+function TwoDA(io::IO; debug=false, aligned=false)
+	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
+	line = readline(io)
+# 	@assert contains(line, r"^\s*2da\s+v1.0"i) "Bad 2da first line: '$line'"
+	defaultvalue = replace(replace(readline(io), r"^\s*" => ""), r"\s*$" => "")
+	line = readline(io)
+	if !aligned
+		cols = split(line)
+		lines = readlines(io)
+		mat = split.(lines)
+		MatrixWithHeaders(first.(mat), cols,
+			[m[j+1] for m in mat, j in eachindex(cols)])
+	else
+		positions = [ i for i in 2:length(line)
+			if isspace(line[i-1]) && !isspace(line[i]) ]
+		cols = [ match(r"^\S+", line[i:end]).match for i in positions ]
+		lines = readlines(io)
+		mat = [ match(r"^\S+", line[i:end]).match for line in lines, i in positions]
+		MatrixWithHeaders([match(r"^\S+", line).match for line in lines], cols,mat)
+	end
+end
+@inline TwoDA(key::KeyIndex, r; kw...) = TwoDA(key[r, Restype_2DA]; kw...)
+# ««1 itm
+# ««2 Enums etc.
+@dottedflags ItemFlag::UInt32 begin # ITEMFLAG.IDS
+	Indestructible
+	TwoHanded
+	Droppable
+	Displayable
+	Cursed
+	CannotScribe
+	Magical
+	LeftHanded
+	# byte 2
+	Silver
+	ColdIron
+	OffHanded
+	Dialog
+	Fake_OffHand
+	Disable_Offhand
+	UsableInInventory # PSTEE
+	Adamantine
+	# byte 4
+	Undispellable = 0x01000000
+	ToggleCriticalHitAversion
+end
+@dottedenum ItemCat::UInt16 begin # ITEMCAT.IDS
+	Misc = 0x0000
+	Amulet = 0x0001
+	Armor = 0x0002
+  Belt = 0x0003
+  Boots = 0x0004
+  Arrow = 0x0005
+  Bracers = 0x0006
+  Headgear = 0x0007
+  Keys = 0x0008 # not in IWD
+  Potion = 0x0009
+  Ring = 0x000a
+  Scroll = 0x000b
+  Shield = 0x000c
+  Food = 0x000d
+  Bullet = 0x000e
+  Bow = 0x000f
+  Dagger = 0x0010
+  Mace = 0x0011 # includes clubs in BG
+  Sling = 0x0012
+  SmallSword = 0x0013
+  LargeSword = 0x0014
+  Hammer = 0x0015
+  Morningstar = 0x0016
+  Flail = 0x0017
+  Dart = 0x0018
+  Axe = 0x0019
+  Quarterstaff = 0x001a
+  Crossbow = 0x001b
+  FistWeapon = 0x001c
+  Spear = 0x001d
+  Halberd = 0x001e # and two-handed axes
+  Bolt = 0x001f
+  Cloak = 0x0020
+  Gold = 0x0021 # for monster-dropped treasure
+  Gem = 0x0022
+  Wand = 0x0023
+  Container = 0x0024 # eye/broken armor
+  Books = 0x0025 # broken shield/bracelet
+  Familiar = 0x0026 # broken sword/earrings
+  Tattoo = 0x0027 # PST
+  Lenses = 0x0028 # PST
+  Buckler = 0x0029 # teeth (PST)
+  Candle = 0x002a
+  Club = 0x002c # IWD
+  LargeShield = 0x002f # IWD
+  MediumShield = 0x0031 # IWD
+  Notes = 0x0032
+  SmallShield = 0x0035 # IWD
+  Telescope = 0x0037 # IWD
+  Drink = 0x0038 # IWD
+  GreatSword = 0x0039 # IWD
+  Container1 = 0x003a
+  Fur = 0x003b
+  LeatherArmor = 0x003c
+  StuddedLeatherArmor = 0x003d
+  ChainMail = 0x003e
+  SplintMail = 0x003f
+  HalfPlate = 0x0040
+  FullPlate = 0x0041
+  HideArmor = 0x0042
+  Robe = 0x0043
+  BastardSword = 0x0045
+  Scarf = 0x0046
+  FoodIWD2 = 0x0047
+  Hat = 0x0048
+  Gauntlet = 0x0049
+end
+@dottedflags UsabilityFlags::UInt32 begin # not found
+	Chaotic
+	Evil
+	Good
+	Neutral # neither good nor evil
+	Lawful
+	True # neither lawful nor chaotic
+	Bard
+	Cleric
+	# byte 2
+	ClericMage
+	ClericThief
+	ClericRanger
+	Fighter
+	FighterDruid
+	FighterMage
+	FighterCleric
+	FighterMageCleric
+	# byte 3
+	FighterMageThief
+	FighterThief
+	Mage
+	MageThief
+	Paladin
+	Ranger
+	Thief
+	Elf
+	# byte 4
+	Dwarf
+	HalfElf
+	Halfling
+	Human
+	Gnome
+	Monk
+	Druid
+	HalfOrc
+end
+const ItemAnimation = Typewrap{StaticString{2},:ItemAnimation}
+@dottedenum WProf::UInt8 begin # WPROF.IDS
+	None = 0x00
+	BastardSword = 0x59
+	LongSword
+	ShortSword
+	TwoHandedSword
+	Katana
+	Scimitar
+	Dagger
+	WarHammer
+	Spear
+	Spear
+	Halberd
+	FlailMorningstar
+	Mace
+	Quarterstaff
+	Crossbow
+	LongBow
+	Shortbow
+	Dart
+	Sling
+	Blackjack
+	Gun
+	MartialArts
+	TwoHandedStyle
+	SwordShieldStyle
+	SingleWeaponStyle
+	TwoWeaponStyle
+	Club
+end
+@dottedenum AttackType::UInt8 begin # not found
+	None = 0
+	Melee
+	Ranged
+	Magical
+	Launcher
+end
+@dottedenum TargetType::UInt8 begin # not found
+	Invalid = 0
+	LivingActor = 1
+	Inventory = 2
+	DeadActor = 3
+	AnyPoint = 4
+	Caster = 5
+	CasterInstant = 7
+end
+@dottedenum LauncherType::UInt8 begin # not found
+	None = 0
+	Bow
+	Crossbow
+	Sling
+	Spear = 40
+	ThrowingAxe = 100
+end
+@dottedenum DamageType::UInt8 begin # not found
+	None = 0
+	Piercing = 1
+	Crushing = 2
+	Slashing = 3
+	Missile = 4
+	Fist = 5
+	PiercingCrushing = 6
+	PiercingSlashing = 7
+	CrushingSlashing = 8
+	BluntMissile = 9 # bugged
+end
+# ««2 Data blocks
+@block ITM_hdr begin
 	b"ITM V1  "
 	unidentified_name::Strref
 	identified_name::Strref
 	replacement::Resref
-	flags::ItemFlags
-	item_type::ItemType
-	usability::UInt32
-	animation::UInt16
+	flags::ItemFlag
+	item_type::ItemCat
+	usability::UsabilityFlags
+	animation::ItemAnimation
 	minlevel::UInt16
 	minstrength::UInt16
 	minstrenghtbonus::UInt8
@@ -380,7 +610,7 @@ end
 	minwisdom::UInt8
 	kit4::UInt8
 	minconstitution::UInt8
-	proficiency::UInt8
+	proficiency::WProf
 	mincharisma::UInt16
 	price::UInt32
 	stackamount::UInt16
@@ -398,33 +628,55 @@ end
 	feature_index::UInt16
 	feature_count::UInt16
 end
-
-# const ITM_ext_hdr = Files.Format(type = UInt8, must_identify = UInt8,
-# 	location = UInt8, alternative_dice_sides = UInt8, use_icon = Resref,
-# 	target_type = UInt8, target_count = UInt8, range = UInt16,
-# 	launcher_required = UInt8, alternative_dice_thrown = UInt8,
-# 	speed_factor = UInt8, alternative_damage_bonus = UInt8,
-# 	thac0_bonus = UInt16, dice_sides = UInt8, primary_type = UInt8,
-# 	dice_thrown = UInt8, secondary_type = UInt8, damage_bonus = UInt16,
-# 	damage_type = UInt16, nfeatures = UInt16, idxfeatures = UInt16,
-# 	max_charges = UInt16, depletion = UInt16, flags = UInt32,
-# 	projectile_animation = UInt16,
-# 	overhand_chance = UInt16, backhand_chance = UInt16, thrust_chance = UInt16,
-# 	is_arrow = UInt16, is_bolt = UInt16, is_bullet = UInt16,
-# 	)
-
-
+@block ITM_ability begin
+	attack_type::UInt8
+	must_identify::UInt8
+	location::UInt8
+	alternative_dice_sides::UInt8
+	use_icon::Resref
+	target_type::UInt8
+	target_count::UInt8
+	range::UInt16
+	launcher_required::UInt8
+	alternative_dice_thrown::UInt8
+	speed_factor::UInt8
+	alternative_damage_bonus::UInt8
+	thac0_bonus::UInt16
+	dice_sides::UInt8
+	primary_type::UInt8
+	dice_thrown::UInt8
+	secondary_type::UInt8
+	damage_bonus::UInt16
+	damage_type::UInt16
+	nfeatures::UInt16
+	idxfeatures::UInt16
+	max_charges::UInt16
+	depletion::UInt16
+	flags::UInt32
+	projectile_animation::UInt16
+	overhand_chance::UInt16
+	backhand_chance::UInt16
+	thrust_chance::UInt16
+	is_arrow::UInt16
+	is_bolt::UInt16
+	is_bullet::UInt16
+end
+# ««2 Item function
 @inline function Item(io::IO)
 	read(io, ITM_hdr)
 end
 @inline Item(f::AbstractString) = open(Item, f, "r")
-#»»1
+@inline Item(key::KeyIndex, r::Resref) = Item(key[r, Restype_ITM])
+# ««1 dlg
+@block DLG_hdr begin
 end
-IE=InfinityEngine;
+# »»1
+end
+IE=InfinityEngine
 test() = open("../bg2/game/chitin.key", "r") do io
 	read(io, IE.KEY_hdr)
 end
 
-key=IE.KeyIndex("../bg2/game/chitin.key");
-str=IE.TlkStrings("../bg2/game/lang/fr_FR/dialog.tlk");
+key=IE.KeyIndex("../bg2/game/chitin.key")
+str=IE.TlkStrings("../bg2/game/lang/fr_FR/dialog.tlk")
 nothing

@@ -1,9 +1,11 @@
 module DottedEnums
+using StaticArrays
 
 abstract type DottedEnum end
 abstract type DottedFlags end
+EnumOrFlags = Union{DottedEnum,DottedFlags}
 
-(T::Type{<:Integer})(x::Union{DottedEnum,DottedFlags}) = T(x.n)
+(T::Type{<:Integer})(x::EnumOrFlags) = T(x.n)
 
 function namemap end
 
@@ -12,7 +14,7 @@ function showtypename(io::IO, tn::Core.TypeName)
 		from = get(io, :module, Main)
 		if isnothing(from) || !Base.isvisible(tn.name, tn.module, from)
 			show(io, tn.module)
-			print(io, '.', tn.name)
+			print(io, '.')
 		end
 	end
 	print(io, tn.name)
@@ -27,7 +29,6 @@ function showenum(io::IO, T::DataType, n::Integer)
 	end
 end
 @inline Base.show(io::IO, x::DottedEnum) = showenum(io, typeof(x), x.n)
-
 function Base.show(io::IO, x::DottedFlags)
 	f = one(x.n); b = false
 	if iszero(x.n)
@@ -47,11 +48,11 @@ Base.:|(x::T, y::T) where{T<:DottedFlags} = T(x.n|y.n)
 Base.:&(x::T, y::T) where{T<:DottedFlags} = T(x.n&y.n)
 Base.:~(x::T) where{T<:DottedFlags} = T(~(x.n))
 
-function dottedenum(T::Union{Symbol,Expr}, args...; flags=false)
+function dottedenum(m::Module, T::Union{Symbol,Expr}, args...; flags=false)
 	typename, basetype = T, flags ? UInt32 : Int32
 	supert = flags ? :DottedFlags : :DottedEnum
 	if Meta.isexpr(T, :(::)) && T.args[1] isa Symbol
-		typename, basetype = T.args[1], Core.eval(__module__, T.args[2])
+		typename, basetype = T.args[1], Core.eval(m, T.args[2])
 	elseif !(T isa Symbol)
 		throw(ArgumentError("invalid type expression for $supert: $T"))
 	end
@@ -65,7 +66,7 @@ function dottedenum(T::Union{Symbol,Expr}, args...; flags=false)
 		s isa LineNumberNode && continue
 		if s isa Symbol # nothing
 		elseif Meta.isexpr(s, :(=))
-			s, i = s.args[1], convert(basetype, Core.eval(__module__, s.args[2]))
+			s, i = s.args[1], convert(basetype, Core.eval(m, s.args[2]))
 		else
 			throw(ArgumentError("invalid argument for $supert $typename: $s"))
 		end
@@ -104,7 +105,7 @@ Creates a `DottedEnum` subtype with name `EnumName` and enumerated values
 Apart from the syntax, this is similar to `@enum`.
 """
 macro dottedenum(T::Union{Symbol,Expr}, args...)
-	dottedenum(T, args...; flags=false)
+	dottedenum(__module__, T, args...; flags=false)
 end
 
 """    @dottedflags EnumName[::BaseType] name1[=value1] ...
@@ -113,9 +114,27 @@ Creates a `DottedFlags` subtype with name `EnumName` and individual
 bits `EnumName.name1` etc.
 """
 macro dottedflags(T::Union{Symbol,Expr}, args...)
-	dottedenum(T, args...; flags=true)
+	dottedenum(__module__, T, args...; flags=true)
 end
 
+# For serialization, we need extracting a given byte of an enum/flags value,
+# and also building one from various flags:
+function getbytes(x::EnumOrFlags, r::Union{AbstractUnitRange,Integer})
+	@assert first(r) ≥ 1; @assert last(r) ≤ sizeof(x)
+	return view(reinterpret(Int8, [x]), r)
+end
+@inline getbytes(x::EnumOrFlags, r::Union{AbstractUnitRange,Integer},
+		T::DataType) = only(reinterpret(T, getbytes(x, r)))
+function setbytes(T::Type{<:EnumOrFlags}, vals...)
+	t = Vector{UInt8}(undef, sizeof(T))
+	i = 0
+	for v in vals
+		view(t, i+1:i+sizeof(v)) .= reinterpret(eltype(t), [v])
+		i+= sizeof(v)
+	end
+	println("t = $t")
+	return T(only(reinterpret(fieldtype(T,:n), t)))
 end
 
-D=DottedEnums
+export @dottedenum, @dottedflags
+end

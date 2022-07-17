@@ -102,7 +102,33 @@ using Printf
 using StaticArrays
 
 # ««1 Basic types
+
+# ««2 File type determination
+
+"""    FileType"KEY" etc.
+
+Singleton object representing types of Infinity Engine files.
+This is passed as a second argument to `Base.read` on a stream
+to indicate file type (either from `.bif` file or from filesystem);
+this is very similar to the Base `MIME` types:
+
+    Base.read(file, FileType"DLG"()) # etc.
+
+If reading from a file, file type can be automatically determined
+by passing just `FileType`:
+
+    Base.read("chitin.key", FileType)
+"""
+struct FileType{T} end
+macro FileType_str(s) FileType{Symbol(s)} end
+Base.read(f::AbstractString, R::FileType; kwargs...) =
+	open(f, "r") do io; read(io, R; kwargs...); end
+# automatic determination of file type by extension:
+Base.read(f::AbstractString, ::Type{FileType}; kwargs...) =
+	read(f, FileType{Symbol(uppercase(splitext(f)[2][2:end]))}(); kwargs...)
+
 # ««2 Extract zero-terminated string from IO
+
 @inline function string0(v::AbstractVector{UInt8})
 	l = findfirst(iszero, v)
 	String(isnothing(l) ? v : view(v, 1:l-1))
@@ -186,8 +212,7 @@ const Resloc = Typewrap{UInt32, :Resloc} # bif indexing
 	Restype_SRC = 0x0803
 end
 @inline Restype(t::AbstractString) = eval(Symbol("Restype_"*uppercase(t)))
-
-# Formatted blocks ««1
+@inline (::Type{FileType})(t::Restype) = FileType{Symbol(repr(t)[end-2:end])}
 
 # ««1 tlk
 struct TlkStrings{X}
@@ -213,7 +238,7 @@ end
 	length::UInt32
 end
 
-@inline TlkStrings(filename::AbstractString) = open(filename, "r") do io
+function Base.read(io::IO, ::FileType"TLK")
 	header = read(io, TLK_hdr)
 	strref = read(io, TLK_str, header.nstr)
 	strings = [ (string = string0(io, header.offset + s.offset, s.length),
@@ -256,7 +281,7 @@ struct KeyIndex{X}
 		new{X}(dir, bif, res, loc)
 	end
 end
-@inline KeyIndex(filename::AbstractString) = open(filename, "r") do io
+Base.read(filename::AbstractString, ::FileType"KEY") = open(filename, "r") do io
 	header = read(io, KEY_hdr)
 	seek(io, header.bifoffset)
 	bifentries = read(io, KEY_bif, header.nbif)
@@ -265,6 +290,9 @@ end
 	resentries = read(io, KEY_res, header.nres)
 	return KeyIndex(dirname(filename), bifnames, resentries)
 end
+Base.read(key::KeyIndex, r::Union{Resref,AbstractString},
+	t::Union{AbstractString,Restype}; kwargs...) =
+	Base.read(key[r, t], FileType(Restype(t))(); kwargs...)
 
 const XOR_KEY = b"\x88\xa8\x8f\xba\x8a\xd3\xb9\xf5\xed\xb1\xcf\xea\xaa\xe4\xb5\xfb\xeb\x82\xf9\x90\xca\xc9\xb5\xe7\xdc\x8e\xb7\xac\xee\xf7\xe0\xca\x8e\xea\xca\x80\xce\xc5\xad\xb7\xc4\xd0\x84\x93\xd5\xf0\xeb\xc8\xb4\x9d\xcc\xaf\xa5\x95\xba\x99\x87\xd2\x9d\xe3\x91\xba\x90\xca"
 
@@ -329,7 +357,7 @@ bifresource(file::AbstractString, index::Integer) = open(file, "r") do io
 end
 
 # ««1 ids
-function Ids(io::IO; debug=false)
+function Base.read(io::IO, ::FileType"IDS"; debug=false)
 	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
 	line = readline(io)
 	startswith(line, "IDS") && (line = readline(io))
@@ -347,8 +375,6 @@ function Ids(io::IO; debug=false)
 	end
 	return list
 end
-@inline Ids(key::KeyIndex, r) = Ids(key[r, Restype_IDS])
-@inline Ids(f::AbstractString) = open(Ids, f, "r")
 # ««1 2da
 struct MatrixWithHeaders{T} <: AbstractMatrix{T}
 	rows::Vector{String}
@@ -371,7 +397,7 @@ function Base.getindex(m::MatrixWithHeaders,
 	return m.matrix[i1,i2]
 end
 
-function TwoDA(io::IO; debug=false, aligned=false)
+function Base.read(io::IO, ::FileType"2DA"; debug=false, aligned=false)
 	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
 	line = readline(io)
 # 	@assert contains(line, r"^\s*2da\s+v1.0"i) "Bad 2da first line: '$line'"
@@ -392,7 +418,7 @@ function TwoDA(io::IO; debug=false, aligned=false)
 		MatrixWithHeaders([match(r"^\S+", line).match for line in lines], cols,mat)
 	end
 end
-@inline TwoDA(key::KeyIndex, r; kw...) = TwoDA(key[r, Restype_2DA]; kw...)
+# @inline Table(key::KeyIndex, r; kw...) = Table(key[r, Restype_2DA]; kw...)
 # ««1 itm
 # ««2 Enums etc.
 @dottedflags ItemFlag::UInt32 begin # ITEMFLAG.IDS
@@ -662,21 +688,93 @@ end
 	is_bullet::UInt16
 end
 # ««2 Item function
-@inline function Item(io::IO)
+function Base.read(io::IO, ::FileType"ITM")
 	read(io, ITM_hdr)
 end
-@inline Item(f::AbstractString) = open(Item, f, "r")
-@inline Item(key::KeyIndex, r::Resref) = Item(key[r, Restype_ITM])
 # ««1 dlg
 @block DLG_hdr begin
+	b"DLG V1.0"
+	number_states::Int32
+	offset_states::Int32
+	number_transitions::Int32
+	offset_transitions::Int32
+	offset_state_triggers::Int32
+	number_state_triggers::Int32
+	offset_transition_triggers::Int32
+	number_transition_triggers::Int32
+	offset_actions::Int32
+	number_actions::Int32
+	flags::UInt32
+end
+@block DLG_state begin
+	text::Strref
+	first_transition::Int32
+	number_transitions::Int32
+	trigger::UInt32
+end
+@block DLG_transition begin
+	flags::UInt32
+	player_text::Strref
+	journal_text::Strref
+	index_trigger::Int32
+	index_action::Int32
+	next_actor::Resref
+	next_state::Int32
+end
+# this is the same type for state trigger, transition trigger, actions:
+@block DLG_string begin
+	offset::UInt32 # of trigger string
+	length::UInt32 # idem
+end
+
+struct Dialog
+	flags::UInt32
+	states::Vector{DLG_state}
+	transitions::Vector{DLG_transition}
+	state_triggers::Vector{String}
+	transition_triggers::Vector{String}
+	actions::Vector{String}
+end
+
+@inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
+	for s in read(seek(io, offset), DLG_string, count)]
+
+function Base.read(io::IO, ::FileType"DLG")
+	header = read(io, DLG_hdr)
+	return Dialog(header.flags,
+		read(seek(io, header.offset_states), DLG_state, header.number_states),
+		read(seek(io, header.offset_transitions), DLG_transition,
+			header.number_transitions),
+		dialog_strings(io, header.offset_state_triggers,
+			header.number_state_triggers),
+		dialog_strings(io, header.offset_transition_triggers,
+			header.number_transition_triggers),
+		dialog_strings(io, header.offset_actions, header.number_actions))
+end
+
+function printdialog(dialog::Dialog, tlk::TlkStrings)
+	for (i,s) in pairs(dialog.states)
+		t = s.trigger
+		println("<state $(i-1)>")
+		tr = get(dialog.state_triggers, t, nothing)
+		if !isnothing(tr)
+			println("  trigger: $tr")
+		end
+		println(tlk[s.text])
+		println("  transitions: $(s.first_transition:s.first_transition+s.number_transitions-1)")
+		println()
+	end
 end
 # »»1
+
 end
 IE=InfinityEngine
 test() = open("../bg2/game/chitin.key", "r") do io
 	read(io, IE.KEY_hdr)
 end
 
-key=IE.KeyIndex("../bg2/game/chitin.key")
-str=IE.TlkStrings("../bg2/game/lang/fr_FR/dialog.tlk")
+key=read("../bg2/game/chitin.key", IE.FileType)
+str=read("../bg2/game/lang/fr_FR/dialog.tlk", IE.FileType)
+dia=read(key, "abazigal", "dlg")
+IE.printdialog(dia,str)
 nothing

@@ -1,14 +1,9 @@
 #=
-Generic definition of a header:
- - field = type | constant (b"..") | hash table
-
- -  if type, this is a r/w value
-     (including user types e.g. Strref, Resref etc.)
-   if constant, this is a ro value (and written back in file)
-   if hash table, this is displayed as the associated value
-   (and read in the same manner)
-	
+# TODO:
+#  - dotted enum
+#  - (minor variant) dotted bitflag (with ~ as well)
 =#
+
 module InfinityEngine
 using Printf
 using StaticArrays
@@ -23,45 +18,15 @@ end
 @inline string0(io::IO, s::Integer, l::Integer) = string0(read(seek(io, s), l))
 
 # ««2 Indices: Strref, Resref etc.
-#
 
 abstract type AbstractStrongInt end
-
-# """    @StrongEnum Index 32 (0x1234 = "abc", etc.)
-# 	Defines Index_abc = 0x1234 etc.
-# """
-# macro StrongEnum(name, basetype, list)
-# 	show_expr = Expr[]
-# 	def_expr = Expr[]
-# 	allvalues = :(())
-# 	description = "    `$name`: an enum with base type `$basetype`"
-# 	for z in list.args
-# 		(x,y) = z.args
-# 		s = string(name)*'_'*y
-# 		push!(show_expr, :(x.n==$x && (print(io, $s); return)))
-# 		push!(def_expr, :(global $(Symbol(s)) = $name($x)))
-# 		push!(allvalues.args, x)
-# 		description*= "\n |"*repr(x)*"|"*repr(y)*"|"
-# 	end
-# 	quote
-# 		struct $name <: AbstractStrongInt
-# 			n::$basetype
-# 		end
-# 		@doc $description $name
-# 		$(def_expr...)
-# 		@inline Base.isvalid(x::$name) = x.n ∈ $allvalues
-# 		function Base.show(io::IO, x::$name)
-# 			$(show_expr...)
-# 			print(io, $(string(name)), '('); show(io,x.n); print(io, ')')
-# 		end
-# 	end
-# end
 
 struct StrongInt{I<:Integer,K} <: AbstractStrongInt
 	n::I
 end
 @inline (::Type{<:Integer})(x::StrongInt) = x.n
-@inline Base.show(io::IO, x::StrongInt{I,K}) where{I,K}=print(io, K,'(',x.n,')')
+@inline Base.show(io::IO, x::StrongInt{I,K}) where{I,K} =
+	print(io, K,'(',repr(x.n),')')
 
 const Strref = StrongInt{UInt32,:Strref}
 const Resref = StrongInt{UInt64,:Resref}
@@ -120,15 +85,124 @@ const Resloc = StrongInt{UInt32,:Resloc} # bif indexing
 	Restype_SRC = 0x0803
 end
 
-# Formatted blocks ««1
-# FIXME: replace this by a @Format{...} macro returning an anonymous struct
-# (with the same fields as the corresponding NamedTuple)
+macro dotenum(type, values)
+	typename = Meta.isexpr(type, :(::)) ? type.args[1] : type
+	newvalues = :(begin end)
+	for v in values.args
+		v isa LineNumberNode && continue
+		println("value $v")
+		if Meta.isexpr(v, :(=))
+			(x, y) = v.args; s = Symbol(string(typename)*'_'*string(x))
+			push!(newvalues.args, :($s=$y))
+		else
+			s = Symbol(string(typename)*'_'*string(v))
+			push!(newvalues.args, :($s))
+		end
+	end
+	println(newvalues)
+end
+@bitflag ItemFlags::UInt32 begin
+	ItemFlags_Unsellable
+	ItemFlags_TwoHanded
+	ItemFlags_Movable
+	ItemFlags_Displayable
+	ItemFlags_Cursed
+	ItemFlags_CannotScribe
+	ItemFlags_Magical
+	ItemFlags_LeftHanded
+	# byte 2
+	ItemFlags_Silver
+	ItemFlags_ColdIron
+	ItemFlags_OffHanded
+	ItemFlags_Conversable
+	ItemFlags_FakeTwoHanded
+	ItemFlags_ForbidOffHandAnimation
+	ItemFlags_UsableInInventory # PSTEE
+	ItemFlags_Adamantine
+	# byte 4
+	ItemFlags_Undispellable = 0x01000000
+	ItemFlags_ToggleCriticalHitAversion
+end
+@enum ItemType::UInt16 begin
+	ItemTypeMisc = 0x0000
+	ItemTypeAmulet = 0x0001
+	ItemTypeArmor = 0x0002
+  ItemTypeBelt = 0x0003
+  ItemTypeBoots = 0x0004
+  ItemTypeArrow = 0x0005
+  ItemTypeBracers = 0x0006
+  ItemTypeHeadgear = 0x0007
+  ItemTypeKeys = 0x0008 # not in IWD
+  ItemTypePotion = 0x0009
+  ItemTypeRing = 0x000a
+  ItemTypeScroll = 0x000b
+  ItemTypeShield = 0x000c
+  ItemTypeFood = 0x000d
+  ItemTypeBullet = 0x000e
+  ItemTypeBow = 0x000f
+  ItemTypeDagger = 0x0010
+  ItemTypeMace = 0x0011 # includes clubs in BG
+  ItemTypeSling = 0x0012
+  ItemTypeSmallSword = 0x0013
+  ItemTypeLargeSword = 0x0014
+  ItemTypeHammer = 0x0015
+  ItemTypeMorningstar = 0x0016
+  ItemTypeFlail = 0x0017
+  ItemTypeDart = 0x0018
+  ItemTypeAxe = 0x0019
+  ItemTypeQuarterstaff = 0x001a
+  ItemTypeCrossbow = 0x001b
+  ItemTypeFistWeapon = 0x001c
+  ItemTypeSpear = 0x001d
+  ItemTypeHalberd = 0x001e # and two-handed axes
+  ItemTypeBolt = 0x001f
+  ItemTypeCloak = 0x0020
+  ItemTypeGold = 0x0021 # for monster-dropped treasure
+  ItemTypeGem = 0x0022
+  ItemTypeWand = 0x0023
+  ItemTypeContainer = 0x0024 # eye/broken armor
+  ItemTypeBooks = 0x0025 # broken shield/bracelet
+  ItemTypeFamiliar = 0x0026 # broken sword/earrings
+  ItemTypeTattoo = 0x0027 # PST
+  ItemTypeLenses = 0x0028 # PST
+  ItemTypeBuckler = 0x0029 # teeth (PST)
+  ItemTypeCandle = 0x002a
+  ItemTypeClub = 0x002c # IWD
+  ItemTypeLargeShield = 0x002f # IWD
+  ItemTypeMediumShield = 0x0031 # IWD
+  ItemTypeNotes = 0x0032
+  ItemTypeSmallShield = 0x0035 # IWD
+  ItemTypeTelescope = 0x0037 # IWD
+  ItemTypeDrink = 0x0038 # IWD
+  ItemTypeGreatSword = 0x0039 # IWD
+  ItemTypeContainer1 = 0x003a
+  ItemTypeFur = 0x003b
+  ItemTypeLeatherArmor = 0x003c
+  ItemTypeStuddedLeatherArmor = 0x003d
+  ItemTypeChainMail = 0x003e
+  ItemTypeSplintMail = 0x003f
+  ItemTypeHalfPlate = 0x0040
+  ItemTypeFullPlate = 0x0041
+  ItemTypeHideArmor = 0x0042
+  ItemTypeRobe = 0x0043
+  ItemTypeBastardSword = 0x0045
+  ItemTypeScarf = 0x0046
+  ItemTypeFoodIWD2 = 0x0047
+  ItemTypeHat = 0x0048
+  ItemTypeGauntlet = 0x0049
+end
+@enum UsabilityFlags::UInt32 begin
+	UsabilityFlags_Chaotic
+end
 
-abstract type AbstractFormat end
+# Formatted blocks ««1
+
+abstract type AbstractBlock end
 
 reprb(x) = repr(x)
 reprb(x::Base.CodeUnits) = 'b'*repr(String(x))
-macro Format(name, fields)
+
+macro Block(name, fields)
 	type_fields = Expr[]
 	read_fields = Expr[]
 	read_vars = Symbol[]
@@ -151,7 +225,7 @@ macro Format(name, fields)
 	description*= "total size = "*string(offset)
 	name = esc(name)
 	quote
-		struct $(name) <: AbstractFormat
+		struct $(name) <: AbstractBlock
 			$(type_fields...)
 		end
 		@inline Base.show(io::IO, ::MIME"text/plain", ::Type{$name}) =
@@ -164,7 +238,7 @@ macro Format(name, fields)
 end
 
 @inline readt(io::IO, T::DataType) = only(reinterpret(T,read(io, sizeof(T))))
-@inline Base.read(io::IO, T::Type{<:AbstractFormat}, n::Integer) =
+@inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer) =
 	[ read(io, T) for _ in Base.OneTo(n) ]
 
 # ««1 tlk
@@ -176,13 +250,13 @@ end
 
 @inline Base.getindex(f::TlkStrings, i::Strref) = f.strings[Int32(i)+1]
 
-@Format TLK_hdr begin
+@Block TLK_hdr begin
 	b"TLK V1  "
 	lang::UInt16
 	nstr::UInt32
 	offset::UInt32
 end
-@Format TLK_str begin
+@Block TLK_str begin
 	flags::UInt16
 	sound::Resref
 	volume::UInt32
@@ -205,20 +279,20 @@ struct TlkStringSet{X}
 end
 
 # ««1 key/bif
-@Format KEY_hdr begin
+@Block KEY_hdr begin
 	b"KEY V1  "
 	nbif::Int32
 	nres::Int32
 	bifoffset::UInt32
 	resoffset::UInt32
 end
-@Format KEY_bif begin
+@Block KEY_bif begin
 	filelength::UInt32
 	offset::UInt32
 	namelength::UInt16
 	location::UInt16
 end
-@Format KEY_res begin
+@Block KEY_res begin
 	name::Resref
 	type::Restype
 	location::Resloc
@@ -252,14 +326,14 @@ function Base.getindex(f::KeyIndex, resname::Resref, restype::Restype)
 	return bifresource(file, resourceindex(loc))
 end
 
-@Format BIF_hdr begin
+@Block BIF_hdr begin
 	b"BIFFV1  "
 	nres::UInt32
 	ntilesets::UInt32
 	offset::UInt32
 end
 
-@Format BIF_resource begin
+@Block BIF_resource begin
 	locator::Resloc
 	offset::UInt32
 	size::UInt32
@@ -267,7 +341,7 @@ end
 	unknown::UInt16
 end
 
-@Format BIF_tileset begin
+@Block BIF_tileset begin
 	locator::Resloc
 	offset::UInt32
 	ntiles::UInt32
@@ -286,13 +360,13 @@ end
 # »»1
 # ««1 itm
 
-@Format ITM_hdr begin
+@Block ITM_hdr begin
 	b"ITM V1  "
 	unidentified_name::Strref
 	identified_name::Strref
 	replacement::Resref
-	flags::UInt32
-	item_type::UInt16
+	flags::ItemFlags
+	item_type::ItemType
 	usability::UInt32
 	animation::UInt16
 	minlevel::UInt16

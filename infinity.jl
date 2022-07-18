@@ -43,10 +43,21 @@ macro block(name, fields)
 	show_code = Expr[]
 	field_frag = Dict{Symbol,BitVector}()
 	size_code = Expr[]
+	instantiate_code = Expr[]
 # 	description = ""
-	typeparams = Meta.isexpr(name, :curly) ? name.args[2:end] : ()
-	escname = Meta.isexpr(name, :curly) ?
-		Expr(:curly, esc(name.args[1]), typeparams...) : esc(name)
+	if Meta.isexpr(name, :curly)
+		typeparams = name.args[2:end]
+		escname = :($(esc(name.args[1])){$(typeparams...)})
+	elseif Meta.isexpr(name, :where)
+		typeparams = name.args[2:end]
+		escname = :($(esc(name.args[1].args[1])){$(name.args[1].args[2:end]...)})
+	else
+		typeparams = ()
+		escname = esc(name)
+	end
+# 	typeparams = Meta.isexpr(name, :curly) ? name.args[2:end] : ()
+# 	escname = Meta.isexpr(name, :curly) ?
+# 		Expr(:curly, esc(name.args[1]), typeparams...) : esc(name)
 	for expr in fields.args
 		expr isa LineNumberNode && continue
 		if Meta.isexpr(expr, :ref)
@@ -96,18 +107,19 @@ macro block(name, fields)
 	block = quote
 		Base.@__doc__(struct $escname <: AbstractBlock
 			$(type_code...)
-			$escname(::Type{AbstractBlock};$(read_vars...)) where{$(typeparams...)} =
-				new{$(typeparams...)}($(read_vars...))
 		end)
 		# this hook allows overriding the kwargs method:
 		@inline $escname(;kwargs...) where{$(typeparams...)} =
 			$escname(AbstractBlock; kwargs...)
-		function Base.show(io::IO, ::MIME"text/plain", ::Type{$escname}) where{$(typeparams...)}
+		function Base.show(io::IO, ::MIME"text/plain", ::Type{<:$escname}
+				) where{$(typeparams...)}
 			offset = 0
 			$(show_code...)
 			print(io, "total size is ", offset)
 			return offset
 		end
+		$escname(::Type{AbstractBlock};$(read_vars...)) where{$(typeparams...)} =
+			$escname($(read_vars...))
 		# We extend filesize() to hold the size of the file representation of
 		# this struct:
 		@inline Base.filesize(::Type{$escname}) where{$(typeparams...)} =
@@ -120,10 +132,6 @@ macro block(name, fields)
 	block.head = :toplevel
 	return block
 end
-@block X begin
-	a::Int
-	foo::UInt32
-end
 
 
 # @inline readt(io::IO, T::DataType) = only(reinterpret(T,read(io, sizeof(T))))
@@ -132,6 +140,76 @@ end
 end
 using .Blocks: @block
 
+module Functors
+"""    find_typevar(T, TX)
+
+Given a type expression `T` with (exactly) one free variable `V`
+and a concrete subtype `TX`, returns the type with with this variable
+is instantiated in `TX`, i.e. `X` such that `TX == T{X}`.
+"""
+function find_typevar(T::DataType, TX::DataType)
+	@assert T.hasfreetypevars
+	for (p1, p2) in zip(T.parameters, TX.parameters)
+		p1 isa TypeVar && return (p1, p2)
+		p1.hasfreetypevars && return find_typevar(p1, p2)
+	end
+end
+
+"""    replacetypevars(f, T, V, A, B, x)
+
+Given a type expression `T` with free variable `V`
+and a concrete instance `x` of `T{A}`,
+as well as a function `f` mapping `A` to `B`,
+returns the instance of `T{B}` constructed by mapping `f`
+to the appropriate fields of `x`.
+"""
+function replacetypevars(f, T, V, A, B, x::TX) where{TX}
+# 	println("replacetypevars: $T, $TX;  $V = $A => $B")
+	T isa TypeVar && return f(x)::B
+	!T.hasfreetypevars && return x
+	TX <: AbstractArray &&
+	begin
+		newt = UnionAll(V,T){B}
+# 		println("  V=$V T=$T UnionAll=$(UnionAll(V,T))")
+# 		println("new type should be ", newt)
+		z = [ replacetypevars(f, T.parameters[1], V, A, B, y) for y in x ]
+# 		println("changing to: ", (typeof(z), z))
+		return [ replacetypevars(f, T.parameters[1], V, A, B, y) for y in x ]
+	end
+# 	if isstructtype(T)
+# 		TB = UnionAll(V,T){B}
+# 		vals = ((replacetypevars(f, fieldtype(T,i), V, A, B, getfield(x,i))
+# 			for i in 1:fieldcount(T))...,)
+# 		Expr(:new, :TB, Expr(Symbol("..."), :vals))
+# 	end
+	isstructtype(T) && return UnionAll(V, T){B}(
+			(replacetypevars(f, fieldtype(T,i), V, A, B, getfield(x,i))
+			for i in 1:fieldcount(T))...,)
+	error("unreachable")
+end
+
+"""    functor(f::Function, T::UnionAll, x, [B::Type])
+
+Given a `UnionAll` type T (defined over a free variable `V`)
+and a concrete instance `x` of this type,
+maps the function `f` over all fields of `x`
+(recursively) defined by the type variable `V`,
+returning the resulting object.
+
+If `x` has type `T{A}` and `f` maps type `A` to type `B`
+then the returned object will have type `T{B}`.
+
+If the type `B` is not user-supplied then type inference will try
+(and sometimes fail!) to guess it.
+"""
+function functor(f, T::UnionAll, x::TX, B = nothing) where{TX}
+	@assert TX <: T
+	(V, A) = find_typevar(T.body, TX)
+	@assert TX == T{A}
+	isnothing(B) && (B = only(Base.return_types(f, Tuple{A})))
+	replacetypevars(f, T.body, V, A, B, x)
+end
+end
 include("dottedenums.jl"); using .DottedEnums
 
 using Printf
@@ -279,7 +357,16 @@ struct TlkStrings{X}
 	@inline TlkStrings(str::AbstractVector{X}) where{X} = new{X}(str, Dict())
 end
 
-@inline Base.getindex(f::TlkStrings, i::Strref) = f.strings[Int32(i)+1]
+@inline Base.getindex(f::TlkStrings{X}, i::Strref) where{X} =
+	f.strings[Int32(i)+1]::X
+
+"""    instantiate(str::TlkStrings, x)
+
+Instantiates all `Strref` fields as strings in this object, using `str`
+as a string index.
+"""
+function instantiate(x::TlkStrings)
+end
 
 @block TLK_hdr begin
 	b"TLK V1  "
@@ -671,10 +758,10 @@ end
 	BluntMissile = 9 # bugged
 end
 # ««2 Data blocks
-@block ITM_hdr begin
+@block ITM_hdr{S} begin
 	b"ITM V1  "
-	unidentified_name::Strref
-	identified_name::Strref
+	unidentified_name::S
+	identified_name::S
 	replacement::Resref
 	flags::ItemFlag
 	item_type::ItemCat
@@ -699,8 +786,8 @@ end
 	lore::UInt16
 	groundicon::Resref
 	weight::UInt32
-	unidentified_description::Strref
-	identified_description::Strref
+	unidentified_description::S
+	identified_description::S
 	description_icon::Resref
 	enchantment::UInt32
 	ext_header_offset::UInt32
@@ -744,7 +831,7 @@ end
 end
 # ««2 Item function
 function Base.read(f::File"ITM")
-	read(f.io, ITM_hdr)
+	read(f.io, ITM_hdr{Strref})
 end
 # ««1 dlg
 @dottedflags DialogTransitionFlags::UInt32 begin
@@ -900,9 +987,12 @@ end
 # »»1
 end
 IE=InfinityEngine
+x = [1,2,3]
+y = IE.Functors.functor(string, Vector, x)
 
 key=read(IE.File, "../bg2/game/chitin.key")
 str=read(IE.File, "../bg2/game/lang/fr_FR/dialog.tlk")
 dia=read(key["abaziga", "dlg"])
-IE.printdialog(dia,str)
+dia1=IE.Functors.functor(x->str[x].string, IE.Dialog, dia, String)
+# IE.printdialog(dia,str)
 nothing

@@ -1,11 +1,12 @@
 module DottedEnums
 using StaticArrays
 
-abstract type DottedEnum end
-abstract type DottedFlags end
-EnumOrFlags = Union{DottedEnum,DottedFlags}
-
+abstract type EnumOrFlags{T} end
+abstract type DottedEnum{T} <: EnumOrFlags{T} end
+abstract type DottedFlags{T} <: EnumOrFlags{T} end
+@inline basetype(::Type{<:EnumOrFlags{T}}) where{T} = T
 (T::Type{<:Integer})(x::EnumOrFlags) = T(x.n)
+
 
 function namemap end
 
@@ -47,6 +48,8 @@ end
 Base.:|(x::T, y::T) where{T<:DottedFlags} = T(x.n|y.n)
 Base.:&(x::T, y::T) where{T<:DottedFlags} = T(x.n&y.n)
 Base.:~(x::T) where{T<:DottedFlags} = T(~(x.n))
+Base.iszero(x::DottedFlags) = iszero(x.n)
+Base.:∈(x::T, y::T) where{T<:DottedFlags} = !iszero(x&y)
 
 function dottedenum(m::Module, T::Union{Symbol,Expr}, args...; flags=false)
 	typename, basetype = T, flags ? UInt32 : Int32
@@ -84,7 +87,7 @@ function dottedenum(m::Module, T::Union{Symbol,Expr}, args...; flags=false)
 		# we don't check for keyword or value unicity
 	end
 	block = quote
-		Base.@__doc__(struct $tn <: $supert; n::$basetype; end)
+		Base.@__doc__(struct $tn <: $supert{$basetype}; n::$basetype; end)
 		function Base.getproperty(T::Type{$tn}, s::Symbol)
 			s ∈ fieldnames(DataType) && return getfield(T, s)
 			$(namedef...)
@@ -116,6 +119,7 @@ bits `EnumName.name1` etc.
 macro dottedflags(T::Union{Symbol,Expr}, args...)
 	dottedenum(__module__, T, args...; flags=true)
 end
+@inline Base.read(io::IO, T::Type{<:EnumOrFlags}) = T(read(io, basetype(T)))
 
 # For serialization, we need extracting a given byte of an enum/flags value,
 # and also building one from various flags:

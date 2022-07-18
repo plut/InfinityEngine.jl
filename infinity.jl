@@ -1,7 +1,16 @@
 #=
 # TODO:
-#  - dotted enum
-#  - (minor variant) dotted bitflag (with ~ as well)
+# - check translation format
+# + define `Game` structure holding everything at top level
+#  + override (map type -> Set of ids)
+#  - languages ?
+#   - use one master language (typ. en_US) for determining when to add
+#     strings, then compile strings for all languages with same strrefs
+#     (obviously!)
+# - check if passing id name as IO context makes sense (otherwise: extra arg..)
+# - check forbidden NTFS chars to choose a prefix
+# - `.d` => julia syntactic transformation
+# - nice display methods for items, creatures, dialog etc.
 =#
 
 module InfinityEngine
@@ -28,12 +37,16 @@ The fields may be either:
 """
 macro block(name, fields)
 # TODO:
-	type_fields = Expr[]
-	read_fields = Expr[]
+	type_code = Expr[]
 	read_vars = Symbol[]
+	read_code = Expr[]
+	show_code = Expr[]
 	field_frag = Dict{Symbol,BitVector}()
-	offset = 0
-	description = ""
+	size_code = Expr[]
+# 	description = ""
+	typeparams = Meta.isexpr(name, :curly) ? name.args[2:end] : ()
+	escname = Meta.isexpr(name, :curly) ?
+		Expr(:curly, esc(name.args[1]), typeparams...) : esc(name)
 	for expr in fields.args
 		expr isa LineNumberNode && continue
 		if Meta.isexpr(expr, :ref)
@@ -43,7 +56,7 @@ macro block(name, fields)
 # 				field, content = expr.args[1], Core.eval(__module__, field.args[2])
 # 				@assert !haskey(field_frag, field)
 # 				field_frag[field] = falses(sizeof(content))
-# 				push!(type_fields, :($field::$(esc(content))))
+# 				push!(type_code, :($field::$(esc(content))))
 # 				push!(read_vars, v)
 # 			end
 # 			r1, r2 = first(r), last(r)
@@ -54,31 +67,54 @@ macro block(name, fields)
 # 			if all(field_frag)
 # 			end
 		elseif Meta.isexpr(expr, :(::))
-			field, content = expr.args[1], Core.eval(__module__, expr.args[2])
-			push!(type_fields, esc(expr))
+			field, content = expr.args[1], expr.args[2]
+			if content ∈ typeparams
+				push!(size_code, :(sizeof($content)))
+			else
+				content = esc(content)
+				push!(size_code, :(sizeof($content)))
+			end
+			push!(type_code, :($field::$content))
 			v = field; push!(read_vars, v)
-			push!(read_fields, :($v = readt(io, $content)))
+			push!(read_code, :($v = read(io, $content)),
+				:(debug && println($(string(name)), "/",  $(string(field)), ": read ",$(sizeof(content)),": ",$v)))
 		else
 			field, content = reprb(expr), eval(expr)
-			push!(read_fields, :(@assert read(io, $(sizeof(content))) == $content))
+			push!(read_code, :(@assert read(io, $(sizeof(content))) == $content))
 		end
-		description*= @sprintf("0x%04x %4d %s\n", offset, sizeof(content), field)
-		offset+= sizeof(content)
+		push!(show_code, quote
+		s = try sizeof($content); catch; end
+		if !isnothing(s)
+		@printf(io, "0x%04x %4d %s\n", offset, s, $(string(field)))
+		offset+= s
+		else
+		@printf(io, "<-- type %s::%s does not have a definite type\n",
+			$(string(field)), string($content))
+		end
+		end)
 	end
-	description*= "total size = "*string(offset)
-	name = esc(name)
 	block = quote
-		Base.@__doc__(struct $name <: AbstractBlock
-			$(type_fields...)
-			$name(::Type{AbstractBlock};$(read_vars...)) = new($(read_vars...))
+		Base.@__doc__(struct $escname <: AbstractBlock
+			$(type_code...)
+			$escname(::Type{AbstractBlock};$(read_vars...)) where{$(typeparams...)} =
+				new{$(typeparams...)}($(read_vars...))
 		end)
 		# this hook allows overriding the kwargs method:
-		@inline $name(;kwargs...) = $name(AbstractBlock; kwargs...)
-		@inline Base.show(io::IO, ::MIME"text/plain", ::Type{$name}) =
-			print(io, $description)
-		function Base.read(io::IO, ::Type{$name})
-			$(read_fields...)
-			return $name(;$(read_vars...))
+		@inline $escname(;kwargs...) where{$(typeparams...)} =
+			$escname(AbstractBlock; kwargs...)
+		function Base.show(io::IO, ::MIME"text/plain", ::Type{$escname}) where{$(typeparams...)}
+			offset = 0
+			$(show_code...)
+			print(io, "total size is ", offset)
+			return offset
+		end
+		# We extend filesize() to hold the size of the file representation of
+		# this struct:
+		@inline Base.filesize(::Type{$escname}) where{$(typeparams...)} =
+			+($(size_code...))
+		function Base.read(io::IO, ::Type{$escname}; debug=false) where{$(typeparams...)}
+			$(read_code...)
+			return $escname(;$(read_vars...))
 		end
 	end
 	block.head = :toplevel
@@ -90,7 +126,7 @@ end
 end
 
 
-@inline readt(io::IO, T::DataType) = only(reinterpret(T,read(io, sizeof(T))))
+# @inline readt(io::IO, T::DataType) = only(reinterpret(T,read(io, sizeof(T))))
 @inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer) =
 	[ read(io, T) for _ in Base.OneTo(n) ]
 end
@@ -105,27 +141,29 @@ using StaticArrays
 
 # ««2 File type determination
 
-"""    FileType"KEY" etc.
+"""    File{Type}
 
-Singleton object representing types of Infinity Engine files.
-This is passed as a second argument to `Base.read` on a stream
-to indicate file type (either from `.bif` file or from filesystem);
-this is very similar to the Base `MIME` types:
+A structure holding the type and filename of a file as well as an IO object
+for reading/writing this file.
 
-    Base.read(file, FileType"DLG"()) # etc.
+Since the file type determines the `read`/`write` methods (and only takes
+a finite set of values) it is a type parameter.
 
-If reading from a file, file type can be automatically determined
-by passing just `FileType`:
-
-    Base.read("chitin.key", FileType)
+Defined methods include:
+ - `File{T}(filename, io)`: allows attaching a file name to an IO
+   (such as IO from an archive file).
+ - `Base.read(File, filename)`: automatic file type determination.
 """
-struct FileType{T} end
-macro FileType_str(s) FileType{Symbol(s)} end
-Base.read(f::AbstractString, R::FileType; kwargs...) =
-	open(f, "r") do io; read(io, R; kwargs...); end
-# automatic determination of file type by extension:
-Base.read(f::AbstractString, ::Type{FileType}; kwargs...) =
-	read(f, FileType{Symbol(uppercase(splitext(f)[2][2:end]))}(); kwargs...)
+struct File{T,IO}
+	name::String
+	io::IO
+	@inline File{T}(name::AbstractString, io::IO) where{T,IO} = new{T,IO}(name,io)
+end
+@inline File(f::AbstractString, io::IO) = let (a,b) = splitext(f)
+	File{Symbol(uppercase(b[2:end]))}(a, io); end
+@inline Base.read(::Type{File}, f::AbstractString) =
+	open(f, "r") do io; read(File(f, io)); end
+macro File_str(s) File{Symbol(s)} end
 
 # ««2 Extract zero-terminated string from IO
 
@@ -141,16 +179,30 @@ struct StaticString{N} <: AbstractString
 	@inline StaticString{N}(chars::AbstractVector{<:Integer}) where{N} =
 		new{N}(chars)
 end
-@inline Base.show(io::IO,s::StaticString) = @printf io "b\"%s\"" String(s.chars)
-@inline (::Type{String})(s::StaticString) = string0(s.chars)
-@inline (T::Type{<:StaticString{N}})(s::AbstractString) where{N} =
+@inline Base.sizeof(::StaticString{N}) where{N} = N
+@inline Base.ncodeunits(s::StaticString) = sizeof(s)
+@inline Base.codeunit(s::StaticString, i) = s.char[i]
+@inline Base.codeunit(::StaticString) = UInt8
+# We handle only ASCII strings...
+@inline Base.isvalid(::StaticString, ::Integer) = true
+@inline function Base.iterate(s::StaticString, i::Integer = 1)
+	i ≥ length(s) && return nothing
+	c = s.chars[i]
+	iszero(c) && return nothing
+	(Char(c), i+1)
+end
+@inline function (T::Type{<:StaticString{N}})(s::AbstractString) where{N}
+	@assert length(s) ≤ N "string must be at most $N characters long: \"$s\""
 	T(codeunits(rpad(uppercase(s), N, '\0')))
+end
+@inline Base.read(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
 
 # ««2 Type wrapper
 struct Typewrap{T,S}
 	data::T
 	@inline (::Type{Typewrap{T,S}})(args...) where{T,S} = new{T,S}(T(args...))
 end
+@inline Base.read(io::IO, X::Type{<:Typewrap{T}}) where{T,S} = X(read(io, T))
 @inline (::Type{Typewrap{T,S}})(x::Typewrap{T,S}) where{T,S} = x
 @inline Base.show(io::IO, t::Typewrap{T,S}) where{T,S} =
 	(print(io, S, '('); show(io, t.data); print(io, ')'))
@@ -170,10 +222,12 @@ const Resloc = Typewrap{UInt32, :Resloc} # bif indexing
 @inline resourceindex(r::Resloc) = Int32(r) & 0x3fff
 
 @enum Restype::UInt16 begin
+	Restype_000 = 0x0000
 	Restype_BMP = 0x0001
 	Restype_MVE = 0x0002
 	Restype_WAV = 0x0004
 	Restype_PLT = 0x0006
+	Restype_005 = 0x0005
 	Restype_BAM = 0x03e8
 	Restype_WED = 0x03e9
 	Restype_CHU = 0x03ea
@@ -211,8 +265,12 @@ const Resloc = Typewrap{UInt32, :Resloc} # bif indexing
 	Restype_INI = 0x0802
 	Restype_SRC = 0x0803
 end
-@inline Restype(t::AbstractString) = eval(Symbol("Restype_"*uppercase(t)))
-@inline (::Type{FileType})(t::Restype) = FileType{Symbol(repr(t)[end-2:end])}
+@inline Restype(t::AbstractString) =
+	let s = Symbol("Restype_"*uppercase(t))
+	isdefined(@__MODULE__, s) ? eval(s) : nothing
+end
+@inline (::Type{File})(t::Restype) =
+	File{Symbol(replace(repr(t), r"^.*Restype_" => ""))}
 
 # ««1 tlk
 struct TlkStrings{X}
@@ -238,10 +296,10 @@ end
 	length::UInt32
 end
 
-function Base.read(io::IO, ::FileType"TLK")
-	header = read(io, TLK_hdr)
-	strref = read(io, TLK_str, header.nstr)
-	strings = [ (string = string0(io, header.offset + s.offset, s.length),
+function Base.read(f::File"TLK")
+	header = read(f.io, TLK_hdr)
+	strref = read(f.io, TLK_str, header.nstr)
+	strings = [ (string = string0(f.io, header.offset + s.offset, s.length),
 		flags = s.flags, sound = s.sound, volume = s.volume, pitch = s.pitch)
 		for s in strref ]
 	return TlkStrings(strings)
@@ -281,18 +339,18 @@ struct KeyIndex{X}
 		new{X}(dir, bif, res, loc)
 	end
 end
-Base.read(filename::AbstractString, ::FileType"KEY") = open(filename, "r") do io
-	header = read(io, KEY_hdr)
-	seek(io, header.bifoffset)
-	bifentries = read(io, KEY_bif, header.nbif)
-	bifnames = [ string0(io, x.offset, x.namelength) for x in bifentries ]
-	seek(io, header.resoffset)
-	resentries = read(io, KEY_res, header.nres)
-	return KeyIndex(dirname(filename), bifnames, resentries)
+function Base.read(f::File"KEY")
+	header = read(f.io, KEY_hdr)
+	seek(f.io, header.bifoffset)
+	bifentries = read(f.io, KEY_bif, header.nbif)
+	bifnames = [ string0(f.io, x.offset, x.namelength) for x in bifentries ]
+	seek(f.io, header.resoffset)
+	resentries = read(f.io, KEY_res, header.nres)
+	return KeyIndex(dirname(f.name), bifnames, resentries)
 end
-Base.read(key::KeyIndex, r::Union{Resref,AbstractString},
+File(key::KeyIndex, r::Union{Resref,AbstractString},
 	t::Union{AbstractString,Restype}; kwargs...) =
-	Base.read(key[r, t], FileType(Restype(t))(); kwargs...)
+	File(Restype(t))(String(r), key[r,t])
 
 const XOR_KEY = b"\x88\xa8\x8f\xba\x8a\xd3\xb9\xf5\xed\xb1\xcf\xea\xaa\xe4\xb5\xfb\xeb\x82\xf9\x90\xca\xc9\xb5\xe7\xdc\x8e\xb7\xac\xee\xf7\xe0\xca\x8e\xea\xca\x80\xce\xc5\xad\xb7\xc4\xd0\x84\x93\xd5\xf0\xeb\xc8\xb4\x9d\xcc\xaf\xa5\x95\xba\x99\x87\xd2\x9d\xe3\x91\xba\x90\xca"
 
@@ -312,15 +370,12 @@ function Base.getindex(f::KeyIndex, resname::Union{AbstractString,Resref},
 	loc = f.location[(resname, restype)]
 	file = joinpath(f.directory, f.bif[1+sourcefile(loc)])
 	io = bifresource(file, resourceindex(loc))
-	return restype ∈ (Restype_2DA, Restype_IDS) ? decrypt(io) : io
+	restype ∈ (Restype_2DA, Restype_IDS) && (io = decrypt(io))
+	return File(restype)(String(resname), io)
 end
-# @inline Base.getindex(f::KeyIndex, s::AbstractString, t) = getindex(f, Resref(s), t)
-# @inline Base.getindex(f::KeyIndex, resname::Resref, t::AbstractString) =
-# 	getindex(f, resname, Restype(t))
 @inline (::Type{String})(f::KeyIndex, resname, t) = read(f[resname, t], String)
 grep(f::KeyIndex, t, s) =
 	String.(r for r in allresources(f, t) if contains(String(f,r,t), s))
-# half-orc: 53187 53213 224201 224203 265330
 @inline allresources(f::KeyIndex,t::AbstractString) = allresources(f,Restype(t))
 @inline allresources(f::KeyIndex, t::Restype) =
 	( r.name for r in f.resources if r.type == t )
@@ -357,11 +412,11 @@ bifresource(file::AbstractString, index::Integer) = open(file, "r") do io
 end
 
 # ««1 ids
-function Base.read(io::IO, ::FileType"IDS"; debug=false)
-	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
-	line = readline(io)
-	startswith(line, "IDS") && (line = readline(io))
-	!isnothing(match(r"^[0-9]*$", line)) && (line = readline(io))
+function Base.read(f::File"IDS"; debug=false)
+	debug && (mark(f.io); println("(", read(f.io, String), ")"); reset(f.io))
+	line = readline(f.io)
+	startswith(line, "IDS") && (line = readline(f.io))
+	!isnothing(match(r"^[0-9]*$", line)) && (line = readline(f.io))
 	list = Pair{Int,String}[]
 	while true
 		line = replace(line, r"\s*$" => "")
@@ -370,8 +425,8 @@ function Base.read(io::IO, ::FileType"IDS"; debug=false)
 			length(s) ≤ 1 && error("could not split IDS line: $line")
 			push!(list, (parse(Int, s[1]) => s[2]))
 		end
-		eof(io) && break
-		line = readline(io)
+		eof(f.io) && break
+		line = readline(f.io)
 	end
 	return list
 end
@@ -397,15 +452,15 @@ function Base.getindex(m::MatrixWithHeaders,
 	return m.matrix[i1,i2]
 end
 
-function Base.read(io::IO, ::FileType"2DA"; debug=false, aligned=false)
-	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
-	line = readline(io)
+function Base.read(f::File"2DA"; debug=false, aligned=false)
+	debug && (mark(f.io); println("(", read(f.io, String), ")"); reset(f.io))
+	line = readline(f.io)
 # 	@assert contains(line, r"^\s*2da\s+v1.0"i) "Bad 2da first line: '$line'"
-	defaultvalue = replace(replace(readline(io), r"^\s*" => ""), r"\s*$" => "")
-	line = readline(io)
+	defaultvalue = replace(replace(readline(f.io), r"^\s*" => ""), r"\s*$" => "")
+	line = readline(f.io)
 	if !aligned
 		cols = split(line)
-		lines = readlines(io)
+		lines = readlines(f.io)
 		mat = split.(lines)
 		MatrixWithHeaders(first.(mat), cols,
 			[m[j+1] for m in mat, j in eachindex(cols)])
@@ -413,7 +468,7 @@ function Base.read(io::IO, ::FileType"2DA"; debug=false, aligned=false)
 		positions = [ i for i in 2:length(line)
 			if isspace(line[i-1]) && !isspace(line[i]) ]
 		cols = [ match(r"^\S+", line[i:end]).match for i in positions ]
-		lines = readlines(io)
+		lines = readlines(f.io)
 		mat = [ match(r"^\S+", line[i:end]).match for line in lines, i in positions]
 		MatrixWithHeaders([match(r"^\S+", line).match for line in lines], cols,mat)
 	end
@@ -688,10 +743,22 @@ end
 	is_bullet::UInt16
 end
 # ««2 Item function
-function Base.read(io::IO, ::FileType"ITM")
-	read(io, ITM_hdr)
+function Base.read(f::File"ITM")
+	read(f.io, ITM_hdr)
 end
 # ««1 dlg
+@dottedflags DialogTransitionFlags::UInt32 begin
+	HasText
+	HasTrigger
+	HasAction
+	TerminatesDialog
+	Interrupt
+	AddUnsolvedQuest
+	AddJournalNote
+	AddSolvedQuest
+	ImmediateScriptActions
+	ClearActions
+end
 @block DLG_hdr begin
 	b"DLG V1.0"
 	number_states::Int32
@@ -706,16 +773,16 @@ end
 	number_actions::Int32
 	flags::UInt32
 end
-@block DLG_state begin
-	text::Strref
+@block DLG_state{S} begin
+	text::S
 	first_transition::Int32
 	number_transitions::Int32
 	trigger::UInt32
 end
-@block DLG_transition begin
-	flags::UInt32
-	player_text::Strref
-	journal_text::Strref
+@block DLG_transition{S} begin
+	flags::DialogTransitionFlags
+	player_text::S
+	journal_text::S
 	index_trigger::Int32
 	index_action::Int32
 	next_actor::Resref
@@ -727,10 +794,16 @@ end
 	length::UInt32 # idem
 end
 
-struct Dialog
+"""    Dialog{S}
+
+Describes the state machine associated with a dialog.
+`S` is the type used for dialog strings (either `Strref` or `String`).
+"""
+struct Dialog{S}
+	self::Resref
 	flags::UInt32
-	states::Vector{DLG_state}
-	transitions::Vector{DLG_transition}
+	states::Vector{DLG_state{S}}
+	transitions::Vector{DLG_transition{S}}
 	state_triggers::Vector{String}
 	transition_triggers::Vector{String}
 	actions::Vector{String}
@@ -739,42 +812,97 @@ end
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in read(seek(io, offset), DLG_string, count)]
 
-function Base.read(io::IO, ::FileType"DLG")
-	header = read(io, DLG_hdr)
-	return Dialog(header.flags,
-		read(seek(io, header.offset_states), DLG_state, header.number_states),
-		read(seek(io, header.offset_transitions), DLG_transition,
+function Base.read(f::File"DLG")
+	header = read(f.io, DLG_hdr)
+	return Dialog{Strref}(Resref(basename(f.name)), header.flags,
+		read(seek(f.io, header.offset_states), DLG_state{Strref},
+			header.number_states),
+		read(seek(f.io, header.offset_transitions), DLG_transition{Strref},
 			header.number_transitions),
-		dialog_strings(io, header.offset_state_triggers,
+		dialog_strings(f.io, header.offset_state_triggers,
 			header.number_state_triggers),
-		dialog_strings(io, header.offset_transition_triggers,
+		dialog_strings(f.io, header.offset_transition_triggers,
 			header.number_transition_triggers),
-		dialog_strings(io, header.offset_actions, header.number_actions))
+		dialog_strings(f.io, header.offset_actions, header.number_actions))
 end
 
-function printdialog(dialog::Dialog, tlk::TlkStrings)
+function printtransition(dialog::Dialog, str::TlkStrings, i, doneactions)
+	t = dialog.transitions[i+1]
+	print("  $i",
+# 				t.flags
+# 				&~DialogTransitionFlags.HasText
+# 				&~DialogTransitionFlags.TerminatesDialog
+		)
+	if t.flags ∋ DialogTransitionFlags.TerminatesDialog
+		print(" (final)")
+	else
+		print(" =>")
+		t.next_actor ≠ dialog.self && print(" ", t.next_actor)
+		print(" <$(t.next_state)>")
+	end
+	if t.flags ∋ DialogTransitionFlags.HasText
+		print('"', str[t.player_text].string, '"')
+	else
+		print("(no text)")
+	end
+	println()
+	if t.flags ∋ DialogTransitionFlags.HasAction
+		a = t.index_action
+		println(" action $a:")
+		if a ∉ doneactions
+			push!(doneactions, a)
+			println(dialog.actions[t.index_action+1])
+		end
+	end
+end
+
+function printdialog(dialog::Dialog{Strref}, str::TlkStrings)
+	donetransitions = Set{Int}()
+	doneactions = Set{Int}()
+	println("self is $(dialog.self)")
 	for (i,s) in pairs(dialog.states)
 		t = s.trigger
-		println("<state $(i-1)>")
+		println("state <$(i-1)>")
 		tr = get(dialog.state_triggers, t, nothing)
 		if !isnothing(tr)
 			println("  trigger: $tr")
 		end
-		println(tlk[s.text])
-		println("  transitions: $(s.first_transition:s.first_transition+s.number_transitions-1)")
-		println()
+		println('"', str[s.text].string, '"')
+		trans = s.first_transition:s.first_transition+s.number_transitions-1
+		println("  transitions: $trans")
+		for i in trans
+			i ∈ donetransitions && continue; push!(donetransitions, i)
+			printtransition(dialog, str, i, doneactions)
+		end
 	end
 end
-# »»1
+#««1 Game
+struct Game
+	directory::String
+	key::KeyIndex
+	override::Dict{Restype, Set{Resref}}
+end
 
+function Game(directory::AbstractString)
+	key = read(File, joinpath(directory, "chitin.key"))
+	println("read $(length(key.resources)) key resources")
+	override = Dict(r => Set{Resref}() for r in instances(Restype))
+	for f in readdir(joinpath(directory, "override"))
+		(b, e) = splitext(f)
+		r = Restype(e[2:end]); isnothing(r) && continue
+		length(b) > 8 && continue
+		push!(override[r], Resref(b))
+	end
+	println("read $(sum(length(v) for (_,v) in override)) override resources")
+	return Game(directory, key, override)
+end
+
+# »»1
 end
 IE=InfinityEngine
-test() = open("../bg2/game/chitin.key", "r") do io
-	read(io, IE.KEY_hdr)
-end
 
-key=read("../bg2/game/chitin.key", IE.FileType)
-str=read("../bg2/game/lang/fr_FR/dialog.tlk", IE.FileType)
-dia=read(key, "abazigal", "dlg")
+key=read(IE.File, "../bg2/game/chitin.key")
+str=read(IE.File, "../bg2/game/lang/fr_FR/dialog.tlk")
+dia=read(key["abaziga", "dlg"])
 IE.printdialog(dia,str)
 nothing

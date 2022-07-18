@@ -1,14 +1,14 @@
 #=
 # TODO:
 # - check translation format
+#  - needs xgettext (or at least a very basic version)
 # + define `Game` structure holding everything at top level
 #  + override (map type -> Set of ids)
 #  - languages ?
 #   - use one master language (typ. en_US) for determining when to add
 #     strings, then compile strings for all languages with same strrefs
 #     (obviously!)
-# - check if passing id name as IO context makes sense (otherwise: extra arg..)
-# - check forbidden NTFS chars to choose a prefix
+# - check forbidden NTFS chars to choose a prefix: <>:"/\|?*
 # - `.d` => julia syntactic transformation
 # - nice display methods for items, creatures, dialog etc.
 =#
@@ -165,6 +165,7 @@ to the appropriate fields of `x`.
 """
 function replacetypevars(f, T, V, A, B, x::TX) where{TX}
 # 	println("replacetypevars: $T, $TX;  $V = $A => $B")
+	# two leaf cases:
 	T isa TypeVar && return f(x)::B
 	!T.hasfreetypevars && return x
 	TX <: AbstractArray &&
@@ -212,37 +213,11 @@ end
 end
 include("dottedenums.jl"); using .DottedEnums
 
+import Base.read
 using Printf
 using StaticArrays
 
 # ««1 Basic types
-
-# ««2 File type determination
-
-"""    File{Type}
-
-A structure holding the type and filename of a file as well as an IO object
-for reading/writing this file.
-
-Since the file type determines the `read`/`write` methods (and only takes
-a finite set of values) it is a type parameter.
-
-Defined methods include:
- - `File{T}(filename, io)`: allows attaching a file name to an IO
-   (such as IO from an archive file).
- - `Base.read(File, filename)`: automatic file type determination.
-"""
-struct File{T,IO}
-	name::String
-	io::IO
-	@inline File{T}(name::AbstractString, io::IO) where{T,IO} = new{T,IO}(name,io)
-end
-@inline File(f::AbstractString, io::IO) = let (a,b) = splitext(f)
-	File{Symbol(uppercase(b[2:end]))}(a, io); end
-@inline Base.read(::Type{File}, f::AbstractString) =
-	open(f, "r") do io; read(File(f, io)); end
-macro File_str(s) File{Symbol(s)} end
-
 # ««2 Extract zero-terminated string from IO
 
 @inline function string0(v::AbstractVector{UInt8})
@@ -264,7 +239,7 @@ end
 # We handle only ASCII strings...
 @inline Base.isvalid(::StaticString, ::Integer) = true
 @inline function Base.iterate(s::StaticString, i::Integer = 1)
-	i ≥ length(s) && return nothing
+	i > length(s) && return nothing
 	c = s.chars[i]
 	iszero(c) && return nothing
 	(Char(c), i+1)
@@ -273,82 +248,138 @@ end
 	@assert length(s) ≤ N "string must be at most $N characters long: \"$s\""
 	T(codeunits(rpad(uppercase(s), N, '\0')))
 end
-@inline Base.read(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
+@inline read(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
 
 # ««2 Type wrapper
 struct Typewrap{T,S}
 	data::T
 	@inline (::Type{Typewrap{T,S}})(args...) where{T,S} = new{T,S}(T(args...))
 end
-@inline Base.read(io::IO, X::Type{<:Typewrap{T}}) where{T,S} = X(read(io, T))
+@inline read(io::IO, X::Type{<:Typewrap{T}}) where{T,S} = X(read(io, T))
 @inline (::Type{Typewrap{T,S}})(x::Typewrap{T,S}) where{T,S} = x
 @inline Base.show(io::IO, t::Typewrap{T,S}) where{T,S} =
 	(print(io, S, '('); show(io, t.data); print(io, ')'))
-@inline (J::Type{<:Integer})(x::Typewrap{<:Integer}) = J(x.data)
-@inline (J::Type{<:AbstractString})(x::Typewrap{<:AbstractString}) = J(x.data)
+@inline (J::Type{<:Union{Integer,AbstractString}})(x::Typewrap) = J(x.data)
 
-# ««2 Indices: Strref, Resref etc.
+# ««2 Indices: Strref etc.
+"""    Strref
 
-const Resref = Typewrap{StaticString{8},:Resref}
-macro res_str(s) Resref(s) end
-
+Index (32-bit) referring to a translated string in dialog.tlk/dialogF.tlk.
+"""
 const Strref = Typewrap{UInt32, :Strref}
 
-const Resloc = Typewrap{UInt32, :Resloc} # bif indexing
-@inline sourcefile(r::Resloc) = Int32(r) >> 20
-@inline tilesetindex(r::Resloc) = (Int32(r) >> 14) && 0x3f
-@inline resourceindex(r::Resloc) = Int32(r) & 0x3fff
+"""    Resource"Type"
 
-@enum Restype::UInt16 begin
-	Restype_000 = 0x0000
-	Restype_BMP = 0x0001
-	Restype_MVE = 0x0002
-	Restype_WAV = 0x0004
-	Restype_PLT = 0x0006
-	Restype_005 = 0x0005
-	Restype_BAM = 0x03e8
-	Restype_WED = 0x03e9
-	Restype_CHU = 0x03ea
-	Restype_TIS = 0x03eb
-	Restype_MOS = 0x03ec
-	Restype_ITM = 0x03ed
-	Restype_SPL = 0x03ee
-	Restype_BCS = 0x03ef
-	Restype_IDS = 0x03f0
-	Restype_CRE = 0x03f1
-	Restype_ARE = 0x03f2
-	Restype_DLG = 0x03f3
-	Restype_2DA = 0x03f4
-	Restype_GAM = 0x03f5
-	Restype_STO = 0x03f6
-	Restype_WMP = 0x03f7
-	Restype_CHR = 0x03f8
-	Restype_BS = 0x03f9
-	Restype_CHR2 = 0x03fa
-	Restype_VVC = 0x03fb
-	Restype_VFC = 0x03fc
-	Restype_PRO = 0x03fd
-	Restype_BIO = 0x03fe
-	Restype_WBM = 0x03ff
-	Restype_FNT = 0x0400
-	Restype_GUI = 0x0402
-	Restype_SQL = 0x0403
-	Restype_PVRZ = 0x0404
-	Restype_GLSL = 0x0405
-	Restype_MENU = 0x0408
-	Restype_LUA = 0x0409
-	Restype_TTF = 0x040a
-	Restype_PNG = 0x040b
-	Restype_BAH = 0x044c
-	Restype_INI = 0x0802
-	Restype_SRC = 0x0803
+Index (64-bit, or 8 char string) referring to a resource.
+This index carries type information marking the resource type,
+and indicated by the string parameter: Resource"ITM"("BLUN01")
+describes an item, etc.
+This allows dispatch to be done correctly at compile-time.
+"""
+const Resource{T} =Typewrap{Typewrap{StaticString{8},T},:Resource}
+macro Resource_str(s) Resource{Symbol(uppercase(s))} end
+
+"""    BifIndex
+32-bit index of resource in bif files.
+"""
+const BifIndex = Typewrap{UInt32, :BifIndex} # bif indexing
+@inline sourcefile(r::BifIndex) = Int32(r) >> 20
+@inline tilesetindex(r::BifIndex) = (Int32(r) >> 14) && 0x3f
+@inline resourceindex(r::BifIndex) = Int32(r) & 0x3fff
+
+"""    Resindex
+
+16-bit value indexing a resource type in key file.
+(This is immediately translated to a string value when reading this file).
+"""
+const Resindex = Typewrap{UInt16, :Resindex} # 16-bit version
+# ««2 File type determination
+
+# Restype type is a compile-time correspondence between UInt16 and strings
+# This is stored as:
+#  - UInt16 in key file and
+#  - strings in source code and filesystem files
+#
+# Use cases:
+#  - locate resource by string name in KeyIndex: source = string =>KeyIndex
+#  - build Key index from .key file: int=>KeyIndex
+#  - read from file: source = string => string
+
+const RESOURCE_TABLE = Dict{UInt16,String}(
+	0x0001 => "BMP",
+	0x0002 => "MVE",
+	0x0004 => "WAV",
+	0x0006 => "PLT",
+	0x03e8 => "BAM",
+	0x03e9 => "WED",
+	0x03ea => "CHU",
+	0x03eb => "TIS",
+	0x03ec => "MOS",
+	0x03ed => "ITM",
+	0x03ee => "SPL",
+	0x03ef => "BCS",
+	0x03f0 => "IDS",
+	0x03f1 => "CRE",
+	0x03f2 => "ARE",
+	0x03f3 => "DLG",
+	0x03f4 => "2DA",
+	0x03f5 => "GAM",
+	0x03f6 => "STO",
+	0x03f7 => "WMP",
+	0x03f8 => "CHR",
+	0x03f9 => "BS",
+	0x03fa => "CHR2",
+	0x03fb => "VVC",
+	0x03fc => "VFC",
+	0x03fd => "PRO",
+	0x03fe => "BIO",
+	0x03ff => "WBM",
+	0x0400 => "FNT",
+	0x0402 => "GUI",
+	0x0403 => "SQL",
+	0x0404 => "PVRZ",
+	0x0405 => "GLSL",
+	0x0408 => "MENU",
+	0x0409 => "LUA",
+	0x040a => "TTF",
+	0x040b => "PNG",
+	0x044c => "BAH",
+	0x0802 => "INI",
+	0x0803 => "SRC",
+)
+@inline String(x::Resindex) = get(RESOURCE_TABLE, UInt16(x), repr(UInt16(x)))
+@inline Base.Symbol(x::Resindex) = Symbol(String(x))
+"""    Restype{Type}
+
+A structure holding an IO stream for game data (either from a filesystem
+file or from a bif resource) together with the resource name and type
+identifier.
+
+ - Since the file type determines the `read`/`write` methods (and only takes
+   a finite set of values) it is a type parameter.
+ - The resource name (i.e. basename of the file without extension) is stored
+   as a field. The name is canonicalized as upper-case.
+
+Defined methods include:
+ - `Restype"EXT"`: macro defining static value for this file type.
+ - `Restype{T}(filename)`: constructor opening the file.
+ - `Restype(filename)`: same as above with automatic file type determination.
+ - `Restype{T}(filename, io)`: constructor for existing IO.
+ - `Base.read(Restype)`: reads to appropriate structure type.
+
+Constructors:
+"""
+mutable struct Restype{T,IO}
+	name::String
+	io::IO
+	@inline Restype{T}(name::AbstractString, io::IO) where{T,IO} =
+		finalizer(x->close(x.io), new{T,IO}(uppercase(name),io))
 end
-@inline Restype(t::AbstractString) =
-	let s = Symbol("Restype_"*uppercase(t))
-	isdefined(@__MODULE__, s) ? eval(s) : nothing
-end
-@inline (::Type{File})(t::Restype) =
-	File{Symbol(replace(repr(t), r"^.*Restype_" => ""))}
+@inline Restype{T}(f::AbstractString) where{T} =
+	((a,b) = splitext(basename(f)); Restype{T}(a, open(f)))
+@inline Restype(f::AbstractString) = 
+	((a,b) = splitext(basename(f)); Restype{Symbol(uppercase(b[2:end]))}(a, open(f)))
+macro Restype_str(s) Restype{Symbol(uppercase(s))} end
 
 # ««1 tlk
 struct TlkStrings{X}
@@ -357,8 +388,11 @@ struct TlkStrings{X}
 	@inline TlkStrings(str::AbstractVector{X}) where{X} = new{X}(str, Dict())
 end
 
-@inline Base.getindex(f::TlkStrings{X}, i::Strref) where{X} =
-	f.strings[Int32(i)+1]::X
+function Base.getindex(f::TlkStrings{X}, i::Strref) where{X}
+	i = UInt32(i)
+	i == typemax(i) && (i = 0)
+	f.strings[i+1]::X
+end
 
 """    instantiate(str::TlkStrings, x)
 
@@ -376,14 +410,14 @@ end
 end
 @block TLK_str begin
 	flags::UInt16
-	sound::Resref
+	sound::Resource"WAV"
 	volume::UInt32
 	pitch::UInt32
 	offset::UInt32
 	length::UInt32
 end
 
-function Base.read(f::File"TLK")
+function read(f::Restype"TLK")
 	header = read(f.io, TLK_hdr)
 	strref = read(f.io, TLK_str, header.nstr)
 	strings = [ (string = string0(f.io, header.offset + s.offset, s.length),
@@ -411,33 +445,31 @@ end
 	location::UInt16
 end
 @block KEY_res begin
-	name::Resref
-	type::Restype
-	location::Resloc
+	name::StaticString{8}
+	type::Resindex
+	location::BifIndex
 end
 
 struct KeyIndex{X}
 	directory::String
 	bif::Vector{String}
 	resources::Vector{X}
-	location::Dict{Tuple{Resref,Restype},Resloc}
+	location::Dict{Tuple{StaticString{8},Symbol},BifIndex}
 	function KeyIndex(dir, bif, res::AbstractVector{X}) where{X}
-		loc = Dict((r.name, r.type) => r.location for r in res)
+		loc = Dict((r.name, Symbol(r.type)) => r.location for r in res)
 		new{X}(dir, bif, res, loc)
 	end
 end
-function Base.read(f::File"KEY")
-	header = read(f.io, KEY_hdr)
-	seek(f.io, header.bifoffset)
-	bifentries = read(f.io, KEY_bif, header.nbif)
-	bifnames = [ string0(f.io, x.offset, x.namelength) for x in bifentries ]
-	seek(f.io, header.resoffset)
-	resentries = read(f.io, KEY_res, header.nres)
-	return KeyIndex(dirname(f.name), bifnames, resentries)
+KeyIndex(filename::AbstractString) = open(filename) do io
+	dir = dirname(filename)
+	header = read(io, KEY_hdr)
+	seek(io, header.bifoffset)
+	bifentries = read(io, KEY_bif, header.nbif)
+	bifnames = [ string0(io, x.offset, x.namelength) for x in bifentries ]
+	seek(io, header.resoffset)
+	resentries = read(io, KEY_res, header.nres)
+	return KeyIndex(dir, bifnames, resentries)
 end
-File(key::KeyIndex, r::Union{Resref,AbstractString},
-	t::Union{AbstractString,Restype}; kwargs...) =
-	File(Restype(t))(String(r), key[r,t])
 
 const XOR_KEY = b"\x88\xa8\x8f\xba\x8a\xd3\xb9\xf5\xed\xb1\xcf\xea\xaa\xe4\xb5\xfb\xeb\x82\xf9\x90\xca\xc9\xb5\xe7\xdc\x8e\xb7\xac\xee\xf7\xe0\xca\x8e\xea\xca\x80\xce\xc5\xad\xb7\xc4\xd0\x84\x93\xd5\xf0\xeb\xc8\xb4\x9d\xcc\xaf\xa5\x95\xba\x99\x87\xd2\x9d\xe3\x91\xba\x90\xca"
 
@@ -449,23 +481,8 @@ function decrypt(io::IO)
 	end
 	return IOBuffer(buf[2:end])
 end
-function Base.getindex(f::KeyIndex, resname::Union{AbstractString,Resref},
-		restype::Union{AbstractString,Restype})
-	resname, restype = Resref(resname), Restype(restype)
-# Resources are not unique w.r.t the name, but only name + type
-# e.g. plangood.{bcs,cre,chr}
-	loc = f.location[(resname, restype)]
-	file = joinpath(f.directory, f.bif[1+sourcefile(loc)])
-	io = bifresource(file, resourceindex(loc))
-	restype ∈ (Restype_2DA, Restype_IDS) && (io = decrypt(io))
-	return File(restype)(String(resname), io)
-end
-@inline (::Type{String})(f::KeyIndex, resname, t) = read(f[resname, t], String)
-grep(f::KeyIndex, t, s) =
-	String.(r for r in allresources(f, t) if contains(String(f,r,t), s))
-@inline allresources(f::KeyIndex,t::AbstractString) = allresources(f,Restype(t))
-@inline allresources(f::KeyIndex, t::Restype) =
-	( r.name for r in f.resources if r.type == t )
+@inline decrypt(::Val, io::IO) = io
+@inline decrypt(::Union{Val{Symbol("2DA")},Val{:IDS}}, io::IO) = decrypt(io)
 
 @block BIF_hdr begin
 	b"BIFFV1  "
@@ -475,15 +492,15 @@ grep(f::KeyIndex, t, s) =
 end
 
 @block BIF_resource begin
-	locator::Resloc
+	locator::BifIndex
 	offset::UInt32
 	size::UInt32
-	type::Restype
+	type::Resindex
 	unknown::UInt16
 end
 
 @block BIF_tileset begin
-	locator::Resloc
+	locator::BifIndex
 	offset::UInt32
 	ntiles::UInt32
 	size::UInt32
@@ -491,18 +508,29 @@ end
 	unknown::UInt16
 end
 
-bifresource(file::AbstractString, index::Integer) = open(file, "r") do io
+bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
 	header = read(io, BIF_hdr)
 	seek(io, header.offset)
 	resources = read(io, BIF_resource, header.nres)
 	IOBuffer(read(seek(io, resources[index+1].offset), resources[index+1].size))
 end
 
+function Restype{T}(key::KeyIndex, name) where{T}
+	loc = get(key.location, (StaticString{8}(name), T), nothing)
+	isnothing(loc) && return nothing
+	bif = joinpath(key.directory, key.bif[1+sourcefile(loc)])
+	io = bifcontent(bif, resourceindex(loc))
+	return Restype{T}(String(name), decrypt(Val{T}(), io))
+end
+Base.all(key::KeyIndex, ::Type{Restype{T}}) where{T} =
+	(Resource{T}(r[1]) for r in keys(key.location) if r[2] == T)
+
 # ««1 ids
-function Base.read(f::File"IDS"; debug=false)
+# useful ones: PROJECTL SONGLIST ITEMCAT NPC ANISND ?
+function read(f::Restype"IDS"; debug=false)
 	debug && (mark(f.io); println("(", read(f.io, String), ")"); reset(f.io))
 	line = readline(f.io)
-	startswith(line, "IDS") && (line = readline(f.io))
+	(!contains(line, " ") || startswith(line, "IDS")) && (line = readline(f.io))
 	!isnothing(match(r"^[0-9]*$", line)) && (line = readline(f.io))
 	list = Pair{Int,String}[]
 	while true
@@ -538,8 +566,7 @@ function Base.getindex(m::MatrixWithHeaders,
 	@assert !isnothing(i2) "Row header not found: '$s2'"
 	return m.matrix[i1,i2]
 end
-
-function Base.read(f::File"2DA"; debug=false, aligned=false)
+function read(f::Restype"2DA"; debug=false, aligned=false)
 	debug && (mark(f.io); println("(", read(f.io, String), ")"); reset(f.io))
 	line = readline(f.io)
 # 	@assert contains(line, r"^\s*2da\s+v1.0"i) "Bad 2da first line: '$line'"
@@ -560,7 +587,6 @@ function Base.read(f::File"2DA"; debug=false, aligned=false)
 		MatrixWithHeaders([match(r"^\S+", line).match for line in lines], cols,mat)
 	end
 end
-# @inline Table(key::KeyIndex, r; kw...) = Table(key[r, Restype_2DA]; kw...)
 # ««1 itm
 # ««2 Enums etc.
 @dottedflags ItemFlag::UInt32 begin # ITEMFLAG.IDS
@@ -762,7 +788,7 @@ end
 	b"ITM V1  "
 	unidentified_name::S
 	identified_name::S
-	replacement::Resref
+	replacement::Resource"ITM"
 	flags::ItemFlag
 	item_type::ItemCat
 	usability::UsabilityFlags
@@ -782,13 +808,13 @@ end
 	mincharisma::UInt16
 	price::UInt32
 	stackamount::UInt16
-	inventoryicon::Resref
+	inventoryicon::Resource"BAM"
 	lore::UInt16
-	groundicon::Resref
+	groundicon::Resource"BAM"
 	weight::UInt32
 	unidentified_description::S
 	identified_description::S
-	description_icon::Resref
+	description_icon::Resource"BAM"
 	enchantment::UInt32
 	ext_header_offset::UInt32
 	ext_header_count::UInt16
@@ -801,7 +827,7 @@ end
 	must_identify::UInt8
 	location::UInt8
 	alternative_dice_sides::UInt8
-	use_icon::Resref
+	use_icon::Resource"BAM"
 	target_type::UInt8
 	target_count::UInt8
 	range::UInt16
@@ -830,7 +856,7 @@ end
 	is_bullet::UInt16
 end
 # ««2 Item function
-function Base.read(f::File"ITM")
+function read(f::Restype"ITM")
 	read(f.io, ITM_hdr{Strref})
 end
 # ««1 dlg
@@ -872,7 +898,7 @@ end
 	journal_text::S
 	index_trigger::Int32
 	index_action::Int32
-	next_actor::Resref
+	next_actor::Resource"DLG"
 	next_state::Int32
 end
 # this is the same type for state trigger, transition trigger, actions:
@@ -887,7 +913,7 @@ Describes the state machine associated with a dialog.
 `S` is the type used for dialog strings (either `Strref` or `String`).
 """
 struct Dialog{S}
-	self::Resref
+	self::Resource"DLG"
 	flags::UInt32
 	states::Vector{DLG_state{S}}
 	transitions::Vector{DLG_transition{S}}
@@ -899,9 +925,9 @@ end
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in read(seek(io, offset), DLG_string, count)]
 
-function Base.read(f::File"DLG")
+function read(f::Restype"DLG")
 	header = read(f.io, DLG_hdr)
-	return Dialog{Strref}(Resref(basename(f.name)), header.flags,
+	return Dialog{Strref}(Resource"DLG"(basename(f.name)), header.flags,
 		read(seek(f.io, header.offset_states), DLG_state{Strref},
 			header.number_states),
 		read(seek(f.io, header.offset_transitions), DLG_transition{Strref},
@@ -964,25 +990,66 @@ function printdialog(dialog::Dialog{Strref}, str::TlkStrings)
 	end
 end
 #««1 Game
+# shorthand: strings*dialog instantiates Strrefs
+for T in (:Dialog,:ITM_hdr)
+	@eval @inline Base.:*(str::TlkStrings, x::$T{Strref}) =
+		Functors.functor(x->str[x].string::String, $T, x)
+end
+"""    Game
+
+Main structure holding all top-level data for a game installation, including:
+ - key/bif archived files,
+ - tlk strings,
+ - table of override files.
+"""
 struct Game
 	directory::String
 	key::KeyIndex
-	override::Dict{Restype, Set{Resref}}
+	override::Dict{Symbol, Set{String}}
 end
+"""    Game(directory)
 
+Initializes a `Game` structure from the game directory
+(i.e. the directory containing the `"chitin.key"` file).
+"""
 function Game(directory::AbstractString)
-	key = read(File, joinpath(directory, "chitin.key"))
+	key = KeyIndex(joinpath(directory, "chitin.key"))
 	println("read $(length(key.resources)) key resources")
-	override = Dict(r => Set{Resref}() for r in instances(Restype))
+	override = Dict{Symbol,Set{String}}()
 	for f in readdir(joinpath(directory, "override"))
-		(b, e) = splitext(f)
-		r = Restype(e[2:end]); isnothing(r) && continue
-		length(b) > 8 && continue
-		push!(override[r], Resref(b))
+		(n, e) = splitext(uppercase(basename(f))); t = Symbol(e[2:end])
+		push!(get!(override, t, Set{String}()), n)
 	end
 	println("read $(sum(length(v) for (_,v) in override)) override resources")
 	return Game(directory, key, override)
 end
+" returns 2 if override, 1 if key/bif, 0 if not existing."
+function filetype(game::Game,::Type{Restype{T}}, name::AbstractString) where{T}
+	haskey(game.override, T) && uppercase(String(name)) ∈ game.override[T] &&
+		return 2
+	haskey(game.key.location, (StaticString{8}(name), T)) && return 1
+	return 0
+end
+function Restype{T}(game::Game, name::AbstractString) where{T}
+	t = filetype(game, Restype{T}, name)
+	if t == 2
+		file = joinpath(game.directory, "override", String(name)*'.'*String(T))
+		return Restype{T}(file)
+	elseif t == 1
+		return Restype{T}(game.key, name)
+	else
+		error("resource not found: $name.$T")
+	end
+end
+
+# allow strong typing to occur on the index side instead of the read side:
+@inline Restype(k::Union{Game,KeyIndex}, name::Resource{T}) where{T} =
+	Restype{T}(k, name.data.data)
+@inline read(k::Union{Game,KeyIndex}, name::Resource; kw...) =
+	read(Restype(k, name); kw...)
+@inline filetype(game::Game, name::Resource{T}) where{T} =
+	filetype(game, Restype{T}, name)
+
 
 # »»1
 end
@@ -990,9 +1057,10 @@ IE=InfinityEngine
 x = [1,2,3]
 y = IE.Functors.functor(string, Vector, x)
 
-key=read(IE.File, "../bg2/game/chitin.key")
-str=read(IE.File, "../bg2/game/lang/fr_FR/dialog.tlk")
-dia=read(key["abaziga", "dlg"])
-dia1=IE.Functors.functor(x->str[x].string, IE.Dialog, dia, String)
+game = IE.Game("../bg2/game")
+# key=IE.KeyIndex("../bg2/game/chitin.key")
+str=read(IE.Restype("../bg2/game/lang/fr_FR/dialog.tlk"))
+# dia=read(key["abaziga", "dlg"])
+# dia1=str*dia
 # IE.printdialog(dia,str)
 nothing

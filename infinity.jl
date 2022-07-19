@@ -1,5 +1,6 @@
 #=
 # TODO:
+# + close files when needed!
 # - check translation format
 #  - needs xgettext (or at least a very basic version)
 # + define `Game` structure holding everything at top level
@@ -20,126 +21,125 @@ using Printf
 using StaticArrays
 abstract type AbstractBlock end
 
-reprb(x) = repr(x)
-reprb(x::Base.CodeUnits) = 'b'*repr(String(x))
+@inline readstruct(io::IO, T::DataType, n::Integer) =
+	[ readstruct(io, T) for _ in Base.OneTo(n) ]
 
-"""    @block BlockName begin
-      field1::type1 # ...
-      b"constant1" # ...
-    end
-
-Defines a data type `BlockName` as well as methods for `Base.read` and `Base.write` for binary I/O of this type respecting the layout.
-The fields may be either:
- - `field::type`: (with defined length)
- - `b"constant"`: a marker with defined size, this is checked on reading, but does not appear as a field in the data type
- - **(TODO)** `field[pos]::type`: only a part of the field is read/written here; the next time this field appears the type should not be given.
-
-"""
-macro block(name, fields)
-# TODO:
-	type_code = Expr[]
-	read_vars = Symbol[]
-	read_code = Expr[]
-	show_code = Expr[]
-	field_frag = Dict{Symbol,BitVector}()
-	size_code = Expr[]
-	instantiate_code = Expr[]
-# 	description = ""
-	if Meta.isexpr(name, :curly)
-		typeparams = name.args[2:end]
-		escname = :($(esc(name.args[1])){$(typeparams...)})
-	elseif Meta.isexpr(name, :where)
-		typeparams = name.args[2:end]
-		escname = :($(esc(name.args[1].args[1])){$(name.args[1].args[2:end]...)})
+@generated function readstruct(io::IO, ::Type{T}) where{T}
+	isstructtype(T) || return :(read(io, T))
+	code = Expr[]
+	vars = Symbol[]
+	for i in 1:fieldcount(T)
+		# The following code also works for Tuple, generating read_1, read_2 etc.:
+		# (We could also simply use `gensym()` but the resulting code would
+		# be less readable).
+		v = Symbol("read_"*string(fieldname(T,i)))
+# 		v = (T <: Tuple) ? Symbol("field"*string(i)) : fieldname(T, i)
+		push!(vars, v)
+		push!(code, :($v = readstruct(io, $(fieldtype(T,i)))))
+	end
+	if T <: Tuple
+		# Tuple{Int,Int}(Int, Int) constructor does not exist...
+		# Note: this also catches `NamedTuple` types.
+		:($(code...); T(($(vars...),)))
 	else
-		typeparams = ()
-		escname = esc(name)
+		:($(code...); T($(vars...),))
 	end
-# 	typeparams = Meta.isexpr(name, :curly) ? name.args[2:end] : ()
-# 	escname = Meta.isexpr(name, :curly) ?
-# 		Expr(:curly, esc(name.args[1]), typeparams...) : esc(name)
-	for expr in fields.args
-		expr isa LineNumberNode && continue
-		if Meta.isexpr(expr, :ref)
-			error("not implemented")
-# 			field, r = expr.args[1], Core.eval(__module__, expr.args[2])
-# 			if Meta.isexpr(field, :(::))
-# 				field, content = expr.args[1], Core.eval(__module__, field.args[2])
-# 				@assert !haskey(field_frag, field)
-# 				field_frag[field] = falses(sizeof(content))
-# 				push!(type_code, :($field::$(esc(content))))
-# 				push!(read_vars, v)
-# 			end
-# 			r1, r2 = first(r), last(r)
-# 			@assert r1 ≥ 1; @assert r2 ≤ sizeof(content)
-# 			@assert !any(view(field_frag[field], r1:r2))
-# 			field_frag[field][r1:r2].= true
-# 			v = Symbol(string(field)*string(r1))
-# 			if all(field_frag)
-# 			end
-		elseif Meta.isexpr(expr, :(::))
-			field, content = expr.args[1], expr.args[2]
-			if content ∈ typeparams
-				push!(size_code, :(sizeof($content)))
-			else
-				content = esc(content)
-				push!(size_code, :(sizeof($content)))
-			end
-			push!(type_code, :($field::$content))
-			v = field; push!(read_vars, v)
-			push!(read_code, :($v = read(io, $content)),
-				:(debug && println($(string(name)), "/",  $(string(field)), ": read ",$(sizeof(content)),": ",$v)))
-		else
-			field, content = reprb(expr), eval(expr)
-			push!(read_code, :(@assert read(io, $(sizeof(content))) == $content))
-		end
-		push!(show_code, quote
-		s = try sizeof($content); catch; end
-		if !isnothing(s)
-		@printf(io, "0x%04x %4d %s\n", offset, s, $(string(field)))
+end
+
+"""    blocksize(T)
+
+Returns the size of the file representation of type `T`.
+"""
+@inline function blocksize(::Type{T}) where{T}
+	isstructtype(T) || return sizeof(T)
+	v = [blocksize(fieldtype(T,i)) for i in 1:fieldcount(T) ]
+	return sum(v; init=0)
+	return sum(blocksize(fieldtype(T,i)) for i in 1:fieldcount(T); init=0)
+end
+
+"""    layout([io::IO = stdout], T)
+
+Prints the file layout of type `T`.
+"""
+@inline layout(T::DataType) = layout(stdout, T)
+function layout(io::IO, ::Type{T}) where{T}
+	offset = 0
+	isstructtype(T) || (@printf(io,"%4d %s\n", sizeof(T), repr(T)); return)
+	for i in 1:fieldcount(T)
+		t = fieldtype(T, i); s = blocksize(t)
+		@printf(io, "0x%04x %4d %s\n", offset, s, repr(t))
 		offset+= s
-		else
-		@printf(io, "<-- type %s::%s does not have a definite type\n",
-			$(string(field)), string($content))
-		end
-		end)
 	end
-	block = quote
-		Base.@__doc__(struct $escname <: AbstractBlock
-			$(type_code...)
-		end)
-		# this hook allows overriding the kwargs method:
-		@inline $escname(;kwargs...) where{$(typeparams...)} =
-			$escname(AbstractBlock; kwargs...)
-		function Base.show(io::IO, ::MIME"text/plain", ::Type{<:$escname}
-				) where{$(typeparams...)}
-			offset = 0
-			$(show_code...)
-			print(io, "total size is ", offset)
-			return offset
-		end
-		$escname(::Type{AbstractBlock};$(read_vars...)) where{$(typeparams...)} =
-			$escname($(read_vars...))
-		# We extend filesize() to hold the size of the file representation of
-		# this struct:
-		@inline Base.filesize(::Type{$escname}) where{$(typeparams...)} =
-			+($(size_code...))
-		function Base.read(io::IO, ::Type{$escname}; debug=false) where{$(typeparams...)}
-			$(read_code...)
-			return $escname(;$(read_vars...))
-		end
-	end
-	block.head = :toplevel
-	return block
+	println(io, "Total size: ", offset)
 end
 
+"""    kwconstructor(T; fields...)
 
-# @inline readt(io::IO, T::DataType) = only(reinterpret(T,read(io, sizeof(T))))
-@inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer) =
-	[ read(io, T) for _ in Base.OneTo(n) ]
+Defines a keyword-based constructor according to the field names for this type.
+"""
+@generated function kwconstructor(::Type{T}; kwargs...) where{T}
+	args = [ :(get(kwargs, $(QuoteNode(n)), nothing)) for n in fieldnames(T) ]
+	return :($T($(args...)))
 end
-using .Blocks: @block
 
+"""    ConstantOrIgnored{I,V}
+
+A field with a singleton type (zero size in memory),
+corresponding to a fixed value `V` in I/O.
+
+The boolean `I` is an ignore field: if it is `false` then the value is
+checked on reading, otherwise it is read and ignored.
+"""
+struct ConstantOrIgnored{I,V} end
+@inline value(::Type{ConstantOrIgnored{I,V}}) where{I,V} = V
+"    Constant{V}: see `ConstantOrIgnored`."
+@inline Base.convert(T::Type{<:ConstantOrIgnored}, ::Nothing) = T()
+function readstruct(io::IO, T::Type{<:ConstantOrIgnored{I}}) where{I}
+	x = read(io, sizeof(value(T)))
+	@assert I || (x == value(T)) "Bad value \"$x\" (should have been $(value(T)))"
+	return T()
+end
+
+@inline Base.show(io::IO, ::Type{ConstantOrIgnored{I,V}}) where{I,V} =
+	show_constant_ignored(io, I ? :Ignored : :Constant, V)
+@inline show_constant_ignored(io, s, V) = print(io, s, '{', V, '}')
+@inline show_constant_ignored(io, s, V::SVector{N,UInt8}) where{N} =
+	print(io, s, '"', String(V), '"')
+
+@inline blocksize(T::Type{ConstantOrIgnored{I,V}}) where{I,V} = sizeof(V)
+using StaticArrays
+
+@inline fixed_str(T, s) = :($(esc(gensym(T)))::$T{SA[$(codeunits(s)...)]})
+
+"""    Constant{V}
+
+Singleton type (zero memory storage) with a fixed file storage.
+The given value is checked when reading an I/O (with `readstruct`).
+In case the value is not present, an error is thrown.
+"""
+const Constant = ConstantOrIgnored{false}
+"""    Ignored{V}
+Singleton type corresponding to fixed file storage.
+This value is ignored when reading a file (with `readstruct`).
+The defined value is used when writing a file."""
+const Ignored = ConstantOrIgnored{true}
+
+"""    Constant"value"
+
+Defines a field with irrelevant name and `Constant` type.
+**This macro must only be called in a `struct` scope** (not at toplevel)."""
+macro Constant_str(s) fixed_str(:Constant, s) end
+"""    Constant"value"
+
+Defines a field with irrelevant name and `Ignored` type.
+**This macro must only be called in a `struct` scope** (not at toplevel)."""
+macro Ignored_str(s) fixed_str(:Ignored, s) end
+
+
+struct Foo; Constant"## e"; b::UInt8; c::UInt8; end
+export Constant, Ignored, @Constant_str, @Ignored_str, readstruct, layout
+
+end
 module Functors
 """    find_typevar(T, TX)
 
@@ -211,9 +211,15 @@ function functor(f, T::UnionAll, x::TX, B = nothing) where{TX}
 	replacetypevars(f, T.body, V, A, B, x)
 end
 end
-include("dottedenums.jl"); using .DottedEnums
 
 import Base.read
+using .Blocks
+include("dottedenums.jl"); using .DottedEnums
+
+abstract type AbstractBlock end
+@inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer...) =
+	Blocks.readstruct(io, T, n...)
+
 using Printf
 using StaticArrays
 
@@ -257,8 +263,8 @@ struct Typewrap{T,S}
 end
 @inline read(io::IO, X::Type{<:Typewrap{T}}) where{T,S} = X(read(io, T))
 @inline (::Type{Typewrap{T,S}})(x::Typewrap{T,S}) where{T,S} = x
-@inline Base.show(io::IO, t::Typewrap{T,S}) where{T,S} =
-	(print(io, S, '('); show(io, t.data); print(io, ')'))
+# @inline Base.show(io::IO, t::Typewrap{T,S}) where{T,S} =
+# 	(print(io, S, '('); show(io, t.data); print(io, ')'))
 @inline (J::Type{<:Union{Integer,AbstractString}})(x::Typewrap) = J(x.data)
 
 # ««2 Indices: Strref etc.
@@ -268,16 +274,16 @@ Index (32-bit) referring to a translated string in dialog.tlk/dialogF.tlk.
 """
 const Strref = Typewrap{UInt32, :Strref}
 
-"""    Resource"Type"
+"""    Resref"Type"
 
 Index (64-bit, or 8 char string) referring to a resource.
 This index carries type information marking the resource type,
-and indicated by the string parameter: Resource"ITM"("BLUN01")
+and indicated by the string parameter: Resref"ITM"("BLUN01")
 describes an item, etc.
 This allows dispatch to be done correctly at compile-time.
 """
-const Resource{T} =Typewrap{Typewrap{StaticString{8},T},:Resource}
-macro Resource_str(s) Resource{Symbol(uppercase(s))} end
+const Resref{T} =Typewrap{Typewrap{StaticString{8},T},:Resref}
+macro Resref_str(s) Resref{Symbol(uppercase(s))} end
 
 """    BifIndex
 32-bit index of resource in bif files.
@@ -293,18 +299,9 @@ const BifIndex = Typewrap{UInt32, :BifIndex} # bif indexing
 (This is immediately translated to a string value when reading this file).
 """
 const Resindex = Typewrap{UInt16, :Resindex} # 16-bit version
-# ««2 File type determination
+# ««2 Resource type table
 
-# Restype type is a compile-time correspondence between UInt16 and strings
-# This is stored as:
-#  - UInt16 in key file and
-#  - strings in source code and filesystem files
-#
-# Use cases:
-#  - locate resource by string name in KeyIndex: source = string =>KeyIndex
-#  - build Key index from .key file: int=>KeyIndex
-#  - read from file: source = string => string
-
+# Static correspondence between UInt16 and strings (actually symbols).
 const RESOURCE_TABLE = Dict{UInt16,String}(
 	0x0001 => "BMP",
 	0x0002 => "MVE",
@@ -349,37 +346,50 @@ const RESOURCE_TABLE = Dict{UInt16,String}(
 )
 @inline String(x::Resindex) = get(RESOURCE_TABLE, UInt16(x), repr(UInt16(x)))
 @inline Base.Symbol(x::Resindex) = Symbol(String(x))
-"""    Restype{Type}
 
-A structure holding an IO stream for game data (either from a filesystem
-file or from a bif resource) together with the resource name and type
-identifier.
+# ««2 Resource type (marked IO object)
+"""    Resource{Type}
 
- - Since the file type determines the `read`/`write` methods (and only takes
-   a finite set of values) it is a type parameter.
+A structure describing the physical location of a game resource
+(either from filesystem or from a BIF content),
+marked with the resource name + type.
+
+ - Since the resource type determines the `read`/`write` methods
+   (and only takes a finite set of values) this is a type parameter.
  - The resource name (i.e. basename of the file without extension) is stored
    as a field. The name is canonicalized as upper-case.
 
 Defined methods include:
- - `Restype"EXT"`: macro defining static value for this file type.
- - `Restype{T}(filename)`: constructor opening the file.
- - `Restype(filename)`: same as above with automatic file type determination.
- - `Restype{T}(filename, io)`: constructor for existing IO.
- - `Base.read(Restype)`: reads to appropriate structure type.
+ - `Resource"EXT"`: macro defining static value for this file type.
+ - `read(::Resource{T})` (this opens the IO).
 
-Constructors:
+Concrete subtypes must implement:
+ - `open(resource)`: returns an IO (this will automatically enable
+   `open(f, resource)`; see `"base/io.jl"`).
+ - `name(resource)`: returns the resource name as a String.
+
+Specializations must implement:
+ - `read(::Resource{T}, io)`.
 """
-mutable struct Restype{T,IO}
-	name::String
-	io::IO
-	@inline Restype{T}(name::AbstractString, io::IO) where{T,IO} =
-		finalizer(x->close(x.io), new{T,IO}(uppercase(name),io))
+abstract type Resource{T} end
+macro Resource_str(s) Resource{Symbol(uppercase(s))} end
+@inline read(f::Resource; kw...) = open(f) do io; read(f, io; kw...); end
+
+mutable struct ResourceFile{T} <:Resource{T}
+	filename::String
 end
-@inline Restype{T}(f::AbstractString) where{T} =
-	((a,b) = splitext(basename(f)); Restype{T}(a, open(f)))
-@inline Restype(f::AbstractString) = 
-	((a,b) = splitext(basename(f)); Restype{Symbol(uppercase(b[2:end]))}(a, open(f)))
-macro Restype_str(s) Restype{Symbol(uppercase(s))} end
+@inline Resource{T}(f::AbstractString) where{T} = ResourceFile{T}(f)
+@inline Resource(f::AbstractString) = 
+	Resource{Symbol(uppercase(splitext(basename(f))[2]))}(f)
+@inline Base.open(r::ResourceFile) = open(r.filename)
+@inline name(r::ResourceFile) = uppercase(splitext(basename(r.filename))[1])
+
+mutable struct ResourceBuf{T} <: Resource{T}
+	name::String
+	buffer::IOBuffer
+end
+@inline Base.open(r::ResourceBuf) = r.buffer
+@inline name(r::ResourceBuf) = r.name
 
 # ««1 tlk
 struct TlkStrings{X}
@@ -402,49 +412,44 @@ as a string index.
 function instantiate(x::TlkStrings)
 end
 
-@block TLK_hdr begin
-	b"TLK V1  "
+struct TLK_hdr <: AbstractBlock
+	Constant"TLK V1  "
 	lang::UInt16
 	nstr::UInt32
 	offset::UInt32
 end
-@block TLK_str begin
+struct TLK_str <: AbstractBlock
 	flags::UInt16
-	sound::Resource"WAV"
+	sound::Resref"WAV"
 	volume::UInt32
 	pitch::UInt32
 	offset::UInt32
 	length::UInt32
 end
 
-function read(f::Restype"TLK")
-	header = read(f.io, TLK_hdr)
-	strref = read(f.io, TLK_str, header.nstr)
-	strings = [ (string = string0(f.io, header.offset + s.offset, s.length),
+function read(f::Resource"TLK", io::IO)
+	header = read(io, TLK_hdr)
+	strref = read(io, TLK_str, header.nstr)
+	return TlkStrings([ (string = string0(io, header.offset + s.offset, s.length),
 		flags = s.flags, sound = s.sound, volume = s.volume, pitch = s.pitch)
-		for s in strref ]
-	return TlkStrings(strings)
-end
-struct TlkStringSet{X}
-	strings1::TlkStrings{X}
-	strings2::TlkStrings{X}
+		for s in strref ])
 end
 
 # ««1 key/bif
-@block KEY_hdr begin
-	b"KEY V1  "
+struct KEY_hdr <: AbstractBlock
+	Constant"KEY V1  "
 	nbif::Int32
 	nres::Int32
 	bifoffset::UInt32
 	resoffset::UInt32
 end
-@block KEY_bif begin
+struct KEY_bif <: AbstractBlock
 	filelength::UInt32
 	offset::UInt32
 	namelength::UInt16
 	location::UInt16
 end
-@block KEY_res begin
+struct KEY_res <: AbstractBlock
 	name::StaticString{8}
 	type::Resindex
 	location::BifIndex
@@ -471,41 +476,38 @@ KeyIndex(filename::AbstractString) = open(filename) do io
 	return KeyIndex(dir, bifnames, resentries)
 end
 
-const XOR_KEY = b"\x88\xa8\x8f\xba\x8a\xd3\xb9\xf5\xed\xb1\xcf\xea\xaa\xe4\xb5\xfb\xeb\x82\xf9\x90\xca\xc9\xb5\xe7\xdc\x8e\xb7\xac\xee\xf7\xe0\xca\x8e\xea\xca\x80\xce\xc5\xad\xb7\xc4\xd0\x84\x93\xd5\xf0\xeb\xc8\xb4\x9d\xcc\xaf\xa5\x95\xba\x99\x87\xd2\x9d\xe3\x91\xba\x90\xca"
+const XOR_KEY = "88a88fba8ad3b9f5edb1cfeaaae4b5fbeb82f990cac9b5e7dc8eb7aceef7e0ca8eeaca80cec5adb7c4d08493d5f0ebc8b49dccafa595ba9987d29de391ba90ca"|>hex2bytes
 
 function decrypt(io::IO)
 	peek(io) != 0xff && return io
-	buf = collect(codeunits(read(io, String)))
+	buf = Vector{UInt8}(read(seek(io,1), String))
 	for i in eachindex(buf)
-		buf[i] ⊻= XOR_KEY[mod1(i-2, length(XOR_KEY))]
+		buf[i] ⊻= XOR_KEY[mod1(i-1, length(XOR_KEY))]
 	end
-	return IOBuffer(buf[2:end])
+	return IOBuffer(buf)
 end
-@inline decrypt(::Val, io::IO) = io
-@inline decrypt(::Union{Val{Symbol("2DA")},Val{:IDS}}, io::IO) = decrypt(io)
-
-@block BIF_hdr begin
-	b"BIFFV1  "
+struct BIF_hdr <: AbstractBlock
+	Constant"BIFFV1  "
 	nres::UInt32
 	ntilesets::UInt32
 	offset::UInt32
 end
 
-@block BIF_resource begin
+struct BIF_resource <: AbstractBlock
 	locator::BifIndex
 	offset::UInt32
 	size::UInt32
 	type::Resindex
-	unknown::UInt16
+	_1::Ignored{UInt16}
 end
 
-@block BIF_tileset begin
+struct BIF_tileset <: AbstractBlock
 	locator::BifIndex
 	offset::UInt32
 	ntiles::UInt32
 	size::UInt32
-	UInt16(0x03eb)
-	unknown::UInt16
+	_1::Constant{0x03eb}
+	_2::Ignored{UInt16}
 end
 
 bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
@@ -515,23 +517,23 @@ bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
 	IOBuffer(read(seek(io, resources[index+1].offset), resources[index+1].size))
 end
 
-function Restype{T}(key::KeyIndex, name) where{T}
+function (::Type{<:Resource{T}})(key::KeyIndex, name) where{T}
 	loc = get(key.location, (StaticString{8}(name), T), nothing)
 	isnothing(loc) && return nothing
 	bif = joinpath(key.directory, key.bif[1+sourcefile(loc)])
-	io = bifcontent(bif, resourceindex(loc))
-	return Restype{T}(String(name), decrypt(Val{T}(), io))
+	return ResourceBuf{T}(String(name), bifcontent(bif, resourceindex(loc)))
 end
-Base.all(key::KeyIndex, ::Type{Restype{T}}) where{T} =
-	(Resource{T}(r[1]) for r in keys(key.location) if r[2] == T)
+Base.all(key::KeyIndex, ::Type{Resource{T}}) where{T} =
+	(Resref{T}(r[1]) for r in keys(key.location) if r[2] == T)
 
 # ««1 ids
 # useful ones: PROJECTL SONGLIST ITEMCAT NPC ANISND ?
-function read(f::Restype"IDS"; debug=false)
-	debug && (mark(f.io); println("(", read(f.io, String), ")"); reset(f.io))
-	line = readline(f.io)
-	(!contains(line, " ") || startswith(line, "IDS")) && (line = readline(f.io))
-	!isnothing(match(r"^[0-9]*$", line)) && (line = readline(f.io))
+function read(f::Resource"IDS", io::IO; debug=false)
+	io = decrypt(io)
+	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
+	line = readline(io)
+	(!contains(line, " ") || startswith(line, "IDS")) && (line = readline(io))
+	!isnothing(match(r"^[0-9]*$", line)) && (line = readline(io))
 	list = Pair{Int,String}[]
 	while true
 		line = replace(line, r"\s*$" => "")
@@ -540,8 +542,8 @@ function read(f::Restype"IDS"; debug=false)
 			length(s) ≤ 1 && error("could not split IDS line: $line")
 			push!(list, (parse(Int, s[1]) => s[2]))
 		end
-		eof(f.io) && break
-		line = readline(f.io)
+		eof(io) && break
+		line = readline(io)
 	end
 	return list
 end
@@ -566,15 +568,16 @@ function Base.getindex(m::MatrixWithHeaders,
 	@assert !isnothing(i2) "Row header not found: '$s2'"
 	return m.matrix[i1,i2]
 end
-function read(f::Restype"2DA"; debug=false, aligned=false)
-	debug && (mark(f.io); println("(", read(f.io, String), ")"); reset(f.io))
-	line = readline(f.io)
+function read(f::Resource"2DA", io::IO; debug=false, aligned=false)
+	io = decrypt(io)
+	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
+	line = readline(io)
 # 	@assert contains(line, r"^\s*2da\s+v1.0"i) "Bad 2da first line: '$line'"
-	defaultvalue = replace(replace(readline(f.io), r"^\s*" => ""), r"\s*$" => "")
-	line = readline(f.io)
+	defaultvalue = replace(replace(readline(io), r"^\s*" => ""), r"\s*$" => "")
+	line = readline(io)
 	if !aligned
 		cols = split(line)
-		lines = readlines(f.io)
+		lines = readlines(io)
 		mat = split.(lines)
 		MatrixWithHeaders(first.(mat), cols,
 			[m[j+1] for m in mat, j in eachindex(cols)])
@@ -582,7 +585,7 @@ function read(f::Restype"2DA"; debug=false, aligned=false)
 		positions = [ i for i in 2:length(line)
 			if isspace(line[i-1]) && !isspace(line[i]) ]
 		cols = [ match(r"^\S+", line[i:end]).match for i in positions ]
-		lines = readlines(f.io)
+		lines = readlines(io)
 		mat = [ match(r"^\S+", line[i:end]).match for line in lines, i in positions]
 		MatrixWithHeaders([match(r"^\S+", line).match for line in lines], cols,mat)
 	end
@@ -784,11 +787,11 @@ end
 	BluntMissile = 9 # bugged
 end
 # ««2 Data blocks
-@block ITM_hdr{S} begin
-	b"ITM V1  "
+struct ITM_hdr{S} <: AbstractBlock
+	Constant"ITM V1  "
 	unidentified_name::S
 	identified_name::S
-	replacement::Resource"ITM"
+	replacement::Resref"ITM"
 	flags::ItemFlag
 	item_type::ItemCat
 	usability::UsabilityFlags
@@ -808,13 +811,13 @@ end
 	mincharisma::UInt16
 	price::UInt32
 	stackamount::UInt16
-	inventoryicon::Resource"BAM"
+	inventoryicon::Resref"BAM"
 	lore::UInt16
-	groundicon::Resource"BAM"
+	groundicon::Resref"BAM"
 	weight::UInt32
 	unidentified_description::S
 	identified_description::S
-	description_icon::Resource"BAM"
+	description_icon::Resref"BAM"
 	enchantment::UInt32
 	ext_header_offset::UInt32
 	ext_header_count::UInt16
@@ -822,12 +825,12 @@ end
 	feature_index::UInt16
 	feature_count::UInt16
 end
-@block ITM_ability begin
+struct ITM_ability <: AbstractBlock
 	attack_type::UInt8
 	must_identify::UInt8
 	location::UInt8
 	alternative_dice_sides::UInt8
-	use_icon::Resource"BAM"
+	use_icon::Resref"BAM"
 	target_type::UInt8
 	target_count::UInt8
 	range::UInt16
@@ -856,8 +859,8 @@ end
 	is_bullet::UInt16
 end
 # ««2 Item function
-function read(f::Restype"ITM")
-	read(f.io, ITM_hdr{Strref})
+function read(f::Resource"ITM", io::IO)
+	read(io, ITM_hdr{Strref})
 end
 # ««1 dlg
 @dottedflags DialogTransitionFlags::UInt32 begin
@@ -872,8 +875,8 @@ end
 	ImmediateScriptActions
 	ClearActions
 end
-@block DLG_hdr begin
-	b"DLG V1.0"
+struct DLG_hdr <: AbstractBlock
+	Constant"DLG V1.0"
 	number_states::Int32
 	offset_states::Int32
 	number_transitions::Int32
@@ -886,23 +889,23 @@ end
 	number_actions::Int32
 	flags::UInt32
 end
-@block DLG_state{S} begin
+struct DLG_state{S} <: AbstractBlock
 	text::S
 	first_transition::Int32
 	number_transitions::Int32
 	trigger::UInt32
 end
-@block DLG_transition{S} begin
+struct DLG_transition{S} <: AbstractBlock
 	flags::DialogTransitionFlags
 	player_text::S
 	journal_text::S
 	index_trigger::Int32
 	index_action::Int32
-	next_actor::Resource"DLG"
+	next_actor::Resref"DLG"
 	next_state::Int32
 end
 # this is the same type for state trigger, transition trigger, actions:
-@block DLG_string begin
+struct DLG_string <: AbstractBlock
 	offset::UInt32 # of trigger string
 	length::UInt32 # idem
 end
@@ -913,7 +916,7 @@ Describes the state machine associated with a dialog.
 `S` is the type used for dialog strings (either `Strref` or `String`).
 """
 struct Dialog{S}
-	self::Resource"DLG"
+	self::Resref"DLG"
 	flags::UInt32
 	states::Vector{DLG_state{S}}
 	transitions::Vector{DLG_transition{S}}
@@ -925,18 +928,18 @@ end
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in read(seek(io, offset), DLG_string, count)]
 
-function read(f::Restype"DLG")
-	header = read(f.io, DLG_hdr)
-	return Dialog{Strref}(Resource"DLG"(basename(f.name)), header.flags,
-		read(seek(f.io, header.offset_states), DLG_state{Strref},
+function read(f::Resource"DLG", io::IO)
+	header = read(io, DLG_hdr)
+	return Dialog{Strref}(Resref"DLG"(name(f)), header.flags,
+		read(seek(io,header.offset_states), DLG_state{Strref},
 			header.number_states),
-		read(seek(f.io, header.offset_transitions), DLG_transition{Strref},
+		read(seek(io, header.offset_transitions), DLG_transition{Strref},
 			header.number_transitions),
-		dialog_strings(f.io, header.offset_state_triggers,
+		dialog_strings(io, header.offset_state_triggers,
 			header.number_state_triggers),
-		dialog_strings(f.io, header.offset_transition_triggers,
+		dialog_strings(io, header.offset_transition_triggers,
 			header.number_transition_triggers),
-		dialog_strings(f.io, header.offset_actions, header.number_actions))
+		dialog_strings(io, header.offset_actions, header.number_actions))
 end
 
 function printtransition(dialog::Dialog, str::TlkStrings, i, doneactions)
@@ -1024,42 +1027,40 @@ function Game(directory::AbstractString)
 	return Game(directory, key, override)
 end
 " returns 2 if override, 1 if key/bif, 0 if not existing."
-function filetype(game::Game,::Type{Restype{T}}, name::AbstractString) where{T}
+function filetype(game::Game,::Type{Resource{T}}, name::AbstractString) where{T}
 	haskey(game.override, T) && uppercase(String(name)) ∈ game.override[T] &&
 		return 2
 	haskey(game.key.location, (StaticString{8}(name), T)) && return 1
 	return 0
 end
-function Restype{T}(game::Game, name::AbstractString) where{T}
-	t = filetype(game, Restype{T}, name)
+function Resource{T}(game::Game, name::AbstractString) where{T}
+	t = filetype(game, Resource{T}, name)
 	if t == 2
 		file = joinpath(game.directory, "override", String(name)*'.'*String(T))
-		return Restype{T}(file)
+		return ResourceFile{T}(file)
 	elseif t == 1
-		return Restype{T}(game.key, name)
+		return Resource{T}(game.key, name)
 	else
 		error("resource not found: $name.$T")
 	end
 end
 
 # allow strong typing to occur on the index side instead of the read side:
-@inline Restype(k::Union{Game,KeyIndex}, name::Resource{T}) where{T} =
-	Restype{T}(k, name.data.data)
-@inline read(k::Union{Game,KeyIndex}, name::Resource; kw...) =
-	read(Restype(k, name); kw...)
-@inline filetype(game::Game, name::Resource{T}) where{T} =
-	filetype(game, Restype{T}, name)
+@inline Resource(k::Union{Game,KeyIndex}, name::Resref{T}) where{T} =
+	Resource{T}(k, name.data.data)
+@inline read(k::Union{Game,KeyIndex}, name::Resref; kw...) =
+	read(Resource(k, name); kw...)
+@inline filetype(game::Game, name::Resref{T}) where{T} =
+	filetype(game, Resource{T}, name)
 
 
 # »»1
 end
-IE=InfinityEngine
-x = [1,2,3]
-y = IE.Functors.functor(string, Vector, x)
+IE=InfinityEngine; B=IE.Blocks
 
 game = IE.Game("../bg2/game")
 # key=IE.KeyIndex("../bg2/game/chitin.key")
-str=read(IE.Restype("../bg2/game/lang/fr_FR/dialog.tlk"))
+str=read(IE.Resource"TLK"("../bg2/game/lang/fr_FR/dialog.tlk"))
 # dia=read(key["abaziga", "dlg"])
 # dia1=str*dia
 # IE.printdialog(dia,str)

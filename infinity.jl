@@ -263,8 +263,8 @@ struct Typewrap{T,S}
 end
 @inline read(io::IO, X::Type{<:Typewrap{T}}) where{T,S} = X(read(io, T))
 @inline (::Type{Typewrap{T,S}})(x::Typewrap{T,S}) where{T,S} = x
-# @inline Base.show(io::IO, t::Typewrap{T,S}) where{T,S} =
-# 	(print(io, S, '('); show(io, t.data); print(io, ')'))
+@inline Base.show(io::IO, t::Typewrap{T,S}) where{T,S} =
+	(print(io, S, '('); show(io, t.data); print(io, ')'))
 @inline (J::Type{<:Union{Integer,AbstractString}})(x::Typewrap) = J(x.data)
 
 # ««2 Indices: Strref etc.
@@ -400,7 +400,7 @@ end
 
 function Base.getindex(f::TlkStrings{X}, i::Strref) where{X}
 	i = UInt32(i)
-	i == typemax(i) && (i = 0)
+	i >= length(f.strings) && (i = 0)
 	f.strings[i+1]::X
 end
 
@@ -434,6 +434,8 @@ function read(f::Resource"TLK", io::IO)
 		flags = s.flags, sound = s.sound, volume = s.volume, pitch = s.pitch)
 		for s in strref ])
 end
+Base.findall(r::Union{Regex,AbstractString}, str::TlkStrings) =
+	[ Strref(i-1) for (i,s) in pairs(str.strings) if contains(s.string, r) ]
 
 # ««1 key/bif
 struct KEY_hdr <: AbstractBlock
@@ -942,53 +944,55 @@ function read(f::Resource"DLG", io::IO)
 		dialog_strings(io, header.offset_actions, header.number_actions))
 end
 
-function printtransition(dialog::Dialog, str::TlkStrings, i, doneactions)
+function printtransition(io::IO, dialog::Dialog, i, doneactions)
 	t = dialog.transitions[i+1]
-	print("  $i",
+	print(io, "  \e[31m", i,
 # 				t.flags
 # 				&~DialogTransitionFlags.HasText
 # 				&~DialogTransitionFlags.TerminatesDialog
 		)
 	if t.flags ∋ DialogTransitionFlags.TerminatesDialog
-		print(" (final)")
+		print(io, " (final)")
 	else
-		print(" =>")
-		t.next_actor ≠ dialog.self && print(" ", t.next_actor)
-		print(" <$(t.next_state)>")
+		print(io, " =>")
+		t.next_actor ≠ dialog.self && print(io, " ", t.next_actor)
+		print(io, " <$(t.next_state)>")
 	end
+	print(io, "\e[m")
 	if t.flags ∋ DialogTransitionFlags.HasText
-		print('"', str[t.player_text].string, '"')
+		print(io, "\e[36m\"", t.player_text, "\"\e[m")
 	else
-		print("(no text)")
+		print(io, "(no text)")
 	end
-	println()
+	println(io)
 	if t.flags ∋ DialogTransitionFlags.HasAction
 		a = t.index_action
-		println(" action $a:")
+		println(io, " action $a:")
 		if a ∉ doneactions
 			push!(doneactions, a)
-			println(dialog.actions[t.index_action+1])
+			println(io, "\e[32m", dialog.actions[t.index_action+1], "\e[m")
 		end
 	end
 end
 
-function printdialog(dialog::Dialog{Strref}, str::TlkStrings)
+function Base.show(io::IO, ::MIME"text/plain", dialog::Dialog)
 	donetransitions = Set{Int}()
 	doneactions = Set{Int}()
-	println("self is $(dialog.self)")
+	println(io, "Dialog $(dialog.self)")
 	for (i,s) in pairs(dialog.states)
 		t = s.trigger
-		println("state <$(i-1)>")
+		print(io, "\e[1mstate <$(i-1)>\e[m")
 		tr = get(dialog.state_triggers, t, nothing)
 		if !isnothing(tr)
-			println("  trigger: $tr")
+			println(io, "  trigger: ")
+			printstyled(io, tr, color=:yellow)
 		end
-		println('"', str[s.text].string, '"')
+		println(io, " \e[34m\"", s.text, "\"\e[m")
 		trans = s.first_transition:s.first_transition+s.number_transitions-1
-		println("  transitions: $trans")
+		println(io, "  transitions: $trans")
 		for i in trans
 			i ∈ donetransitions && continue; push!(donetransitions, i)
-			printtransition(dialog, str, i, doneactions)
+			printtransition(io, dialog, i, doneactions)
 		end
 	end
 end
@@ -1052,6 +1056,18 @@ end
 	read(Resource(k, name); kw...)
 @inline filetype(game::Game, name::Resref{T}) where{T} =
 	filetype(game, Resource{T}, name)
+function Base.all(game::Game, ::Type{Resource{T}}) where{T}
+	[ Resource{T}(game, name) for name in Base.Iterators.flatten(
+		(String.(all(game.key, Resource{T})), game.override[T]))|>collect|>sort|>unique ]
+end
+
+function search(game::Game, str::TlkStrings, ::Type{Resref"ITM"}, text)
+	for name in all(game, Resource"ITM")
+		s = str[read(name).identified_name].string
+		contains(s, text) || continue
+		println("$name $s")
+	end
+end
 
 
 # »»1

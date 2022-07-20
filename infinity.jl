@@ -240,7 +240,7 @@ struct StaticString{N} <: AbstractString
 end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) = sizeof(s)
-@inline Base.codeunit(s::StaticString, i) = s.char[i]
+@inline Base.codeunit(s::StaticString, i::Integer) = s.chars[i]
 @inline Base.codeunit(::StaticString) = UInt8
 # We handle only ASCII strings...
 @inline Base.isvalid(::StaticString, ::Integer) = true
@@ -250,20 +250,22 @@ end
 	iszero(c) && return nothing
 	(Char(c), i+1)
 end
-@inline function (T::Type{<:StaticString{N}})(s::AbstractString) where{N}
+@inline function StaticString{N}(s::AbstractString) where{N}
 	@assert length(s) ≤ N "string must be at most $N characters long: \"$s\""
-	T(codeunits(rpad(uppercase(s), N, '\0')))
+	return StaticString{N}(codeunits(rpad(uppercase(s), N, '\0')))
 end
+@inline StaticString{N}(s::StaticString{N}) where{N} = s
+
 @inline read(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
 
 # ««2 Type wrapper
-struct Typewrap{T,S}
+struct Typewrap{S,T}
 	data::T
-	@inline (::Type{Typewrap{T,S}})(args...) where{T,S} = new{T,S}(T(args...))
+	@inline Typewrap{S,T}(args...) where{S,T} = new{S,T}(T(args...))
 end
-@inline read(io::IO, X::Type{<:Typewrap{T}}) where{T,S} = X(read(io, T))
-@inline (::Type{Typewrap{T,S}})(x::Typewrap{T,S}) where{T,S} = x
-@inline Base.show(io::IO, t::Typewrap{T,S}) where{T,S} =
+@inline read(io::IO, X::Type{<:Typewrap{S,T}}) where{S,T} = X(read(io, T))
+@inline Typewrap{S,T}(x::Typewrap{S,T}) where{S,T} = x
+@inline Base.show(io::IO, t::Typewrap{S}) where{S} =
 	(print(io, S, '('); show(io, t.data); print(io, ')'))
 @inline (J::Type{<:Union{Integer,AbstractString}})(x::Typewrap) = J(x.data)
 
@@ -272,7 +274,7 @@ end
 
 Index (32-bit) referring to a translated string in dialog.tlk/dialogF.tlk.
 """
-const Strref = Typewrap{UInt32, :Strref}
+const Strref = Typewrap{:Strref, UInt32}
 
 """    Resref"Type"
 
@@ -282,13 +284,13 @@ and indicated by the string parameter: Resref"ITM"("BLUN01")
 describes an item, etc.
 This allows dispatch to be done correctly at compile-time.
 """
-const Resref{T} =Typewrap{Typewrap{StaticString{8},T},:Resref}
+const Resref{T} =Typewrap{:Resref, Typewrap{T, StaticString{8}}}
 macro Resref_str(s) Resref{Symbol(uppercase(s))} end
 
 """    BifIndex
 32-bit index of resource in bif files.
 """
-const BifIndex = Typewrap{UInt32, :BifIndex} # bif indexing
+const BifIndex = Typewrap{:BifIndex,UInt32} # bif indexing
 @inline sourcefile(r::BifIndex) = Int32(r) >> 20
 @inline tilesetindex(r::BifIndex) = (Int32(r) >> 14) && 0x3f
 @inline resourceindex(r::BifIndex) = Int32(r) & 0x3fff
@@ -298,7 +300,7 @@ const BifIndex = Typewrap{UInt32, :BifIndex} # bif indexing
 16-bit value indexing a resource type in key file.
 (This is immediately translated to a string value when reading this file).
 """
-const Resindex = Typewrap{UInt16, :Resindex} # 16-bit version
+const Resindex = Typewrap{:Resindex,UInt16} # 16-bit version
 # ««2 Resource type table
 
 # Static correspondence between UInt16 and strings (actually symbols).
@@ -721,7 +723,7 @@ end
 	Druid
 	HalfOrc
 end
-const ItemAnimation = Typewrap{StaticString{2},:ItemAnimation}
+const ItemAnimation = Typewrap{:ItemAnimation,StaticString{2}}
 @dottedenum WProf::UInt8 begin # WPROF.IDS
 	None = 0x00
 	BastardSword = 0x59
@@ -1065,7 +1067,6 @@ function search(game::Game, str::TlkStrings, ::Type{Resref"ITM"}, text)
 	for name in all(game, Resource"ITM")
 		s = str[read(name).identified_name].string
 		contains(s, text) || continue
-		println("$name $s")
 	end
 end
 
@@ -1073,8 +1074,9 @@ end
 # »»1
 end
 IE=InfinityEngine; B=IE.Blocks
+itm = read(IE.Resource"ITM"("../bg2/game/override/amulgr01.itm"))
 
-game = IE.Game("../bg2/game")
+# game = IE.Game("../bg2/game")
 # key=IE.KeyIndex("../bg2/game/chitin.key")
 str=read(IE.Resource"TLK"("../bg2/game/lang/fr_FR/dialog.tlk"))
 # dia=read(key["abaziga", "dlg"])

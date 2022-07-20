@@ -81,18 +81,20 @@ Expected advantages w.r.t WeiDU:
  - we could have an easier syntax for defining e.g. items:
     Item("Sword of Infinity", etc.)
  - resolution of namespace conflicts via modules + automatic generation of
-	 resource names;
+   resource names;
  - speed (besides this being faster than OCaml, all changes could be
-	 computed in one single execution of the program, e.g. no need to do
-	 many rewrites of `dialog.tlk` with total quadratic complexity...);
+   computed in one single execution of the program, e.g. no need to do
+   many rewrites of `dialog.tlk` with total quadratic complexity...);
  - allows validation of mod content (e.g. translations in .po format?);
  - allows easier inclusion of mod metadata;
  - built-in portability (no need to call shell scripts or .bat files,
-	 Julia contains all the needed functions).
+   Julia contains all the needed functions).
 
 
 Current status: **very limited use cases**. This can currently load and
 display strings, items and dialogues (but not yet modify them).
+However, this indeed seems very much faster than NearInfinity for those
+use cases.
 
 ## `dialogs.jl`
 
@@ -109,7 +111,7 @@ WeiDU”:
  - prevent namespace conflicts without requiring the use of prefixes,
    by solving all the `resref` machinery without user intervention
    (a bit like what WeiDU does with `srref`, but in a more user-friendly
-	 way).
+   way).
 
 Current status: **proof-of-concept**. What code exists is only to try and
 reach a usable *syntax* for defining dialogs.
@@ -118,5 +120,5 @@ reach a usable *syntax* for defining dialogs.
  - julia with a few packages (most of them quite standard or even stdlib:
    Git, HTTP, TOML, JSON, IniFile)
  - file extraction utilities: unrar, 7zr, unzip, tar
- - `vim` text editor (used and scripted as a text interface)
+ - `vim` text editor (used and scripted as a text interface for modtool).
 

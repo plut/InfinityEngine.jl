@@ -23,11 +23,13 @@ module StructIO
 # apparently there already exists a registered module with this name,
 # but it is listed as “experimental” and its code was last updated in
 # June 2018...
+# We tried to maintain compatibility, hence the `unpack` method.
 using Printf
 using StaticArrays
+using Markdown
 
-@inline readstruct(io::IO, T::DataType, n::Integer) =
-	[ readstruct(io, T) for _ in Base.OneTo(n) ]
+@inline unpack(io::IO, T::DataType, n::Integer) =
+	[ unpack(io, T) for _ in Base.OneTo(n) ]
 
 """    readfield(io, fieldtype, structtype, fieldname)
 
@@ -41,7 +43,7 @@ to define behaviour in specific cases by overriding one of the following:
  - `$(@__MODULE__).readfield(io fieldtype)`
 
 This last method in turn is by default:
- - `readstruct(io, fieldtype)` for bits types;
+ - `unpack(io, fieldtype)` for bits types;
  - a somewhat sensible default value for other types where possible,
    (currently: empty strings, arrays, dictionaries and sets).
 """
@@ -52,7 +54,7 @@ readfield(io::IO, fieldtype::DataType, structtype::DataType) =
 readfield(io::IO, fieldtype::DataType) =
 	readfield_isbits(Val(isbitstype(fieldtype)), io, fieldtype)
 readfield_isbits(::Val{true}, io::IO, fieldtype::DataType) =
-	readstruct(io, fieldtype)
+	unpack(io, fieldtype)
 
 # Somewhat sensible values for non-`isbits` types:
 readfield_isbits(::Val{false}, ::IO, T::DataType) =
@@ -63,7 +65,7 @@ readfield_isbits(::Val{false}, ::IO, T::Type{<:Array}) =
 	T(undef, zeros(Int, ndims(T))...)
 readfield_isbits(::Val{false}, ::IO, T::Type{<:Union{Dict,Set}}) = T()
 
-"""    readstruct(io::IO, T)
+"""    unpack(io::IO, T)
 
 Extension of `Base.read`: reads a value of any type from an IO,
 reading each field of a struct in turn.
@@ -71,11 +73,11 @@ reading each field of a struct in turn.
 This assumes that the type `T` has constant size.
 Leaf types (integers) are read using the `Base.read` methods;
 constructed types (structs and tuples) are read by recursive application
-of `readstruct`.
+of `unpack`.
 
 Some fields behave a bit differently; see `Constant` and `Ignored`.
 """
-@generated function readstruct(io::IO, ::Type{T}) where{T}
+@generated function unpack(io::IO, ::Type{T}) where{T}
 	isstructtype(T) || return :(read(io, T))
 	code = Expr[]
 	vars = Symbol[]
@@ -98,31 +100,33 @@ Some fields behave a bit differently; see `Constant` and `Ignored`.
 	return expr
 end
 
-"""    blocksize(T)
+"""    packed_sizeof(T)
 
-Returns the size of the file representation of type `T`.
+Returns the size of the packed representation of type `T`.
 """
-@inline function blocksize(::Type{T}) where{T}
+@inline function packed_sizeof(::Type{T}) where{T}
+	# FIXME: allow user hooks to override e.g. String
 	isstructtype(T) || return sizeof(T)
-	v = [blocksize(fieldtype(T,i)) for i in 1:fieldcount(T) ]
+	v = [packed_sizeof(fieldtype(T,i)) for i in 1:fieldcount(T) ]
 	return sum(v; init=0)
-	return sum(blocksize(fieldtype(T,i)) for i in 1:fieldcount(T); init=0)
+	return sum(packed_sizeof(fieldtype(T,i)) for i in 1:fieldcount(T); init=0)
 end
 
 struct Layout
 	sizes::Vector{Int}
-	fields::Vector{String}
+	types::Vector{String}
+	names::Vector{String}
 end
 function Base.show(io::IO, ::MIME"text/plain", l::Layout)
 	offset = 0
-	for (s, f) in zip(l.sizes, l.fields)
-		@printf(io, "0x%04x %d %s\n", offset, s, f)
+	for (s, t, n) in zip(l.sizes, l.types, l.names)
+		@printf(io, "\e[1m0x%04x\e[m \e[31m%d\e[m \e[36m%-16s\e[m %s\n", offset, s, t, n)
 		offset+= s
 	end
-	println(io, "Total size: ", offset)
+	print(io, "Total size: ", offset)
 end
 
-"""    layout(T)
+"""    packed_layout(T)
 
 Prints the file layout of type `T`.
 
@@ -131,10 +135,18 @@ This may be different from the memory layout:
  - any `Constant` or `Ignored` fields don't have a memory representation,
    but have a defined size on file.
 """
-function layout(::Type{T}) where{T}
+function packed_layout(T::DataType)
 	isstructtype(T) || return Layout([sizeof(T), repr(T)])
-	Layout(collect(blocksize.(fieldtypes(T))), collect(repr.(fieldtypes(T))))
+	l = unpack(devnull, Layout) # heh. default constructor. me smart.
+	for i in 1:fieldcount(T)
+		(type, name) = fieldtype(T,i), fieldname(T, i)
+		push!(l.sizes, packed_sizeof(type))
+		push!(l.types, repr(type))
+		push!(l.names, _fieldname(type, name))
+	end
+	l
 end
+_fieldname(type, name) = String(name)
 
 """    kwconstructor(T; fields...)
 
@@ -182,8 +194,9 @@ end
 @inline show_constant_ignored(io, s, V) = print(io, s, '{', V, '}')
 @inline show_constant_ignored(io, s, V::SVector{N,UInt8}) where{N} =
 	print(io, s, '"', String(V), '"')
+_fieldname(::Type{<:FixedValue}, fieldname) = ""
 
-@inline blocksize(T::Type{FixedValue{I,V}}) where{I,V} = sizeof(V)
+@inline packed_sizeof(T::Type{FixedValue{I,V}}) where{I,V} = sizeof(V)
 using StaticArrays
 
 @inline fixed_str(T, s) = :($(esc(gensym(T)))::$T{SA[$(codeunits(s)...)]})
@@ -191,7 +204,7 @@ using StaticArrays
 """    Constant{V}
 
 Singleton type (zero memory storage) representing a fixed value in a file.
-The given value is checked when reading an I/O (with `readstruct`).
+The given value is checked when reading an I/O (with `unpack`).
 In case the value is not correct, an error is thrown.
 
 ---
@@ -203,7 +216,7 @@ const Constant = FixedValue{false}
 macro Constant_str(s) fixed_str(:Constant, s) end
 """    Ignored{V}
 Singleton type representing a fixed value in a file.
-This value is ignored when reading a file (with `readstruct`).
+This value is ignored when reading a file (with `unpack`).
 The defined value is used when writing a file.
 
 ---
@@ -215,7 +228,7 @@ const Ignored = FixedValue{true}
 macro Ignored_str(s) fixed_str(:Ignored, s) end
 
 
-export Constant, Ignored, @Constant_str, @Ignored_str, readstruct, layout
+export Constant, Ignored, @Constant_str, @Ignored_str, unpack, packed_layout
 
 end
 module Functors
@@ -281,7 +294,7 @@ include("dottedenums.jl"); using .DottedEnums
 
 abstract type AbstractBlock end
 @inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer...) =
-	StructIO.readstruct(io, T, n...)
+	StructIO.unpack(io, T, n...)
 
 using Printf
 using StaticArrays
@@ -328,8 +341,8 @@ struct Typewrap{S,T}
 end
 @inline read(io::IO, X::Type{<:Typewrap{S,T}}) where{S,T} = X(read(io, T))
 @inline Typewrap{S,T}(x::Typewrap{S,T}) where{S,T} = x
-@inline Base.show(io::IO, t::Typewrap{S}) where{S} =
-	(print(io, S, '('); show(io, t.data); print(io, ')'))
+@inline Base.show(io::IO, x::Typewrap{S}) where{S} =
+	(print(io, S, '('); show(io, x.data); print(io, ')'))
 @inline (J::Type{<:Union{Integer,AbstractString}})(x::Typewrap) = J(x.data)
 
 # ««2 Indices: Strref etc.
@@ -338,6 +351,7 @@ end
 Index (32-bit) referring to a translated string in dialog.tlk/dialogF.tlk.
 """
 const Strref = Typewrap{:Strref, UInt32}
+Base.show(io::IO, ::Type{Strref}) = print(io, "Strref")
 
 """    Resref{Type}, Resref"Type"
 
@@ -359,6 +373,7 @@ macro Resref_str(s)
 	@assert i ≤ 9
 	return Resref{Symbol(s[i+1:end])}(s[begin:i-1])
 end
+Base.show(io::IO, ::Type{Resref{T}}) where{T} = print(io, "Resref\"", T, "\"")
 
 """    BifIndex
 32-bit index of resource in bif files.

@@ -7,15 +7,36 @@ Currently the collection comprises the following files:
  - `modtool.jl`: manages WeiDU mods (think of this as
    more-or-less a command-line version of BWS or BGEE modding tool);
  - `infinity.jl`: exposes the Infinity Engine database to Julia in a
-   friendly and efficient way (this is more or less equivalent to Infinity
-   Explorer);
+   friendly and efficient way (this is quite similar to Infinity Explorer);
  - `dialogs.jl`: define dialogs as Julia syntax (this is on its way to
-   becoming a substitute for WeiDU).
+   becoming a substitute for WeiDU's `.d` to `.dlg` compiler).
 
+The design goals include:
+ - speed: WeiDU is a scripting language, which may also call local shell
+   scripts. Also, since each mod is a standalone program, huge files
+   (namely `dialog.tlk`) are rewritten many times (even for tiny
+   changes), leading to quadratic complexity. InfinityExplorer is written
+   in Java and hence quite slow. On the other hand, mods written as Julia
+   scripts using these tools could run as standalone Julia programs and
+   thus be quite fast.
+ - portability: Julia is portable as long as some basic precautions are
+   taken. (In particular, since these tools are developed on Unix, at
+   least some care will be taken w.r.t filenames case-sensitivity.
+   Ideally this should be able to run without any ugly solution such as
+   `ciopfs` or a separate NTFS partition).
+ - user-friendliness (CLI style): prevent the user from needing to learn
+   several esoteric languages and instead use a general-purpose language.
+   Also, having mods as Julia programs should ideally ease their
+   development, testing, and validation before release.
+   (on the other hand, I had *several* WeiDU mods crash on install
+   because of a missing tilde in some released translation files:
+   **this should not happen**. And I'm not even counting the number of
+   UTF8-related errors!).
+ - robustness: see above.
 
 ## `modtool.jl`
 
- - Download, extract, install mods.
+ - Download, extract, install existing WeiDU mods.
  - Contain a (big) database of known mods and their metadata.
  - Compute (mod-wise) install order.
  - Allow selecting mod components (in a persistent way).
@@ -33,10 +54,15 @@ This should be, if not immediately portable (I don't have a Windows
 installation to test it on), at least quite easy to adapt (I took care of
 e.g. using `joinpath` instead of hardcoded slashes, etc.). This *does*
 use a number of Unix-style executables, most of which should exist on
-Windows: `vim`, `git`, `unrar` etc.
+Windows: `git`, `unrar`, `vim` etc.
 
 Current status: **usable** (I used this to heavily mod a BG2
-installation).
+installation). It is not very well documented (yet) though!
+
+Note that a part of the user interface (selecting mod components)
+is supplied by `vim` (yes you read that correctly),
+with the help of some scripts (i.e. it's in easy mode:
+hitting the spacebar selects/deselects, etc.).
 
 ### What this tool does not (currently) do
  - Offer a *graphical* (point-and-click) user interface.

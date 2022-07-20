@@ -1,3 +1,25 @@
+#= TODO:
+ - use a global db for symbolic names of files (to solve namespace conflicts)
+ - transition to extern state: Weidu EXTERN [if_file_exists] "file" label
+  => Extern("file", label)
+ - journal: journal(text), journal(:unsolved, "text"), journal(:solved, "text")
+ - transition without text: transition()
+ - multi-text state (should create a default transition)
+ - if two consecutive say(), then this builds a chain
+   -equivalently, say("text1", "text2", ...)
+ - chain():
+CHAIN ~G3BEV~ LadyBevKelseyExchange @11117 = @11232
+== ~J#KLSYJ~ @11233
+== ~G3BEV~ @11112
+  COPY_TRANS G3BEV KelseyNotAtFault
+becomes:
+say("text1", "text2")
+change("kelsey")
+say("text3")
+change("g3bev")
+say("text4")
+
+=#
 module Dialogs
 
 # Collector ««1
@@ -12,11 +34,10 @@ end
 @inline Base.empty!(c::Collector) = empty!(c.index)
 @inline Base.getindex(c::Collector, s) = getindex(c.index, s)
 function Base.push!(c::Collector, s; unique=false)
-	if !haskey(c.index, s)
-		c.index[s] = length(c.index) # zero-based indexing...
-	elseif unique
-		error("repeated index: $s")
-	end
+	i = get(c.index, s, nothing)
+	isnothing(i) && return c.index[s] = length(c.index) # zero-based indexing...
+	unique && error("repeated index: $s")
+	return i
 end
 function Base.collect(c::Collector)
 	list = Vector{keytype(c.index)}(undef, length(c.index))
@@ -65,12 +86,13 @@ end
 Appends an action to the last transition.
 
 It is an error to call this when no transition is active
-(i.e. either when no state is defined, or just after a `state()` call).
+(i.e. either when no state is defined, or just after a `say()` call).
 
 $trigger_warning
 """
 function action(text::AbstractString)
 	tr = active_transition()
+	@assert isempty(tr.action) "Attempted to attach two actions to the same transition"
 	tr.action = text
 end
 """    State
@@ -87,15 +109,15 @@ mutable struct State
 		new(text, trigger, ft, 0)
 end
 
-"""    state(label, text; [trigger])
+"""    say(label, text; [trigger])
 
 Defines a state of the dialog with associated text.
 
-If `trigger()` was called before `state()` then this defines the trigger
+If `trigger()` was called before `say()` then this defines the trigger
 conditioning this state; otherwise a trigger may be defined using the
 keyword syntax. (Doing both raises an error).
 """
-function state(x::X, text::AbstractString; trigger = nothing) where{X}
+function say(x::X, text::AbstractString; trigger = nothing) where{X}
 	s = State(text, get_current_trigger(trigger), 1+length(global_status.transitions))
 	push!(global_status.state_index, x; unique=true)
 	push!(global_status.states, s)
@@ -122,7 +144,7 @@ settarget(t::Transition, x) =
 
 """    answer(text => label; [trigger = text])
 
-Attaches a transition to the previously defined `state()`.
+Attaches a transition to the previously defined `say()`.
 
 The label must either be:
  - a label (of any type) attached to a state (possibly a state defined
@@ -160,12 +182,18 @@ const global_status = GlobalStatus()
 
 """    done()
 
-This compiles all previous `state()`, `answer()`, etc. invocations
+This compiles all previous `say()`, `answer()`, etc. invocations
 into a self-contained `Dialogue` object.
 """
 function done()
+	action_coll = Collector{String}()
+	trigger_coll = Collector{String}()
 	for (i,s) in pairs(global_status.states)
 		println("state \e[1m<$i\e[m> \"$(s.text)\":")
+		if !isempty(s.trigger)
+			i = push!(trigger_coll, s.trigger)
+			println("  trigger $i = \e[33m$(s.trigger)\e[m")
+		end
 		r = s.firsttransition .+ (0:s.ntransitions-1)
 		println("  transitions $r")
 		for i in r
@@ -177,7 +205,8 @@ function done()
 			end
 			println("  $i: \"$(t.answer) => $g")
 			if !isempty(t.action)
-				println("  \e[32m$(t.action)\e[m")
+				i = push!(action_coll, t.action)
+				println("  action $i = \e[32m$(t.action)\e[m")
 			end
 		end
 	end
@@ -185,27 +214,37 @@ function done()
 	return nothing
 end
 
-export answer, state, trigger, action, done
+function dialog(f, name)
+	f()
+	done()
+end
 
+export say, answer, trigger, action, done, dialog
+
+#»»1
 end
 D = Dialogs
-for f in names(D); f == :Dialogs && continue
+for f in names(D); f == nameof(D) && continue
 	eval(:(@inline $f(args...; kwargs...) = D.$f(args...; kwargs...)))
 end
-# @inline state(args...; kwargs...) = D.state(args...; kwargs...)
+# @inline say(args...; kwargs...) = D.say(args...; kwargs...)
 # @inline trigger(args...; kwargs...) = D.trigger(args...; kwargs...)
 
+dialog("blah") do
 trigger("at night")
-state(:begin, "a beautiful night")
+say(:begin, "a beautiful night")
  answer("indeed" => 3)
  answer("again?" => :begin)
  answer("good bye" => exit)
   action("continue script here")
 
-state(3, "the stars are aligned")
-done()
+say(3, "the stars are aligned")
+ answer("farewell" => exit)
+  action("continue script here")
+end
 
 
 # better would be:
-# x = state("a beautiful night")
+# x = say("a beautiful night")
 # x: "
+#

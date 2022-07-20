@@ -6,20 +6,62 @@
 #   - use one master language (typ. en_US) for determining when to add
 #     strings, then compile strings for all languages with same strrefs
 #     (obviously!)
-# - check forbidden NTFS chars to choose a prefix: <>:"/\|?*
+# - forbidden NTFS chars to choose a prefix: <>:"/\|?*
 # * `.d` => julia syntactic transformation
 # - nice display methods for items, creatures, dialog etc.
+# - namespace conflict resolution: resources have a symbolic and concrete
+# name, use a table for resolving
+#  - store the table in a .ids file
+# - StructIO: allow invisible fields (i.e. present in the structure
+#   but not in the file)
+#   + add extra constructors: init(fieldtype, structtype, fieldname)
 =#
 
 module InfinityEngine
 
-module StructuredRead
+module StructIO
+# apparently there already exists a registered module with this name,
+# but it is listed as “experimental” and its code was last updated in
+# June 2018...
 using Printf
 using StaticArrays
-abstract type AbstractBlock end
 
 @inline readstruct(io::IO, T::DataType, n::Integer) =
 	[ readstruct(io, T) for _ in Base.OneTo(n) ]
+
+"""    readfield(io, fieldtype, structtype, fieldname)
+
+Hook to allow the user to redefine the behaviour for reading a given field
+in a structure.
+
+This function has a default cascade of generic methods allowing the user
+to define behaviour in specific cases by overriding one of the following:
+ - `$(@__MODULE__).readfield(io, fieldtype, structtype, fieldname)`
+ - `$(@__MODULE__).readfield(io, fieldtype, structtype)`
+ - `$(@__MODULE__).readfield(io fieldtype)`
+
+This last method in turn is by default:
+ - `readstruct(io, fieldtype)` for bits types;
+ - a somewhat sensible default value for other types where possible,
+   (currently: empty strings, arrays, dictionaries and sets).
+"""
+readfield(io::IO, fieldtype::DataType, structtype::DataType, fieldname) =
+	readfield(io, fieldtype, structtype)
+readfield(io::IO, fieldtype::DataType, structtype::DataType) = 
+	readfield(io, fieldtype)
+readfield(io::IO, fieldtype::DataType) =
+	readfield_isbits(Val(isbitstype(fieldtype)), io, fieldtype)
+readfield_isbits(::Val{true}, io::IO, fieldtype::DataType) =
+	readstruct(io, fieldtype)
+
+# Somewhat sensible values for non-`isbits` types:
+readfield_isbits(::Val{false}, ::IO, T::DataType) =
+	error("Impossible to read field \"$T\"")
+readfield_isbits(::Val{false}, ::IO, ::Type{String}) = ""
+# note: NOT AbstractArray — we want StaticVectors to be readable:
+readfield_isbits(::Val{false}, ::IO, T::Type{<:Array}) =
+	T(undef, zeros(Int, ndims(T))...)
+readfield_isbits(::Val{false}, ::IO, T::Type{<:Union{Dict,Set}}) = T()
 
 """    readstruct(io::IO, T)
 
@@ -44,15 +86,16 @@ Some fields behave a bit differently; see `Constant` and `Ignored`.
 		v = Symbol("read_"*string(fieldname(T,i)))
 # 		v = (T <: Tuple) ? Symbol("field"*string(i)) : fieldname(T, i)
 		push!(vars, v)
-		push!(code, :($v = readstruct(io, $(fieldtype(T,i)))))
+		push!(code, :($v = readfield(io, $(fieldtype(T,i)), T, $(QuoteNode(fieldname(T,i))))))
 	end
-	if T <: Tuple
+	expr = if T <: Tuple
 		# Tuple{Int,Int}(Int, Int) constructor does not exist...
 		# Note: this also catches `NamedTuple` types.
 		:($(code...); T(($(vars...),)))
 	else
 		:($(code...); T($(vars...),))
 	end
+	return expr
 end
 
 """    blocksize(T)
@@ -78,7 +121,7 @@ function Base.show(io::IO, ::MIME"text/plain", l::Layout)
 	end
 	println(io, "Total size: ", offset)
 end
-	
+
 """    layout(T)
 
 Prints the file layout of type `T`.
@@ -128,7 +171,7 @@ struct FixedValue{I,V} end
 @inline value(::Type{FixedValue{I,V}}) where{I,V} = V
 "    Constant{V}: see `FixedValue`."
 @inline Base.convert(T::Type{<:FixedValue}, ::Nothing) = T()
-function readstruct(io::IO, T::Type{<:FixedValue{I}}) where{I}
+function readfield(io::IO, T::Type{<:FixedValue{I}}) where{I}
 	x = read(io, sizeof(value(T)))
 	@assert I || (x == value(T)) "Bad value \"$x\" (should have been $(value(T)))"
 	return T()
@@ -233,12 +276,12 @@ end
 end
 
 import Base.read
-using .StructuredRead
+using .StructIO
 include("dottedenums.jl"); using .DottedEnums
 
 abstract type AbstractBlock end
 @inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer...) =
-	StructuredRead.readstruct(io, T, n...)
+	StructIO.readstruct(io, T, n...)
 
 using Printf
 using StaticArrays
@@ -398,7 +441,7 @@ Defined methods include:
 Concrete subtypes must implement:
  - `open(resource)`: returns an IO (this will automatically enable
    `open(f, resource)`; see `"base/io.jl"`).
- - `name(resource)`: returns the resource name as a String.
+ - `nameof(resource)`: returns the resource name as a String.
 
 Specializations must implement:
  - `read(::Resource{T}, io)`.
@@ -414,14 +457,15 @@ end
 @inline Resource(f::AbstractString) = 
 	Resource{Symbol(uppercase(splitext(basename(f))[2]))}(f)
 @inline Base.open(r::ResourceFile) = open(r.filename)
-@inline name(r::ResourceFile) = uppercase(splitext(basename(r.filename))[1])
+@inline Base.nameof(r::ResourceFile) =
+	uppercase(splitext(basename(r.filename))[1])
 
 mutable struct ResourceBuf{T} <: Resource{T}
 	name::String
 	buffer::IOBuffer
 end
 @inline Base.open(r::ResourceBuf) = r.buffer
-@inline name(r::ResourceBuf) = r.name
+@inline Base.nameof(r::ResourceBuf) = r.name
 
 # ««1 tlk
 struct TlkStrings{X}
@@ -823,6 +867,7 @@ end
 end
 # ««2 Data blocks
 struct ITM_hdr{S} <: AbstractBlock
+	resource_name::String
 	Constant"ITM V1  "
 	unidentified_name::S
 	identified_name::S
@@ -966,7 +1011,7 @@ end
 
 function read(f::Resource"DLG", io::IO)
 	header = read(io, DLG_hdr)
-	return Dialog{Strref}(Resref"DLG"(first(name(f),8)), header.flags,
+	return Dialog{Strref}(Resref"DLG"(first(nameof(f),8)), header.flags,
 		read(seek(io,header.offset_states), DLG_state{Strref},
 			header.number_states),
 		read(seek(io, header.offset_transitions), DLG_transition{Strref},
@@ -1117,17 +1162,16 @@ function search(game::Game, str::TlkStrings, R::Type{<:Resource}, text)
 	for res in all(game, R)
 		s = str[searchkey(read(res))].string
 		contains(s, text) || continue
-		@printf("%c%-8s %s\n", res isa ResourceFile ? '*' : ' ', name(res), s)
+		@printf("%c%-8s %s\n", res isa ResourceFile ? '*' : ' ', nameof(res), s)
 	end
 end
-
 # »»1
 end
-IE=InfinityEngine; B=IE.StructuredRead
+IE=InfinityEngine; S=IE.StructIO
 # game = IE.Game("../bg2/game")
-str=read(IE.Resource"TLK"("../bg2/game/lang/fr_FR/dialog.tlk"))
+# str=read(IE.Resource"TLK"("../bg2/game/lang/fr_FR/dialog.tlk"))
 # IE.search(game, str, IE.Resource"ITM", "Varscona")
-dia=read(IE.Resource"DLG"("../bg2/game/override/hull.dlg"))
+# dia=read(IE.Resource"DLG"("../bg2/game/override/hull.dlg"))
 
 # dia=read(key["abaziga", "dlg"])
 # dia1=str*dia

@@ -1,22 +1,19 @@
 #=
 # TODO:
-# + close files when needed!
 # - check translation format
 #  - needs xgettext (or at least a very basic version)
-# + define `Game` structure holding everything at top level
-#  + override (map type -> Set of ids)
 #  - languages ?
 #   - use one master language (typ. en_US) for determining when to add
 #     strings, then compile strings for all languages with same strrefs
 #     (obviously!)
 # - check forbidden NTFS chars to choose a prefix: <>:"/\|?*
-# - `.d` => julia syntactic transformation
+# * `.d` => julia syntactic transformation
 # - nice display methods for items, creatures, dialog etc.
 =#
 
 module InfinityEngine
 
-module Blocks
+module StructuredRead
 using Printf
 using StaticArrays
 abstract type AbstractBlock end
@@ -24,6 +21,18 @@ abstract type AbstractBlock end
 @inline readstruct(io::IO, T::DataType, n::Integer) =
 	[ readstruct(io, T) for _ in Base.OneTo(n) ]
 
+"""    readstruct(io::IO, T)
+
+Extension of `Base.read`: reads a value of any type from an IO,
+reading each field of a struct in turn.
+
+This assumes that the type `T` has constant size.
+Leaf types (integers) are read using the `Base.read` methods;
+constructed types (structs and tuples) are read by recursive application
+of `readstruct`.
+
+Some fields behave a bit differently; see `Constant` and `Ignored`.
+"""
 @generated function readstruct(io::IO, ::Type{T}) where{T}
 	isstructtype(T) || return :(read(io, T))
 	code = Expr[]
@@ -57,86 +66,112 @@ Returns the size of the file representation of type `T`.
 	return sum(blocksize(fieldtype(T,i)) for i in 1:fieldcount(T); init=0)
 end
 
-"""    layout([io::IO = stdout], T)
-
-Prints the file layout of type `T`.
-"""
-@inline layout(T::DataType) = layout(stdout, T)
-function layout(io::IO, ::Type{T}) where{T}
+struct Layout
+	sizes::Vector{Int}
+	fields::Vector{String}
+end
+function Base.show(io::IO, ::MIME"text/plain", l::Layout)
 	offset = 0
-	isstructtype(T) || (@printf(io,"%4d %s\n", sizeof(T), repr(T)); return)
-	for i in 1:fieldcount(T)
-		t = fieldtype(T, i); s = blocksize(t)
-		@printf(io, "0x%04x %4d %s\n", offset, s, repr(t))
+	for (s, f) in zip(l.sizes, l.fields)
+		@printf(io, "0x%04x %d %s\n", offset, s, f)
 		offset+= s
 	end
 	println(io, "Total size: ", offset)
+end
+	
+"""    layout(T)
+
+Prints the file layout of type `T`.
+
+This may be different from the memory layout:
+ - Julia aligns the fields in memory, while on file they are not aligned;
+ - any `Constant` or `Ignored` fields don't have a memory representation,
+   but have a defined size on file.
+"""
+function layout(::Type{T}) where{T}
+	isstructtype(T) || return Layout([sizeof(T), repr(T)])
+	Layout(collect(blocksize.(fieldtypes(T))), collect(repr.(fieldtypes(T))))
 end
 
 """    kwconstructor(T; fields...)
 
 Defines a keyword-based constructor according to the field names for this type.
+
+When called, any field not defined by a keyword will be initialized to
+`undef`. Thus this will work only when the types of these fields accept
+conversion (initialization) from `::UndefInitializer`.
+
+It is recommended to use this function to define a keyword constructor
+with default value in this way:
+
+    T(; kwargs...) = kwconstructor(T; field1=defaultvalue1, kwargs...)
+
+(The merge behaviour will then make `kwargs.field1`, if given,
+override the supplied `defaultvalue1`).
 """
 @generated function kwconstructor(::Type{T}; kwargs...) where{T}
-	args = [ :(get(kwargs, $(QuoteNode(n)), nothing)) for n in fieldnames(T) ]
+	args = [ :(get(kwargs, $(QuoteNode(n)), undef)) for n in fieldnames(T) ]
 	return :($T($(args...)))
 end
 
-"""    ConstantOrIgnored{I,V}
+"""    FixedValue{I,V}
 
 A field with a singleton type (zero size in memory),
 corresponding to a fixed value `V` in I/O.
 
 The boolean `I` is an ignore field: if it is `false` then the value is
 checked on reading, otherwise it is read and ignored.
+
+See `Constant` and `Ignored`.
 """
-struct ConstantOrIgnored{I,V} end
-@inline value(::Type{ConstantOrIgnored{I,V}}) where{I,V} = V
-"    Constant{V}: see `ConstantOrIgnored`."
-@inline Base.convert(T::Type{<:ConstantOrIgnored}, ::Nothing) = T()
-function readstruct(io::IO, T::Type{<:ConstantOrIgnored{I}}) where{I}
+struct FixedValue{I,V} end
+@inline value(::Type{FixedValue{I,V}}) where{I,V} = V
+"    Constant{V}: see `FixedValue`."
+@inline Base.convert(T::Type{<:FixedValue}, ::Nothing) = T()
+function readstruct(io::IO, T::Type{<:FixedValue{I}}) where{I}
 	x = read(io, sizeof(value(T)))
 	@assert I || (x == value(T)) "Bad value \"$x\" (should have been $(value(T)))"
 	return T()
 end
 
-@inline Base.show(io::IO, ::Type{ConstantOrIgnored{I,V}}) where{I,V} =
+@inline Base.show(io::IO, ::Type{FixedValue{I,V}}) where{I,V} =
 	show_constant_ignored(io, I ? :Ignored : :Constant, V)
 @inline show_constant_ignored(io, s, V) = print(io, s, '{', V, '}')
 @inline show_constant_ignored(io, s, V::SVector{N,UInt8}) where{N} =
 	print(io, s, '"', String(V), '"')
 
-@inline blocksize(T::Type{ConstantOrIgnored{I,V}}) where{I,V} = sizeof(V)
+@inline blocksize(T::Type{FixedValue{I,V}}) where{I,V} = sizeof(V)
 using StaticArrays
 
 @inline fixed_str(T, s) = :($(esc(gensym(T)))::$T{SA[$(codeunits(s)...)]})
 
 """    Constant{V}
 
-Singleton type (zero memory storage) with a fixed file storage.
+Singleton type (zero memory storage) representing a fixed value in a file.
 The given value is checked when reading an I/O (with `readstruct`).
-In case the value is not present, an error is thrown.
-"""
-const Constant = ConstantOrIgnored{false}
-"""    Ignored{V}
-Singleton type corresponding to fixed file storage.
-This value is ignored when reading a file (with `readstruct`).
-The defined value is used when writing a file."""
-const Ignored = ConstantOrIgnored{true}
+In case the value is not correct, an error is thrown.
 
-"""    Constant"value"
+---
+    Constant"value"
 
 Defines a field with irrelevant name and `Constant` type.
 **This macro must only be called in a `struct` scope** (not at toplevel)."""
+const Constant = FixedValue{false}
 macro Constant_str(s) fixed_str(:Constant, s) end
-"""    Constant"value"
+"""    Ignored{V}
+Singleton type representing a fixed value in a file.
+This value is ignored when reading a file (with `readstruct`).
+The defined value is used when writing a file.
+
+---
+    Ignored"value"
 
 Defines a field with irrelevant name and `Ignored` type.
 **This macro must only be called in a `struct` scope** (not at toplevel)."""
+const Ignored = FixedValue{true}
 macro Ignored_str(s) fixed_str(:Ignored, s) end
 
 
-struct Foo; Constant"## e"; b::UInt8; c::UInt8; end
 export Constant, Ignored, @Constant_str, @Ignored_str, readstruct, layout
 
 end
@@ -144,7 +179,7 @@ module Functors
 """    find_typevar(T, TX)
 
 Given a type expression `T` with (exactly) one free variable `V`
-and a concrete subtype `TX`, returns the type with with this variable
+and a concrete subtype `TX`, returns the type with which this variable
 is instantiated in `TX`, i.e. `X` such that `TX == T{X}`.
 """
 function find_typevar(T::DataType, TX::DataType)
@@ -155,7 +190,7 @@ function find_typevar(T::DataType, TX::DataType)
 	end
 end
 
-"""    replacetypevars(f, T, V, A, B, x)
+"""    replacetypevars(f, T, V, B, x)
 
 Given a type expression `T` with free variable `V`
 and a concrete instance `x` of `T{A}`,
@@ -163,30 +198,15 @@ as well as a function `f` mapping `A` to `B`,
 returns the instance of `T{B}` constructed by mapping `f`
 to the appropriate fields of `x`.
 """
-function replacetypevars(f, T, V, A, B, x::TX) where{TX}
-# 	println("replacetypevars: $T, $TX;  $V = $A => $B")
+function replacetypevars(f, T, V, B, x::TX) where{TX}
 	# two leaf cases:
 	T isa TypeVar && return f(x)::B
 	!T.hasfreetypevars && return x
 	TX <: AbstractArray &&
-	begin
-		newt = UnionAll(V,T){B}
-# 		println("  V=$V T=$T UnionAll=$(UnionAll(V,T))")
-# 		println("new type should be ", newt)
-		z = [ replacetypevars(f, T.parameters[1], V, A, B, y) for y in x ]
-# 		println("changing to: ", (typeof(z), z))
-		return [ replacetypevars(f, T.parameters[1], V, A, B, y) for y in x ]
-	end
-# 	if isstructtype(T)
-# 		TB = UnionAll(V,T){B}
-# 		vals = ((replacetypevars(f, fieldtype(T,i), V, A, B, getfield(x,i))
-# 			for i in 1:fieldcount(T))...,)
-# 		Expr(:new, :TB, Expr(Symbol("..."), :vals))
-# 	end
-	isstructtype(T) && return UnionAll(V, T){B}(
-			(replacetypevars(f, fieldtype(T,i), V, A, B, getfield(x,i))
+		return [ replacetypevars(f, T.parameters[1], V, B, y) for y in x ]
+	@assert isstructtype(T) "leaf cases should have been eliminated by now..."
+	UnionAll(V, T){B}((replacetypevars(f, fieldtype(T,i), V, B, getfield(x,i))
 			for i in 1:fieldcount(T))...,)
-	error("unreachable")
 end
 
 """    functor(f::Function, T::UnionAll, x, [B::Type])
@@ -208,17 +228,17 @@ function functor(f, T::UnionAll, x::TX, B = nothing) where{TX}
 	(V, A) = find_typevar(T.body, TX)
 	@assert TX == T{A}
 	isnothing(B) && (B = only(Base.return_types(f, Tuple{A})))
-	replacetypevars(f, T.body, V, A, B, x)
+	replacetypevars(f, T.body, V, B, x)
 end
 end
 
 import Base.read
-using .Blocks
+using .StructuredRead
 include("dottedenums.jl"); using .DottedEnums
 
 abstract type AbstractBlock end
 @inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer...) =
-	Blocks.readstruct(io, T, n...)
+	StructuredRead.readstruct(io, T, n...)
 
 using Printf
 using StaticArrays
@@ -276,16 +296,26 @@ Index (32-bit) referring to a translated string in dialog.tlk/dialogF.tlk.
 """
 const Strref = Typewrap{:Strref, UInt32}
 
-"""    Resref"Type"
+"""    Resref{Type}, Resref"Type"
 
 Index (64-bit, or 8 char string) referring to a resource.
 This index carries type information marking the resource type,
-and indicated by the string parameter: Resref"ITM"("BLUN01")
+and indicated by the string parameter: `Resref"ITM"("BLUN01")`
 describes an item, etc.
 This allows dispatch to be done correctly at compile-time.
+
+    Resref"value.type"
+
+Shortcut for `Resref"type"("value")`.
 """
 const Resref{T} =Typewrap{:Resref, Typewrap{T, StaticString{8}}}
-macro Resref_str(s) Resref{Symbol(uppercase(s))} end
+macro Resref_str(s)
+	s = uppercase(s)
+	i = findlast('.', s)
+	isnothing(i) && return Resref{Symbol(s)}
+	@assert i ≤ 9
+	return Resref{Symbol(s[i+1:end])}(s[begin:i-1])
+end
 
 """    BifIndex
 32-bit index of resource in bif files.
@@ -350,7 +380,7 @@ const RESOURCE_TABLE = Dict{UInt16,String}(
 @inline Base.Symbol(x::Resindex) = Symbol(String(x))
 
 # ««2 Resource type (marked IO object)
-"""    Resource{Type}
+"""    Resource{Type}, Resource"TYPE"
 
 A structure describing the physical location of a game resource
 (either from filesystem or from a BIF content),
@@ -527,8 +557,9 @@ function (::Type{<:Resource{T}})(key::KeyIndex, name) where{T}
 	bif = joinpath(key.directory, key.bif[1+sourcefile(loc)])
 	return ResourceBuf{T}(String(name), bifcontent(bif, resourceindex(loc)))
 end
-Base.all(key::KeyIndex, ::Type{Resource{T}}) where{T} =
-	(Resref{T}(r[1]) for r in keys(key.location) if r[2] == T)
+Base.names(key::KeyIndex, ::Type{Resource{T}}) where{T} =
+	(r[1] for r in keys(key.location) if r[2] == T)
+Base.all(key::KeyIndex, T::Type{<:Resource}) = (T(key, x) for x in names(key,T))
 
 # ««1 ids
 # useful ones: PROJECTL SONGLIST ITEMCAT NPC ANISND ?
@@ -829,6 +860,7 @@ struct ITM_hdr{S} <: AbstractBlock
 	feature_index::UInt16
 	feature_count::UInt16
 end
+@inline searchkey(i::ITM_hdr) = i.identified_name
 struct ITM_ability <: AbstractBlock
 	attack_type::UInt8
 	must_identify::UInt8
@@ -934,7 +966,7 @@ end
 
 function read(f::Resource"DLG", io::IO)
 	header = read(io, DLG_hdr)
-	return Dialog{Strref}(Resref"DLG"(name(f)), header.flags,
+	return Dialog{Strref}(Resref"DLG"(first(name(f),8)), header.flags,
 		read(seek(io,header.offset_states), DLG_state{Strref},
 			header.number_states),
 		read(seek(io, header.offset_transitions), DLG_transition{Strref},
@@ -1008,8 +1040,20 @@ end
 
 Main structure holding all top-level data for a game installation, including:
  - key/bif archived files,
- - tlk strings,
- - table of override files.
+ - table of override files,
+ - tlk strings (TODO).
+
+Methods include:
+
+ - `read(game, resref)`: reads a `Resref` value, returning a Julia structure
+   depending on the Resref type (e.g. `Resref"blun01.itm"` will return
+   an item structure, etc.).
+ - `filetype(game, resref)`: returns either 0 (resource not found),
+    1 (resource found in bif), or 2 (resource found in override).
+ - `names(game, Resource"type")`: returns a vector of all names of
+   existing resources of this type.
+ - `all(game, Resource"type")`: returns an iterator over all existing
+   resource descriptors of this type.
 """
 struct Game
 	directory::String
@@ -1050,35 +1094,41 @@ function Resource{T}(game::Game, name::AbstractString) where{T}
 		error("resource not found: $name.$T")
 	end
 end
-
-# allow strong typing to occur on the index side instead of the read side:
 @inline Resource(k::Union{Game,KeyIndex}, name::Resref{T}) where{T} =
 	Resource{T}(k, name.data.data)
+
 @inline read(k::Union{Game,KeyIndex}, name::Resref; kw...) =
 	read(Resource(k, name); kw...)
 @inline filetype(game::Game, name::Resref{T}) where{T} =
 	filetype(game, Resource{T}, name)
-function Base.all(game::Game, ::Type{Resource{T}}) where{T}
-	[ Resource{T}(game, name) for name in Base.Iterators.flatten(
-		(String.(all(game.key, Resource{T})), game.override[T]))|>collect|>sort|>unique ]
-end
 
-function search(game::Game, str::TlkStrings, ::Type{Resref"ITM"}, text)
-	for name in all(game, Resource"ITM")
-		s = str[read(name).identified_name].string
+@inline Base.names(game::Game, ::Type{Resource{T}}) where{T} =
+	game.override[T] ∪ names(game.key, Resource{T})
+@inline Base.all(game::Game, R::Type{<:Resource}) =
+	(R(game, n) for n in names(game, R))
+
+"""    search(game, strings, Resource"type", text)
+
+Searches for the given text (string or regular expression)
+in the names of all resources of the given `type`.
+`strings` is the string database used for translation.
+"""
+function search(game::Game, str::TlkStrings, R::Type{<:Resource}, text)
+	for res in all(game, R)
+		s = str[searchkey(read(res))].string
 		contains(s, text) || continue
+		@printf("%c%-8s %s\n", res isa ResourceFile ? '*' : ' ', name(res), s)
 	end
 end
 
-
 # »»1
 end
-IE=InfinityEngine; B=IE.Blocks
-itm = read(IE.Resource"ITM"("../bg2/game/override/amulgr01.itm"))
-
+IE=InfinityEngine; B=IE.StructuredRead
 # game = IE.Game("../bg2/game")
-# key=IE.KeyIndex("../bg2/game/chitin.key")
 str=read(IE.Resource"TLK"("../bg2/game/lang/fr_FR/dialog.tlk"))
+# IE.search(game, str, IE.Resource"ITM", "Varscona")
+dia=read(IE.Resource"DLG"("../bg2/game/override/hull.dlg"))
+
 # dia=read(key["abaziga", "dlg"])
 # dia1=str*dia
 # IE.printdialog(dia,str)

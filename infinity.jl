@@ -254,13 +254,16 @@ as well as a function `f` mapping `A` to `B`,
 returns the instance of `T{B}` constructed by mapping `f`
 to the appropriate fields of `x`.
 """
-function replacetypevars(f, T, V, B, x::TX) where{TX}
-	# two leaf cases:
-	T isa TypeVar && return f(x)::B
+replacetypevars(f, ::TypeVar, ::TypeVar, B::DataType, x) = f(x)::B
+replacetypevars(f, T::Union, V::TypeVar, B::DataType, x) =
+	replacetypevars(f, x isa T.a ? T.a : T.b, V, B, x)
+function replacetypevars(f, T, V::TypeVar, ::Type{B}, x::TX) where{B,TX}
+# 	println("replacetypevars: $V => $B for x::$TX from $T")
 	!T.hasfreetypevars && return x
 	TX <: AbstractArray &&
 		return [ replacetypevars(f, T.parameters[1], V, B, y) for y in x ]
 	@assert isstructtype(T) "leaf cases should have been eliminated by now..."
+	println("  UnionAll case: T=$T $(T isa UnionAll)")
 	UnionAll(V, T){B}((replacetypevars(f, fieldtype(T,i), V, B, getfield(x,i))
 			for i in 1:fieldcount(T))...,)
 end
@@ -291,6 +294,7 @@ end
 import Base.read
 using .StructIO
 include("dottedenums.jl"); using .DottedEnums
+include("dialogs.jl")
 
 abstract type AbstractBlock end
 @inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer...) =
@@ -462,7 +466,15 @@ Specializations must implement:
  - `read(::Resource{T}, io)`.
 """
 abstract type Resource{T} end
-macro Resource_str(s) Resource{Symbol(uppercase(s))} end
+macro Resource_str(str)
+	if contains(str, '.')
+		(_, b) = splitext(str)
+		return :(Resource{$(QuoteNode(Symbol(uppercase(b[2:end]))))}($str))
+	else
+		return :(Resource{$(QuoteNode(Symbol(uppercase(str))))})
+	end
+end
+# macro Resource_str(s) Resource{Symbol(uppercase(s))} end
 @inline read(f::Resource; kw...) = open(f) do io; read(f, io; kw...); end
 
 mutable struct ResourceFile{T} <:Resource{T}
@@ -470,7 +482,7 @@ mutable struct ResourceFile{T} <:Resource{T}
 end
 @inline Resource{T}(f::AbstractString) where{T} = ResourceFile{T}(f)
 @inline Resource(f::AbstractString) = 
-	Resource{Symbol(uppercase(splitext(basename(f))[2]))}(f)
+	Resource{Symbol(uppercase(splitext(basename(f))[2])[2:end])}(f)
 @inline Base.open(r::ResourceFile) = open(r.filename)
 @inline Base.nameof(r::ResourceFile) =
 	uppercase(splitext(basename(r.filename))[1])
@@ -989,21 +1001,21 @@ struct DLG_state{S} <: AbstractBlock
 	text::S
 	first_transition::Int32
 	number_transitions::Int32
-	trigger::UInt32
+	trigger::Int32
 end
 struct DLG_transition{S} <: AbstractBlock
 	flags::DialogTransitionFlags
-	player_text::S
-	journal_text::S
-	index_trigger::Int32
-	index_action::Int32
+	text::S
+	journal::S
+	trigger::Int32
+	action::Int32
 	next_actor::Resref"DLG"
 	next_state::Int32
 end
 # this is the same type for state trigger, transition trigger, actions:
 struct DLG_string <: AbstractBlock
-	offset::UInt32 # of trigger string
-	length::UInt32 # idem
+	offset::Int32 # of trigger string
+	length::Int32 # idem
 end
 
 """    Dialog{S}
@@ -1026,6 +1038,54 @@ end
 
 function read(f::Resource"DLG", io::IO)
 	header = read(io, DLG_hdr)
+	states = read(seek(io,header.offset_states), DLG_state{Strref},
+		header.number_states)
+	transitions = read(seek(io, header.offset_transitions),
+		DLG_transition{Strref}, header.number_transitions)
+	triggers = dialog_strings(io, header.offset_state_triggers,
+			header.number_state_triggers)
+	actions = dialog_strings(io, header.offset_actions, header.number_actions)
+	global ST=states
+	global TR=transitions
+	global TG=triggers
+	global AC=actions
+	machine = Dialogs.StateMachine{Int32,Strref,String,Any}()
+	setkey(coll, list, i) = iszero(~i) ? i : (coll[list[i+1]] = i+1)
+	for s ∈ states
+		state = eltype(machine.states)(;
+			transitions = s.first_transition .+ (1:s.number_transitions),
+			trigger = setkey(machine.triggers, triggers, s.trigger),
+			text = push!(machine.strings, s.text))
+		push!(machine.states, state)
+	end
+	for t ∈ transitions
+		trans = eltype(machine.transitions)((t.next_actor, t.next_state);
+			trigger = setkey(machine.triggers, triggers, t.trigger),
+			action = setkey(machine.actions, actions, t.action),
+			text = push!(machine.strings, t.text),
+			journal = push!(machine.strings, t.journal),
+			flags = UInt32(t.flags)
+			)
+		push!(machine.transitions, trans)
+	end
+	global M = machine
+# 			
+# 		(triggers[1+s.trigger] for s ∈ states if !iszero(~s.trigger))...,
+# 		(triggers[1+t.trigger] for t ∈ transitions if !iszero(~t.trigger))...,)
+# 	machine.actions = typeof(machine.actions)(
+# 		(actions[1+t.action] for t ∈ transitions if !iszero(~t.action))...,)
+# 	@inline fixidx(i::Integer) = iszero(~i) ? ~UInt32(0) : UInt32(1+i)
+# 	machine.states = [Dialogs.State{Int32}(;
+# 		text = machine.strings[s.text], trigger = fixidx(s.trigger),
+# 		transitions = s.first_transition.+(1:s.number_transitions))
+# 		for s in states]
+# 	machine.transitions = [Dialogs.Transition{Int32,Any}(
+# 		(t.next_actor, t.next_state);
+# 		text = machine.strings[s.text]
+# 		text = t.text|>UInt32, journal = t.journal|>UInt32, t.trigger, t.action,
+# 		flags = UInt32(t.flags))
+# 		for t in transitions]
+
 	return Dialog{Strref}(Resref"DLG"(first(nameof(f),8)), header.flags,
 		read(seek(io,header.offset_states), DLG_state{Strref},
 			header.number_states),
@@ -1037,7 +1097,6 @@ function read(f::Resource"DLG", io::IO)
 			header.number_transition_triggers),
 		dialog_strings(io, header.offset_actions, header.number_actions))
 end
-
 function printtransition(io::IO, dialog::Dialog, i, doneactions)
 	t = dialog.transitions[i+1]
 	print(io, "  \e[31m", i,
@@ -1054,17 +1113,17 @@ function printtransition(io::IO, dialog::Dialog, i, doneactions)
 	end
 	print(io, "\e[m")
 	if t.flags ∋ DialogTransitionFlags.HasText
-		print(io, "\e[36m\"", t.player_text, "\"\e[m")
+		print(io, "\e[36m\"", t.text, "\"\e[m")
 	else
 		print(io, "(no text)")
 	end
 	println(io)
 	if t.flags ∋ DialogTransitionFlags.HasAction
-		a = t.index_action
+		a = t.action
 		println(io, " action $a:")
 		if a ∉ doneactions
 			push!(doneactions, a)
-			println(io, "\e[32m", dialog.actions[t.index_action+1], "\e[m")
+			println(io, "\e[32m", dialog.actions[t.action+1], "\e[m")
 		end
 	end
 end
@@ -1096,6 +1155,9 @@ for T in (:Dialog,:ITM_hdr)
 	@eval @inline Base.:*(str::TlkStrings, x::$T{Strref}) =
 		Functors.functor(x->str[x].string::String, $T, x)
 end
+Base.:*(str::TlkStrings, x::Dialogs.StateMachine{Int32,Strref,String,Any}) =
+	Functors.functor(x->str[x].string::String,
+		Dialogs.StateMachine{Int32,S,String,Any} where{S}, x)
 """    Game
 
 Main structure holding all top-level data for a game installation, including:
@@ -1184,11 +1246,11 @@ end
 end
 IE=InfinityEngine; S=IE.StructIO
 # game = IE.Game("../bg2/game")
-# str=read(IE.Resource"TLK"("../bg2/game/lang/fr_FR/dialog.tlk"))
+str=read(IE.Resource"../bg2/game/lang/fr_FR/dialog.tlk")
 # IE.search(game, str, IE.Resource"ITM", "Varscona")
-# dia=read(IE.Resource"DLG"("../bg2/game/override/hull.dlg"))
+dia=read(IE.Resource"../bg2/game/override/hull.dlg")
 
 # dia=read(key["abaziga", "dlg"])
-# dia1=str*dia
+dia1=str*dia
 # IE.printdialog(dia,str)
 nothing

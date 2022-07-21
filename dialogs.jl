@@ -11,6 +11,7 @@
 	 - FIXME: should we rename this condition()?
   - priority() (is this useful? check if it is used at all in WeiDU examples)
 	+ journal()
+	 - TODO first: load state machine from .dlg resource
 	 - check in examples about solved/unsolved etc.
 	+ action)
 	 - check about strrefs in action code!
@@ -281,23 +282,30 @@ Appends a new key and returns the corresponding index.
 Returns the sequence of values collected, i.e. a `list` of keys
 such that `list[collector[key]] == key`.
 """
-# Collects value of a given type, building an index system for these
-# values along the way.
 struct Collector{T,B,I<:Integer} <: AbstractDict{T,I}
 	index::Dict{T,I}
 	Collector{T,B,I}() where{T,B,I<:Integer} = new(Dict{T,I}())
 	Collector{T,B}(args...) where{T,B} = Collector{T,B,Int}(args...)
+	function (C::Type{<:Collector{T}})(args::T...) where{T}
+		c = C()
+		push!(c, args...)
+		return c
+	end
+	# default constructor for functoriality
+	Collector{T,B,I}(index::Dict{T,I}) where{T,B,I} = new{T,B,I}(index)
 end
 @inline Base.valtype(c::Collector{T,B,I}) where{T,B,I} = I
 @inline isunique(c::Collector{T,B}) where{T,B} = B
 @inline Base.convert(T::Type{<:Collector}, ::Tuple{}) = T()
-for f in (:keytype,:length,:empty!,:isempty,:haskey,:getindex,:get,:pairs)
+for f in (:keytype, :length, :empty!, :isempty, :haskey, :getindex, :get,
+	:pairs, :iterate, :setindex!)
 	@eval Base.$f(c::Collector, args...) = $f(c.index, args...)
 end
 function Base.push!(c::Collector, s; unique = isunique(c))
 	unique && haskey(c.index, s) && error("repeated index: $s")
 	get!(c.index, s, valtype(c.index)(1+length(c.index)))
 end
+Base.push!(c::Collector, s...; kw...) = [push!(c, x; kw...) for x ∈ s]
 function Base.collect(c::Collector)
 	list = Vector{keytype(c.index)}(undef, length(c.index))
 	for (k, v) in pairs(c.index)
@@ -321,7 +329,6 @@ mutable struct Transition{I<:Integer,K}
 		trigger=~zero(I), action=~zero(I), flags=UInt32(0)) where{I<:Integer,K} =
 		new{I,K}(target, text, journal, trigger, action, flags)
 end
-
 module Flags
 	set(; text = false, trigger = false, action = false, terminates = false,
 		journal = false, interrupt = false, unsolved = false, journalentry = false,
@@ -342,20 +349,13 @@ mutable struct State{I<:Integer}
 	# Payload: (we could also turn all of these into a type parameter)
 	text::I
 	trigger::I
-	State{I}(; text=~zero(I), trigger=~zero(I), priority=-eps(Float32)
-		) where{I<:Integer}= new{I}(I[], priority, text, trigger)
+	State{I}(; text=~zero(I), trigger=~zero(I), priority=-eps(Float32),
+		transitions=I[]) where{I<:Integer}=
+		new{I}(transitions, priority, text, trigger)
 end
 indextype(T::Type{<:State{I}}) where{I} = I
 
-struct StateKey{X}
-	namespace::String
-	actor::String
-	label::X
-end
-# default constructor, used for when no key is needed (final transitions):
-(T::Type{StateKey{Any}})() = T("", "", undef)
-
-mutable struct StateMachine{I<:Integer,S,T,X}
+mutable struct StateMachine{I<:Integer,S,T,K}
 # TODO: keep states ordered (use a priority system)
 # - first created state has highest priority
 # - states with explicit priority > states with implicit priority
@@ -365,29 +365,35 @@ mutable struct StateMachine{I<:Integer,S,T,X}
 # we can do slightly better: use -eps for implicit priority
 # so that this is (explicit-priority||-Inf, -counter).
 	states::Vector{State{I}}
-	transitions::Vector{Transition{I,StateKey{X}}}
+	transitions::Vector{Transition{I,K}}
+	state_keys::Collector{K,true,I}
+	current_state::I
+	current_transition::I
 
-	state_keys::Collector{StateKey{X},true,I}
-	strings::Collector{S,true,I}
-	actions::Collector{T,true,I}
-	triggers::Collector{T,true,I}
+	StateMachine{I,S,T,X}() where{I<:Integer,S,T,X} = reset(new{I,S,T,X}())
+	# FIXME: the following stuff is not really generic for all state
+	# machines, yet we really need those:
+	# (but this means that we would also need to
+	# abstract away the state and action payloads as type parameters)
+	strings::Collector{S,false,I}
+	actions::Collector{T,false,I}
+	triggers::Collector{T,false,I}
 
 	current_namespace::Union{Nothing,String}
 	current_actor::Union{Nothing,String}
 	current_trigger_idx::I
-	StateMachine{I,S,T,X}() where{I<:Integer,S,T,X} = reset(new{I,S,T,X}())
+	# default constructor is needed for functoriality:
+	StateMachine{I,S,T,X}(a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab) where{I,S,T,X} =
+		new{I,S,T,X}(a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab)
 end
 
 indextype(::StateMachine{I}) where{I} = I
 stringtype(::StateMachine{I,S}) where{I,S} = S
 actiontype(::StateMachine{I,S,T}) where{I,S,T} = T
-labeltype(::StateMachine{I,S,T,X}) where{I,S,T,X} = X
 Base.keytype(m::StateMachine) = keytype(m.state_keys)
 statetype(m::StateMachine) = eltype(m.states)
 transitiontype(m::StateMachine) = eltype(m.transitions)
 
-key(m::StateMachine, actor, label) = keytype(m)(m.current_namespace,actor,label)
-key(m::StateMachine, label) = key(m, m.current_actor, label)
 # instead of doing lots of Union{Nothing,...}, we simply
 # mark invalid keys by 0xffff, which is how they will eventually be
 # written in the file anyway:
@@ -403,12 +409,21 @@ function Base.reset(m::StateMachine)
 	for f in (:states, :transitions, :state_keys, :strings, :actions, :triggers)
 		setfield!(m, f, fieldtype(typeof(m), f)())
 	end
+	m.current_state = ~zero(m.current_state)
+	m.current_transition = ~zero(m.current_transition)
 	m.current_namespace = nothing
 	m.current_actor = nothing
 	m.current_trigger_idx = noindex(m)
 	return m
 end
 
+struct PrintData{S,T,X}
+	strings::Vector{S}
+	triggers::Vector{T}
+	actions::Vector{T}
+	keys::Vector{X}
+end
+	
 function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)
 	str = collect(m.strings)
 	tri = collect(m.triggers)
@@ -441,8 +456,20 @@ function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)
 	end
 end
 
+struct StateKey{X}
+	namespace::String
+	actor::String
+	label::X
+end
+
 "global object describing the current state-machine being built."
-global machine = StateMachine{Int32,String,String,Any}()
+global machine = StateMachine{Int32,String,String,StateKey{Any}}()
+key(actor::AbstractString, label) =
+	keytype(machine)(machine.current_namespace,actor,label)
+key(label) = key(machine, machine.current_actor, label)
+
+# default constructor, used for when no key is needed (final transitions):
+key(::typeof(undef)) = keytype(machine)("", "", undef)
 
 #««2 Small stuff: namespace, actor, trigger
 namespace(text) = (machine.current_namespace = text)
@@ -503,10 +530,12 @@ function add_state!(m::StateMachine, k, text;
 	end
 	push!(m.states, s)
 	push!(m.state_keys, k)
+	m.current_state = length(m.states)
 	m
 end
 
-current_state(m::StateMachine) = (@assert !isempty(m.states); last(m.states))
+current_state(m::StateMachine) =
+	(@assert !isempty(m.states); m.states[m.current_state])
 
 """"
     state(actor, ([label =>] text)*; trigger)
@@ -519,7 +548,7 @@ transitions.
 """
 state(actor::AbstractString, (label, text)::Pair{<:Any,<:AbstractString};
 		kw...) = 
-	add_state!(machine, key(machine, actor, label), text; kw...)
+	add_state!(machine, key(actor, label), text; kw...)
 state(actor::AbstractString, text::AbstractString; kw...) =
 	state(actor, gensym() => text; kw...)
 
@@ -561,17 +590,19 @@ function add_transition!(m::StateMachine, s, target;
 	t = transitiontype(m)(target; text, journal, trigger, action, flags)
 	push!(m.transitions, t)
 	insert!(s.transitions, position, length(m.transitions))
+	m.current_transition = position
 	m
 end
 
 current_transition(m::StateMachine) = let s = current_state(m)
-	@assert !isempty(s.transitions); m.transitions[last(s.transitions)]
+	@assert !isempty(s.transitions)
+	m.transitions[s.transitions[m.current_transition]]
 end
 
 transition(actor::AbstractString, label, args...; kwargs...) =
-	transition_key(key(machine, actor, label), args...; kwargs...)
+	transition_key(key(actor, label), args...; kwargs...)
 transition(::typeof(exit), args...; kwargs...) =
-	transition_key(keytype(machine)(), args...; terminates = true, kwargs...)
+	transition_key(key(undef), args...; terminates = true, kwargs...)
 
 transition_key(k, text::AbstractString; kwargs...) =
 	add_transition!(machine, current_state(machine), k; text, kwargs...)
@@ -596,18 +627,18 @@ answer((text, label)::Pair{<:AbstractString,<:Any}; kw...) =
 export namespace, actor, trigger, action, journal
 export state, say, transition, answer
 end
-D = Dialogs
-for f in names(D); f == nameof(D) && continue
-	eval(:(@inline $f(args...; kwargs...) = D.$f(args...; kwargs...)))
-end
-
-namespace("g")
-actor("Alice")
-trigger("weather is nice")
-say(:hello => "weather is nice today", "sunny and all!")
-  answer("bye" => exit)
-		action("i am gone")
-say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
-	answer("let's hope so" => :hello)
-	answer("what does B say about this?" => ("Bob", :hithere); position=1)
-	  journal("Today I asked a question to Bob")
+# D = Dialogs
+# for f in names(D); f == nameof(D) && continue
+# 	eval(:(@inline $f(args...; kwargs...) = D.$f(args...; kwargs...)))
+# end
+# 
+# namespace("g")
+# actor("Alice")
+# trigger("weather is nice")
+# say(:hello => "weather is nice today", "sunny and all!")
+#   answer("bye" => exit)
+# 		action("i am gone")
+# say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
+# 	answer("let's hope so" => :hello)
+# 	answer("what does B say about this?" => ("Bob", :hithere); position=1)
+# 	  journal("Today I asked a question to Bob")

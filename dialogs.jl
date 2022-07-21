@@ -1,35 +1,31 @@
 #= TODO:
- - priority for states
+ State machine description:
+  + state()
+	 + actor()
+	 + say()
+	+ transition()
+	 + answer()
+	 + implicit transitions
+   - transition without text: transition()
+	+ trigger()
+	 - FIXME: should we rename this condition()?
+  - priority() (is this useful? check if it is used at all in WeiDU examples)
+	+ journal()
+	 - check in examples about solved/unsolved etc.
+	+ action)
+	 - check about strrefs in action code!
+	 - define a Julia syntax for action code?
+ - Compilation
+  - importing .dlg database
+	- merging databases
+	 - canonicalize state keys
+	- exporting
+ - Nice stuff
+  - detection of too-long text
+	- detection of no-exit situations
+
  - use a global db for symbolic names of files (to solve namespace conflicts)
- - transition to extern state: Weidu EXTERN [if_file_exists] "file" label
-  => Extern("file", label)
  - journal: journal(text), journal(:unsolved, "text"), journal(:solved, "text")
- - transition without text: transition()
- - multi-text state (should create a default transition)
- - if two consecutive say(), then this builds a chain
-   -equivalently, say("text1", "text2", ...)
- - chain():
-CHAIN ~G3BEV~ LadyBevKelseyExchange @11117 = @11232
-== ~J#KLSYJ~ @11233
-== ~G3BEV~ @11112
-  COPY_TRANS G3BEV KelseyNotAtFault
-becomes:
-say("text1", "text2")
-actor("kelsey")
-say("text3")
-actor("g3bev")
-say("text4")
-
-
-This could become global:
-dialog("kelsey") do
-
-end
-
- => translated as:
-dialog() do
-actor("kelsey") etc.
-end
 =#
 """
 # State machine description:
@@ -225,7 +221,7 @@ where the index is the state ordering in the `.dlg` file.
 
  - Canonicalizing text:
 
-All labels are replaced by `(actor, unique_integer_index)`,
+All keys are replaced by `(actor, unique_integer_index)`,
 where the index corresponds to the `.dlg` index table
 (i.e. new indices are placed after the existing `.dlg` indices).
 Original indices are marked in a special way (e.g. DlgIndex(i)).
@@ -483,15 +479,15 @@ mutable struct Transition{I<:Integer,K}
 end
 
 module Flags
-	flags(; text = false, trigger = false, action = false, terminates = false,
+	set(; text = false, trigger = false, action = false, terminates = false,
 		journal = false, interrupt = false, unsolved = false, journalentry = false,
 		solved = false) =
 		UInt32(text<<0 | trigger<<1 | action<<2 | terminates<<3 | journal << 4 |
 			interrupt <<5 | unsolved << 6 | journalentry << 7 | solved << 8)
 	Base.contains(x, flag::Symbol) =
-		!iszero(x & flags(; NamedTuple{(flag,),Tuple{Bool}}((true,))...))
-	function string(x; default="0") # not overloading Base!
-		kw = Base.kwarg_decl(first(methods(flags).ms))
+		!iszero(x & set(; NamedTuple{(flag,),Tuple{Bool}}((true,))...))
+	function string(x; default="0") # not importing Base!
+		kw = Base.kwarg_decl(first(methods(set).ms))
 		iszero(x) ? default :
 		join((Base.string.(k) for k in kw if contains(x, k)), '|')
 	end
@@ -524,7 +520,6 @@ mutable struct StateMachine{I<:Integer,S,T,X}
 # i.e. (Bool, Real, Int)
 # we can do slightly better: use -eps for implicit priority
 # so that this is (explicit-priority||-Inf, -counter).
-
 	states::Vector{State{I}}
 	transitions::Vector{Transition{I,StateKey{X}}}
 
@@ -567,6 +562,7 @@ end
 function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)
 	str = collect(m.strings)
 	tri = collect(m.triggers)
+	act = collect(m.actions)
 	p = collect(pairs(m.states))
 	revk = collect(m.state_keys)
 	for (k, s) in sort(collect(pairs(m.states));
@@ -586,8 +582,9 @@ function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)
 				" ",
 				contains(t.flags, :text) ? "\e[36m\"$(str[t.text])\"\e[m" : "(no text)",
 				" ",
-				contains(t.flags, :action) ? "\n\e[31m\"$(str[t.action])\"\e[m" :
+				contains(t.flags, :action) ? "\n\e[31m\"$(act[t.action])\"\e[m" :
 					"(no action)",
+				contains(t.flags, :journal) ? "\n\e[35m\"$(str[t.journal])\"\e[m" : "",
 			)
 			println(io)
 		end
@@ -606,7 +603,6 @@ function current_trigger!(m::StateMachine, text::AbstractString)
 	m.current_trigger_idx = push!(m.triggers, text)
 end
 current_trigger!(::StateMachine, ::Nothing) = nothing
-trigger(text::AbstractString) = current_trigger!(machine, text)
 
 # methods called by add_state!, add_transition!:
 "erases current trigger, returning erased value."
@@ -618,6 +614,27 @@ end
 "selects between current trigger and provided value"
 current_trigger_idx(m::StateMachine, text::Union{Nothing,AbstractString}) =
 	(current_trigger!(m, text); return current_trigger_idx(m))
+
+#««2 Higher-level: `trigger`, `action`, `journal`
+trigger(text::AbstractString) = current_trigger!(machine, text)
+
+function action(text::AbstractString; override=false)
+	t = current_transition(machine)
+	@assert(override || !contains(t.flags, :action),
+		"action already defined for this transition")
+	t.flags |= Flags.set(action = true)
+	t.action = push!(machine.actions, text)
+	machine
+end
+
+function journal(text::AbstractString; override=false)
+	t = current_transition(machine)
+	@assert(override || !contains(t.flags, :journal),
+		"journal entry already defined for this transition")
+	t.flags |= Flags.set(journal = true)
+	t.journal = push!(machine.strings, text)
+	machine
+end
 
 #««2 States
 " lowest-level state adding function for a state machine."
@@ -679,20 +696,23 @@ function add_transition!(m::StateMachine, s, target;
 		journal::Union{Nothing,AbstractString} = nothing,
 		action::Union{Nothing,AbstractString} = nothing,
 		trigger::Union{Nothing,AbstractString} = nothing,
-		terminates = false)
+		kwargs...) # KW: terminates
 	target::keytype(m)
 	s::statetype(m)
 	text = index(m.strings, text)
 	journal = index(m.strings, journal)
 	action = index(m.strings, action)
 	trigger = current_trigger_idx(m, trigger)
-	flags = Flags.flags(; terminates, text = isindex(text),
-		journal = isindex(journal), action = isindex(action),
-		trigger = isindex(trigger))
+	flags = Flags.set(; text = isindex(text), journal = isindex(journal),
+		action = isindex(action), trigger = isindex(trigger), kwargs...)
 	t = transitiontype(m)(target; text, journal, trigger, action, flags)
 	push!(m.transitions, t)
 	push!(s.transitions, length(m.transitions))
 	m
+end
+
+current_transition(m::StateMachine) = let s = current_state(m)
+	@assert !isempty(s.transitions); m.transitions[last(s.transitions)]
 end
 
 transition(actor::AbstractString, label, args...; kwargs...) =
@@ -721,7 +741,7 @@ answer((text, label)::Pair{<:AbstractString,<:Any}; kw...) =
 	
 #»»2
 
-export namespace, actor, trigger
+export namespace, actor, trigger, action, journal
 export state, say, transition, answer
 end
 D = Dialogs
@@ -734,9 +754,11 @@ actor("Alice")
 trigger("weather is nice")
 say(:hello => "weather is nice today", "sunny and all!")
   answer("bye" => exit)
+		action("i am gone")
 say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
 	answer("let's hope so" => :hello)
 	answer("what does B say about this?" => ("Bob", :hithere))
+	  journal("Today I asked a question to Bob")
 
 
 # @inline say(args...; kwargs...) = D.say(args...; kwargs...)

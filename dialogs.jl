@@ -15,6 +15,22 @@
 	+ action)
 	 - check about strrefs in action code!
 	 - define a Julia syntax for action code?
+ - Editing existing entries
+  - define edition types (defer to end once everything is loaded ?)
+	 - MUCH easier to load state machine first...
+	- primary need = interjections
+	- main edit types:
+	 - edit state:
+	  - insert transition from existing state: almost possible w/ curr. syntax
+state(actor, label) # loads existing state XXX ensure merging!
+transition(...) # inserts transition; TODO: set insertion point
+    - select transition for change
+    - delete transition (not very useful)
+    - change state payload
+   - edit transition:
+	  - change target
+		- change payload (already mostly possible)
+
  - Compilation
   - importing .dlg database
 	- merging databases
@@ -249,19 +265,33 @@ The intermedia
 """
 module Dialogs
 
-# Collector ««1
+module Collectors
+"""    Collector{T,unique?}
+
+Collects values of type `T`, assigning them sequential indices.
+If `unique?` is true then only unique values are allowed, otherwise
+duplicates are merged.
+
+    push!(collector, key)
+
+Appends a new key and returns the corresponding index.
+
+    collect(collector)
+
+Returns the sequence of values collected, i.e. a `list` of keys
+such that `list[collector[key]] == key`.
+"""
 # Collects value of a given type, building an index system for these
 # values along the way.
-struct Collector{T,B,I<:Integer}
+struct Collector{T,B,I<:Integer} <: AbstractDict{T,I}
 	index::Dict{T,I}
 	Collector{T,B,I}() where{T,B,I<:Integer} = new(Dict{T,I}())
 	Collector{T,B}(args...) where{T,B} = Collector{T,B,Int}(args...)
 end
-# @inline Base.valtype(c::Collector{T}) where{T} = T
-@inline indextype(c::Collector{T,B,I}) where{T,B,I} = I
+@inline Base.valtype(c::Collector{T,B,I}) where{T,B,I} = I
 @inline isunique(c::Collector{T,B}) where{T,B} = B
 @inline Base.convert(T::Type{<:Collector}, ::Tuple{}) = T()
-for f in (:keytype, :length, :empty!, :isempty, :haskey, :getindex, :get)
+for f in (:keytype,:length,:empty!,:isempty,:haskey,:getindex,:get,:pairs)
 	@eval Base.$f(c::Collector, args...) = $f(c.index, args...)
 end
 function Base.push!(c::Collector, s; unique = isunique(c))
@@ -275,195 +305,9 @@ function Base.collect(c::Collector)
 	end
 	return list
 end
-# »»1
-#««
-# const trigger_warning = """
-# !!! note
-# 
-#     Since we are mimicking Weidu's syntax,
-#     triggers come *before* states and transitions,
-# 		while actions come *after* transitions.
-# """
-# 
-# """    trigger(text)
-# Prepends a trigger to the next `state` or `answer`.
-# 
-# $trigger_warning
-# """
-# function trigger(text::AbstractString)
-# 	@assert global_status.trigger == nothing "top-level trigger defined twice"
-# 	global_status.trigger = text
-# end
-# function get_current_trigger(trigger)
-# 	if isnothing(trigger)
-# 		r = something(global_status.trigger, "")
-# 	else
-# 		@assert global_status.trigger == nothing "passed trigger argument when a top-level current trigger exists"
-# 		r = trigger
-# 	end
-# 	global global_status.trigger = nothing
-# 	return r
-# end
-# 
-# function active_transition()
-# 	@assert !isempty(global_status.states) "No states or transitions are defined at this point"
-# 	s = last(global_status.states)
-# 	@assert s.ntransitions > 0 "No transitions defined for current state at this point"
-# 	return global_status.transitions[s.firsttransition + s.ntransitions - 1]
-# end
-# """    action(text)
-# 
-# Appends an action to the last transition.
-# 
-# It is an error to call this when no transition is active
-# (i.e. either when no state is defined, or just after a `say()` call).
-# 
-# $trigger_warning
-# """
-# function action(text::AbstractString)
-# 	tr = active_transition()
-# 	@assert isempty(tr.action) "Attempted to attach two actions to the same transition"
-# 	tr.action = text
-# end
-# """    State
-# 
-# Holds data for one state of the dialog: text, trigger (if any),
-# transitions.
-# """
-# mutable struct State
-# 	text::String
-# 	trigger::String
-# 	firsttransition::Int32
-# 	ntransitions::Int32
-# 	State(text::AbstractString, trigger::AbstractString = "", ft = 1) =
-# 		new(text, trigger, ft, 0)
-# end
-# 
-# """    say(label, text; [trigger])
-# 
-# Defines a state of the dialog with associated text.
-# 
-# If `trigger()` was called before `say()` then this defines the trigger
-# conditioning this state; otherwise a trigger may be defined using the
-# keyword syntax. (Doing both raises an error).
-# """
-# function say(x::X, text::AbstractString; trigger = nothing) where{X}
-# 	s = State(text, get_current_trigger(trigger), 1+length(global_status.transitions))
-# 	push!(global_status.state_index, x; unique=true)
-# 	push!(global_status.states, s)
-# 	@assert length(global_status.state_index) == length(global_status.states)
-# end
-# 
-# mutable struct Transition{X}
-# 	flags::UInt32
-# 	answer::String
-# 	journal::String
-# 	action::String
-# 	trigger::String
-# 	target::X
-# 	@inline Transition{X}(text::AbstractString, target;
-# 		journal = "", action="", trigger="", flags=0) where{X} =
-# 		new{X}(flags, text, journal, action, trigger, target)
-# end
-# @inline Transition(text, target::X; kwargs...) where{X} =
-# 	Transition{X}(text, target; kwargs...)
-# 
-# settarget(t::Transition, x) =
-# 	Transition(t.answer, x; t.journal, t.action, t.trigger, t.flags)
-# 
-# 
-# """    answer(text => label; [trigger = text])
-# 
-# Attaches a transition to the previously defined `say()`.
-# 
-# The label must either be:
-#  - a label (of any type) attached to a state (possibly a state defined
-#    later; this will only be checked when the dialog is compiled);
-#  - or the keyword `exit`, meanin that this transition ends the dialogue.
-# 
-# It is an error to call this function without having defined a state.
-# 
-# A trigger may be attached to this transition, using either the keyword
-# or a previous `trigger()` invocation (doing both is an error).
-# """
-# function answer((text, x)::Pair{<:AbstractString}; trigger = nothing, kwargs...)
-# 	@assert !isempty(global_status.states) "Impossible to define a transition without a state"
-# 	trigger = get_current_trigger(trigger)
-# 	a = Transition{Any}(text, x; trigger, kwargs...)
-# 	push!(global_status.transitions, a)
-# 	last(global_status.states).ntransitions+= 1
-# end
-# 
-# # mutable struct GlobalStatus
-# # 	trigger::Union{Nothing,String} # last created trigger
-# # 	actor::Union{Nothing,String}
-# # 	state_index::Collector{Any}
-# # 	states::Vector{State} # all created states; “active” state is last
-# # 	transitions::Vector{Transition{Any}} # all created transitions
-# # 	@inline GlobalStatus() = reset(new())
-# # end
-# @inline function Base.reset(g::GlobalStatus)
-# 	g.trigger = nothing
-# 	g.state_index = ()
-# 	g.states = []
-# 	g.transitions = []
-# 	return g
-# end
-# const global_status = GlobalStatus()
-# 
-# function change(name)
-# 	global_status.actor = name
-# end
-# 
-# """    done()
-# 
-# This compiles all previous `say()`, `answer()`, etc. invocations
-# into a self-contained `Dialogue` object.
-# """
-# function done()
-# 	action_coll = Collector{String}()
-# 	trigger_coll = Collector{String}()
-# 	for (i,s) in pairs(global_status.states)
-# 		println("state \e[1m<$i\e[m> \"$(s.text)\":")
-# 		if !isempty(s.trigger)
-# 			i = push!(trigger_coll, s.trigger)
-# 			println("  trigger $i = \e[33m$(s.trigger)\e[m")
-# 		end
-# 		r = s.firsttransition .+ (0:s.ntransitions-1)
-# 		println("  transitions $r")
-# 		for i in r
-# 			t = global_status.transitions[i]
-# 			if t.target == exit
-# 				g = "(final)"
-# 			else
-# 				g = "\e[1m<"*string(global_status.state_index[t.target])*">\e[m"
-# 			end
-# 			println("  $i: \"$(t.answer) => $g")
-# 			if !isempty(t.action)
-# 				i = push!(action_coll, t.action)
-# 				println("  action $i = \e[32m$(t.action)\e[m")
-# 			end
-# 		end
-# 	end
-# 	reset(global_status)
-# 	return nothing
-# end
-# 
-# function dialog(f, actor::AbstractString)
-# 	reset(global_status)
-# # 	change(actor)
-# 	f()
-# end
-# function dialog(f)
-# 	reset(global_status)
-# 	f()
-# end
-# 
-# export say, answer, trigger, action, done, dialog»»
-
-#»»1
-
-
+export Collector
+end
+using .Collectors
 mutable struct Transition{I<:Integer,K}
 	target::K
 	# Payload: (we could also turn all of these into a type parameter,
@@ -544,8 +388,14 @@ transitiontype(m::StateMachine) = eltype(m.transitions)
 
 key(m::StateMachine, actor, label) = keytype(m)(m.current_namespace,actor,label)
 key(m::StateMachine, label) = key(m, m.current_actor, label)
+# instead of doing lots of Union{Nothing,...}, we simply
+# mark invalid keys by 0xffff, which is how they will eventually be
+# written in the file anyway:
 isindex(i::Integer) = !iszero(~i)
 noindex(m::StateMachine) = ~zero(indextype(m))
+# special case: appending a `nothing` object to a collector does nothing:
+Base.push!(c::Collector, ::Nothing) = ~zero(valtype(c))
+
 
 transitions(m::StateMachine,s::State)= (m.transitions[i] for i in s.transitions)
 
@@ -591,6 +441,7 @@ function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)
 	end
 end
 
+"global object describing the current state-machine being built."
 global machine = StateMachine{Int32,String,String,Any}()
 
 #««2 Small stuff: namespace, actor, trigger
@@ -687,27 +538,29 @@ Labels are automatically generated (but unreachable) if not provided.
 say(args::StateText...; kw...) = state(machine.current_actor, args...; kw...)
 
 #««2 Transitions
-index(c::Collector, s) = push!(c, s)
-index(c::Collector, ::Nothing) = ~zero(indextype(c))
+"""    add_transition!(machine, source state, target key; position, payload...)
 
-"add_transition!(machine, source state, target key; payload...)"
+ - `position` is the insertion point in the transition table for this state (default is last).
+"""
 function add_transition!(m::StateMachine, s, target;
 		text::Union{Nothing,AbstractString} = nothing,
 		journal::Union{Nothing,AbstractString} = nothing,
 		action::Union{Nothing,AbstractString} = nothing,
 		trigger::Union{Nothing,AbstractString} = nothing,
+		position::Union{Nothing,Integer} = nothing,
 		kwargs...) # KW: terminates
 	target::keytype(m)
 	s::statetype(m)
-	text = index(m.strings, text)
-	journal = index(m.strings, journal)
-	action = index(m.strings, action)
+	position = something(position, 1+length(s.transitions))
+	text = push!(m.strings, text)
+	journal = push!(m.strings, journal)
+	action = push!(m.strings, action)
 	trigger = current_trigger_idx(m, trigger)
 	flags = Flags.set(; text = isindex(text), journal = isindex(journal),
 		action = isindex(action), trigger = isindex(trigger), kwargs...)
 	t = transitiontype(m)(target; text, journal, trigger, action, flags)
 	push!(m.transitions, t)
-	push!(s.transitions, length(m.transitions))
+	insert!(s.transitions, position, length(m.transitions))
 	m
 end
 
@@ -720,7 +573,6 @@ transition(actor::AbstractString, label, args...; kwargs...) =
 transition(::typeof(exit), args...; kwargs...) =
 	transition_key(keytype(machine)(), args...; terminates = true, kwargs...)
 
-# XXX set flags (Text) depending on the presence of text
 transition_key(k, text::AbstractString; kwargs...) =
 	add_transition!(machine, current_state(machine), k; text, kwargs...)
 transition_key(k; kwargs...) =
@@ -757,28 +609,5 @@ say(:hello => "weather is nice today", "sunny and all!")
 		action("i am gone")
 say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
 	answer("let's hope so" => :hello)
-	answer("what does B say about this?" => ("Bob", :hithere))
+	answer("what does B say about this?" => ("Bob", :hithere); position=1)
 	  journal("Today I asked a question to Bob")
-
-
-# @inline say(args...; kwargs...) = D.say(args...; kwargs...)
-# @inline trigger(args...; kwargs...) = D.trigger(args...; kwargs...)
-
-# dialog("blah") do
-# trigger("at night")
-# say(:begin, "a beautiful night")
-#  answer("indeed" => 3)
-#  answer("again?" => :begin)
-#  answer("good bye" => exit)
-#   action("continue script here")
-# 
-# say(3, "the stars are aligned")
-#  answer("farewell" => exit)
-#   action("continue script here")
-# end
-
-
-# better would be:
-# x = say("a beautiful night")
-# x: "
-#

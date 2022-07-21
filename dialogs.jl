@@ -15,9 +15,9 @@ CHAIN ~G3BEV~ LadyBevKelseyExchange @11117 = @11232
   COPY_TRANS G3BEV KelseyNotAtFault
 becomes:
 say("text1", "text2")
-change("kelsey")
+actor("kelsey")
 say("text3")
-change("g3bev")
+actor("g3bev")
 say("text4")
 
 
@@ -77,7 +77,7 @@ It is illegal to re-use a `(actor, label)` pair.
 
 To avoid repeating `actor` variables too often, a global current actor is introduced. This value is set by
 
-    change(actor)
+    actor("Bob")
 
 and used by the shortcut
 
@@ -87,7 +87,7 @@ In particular, this means that chains can also be written as `say()` calls.
 
 ### Appending to previous state
 
-    change(actor, label)
+    actor("Bob", label)
 
 This resets the “current state” global variable to this one.
 It is then possible to insert new transitions for this state.
@@ -256,19 +256,21 @@ module Dialogs
 # Collector ««1
 # Collects value of a given type, building an index system for these
 # values along the way.
-struct Collector{T}
-	index::Dict{T,Int}
-	Collector{T}() where{T} = new(Dict{T,Int}())
+struct Collector{T,B,I<:Integer}
+	index::Dict{T,I}
+	Collector{T,B,I}() where{T,B,I<:Integer} = new(Dict{T,I}())
+	Collector{T,B}(args...) where{T,B} = Collector{T,B,Int}(args...)
 end
+# @inline Base.valtype(c::Collector{T}) where{T} = T
+@inline indextype(c::Collector{T,B,I}) where{T,B,I} = I
+@inline isunique(c::Collector{T,B}) where{T,B} = B
 @inline Base.convert(T::Type{<:Collector}, ::Tuple{}) = T()
-@inline Base.length(c::Collector) = length(c.index)
-@inline Base.empty!(c::Collector) = empty!(c.index)
-@inline Base.getindex(c::Collector, s) = getindex(c.index, s)
-function Base.push!(c::Collector, s; unique=false)
-	i = get(c.index, s, nothing)
-	isnothing(i) && return c.index[s] = 1+length(c.index) # zero-based indexing...
-	unique && error("repeated index: $s")
-	return i
+for f in (:keytype, :length, :empty!, :isempty, :haskey, :getindex, :get)
+	@eval Base.$f(c::Collector, args...) = $f(c.index, args...)
+end
+function Base.push!(c::Collector, s; unique = isunique(c))
+	unique && haskey(c.index, s) && error("repeated index: $s")
+	get!(c.index, s, valtype(c.index)(1+length(c.index)))
 end
 function Base.collect(c::Collector)
 	list = Vector{keytype(c.index)}(undef, length(c.index))
@@ -464,139 +466,180 @@ end
 # export say, answer, trigger, action, done, dialog»»
 
 #»»1
-struct StateIndex{X}
+
+
+mutable struct Transition{I<:Integer,K}
+	target::K
+	# Payload: (we could also turn all of these into a type parameter,
+	# but would this really be useful?)
+	text::I
+	journal::I
+	trigger::I
+	action::I
+	flags::UInt32
+	Transition{I,K}(target::K; text = ~zero(I), journal=~zero(I),
+		trigger=~zero(I), action=~zero(I), flags=UInt32(0)) where{I<:Integer,K} =
+		new{I,K}(target, text, journal, trigger, action, flags)
+end
+
+module Flags
+	flags(; text = false, trigger = false, action = false, terminates = false,
+		journal = false, interrupt = false, unsolved = false, journalentry = false,
+		solved = false) =
+		UInt32(text<<0 | trigger<<1 | action<<2 | terminates<<3 | journal << 4 |
+			interrupt <<5 | unsolved << 6 | journalentry << 7 | solved << 8)
+	Base.contains(x, flag::Symbol) =
+		!iszero(x & flags(; NamedTuple{(flag,),Tuple{Bool}}((true,))...))
+	function string(x; default="0") # not overloading Base!
+		kw = Base.kwarg_decl(first(methods(flags).ms))
+		iszero(x) ? default :
+		join((Base.string.(k) for k in kw if contains(x, k)), '|')
+	end
+end
+mutable struct State{I<:Integer}
+	transitions::Vector{I} # index into transition table
+	priority::Float32
+	# Payload: (we could also turn all of these into a type parameter)
+	text::I
+	trigger::I
+	State{I}(; text=~zero(I), trigger=~zero(I), priority=-eps(Float32)
+		) where{I<:Integer}= new{I}(I[], priority, text, trigger)
+end
+indextype(T::Type{<:State{I}}) where{I} = I
+
+struct StateKey{X}
 	namespace::String
 	actor::String
 	label::X
 end
-mutable struct Transition{I<:Integer,X}
-	player_text::Union{Nothing,I}
-	journal_text::Union{Nothing,I}
-	trigger::Union{Nothing,I}
-	action::Union{Nothing,I}
-	flags::UInt32
-	target::Union{Nothing,StateIndex{X}}
-end
-module Flags
-	const Text = UInt32(1<<0)
-	const Trigger = UInt32(1<<1)
-	const Action = UInt32(1<<2)
-	const Terminates = UInt32(1<<3)
-	const Journal = UInt32(1<<4)
-	const Interrupt = UInt32(1<<5)
-	const UnsolvedQuest = UInt32(1<<6)
-	const JournalEntry = UInt32(1<<7)
-	const SolvedQuest = UInt32(1<<8)
-	has(flags, x) = !iszero(flags & x)
-end
-mutable struct State{I<:Integer,X}
-# I: text type; I: (action, trigger) type; X: state index type
-# FIXME: kill those union(nothing), replace by ~zero(I)
-	text::I
-	trigger::Union{Nothing,I}
-	transitions::Vector{Transition{I,X}}
-	priority::Tuple{Float32,Int32}
-end
-transitiontype(::State{I,X}) where{I,X} = Transition{I,X}
+# default constructor, used for when no key is needed (final transitions):
+(T::Type{StateKey{Any}})() = T("", "", undef)
 
-mutable struct StateMachine{S,T,I<:Integer,X}
+mutable struct StateMachine{I<:Integer,S,T,X}
 # TODO: keep states ordered (use a priority system)
 # - first created state has highest priority
 # - states with explicit priority > states with implicit priority
 # i.e. priority is a triple:
 # (is-explicit, given-priority, created-first) (in lex ordering)
 # i.e. (Bool, Real, Int)
-# we can do slightly better: use -Inf for implicit priority
+# we can do slightly better: use -eps for implicit priority
 # so that this is (explicit-priority||-Inf, -counter).
 
-	states::Dict{StateIndex{X},State{I,X}}
-	strings::Collector{S}
-	actions::Collector{T}
-	triggers::Collector{T}
-	current_state::Union{Nothing,State{I,X}}
+	states::Vector{State{I}}
+	transitions::Vector{Transition{I,StateKey{X}}}
+
+	state_keys::Collector{StateKey{X},true,I}
+	strings::Collector{S,true,I}
+	actions::Collector{T,true,I}
+	triggers::Collector{T,true,I}
+
 	current_namespace::Union{Nothing,String}
 	current_actor::Union{Nothing,String}
-	current_trigger_idx::Union{Nothing,I}
-	StateMachine{S,T,I,X}() where{S,T,I<:Integer,X} = reset(new{S,T,I,X}())
+	current_trigger_idx::I
+	StateMachine{I,S,T,X}() where{I<:Integer,S,T,X} = reset(new{I,S,T,X}())
 end
 
-indextype(::StateMachine{S,T,I,X}) where{S,T,I,X} = X
-Base.keytype(m::StateMachine) = StateIndex{indextype(m)}
+indextype(::StateMachine{I}) where{I} = I
+stringtype(::StateMachine{I,S}) where{I,S} = S
+actiontype(::StateMachine{I,S,T}) where{I,S,T} = T
+labeltype(::StateMachine{I,S,T,X}) where{I,S,T,X} = X
+Base.keytype(m::StateMachine) = keytype(m.state_keys)
+statetype(m::StateMachine) = eltype(m.states)
+transitiontype(m::StateMachine) = eltype(m.transitions)
+
 key(m::StateMachine, actor, label) = keytype(m)(m.current_namespace,actor,label)
 key(m::StateMachine, label) = key(m, m.current_actor, label)
-statetype(::StateMachine{S,T,I,X}) where{S,T,I,X} = State{I,X}
-transitiontype(m::StateMachine) = transitiontype(statetype(m))
-function Base.reset(g::StateMachine)
-	for f in (:states, :strings, :actions, :triggers)
-		setfield!(g, f, fieldtype(typeof(g), f)())
+isindex(i::Integer) = !iszero(~i)
+noindex(m::StateMachine) = ~zero(indextype(m))
+
+transitions(m::StateMachine,s::State)= (m.transitions[i] for i in s.transitions)
+
+function Base.reset(m::StateMachine)
+	for f in (:states, :transitions, :state_keys, :strings, :actions, :triggers)
+		setfield!(m, f, fieldtype(typeof(m), f)())
 	end
-	g.current_state = nothing
-	g.current_namespace = nothing
-	g.current_actor = nothing
-	return g
+	m.current_namespace = nothing
+	m.current_actor = nothing
+	m.current_trigger_idx = noindex(m)
+	return m
 end
 
 function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)
 	str = collect(m.strings)
 	tri = collect(m.triggers)
 	p = collect(pairs(m.states))
-	for (k, s) in sort(collect(pairs(m.states)); by=ks->ks[2].priority, rev=true)
-		println(io, "state \e[1m<$k>\e[m: \e[34m\"$(str[s.text])\"\e[m")
-		if !isnothing(s.trigger)
+	revk = collect(m.state_keys)
+	for (k, s) in sort(collect(pairs(m.states));
+		by=((k,s),)->(s.priority, -k), rev=true)
+		println(io, "state \e[1m<$k>\e[m: ($(s.priority))",
+			"\e[34m\"$(str[s.text])\"\e[m",
+		)
+		if isindex(s.trigger)
 			println(io, "  has trigger: \e[33m\"$(tri[s.trigger])\"\e[m")
 		end
 		println(io, "  $(length(s.transitions)) transitions:")
-		for t in s.transitions
-			if Flags.has(t.flags, Flags.Terminates)
-				print(io, "  \e[7m(final)\e[m")
-			else
-				print(io, "  => \e[37m<$(t.target)\e[m")
-			end
-			if Flags.has(t.flags, Flags.Text)
-				print(io, " \e[36m\"$(str[t.player_text])\"\e[m")
-			else
-				print(io, "  (no text)")
-			end
+		for j in s.transitions
+			t = m.transitions[j]
+			print(io, "  $j = flags(", Flags.string(t.flags), ")  ",
+				contains(t.flags, :terminates) ? "\e[7m(final)\e[m" :
+					"=> \e[37m<$(get(m.state_keys,t.target,undef))>\e[m",
+				" ",
+				contains(t.flags, :text) ? "\e[36m\"$(str[t.text])\"\e[m" : "(no text)",
+				" ",
+				contains(t.flags, :action) ? "\n\e[31m\"$(str[t.action])\"\e[m" :
+					"(no action)",
+			)
 			println(io)
 		end
 	end
 end
 
-global machine = StateMachine{String,String,Int32,Any}()
+global machine = StateMachine{Int32,String,String,Any}()
 
 #««2 Small stuff: namespace, actor, trigger
 namespace(text) = (machine.current_namespace = text)
 actor(text) = (machine.current_actor = text)
 
-function trigger(text::AbstractString)
-	@assert isnothing(machine.current_trigger_idx)
-	machine.current_trigger_idx = push!(machine.triggers, text)
+"sets current trigger. It is an error to call this twice."
+function current_trigger!(m::StateMachine, text::AbstractString)
+	@assert !isindex(m.current_trigger_idx)
+	m.current_trigger_idx = push!(m.triggers, text)
 end
+current_trigger!(::StateMachine, ::Nothing) = nothing
+trigger(text::AbstractString) = current_trigger!(machine, text)
 
-"returns index of trigger, either kw arg or current_trigger_idx
-(defining both is an error), and resets current_trigger_idx to nothing."
-function current_trigger_idx(m::StateMachine, trigger)
-	# here trigger is a string while current_trigger_idx is an index
-	if isnothing(m.current_trigger_idx)
-		isnothing(trigger) && return
-		return push!(m.triggers, trigger)
-	else
-		isnothing(trigger) || error("trigger defined twice")
-		x = m.current_trigger_idx
-		m.current_trigger_idx = nothing
-		return x
-	end
+# methods called by add_state!, add_transition!:
+"erases current trigger, returning erased value."
+function current_trigger_idx(m::StateMachine)
+	x = m.current_trigger_idx
+	m.current_trigger_idx = noindex(m)
+	return x
 end
+"selects between current trigger and provided value"
+current_trigger_idx(m::StateMachine, text::Union{Nothing,AbstractString}) =
+	(current_trigger!(m, text); return current_trigger_idx(m))
 
 #««2 States
-function add_state!(m::StateMachine, key::StateIndex, text;
-		trigger = nothing, priority = -Inf32)
-	haskey(m.states, key) && error("duplicate state key: $key")
-	i = push!(m.strings, text)
-	t = current_trigger_idx(m, trigger)
-	s = statetype(m)(i, t, [], (priority, -length(m.states)))
-	return m.states[key] = s
+" lowest-level state adding function for a state machine."
+function add_state!(m::StateMachine, k, text;
+		trigger = nothing, kwargs...) # only priority in kwargs
+	k::keytype(m)
+	haskey(m.state_keys, key) && error("duplicate state key: $key")
+	text = push!(m.strings, text)
+	trigger = current_trigger_idx(m, trigger)
+	s = statetype(m)(;text, trigger, kwargs...)
+	# create implicit transition if needed
+	if !isempty(m.states) && isempty(last(m.states).transitions)
+		println("implicit transition from state $(length(m.states)) to next")
+		add_transition!(m, last(m.states), k)
+	end
+	push!(m.states, s)
+	push!(m.state_keys, k)
+	m
 end
+
+current_state(m::StateMachine) = (@assert !isempty(m.states); last(m.states))
+
 """"
     state(actor, ([label =>] text)*; trigger)
 
@@ -606,58 +649,62 @@ actor, label). Labels are automatically generated if not provided.
 If more than one state is given then they are linked by implicit
 transitions.
 """
-function state(actor::AbstractString,
-		(label, text)::Pair{<:Any,<:AbstractString}; kwargs...)
-	k = key(machine, actor, label)
-	new_state = add_state!(machine, k, text; kwargs...)
-	if !isnothing(machine.current_state) &&
-		isempty(machine.current_state.transitions)
-		add_transition!(machine, nothing, k; trigger=nothing)
-	end
-	machine.current_state = new_state
-end
-state(actor::AbstractString, text::AbstractString; kwargs...) =
-	state(actor, gensym() => text; kwargs...)
+state(actor::AbstractString, (label, text)::Pair{<:Any,<:AbstractString};
+		kw...) = 
+	add_state!(machine, key(machine, actor, label), text; kw...)
+state(actor::AbstractString, text::AbstractString; kw...) =
+	state(actor, gensym() => text; kw...)
+
 const StateText = Union{AbstractString,Pair{<:Any,<:AbstractString}}
 state(actor::AbstractString, args::StateText...; kwargs...) =
-	for a in args; state(actor, a); end
+	for a in args; state(actor, a; kwargs...); end
 
-"""    say([label] => text...; trigger)
+"""    say([label =>] text...; trigger)
 
 Creates one (or more) state. The state keys are
 `(current_namespace, current_actor, label)`.
+In other words this is equivalent to (and defined as)
+`state(current_actor, [label =>] text...)`.
 Labels are automatically generated (but unreachable) if not provided.
 """
 say(args::StateText...; kw...) = state(machine.current_actor, args...; kw...)
 
 #««2 Transitions
+index(c::Collector, s) = push!(c, s)
+index(c::Collector, ::Nothing) = ~zero(indextype(c))
 
-function add_transition!(m::StateMachine, text_idx, next;
-		terminates = false, trigger = nothing)
-	@assert !isnothing(m.current_state)
-	t = current_trigger_idx(m, trigger)
-	flags = UInt32(0)
-	terminates && (flags |= Flags.Terminates)
-	a = transitiontype(m.current_state)(text_idx, nothing, t, nothing,
-		flags, next)
-	push!(m.current_state.transitions, a)
-end
-function current_transition(m::StateMachine)
-	@assert !isnothing(m.current_state)
-	@assert !isempty(m.current_state.transitions)
-	return last(m.current_state.transitions)
+"add_transition!(machine, source state, target key; payload...)"
+function add_transition!(m::StateMachine, s, target;
+		text::Union{Nothing,AbstractString} = nothing,
+		journal::Union{Nothing,AbstractString} = nothing,
+		action::Union{Nothing,AbstractString} = nothing,
+		trigger::Union{Nothing,AbstractString} = nothing,
+		terminates = false)
+	target::keytype(m)
+	s::statetype(m)
+	text = index(m.strings, text)
+	journal = index(m.strings, journal)
+	action = index(m.strings, action)
+	trigger = current_trigger_idx(m, trigger)
+	flags = Flags.flags(; terminates, text = isindex(text),
+		journal = isindex(journal), action = isindex(action),
+		trigger = isindex(trigger))
+	t = transitiontype(m)(target; text, journal, trigger, action, flags)
+	push!(m.transitions, t)
+	push!(s.transitions, length(m.transitions))
+	m
 end
 
 transition(actor::AbstractString, label, args...; kwargs...) =
 	transition_key(key(machine, actor, label), args...; kwargs...)
 transition(::typeof(exit), args...; kwargs...) =
-	transition_key(nothing, args...; terminates = true, kwargs...)
+	transition_key(keytype(machine)(), args...; terminates = true, kwargs...)
 
 # XXX set flags (Text) depending on the presence of text
 transition_key(k, text::AbstractString; kwargs...) =
-	add_transition!(machine, push!(machine.strings, text), k; kwargs...)
+	add_transition!(machine, current_state(machine), k; text, kwargs...)
 transition_key(k; kwargs...) =
-	add_transition!(machine, nothing, k; kwargs...)
+	add_transition!(machine, current_state(machine), k; kwargs...)
 
 """    answer(text => (actor, label); flags)
     answer(text => label; flags)
@@ -683,12 +730,13 @@ for f in names(D); f == nameof(D) && continue
 end
 
 namespace("g")
-actor("a")
+actor("Alice")
 trigger("weather is nice")
 say(:hello => "weather is nice today", "sunny and all!")
   answer("bye" => exit)
-say(:hello2 => "it rains.. again", "but tomorrow it will be sunny")
+say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
 	answer("let's hope so" => :hello)
+	answer("what does B say about this?" => ("Bob", :hithere))
 
 
 # @inline say(args...; kwargs...) = D.say(args...; kwargs...)

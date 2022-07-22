@@ -650,7 +650,8 @@ function (::Type{<:Resource{T}})(key::KeyIndex, name) where{T}
 end
 Base.names(key::KeyIndex, ::Type{Resource{T}}) where{T} =
 	(r[1] for r in keys(key.location) if r[2] == T)
-Base.all(key::KeyIndex, T::Type{<:Resource}) = (T(key, x) for x in names(key,T))
+Base.findall(T::Type{<:Resource}, key::KeyIndex) =
+	(T(key, x) for x in names(key,T))
 
 # ««1 ids
 # useful ones: PROJECTL SONGLIST ITEMCAT NPC ANISND ?
@@ -1067,15 +1068,18 @@ function read(f::Resource"DLG", io::IO)
 			header.number_state_triggers)
 	tr_triggers = dialog_strings(io, header.offset_transition_triggers,
 			header.number_transition_triggers)
-	println("read $(length(tr_triggers)) transition triggers")
 	actions = dialog_strings(io, header.offset_actions, header.number_actions)
 
 	global ST=states; global TR=transitions
+	SD = StateData{Strref}
+	TD = TransitionData{I}
 	machine = Dialogs.StateMachine{Int32,Strref,String,Any}()
+	builder = Dialogs.Builder{Int32}()
+	context = Dialogs.Context{Int32,Strref,String}()
 	getval(list, i) = iszero(~i) ? nothing : list[i+1]
 	for (i, s) in pairs(states)
-		state = Dialogs.add_state!(machine, (self, i-1), s.text;
-			trigger = getval(st_triggers, s.trigger))
+		state = Dialogs.add_state!(builder, context, machine, (self, i-1);
+			text = s.text, trigger = getval(st_triggers, s.trigger))
 		for j in s.first_transition+1:s.first_transition+s.number_transitions
 			t = transitions[j]
 			Dialogs.add_transition!(machine, state, (t.next_actor, t.next_state);
@@ -1203,11 +1207,17 @@ function Game(directory::AbstractString)
 	key = KeyIndex(joinpath(directory, "chitin.key"))
 	println("read $(length(key.resources)) key resources")
 	override = Dict{Symbol,Set{String}}()
-	for f in readdir(joinpath(directory, "override"))
-		(n, e) = splitext(uppercase(basename(f))); t = Symbol(e[2:end])
-		push!(get!(override, t, Set{String}()), n)
+	o_dir = joinpath(directory, "override")
+	if !isdir(o_dir)
+		println("created override directory: ", o_dir)
+		mkdir(o_dir)
+	else
+		for f in readdir(joinpath(directory, "override"))
+			(n, e) = splitext(uppercase(basename(f))); t = Symbol(e[2:end])
+			push!(get!(override, t, Set{String}()), n)
+		end
+		println("read $(sum(length(v) for (_,v) in override; init=0)) override resources")
 	end
-	println("read $(sum(length(v) for (_,v) in override)) override resources")
 	return Game(directory, key, override)
 end
 " returns 2 if override, 1 if key/bif, 0 if not existing."
@@ -1229,7 +1239,7 @@ function Resource{T}(game::Game, name::AbstractString) where{T}
 	end
 end
 @inline Resource(k::Union{Game,KeyIndex}, name::Resref{T}) where{T} =
-	Resource{T}(k, name.data.data)
+	Resource{T}(k, name.name)
 
 @inline read(k::Union{Game,KeyIndex}, name::Resref; kw...) =
 	read(Resource(k, name); kw...)
@@ -1257,11 +1267,11 @@ end
 # »»1
 end
 IE=InfinityEngine; S=IE.StructIO
-# game = IE.Game("../bg2/game")
-str=read(IE.Resource"../bg2/game/lang/fr_FR/dialog.tlk")
+game = IE.Game("../bg/game")
+str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
 # IE.search(game, str, IE.Resource"ITM", "Varscona")
-key = IE.KeyIndex("../bg2/game/chitin.key")
-dia = read(IE.Resource"dlg"(key, "abazigal"))
+key = IE.KeyIndex("../bg/game/chitin.key")
+# dia = read(IE.Resource"dlg"(key, "abazigal"))
 # dia=read(IE.Resource"../bg2/game/override/hull.dlg")
 # dia=read(IE.Resource"../bg2/game/override/abazigal.dlg")
 

@@ -257,13 +257,17 @@ to the appropriate fields of `x`.
 replacetypevars(f, ::TypeVar, ::TypeVar, B::DataType, x) = f(x)::B
 replacetypevars(f, T::Union, V::TypeVar, B::DataType, x) =
 	replacetypevars(f, x isa T.a ? T.a : T.b, V, B, x)
+function replacetypevars(f, T::UnionAll, V::TypeVar, B::DataType, x)
+	error("not implemented for UnionAll type $T")
+	# we don't yet know how to instantiate the remaining type variables of T
+end
 function replacetypevars(f, T, V::TypeVar, ::Type{B}, x::TX) where{B,TX}
 # 	println("replacetypevars: $V => $B for x::$TX from $T")
 	!T.hasfreetypevars && return x
 	TX <: AbstractArray &&
 		return [ replacetypevars(f, T.parameters[1], V, B, y) for y in x ]
 	@assert isstructtype(T) "leaf cases should have been eliminated by now..."
-	println("  UnionAll case: T=$T $(T isa UnionAll)")
+# 	println("  UnionAll case: T=$T $(T isa UnionAll)")
 	UnionAll(V, T){B}((replacetypevars(f, fieldtype(T,i), V, B, getfield(x,i))
 			for i in 1:fieldcount(T))...,)
 end
@@ -284,9 +288,13 @@ If the type `B` is not user-supplied then type inference will try
 """
 function functor(f, T::UnionAll, x::TX, B = nothing) where{TX}
 	@assert TX <: T
-	(V, A) = find_typevar(T.body, TX)
-	@assert TX == T{A}
-	isnothing(B) && (B = only(Base.return_types(f, Tuple{A})))
+	if isnothing(B)
+		(V, A) = find_typevar(T.body, TX)
+		@assert TX == T{A}
+		isnothing(B) && (B = only(Base.return_types(f, Tuple{A})))
+	else
+		V = T.var
+	end
 	replacetypevars(f, T.body, V, B, x)
 end
 end
@@ -354,7 +362,7 @@ end
 
 Index (32-bit) referring to a translated string in dialog.tlk/dialogF.tlk.
 """
-const Strref = Typewrap{:Strref, UInt32}
+const Strref = Typewrap{:Strref, Int32}
 Base.show(io::IO, ::Type{Strref}) = print(io, "Strref")
 
 """    Resref{Type}, Resref"Type"
@@ -369,7 +377,12 @@ This allows dispatch to be done correctly at compile-time.
 
 Shortcut for `Resref"type"("value")`.
 """
-const Resref{T} =Typewrap{:Resref, Typewrap{T, StaticString{8}}}
+struct Resref{T}
+	name::StaticString{8}
+	Resref{T}(s::AbstractString) where{T} = new{T}(uppercase(first(s,8)))
+end
+
+# const Resref{T} =Typewrap{:Resref, Typewrap{T, StaticString{8}}}
 macro Resref_str(s)
 	s = uppercase(s)
 	i = findlast('.', s)
@@ -378,6 +391,7 @@ macro Resref_str(s)
 	return Resref{Symbol(s[i+1:end])}(s[begin:i-1])
 end
 Base.show(io::IO, ::Type{Resref{T}}) where{T} = print(io, "Resref\"", T, "\"")
+Base.show(io::IO, r::Resref{T}) where{T} = print(io,"Resref\"",r.name,'.',T,'"')
 
 """    BifIndex
 32-bit index of resource in bif files.
@@ -494,25 +508,21 @@ end
 @inline Base.open(r::ResourceBuf) = r.buffer
 @inline Base.nameof(r::ResourceBuf) = r.name
 
+Resref(r::Resource{T}) where{T} = Resref{T}(nameof(r))
+
 # ««1 tlk
 struct TlkStrings{X}
 	strings::Vector{X}
-	index::Dict{String,UInt32}
-	@inline TlkStrings(str::AbstractVector{X}) where{X} = new{X}(str, Dict())
+	index::Dict{String,Int32}
+	# i is the Julia index, not the strref
+	@inline TlkStrings(strings::AbstractVector{X}) where{X}  =
+		new{X}(strings, Dict(s.string=>i for (i,s) in pairs(strings)))
 end
 
 function Base.getindex(f::TlkStrings{X}, i::Strref) where{X}
 	i = UInt32(i)
 	i >= length(f.strings) && (i = 0)
 	f.strings[i+1]::X
-end
-
-"""    instantiate(str::TlkStrings, x)
-
-Instantiates all `Strref` fields as strings in this object, using `str`
-as a string index.
-"""
-function instantiate(x::TlkStrings)
 end
 
 struct TLK_hdr <: AbstractBlock
@@ -537,8 +547,17 @@ function read(f::Resource"TLK", io::IO)
 		flags = s.flags, sound = s.sound, volume = s.volume, pitch = s.pitch)
 		for s in strref ])
 end
-Base.findall(r::Union{Regex,AbstractString}, str::TlkStrings) =
-	[ Strref(i-1) for (i,s) in pairs(str.strings) if contains(s.string, r) ]
+Base.findall(r::Union{Regex,AbstractString}, tlk::TlkStrings) =
+	[ Strref(i-1) for (i,s) in pairs(tlk.strings) if contains(s.string, r) ]
+
+function Strref(tlk::TlkStrings, s::AbstractString)
+	i = get(tlk.index, s, nothing)
+	if isnothing(i)
+		push!(tlk.strings, s)
+		i = tlk.index[s] = length(tlk.strings)
+	end
+	return Strref(i-1)
+end
 
 # ««1 key/bif
 struct KEY_hdr <: AbstractBlock
@@ -623,6 +642,7 @@ bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
 end
 
 function (::Type{<:Resource{T}})(key::KeyIndex, name) where{T}
+	name = uppercase(name)
 	loc = get(key.location, (StaticString{8}(name), T), nothing)
 	isnothing(loc) && return nothing
 	bif = joinpath(key.directory, key.bif[1+sourcefile(loc)])
@@ -1037,65 +1057,56 @@ end
 	for s in read(seek(io, offset), DLG_string, count)]
 
 function read(f::Resource"DLG", io::IO)
+	self = Resref(f)
 	header = read(io, DLG_hdr)
 	states = read(seek(io,header.offset_states), DLG_state{Strref},
 		header.number_states)
 	transitions = read(seek(io, header.offset_transitions),
 		DLG_transition{Strref}, header.number_transitions)
-	triggers = dialog_strings(io, header.offset_state_triggers,
+	st_triggers = dialog_strings(io, header.offset_state_triggers,
 			header.number_state_triggers)
+	tr_triggers = dialog_strings(io, header.offset_transition_triggers,
+			header.number_transition_triggers)
+	println("read $(length(tr_triggers)) transition triggers")
 	actions = dialog_strings(io, header.offset_actions, header.number_actions)
-	global ST=states
-	global TR=transitions
-	global TG=triggers
-	global AC=actions
-	machine = Dialogs.StateMachine{Int32,Strref,String,Any}()
-	setkey(coll, list, i) = iszero(~i) ? i : (coll[list[i+1]] = i+1)
-	for s ∈ states
-		state = eltype(machine.states)(;
-			transitions = s.first_transition .+ (1:s.number_transitions),
-			trigger = setkey(machine.triggers, triggers, s.trigger),
-			text = push!(machine.strings, s.text))
-		push!(machine.states, state)
-	end
-	for t ∈ transitions
-		trans = eltype(machine.transitions)((t.next_actor, t.next_state);
-			trigger = setkey(machine.triggers, triggers, t.trigger),
-			action = setkey(machine.actions, actions, t.action),
-			text = push!(machine.strings, t.text),
-			journal = push!(machine.strings, t.journal),
-			flags = UInt32(t.flags)
-			)
-		push!(machine.transitions, trans)
-	end
-	global M = machine
-# 			
-# 		(triggers[1+s.trigger] for s ∈ states if !iszero(~s.trigger))...,
-# 		(triggers[1+t.trigger] for t ∈ transitions if !iszero(~t.trigger))...,)
-# 	machine.actions = typeof(machine.actions)(
-# 		(actions[1+t.action] for t ∈ transitions if !iszero(~t.action))...,)
-# 	@inline fixidx(i::Integer) = iszero(~i) ? ~UInt32(0) : UInt32(1+i)
-# 	machine.states = [Dialogs.State{Int32}(;
-# 		text = machine.strings[s.text], trigger = fixidx(s.trigger),
-# 		transitions = s.first_transition.+(1:s.number_transitions))
-# 		for s in states]
-# 	machine.transitions = [Dialogs.Transition{Int32,Any}(
-# 		(t.next_actor, t.next_state);
-# 		text = machine.strings[s.text]
-# 		text = t.text|>UInt32, journal = t.journal|>UInt32, t.trigger, t.action,
-# 		flags = UInt32(t.flags))
-# 		for t in transitions]
 
-	return Dialog{Strref}(Resref"DLG"(first(nameof(f),8)), header.flags,
-		read(seek(io,header.offset_states), DLG_state{Strref},
-			header.number_states),
-		read(seek(io, header.offset_transitions), DLG_transition{Strref},
-			header.number_transitions),
-		dialog_strings(io, header.offset_state_triggers,
-			header.number_state_triggers),
-		dialog_strings(io, header.offset_transition_triggers,
-			header.number_transition_triggers),
-		dialog_strings(io, header.offset_actions, header.number_actions))
+	global ST=states; global TR=transitions
+	machine = Dialogs.StateMachine{Int32,Strref,String,Any}()
+	getval(list, i) = iszero(~i) ? nothing : list[i+1]
+	for (i, s) in pairs(states)
+		state = Dialogs.add_state!(machine, (self, i-1), s.text;
+			trigger = getval(st_triggers, s.trigger))
+		for j in s.first_transition+1:s.first_transition+s.number_transitions
+			t = transitions[j]
+			Dialogs.add_transition!(machine, state, (t.next_actor, t.next_state);
+				t.text, t.journal, trigger = getval(tr_triggers, t.trigger),
+				action = getval(actions, t.action), flags = UInt32(t.flags))
+		end
+	end
+	return machine
+	#= patterns observed in Bioware dialogues:
+	* normal reply: (text) action=-1 journal=strref(0) trigger=-1
+	* (action|terminates) target=("",0) text=strref(0) journal=strref(0)
+	* exit transition: (action|terminates), target=("",0),
+	  text=strref(-1) journal=strref(0)
+	* exit: (action|terminates|journal|solved) target=("",0) trigger=-1
+	* (e.g. abazigal transition 8) random solved bit w/o journal entry (nor bit)
+	 => don't believe the solved bit, use the journal entry!
+	IOW: strrefs are 0 when undefined (=> graceful fail);
+		other indices are -1
+	* 
+	=#
+
+# 	return Dialog{Strref}(Resref"DLG"(first(nameof(f),8)), header.flags,
+# 		read(seek(io,header.offset_states), DLG_state{Strref},
+# 			header.number_states),
+# 		read(seek(io, header.offset_transitions), DLG_transition{Strref},
+# 			header.number_transitions),
+# 		dialog_strings(io, header.offset_state_triggers,
+# 			header.number_state_triggers),
+# 		dialog_strings(io, header.offset_transition_triggers,
+# 			header.number_transition_triggers),
+# 		dialog_strings(io, header.offset_actions, header.number_actions))
 end
 function printtransition(io::IO, dialog::Dialog, i, doneactions)
 	t = dialog.transitions[i+1]
@@ -1155,6 +1166,7 @@ for T in (:Dialog,:ITM_hdr)
 	@eval @inline Base.:*(str::TlkStrings, x::$T{Strref}) =
 		Functors.functor(x->str[x].string::String, $T, x)
 end
+
 Base.:*(str::TlkStrings, x::Dialogs.StateMachine{Int32,Strref,String,Any}) =
 	Functors.functor(x->str[x].string::String,
 		Dialogs.StateMachine{Int32,S,String,Any} where{S}, x)
@@ -1248,9 +1260,13 @@ IE=InfinityEngine; S=IE.StructIO
 # game = IE.Game("../bg2/game")
 str=read(IE.Resource"../bg2/game/lang/fr_FR/dialog.tlk")
 # IE.search(game, str, IE.Resource"ITM", "Varscona")
-dia=read(IE.Resource"../bg2/game/override/hull.dlg")
+key = IE.KeyIndex("../bg2/game/chitin.key")
+dia = read(IE.Resource"dlg"(key, "abazigal"))
+# dia=read(IE.Resource"../bg2/game/override/hull.dlg")
+# dia=read(IE.Resource"../bg2/game/override/abazigal.dlg")
+
 
 # dia=read(key["abaziga", "dlg"])
-dia1=str*dia
+# dia1=str*dia
 # IE.printdialog(dia,str)
 nothing

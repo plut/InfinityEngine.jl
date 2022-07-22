@@ -1,4 +1,5 @@
 #= TODO:
+# annotate strings with language
  State machine description:
   + state()
 	 + actor()
@@ -269,6 +270,12 @@ module Dialogs
 module Collectors
 """    Collector{T,unique?}
 
+Represents a searchable, ordered, mutable list of values of type `T`,
+supporting the following operations:
+ - value lookup: `T` -> integer
+ - index lookup: integer -> `T`
+ - value swapping
+ - value appending (at end of list)
 Collects values of type `T`, assigning them sequential indices.
 If `unique?` is true then only unique values are allowed, otherwise
 duplicates are merged.
@@ -282,26 +289,25 @@ Appends a new key and returns the corresponding index.
 Returns the sequence of values collected, i.e. a `list` of keys
 such that `list[collector[key]] == key`.
 """
-struct Collector{T,B,I<:Integer} <: AbstractDict{T,I}
+struct Collector{T,I<:Integer} <: AbstractDict{T,I}
 	index::Dict{T,I}
-	Collector{T,B,I}() where{T,B,I<:Integer} = new(Dict{T,I}())
-	Collector{T,B}(args...) where{T,B} = Collector{T,B,Int}(args...)
-	function (C::Type{<:Collector{T}})(args::T...) where{T}
-		c = C()
-		push!(c, args...)
-		return c
-	end
+
+	Collector{T,I}() where{T,I<:Integer} = new(Dict{T,I}())
+
 	# default constructor for functoriality
-	Collector{T,B,I}(index::Dict{T,I}) where{T,B,I} = new{T,B,I}(index)
+	Collector{T,I}(index::Dict{T,I}) where{T,I} = new{T,I}(index)
 end
-@inline Base.valtype(c::Collector{T,B,I}) where{T,B,I} = I
-@inline isunique(c::Collector{T,B}) where{T,B} = B
+Collector{T}(args...) where{T} = Collector{T,Int}(args...)
+(C::Type{<:Collector{T}})(args::T...) where{T} = (c = C(); push!(c, args...); c)
+Collector{T,I}(::Tuple{}) where{T,I} = Collector{T,I}()
+
+# @inline Base.valtype(c::Collector{T,I}) where{T,I} = I
 @inline Base.convert(T::Type{<:Collector}, ::Tuple{}) = T()
-for f in (:keytype, :length, :empty!, :isempty, :haskey, :getindex, :get,
+for f in (:length, :empty!, :isempty, :haskey, :getindex, :get,
 	:pairs, :iterate, :setindex!)
 	@eval Base.$f(c::Collector, args...) = $f(c.index, args...)
 end
-function Base.push!(c::Collector, s; unique = isunique(c))
+function Base.push!(c::Collector, s; unique = false)
 	unique && haskey(c.index, s) && error("repeated index: $s")
 	get!(c.index, s, valtype(c.index)(1+length(c.index)))
 end
@@ -313,22 +319,144 @@ function Base.collect(c::Collector)
 	end
 	return list
 end
+function Base.get(f::Function, c::Collector, x)
+	i = get(c, x, nothing)
+	!isnothing(i) && f(i)
+end
+
 export Collector
 end
 using .Collectors
-mutable struct Transition{I<:Integer,K}
+
+# ««1 State machine
+struct State{I,S}
+	transitions::Vector{I}
+	data::S
+end
+struct Transition{K,T}
 	target::K
-	# Payload: (we could also turn all of these into a type parameter,
-	# but would this really be useful?)
+	data::T
+end
+"""    StateMachine{I,S,T,K}
+
+`I` is index type, `S` is state payload, `T` is transition payload,
+
+States are indexed by keys of type `K`. Transitions are indexed
+by the state.
+"""
+struct StateMachine{I,S,T,K}
+	states::Vector{State{I,S}}
+	transitions::Vector{Transition{K,T}}
+	keys::Collector{K}
+	StateMachine{I,S,T,K}() where{I,S,T,K} = new{I,S,T,K}([], [], ())
+end
+
+indextype(::StateMachine{I}) where{I} = I
+statedata(m::StateMachine{I,S}) where{I,S} = S
+transitiondata(m::StateMachine{I,S,T}) where{I,S,T} = T
+Base.keytype(::StateMachine{I,S,T,K}) where{I,S,T,K} = K
+statetype(m::StateMachine) = eltype(m.states)
+transitiontype(m::StateMachine) = eltype(m.transitions)
+
+state(m::StateMachine, key) = m.states[m.keys[key]]
+Base.keys(m::StateMachine) = collect(m.keys)
+
+function add_state!(m::StateMachine, key, data)
+	s = statetype(m)(transitiontype(m)[], data)
+	i = push!(m.keys, key; unique=true)
+	push!(m.states, s)
+	@assert i == length(m.states) # invariant
+	return s
+end
+
+function add_transition!(m::StateMachine, source, target, data, position)
+	# source is a state, target is a key
+	t = transitiontype(m)(target, data)
+	push!(m.transitions, t)
+	insert!(source.transitions, position, length(m.transitions))
+	return t
+end
+
+struct Builder{I<:Integer,M<:StateMachine{I}}
+	machine::M
+	# current values of state and transition:
+	current_state::Base.RefValue{I} #  into machine.states
+	current_transition::Base.RefValue{I} # into machine.transitions[state]
+	Builder{I,M}() where{I<:Integer,M<:StateMachine{I}} =
+		new{I,M}(M(), Ref(zero(I)), Ref(zero(I)))
+end
+machinetype(::Builder{I,M}) where{I,M} = M
+indextype(::Builder{I}) where{I} = I
+statedata(b::Builder) = statedata(b.machine)
+transitiondata(b::Builder) = transitiondata(b.machine)
+statetype(b::Builder) = statetype(b.machine)
+transitiontype(b::Builder) = transitiontype(b.machine)
+Base.keytype(b::Builder) = keytype(b.machine)
+
+set_state!(b::Builder, key) = b.current_state[] = b.machine.keys[key]
+
+function add_state!(b::Builder, args...)
+	add_state!(b.machine, args...)
+	b.current_state[] = length(b.machine.states)
+end
+
+set_transition!(b::Builder, i) = b.current_transition[] = i
+
+function add_transition!(b::Builder, source, target, data, position)
+	add_transition!(b.machine, source, target, data, position)
+	b.current_transition[] = position
+end
+
+current_state(b::Builder) =
+	(@assert !iszero(b.current_state[]); b.machine.states[b.current_state[]])
+if_current_state(f::Function, b::Builder) =
+	!iszero(b.current_state[]) && f(b.machine.states[b.current_state[]])
+
+current_transition(b::Builder) = let s = current_state(b)
+	t = b.current_transition[]
+	b.machine.transitions[s.transitions[t]]
+end
+if_current_transition(f::Function, b::Builder) = if_current_state(b) do s
+	t = b.current_transition[]
+	!iszero(t) && f(b.machine.transitions[s.transitions[t]])
+end
+
+
+# State machine builder ««1
+"state key type for the global state machine being built"
+struct StateKey{X}
+	namespace::String
+	actor::String
+	label::X
+end
+
+"state data type for the global state machine being built"
+mutable struct StateData{I<:Integer}
+	priority::Float32
+	# Payload: (we could also turn all of these into a type parameter)
+	text::I
+	trigger::I
+	StateData{I}(; text=~zero(I), trigger=~zero(I), priority=-eps(Float32)
+		) where{I<:Integer}= new{I}(priority, text, trigger)
+end
+
+"transition data type for the global state machine being built"
+mutable struct TransitionData{I<:Integer}
 	text::I
 	journal::I
 	trigger::I
 	action::I
 	flags::UInt32
-	Transition{I,K}(target::K; text = ~zero(I), journal=~zero(I),
-		trigger=~zero(I), action=~zero(I), flags=UInt32(0)) where{I<:Integer,K} =
-		new{I,K}(target, text, journal, trigger, action, flags)
+	function TransitionData{I}(; text, journal, trigger, action,
+			flags = nothing, kwargs...) where{I<:Integer}
+		flags = something(flags, Flags.set(;
+			text = isindex(text), journal = isindex(journal),
+			action = isindex(action), trigger = isindex(trigger), kwargs...))
+		return new{I}(text, journal, trigger, action, flags)
+	end
 end
+
+"module holding syntactic sugar for transition flags"
 module Flags
 	set(; text = false, trigger = false, action = false, terminates = false,
 		journal = false, interrupt = false, unsolved = false, journalentry = false,
@@ -343,199 +471,160 @@ module Flags
 		join((Base.string.(k) for k in kw if contains(x, k)), '|')
 	end
 end
-mutable struct State{I<:Integer}
-	transitions::Vector{I} # index into transition table
-	priority::Float32
-	# Payload: (we could also turn all of these into a type parameter)
-	text::I
-	trigger::I
-	State{I}(; text=~zero(I), trigger=~zero(I), priority=-eps(Float32),
-		transitions=I[]) where{I<:Integer}=
-		new{I}(transitions, priority, text, trigger)
+
+# Build context ««1
+
+"context for the state machine builder. S is string type, T is action type."
+mutable struct Context{I<:Integer,S,T}
+	strings::Collector{S,I}
+	actions::Collector{T,I}
+	state_triggers::Collector{T,I}
+	transition_triggers::Collector{T,I}
+	languages::Collector{String,I}
+
+	namespace::Union{Nothing,String}
+	actor::Union{Nothing,String}
+	trigger::Union{Nothing,T}
+	language::I
+	# XXX default constructor is needed for functoriality?
+	Context{I,S,T}() where{I<:Integer,S,T} = reset(new{I,S,T}())
 end
-indextype(T::Type{<:State{I}}) where{I} = I
-
-mutable struct StateMachine{I<:Integer,S,T,K}
-# TODO: keep states ordered (use a priority system)
-# - first created state has highest priority
-# - states with explicit priority > states with implicit priority
-# i.e. priority is a triple:
-# (is-explicit, given-priority, created-first) (in lex ordering)
-# i.e. (Bool, Real, Int)
-# we can do slightly better: use -eps for implicit priority
-# so that this is (explicit-priority||-Inf, -counter).
-	states::Vector{State{I}}
-	transitions::Vector{Transition{I,K}}
-	state_keys::Collector{K,true,I}
-	current_state::I
-	current_transition::I
-
-	StateMachine{I,S,T,X}() where{I<:Integer,S,T,X} = reset(new{I,S,T,X}())
-	# FIXME: the following stuff is not really generic for all state
-	# machines, yet we really need those:
-	# (but this means that we would also need to
-	# abstract away the state and action payloads as type parameters)
-	strings::Collector{S,false,I}
-	actions::Collector{T,false,I}
-	triggers::Collector{T,false,I}
-
-	current_namespace::Union{Nothing,String}
-	current_actor::Union{Nothing,String}
-	current_trigger_idx::I
-	# default constructor is needed for functoriality:
-	StateMachine{I,S,T,X}(a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab) where{I,S,T,X} =
-		new{I,S,T,X}(a1,a2,a3,a4,a5,a6,a7,a8,a9,aa,ab)
+function Base.reset(c::Context)
+	for f in (:strings, :actions, :state_triggers,:transition_triggers,:languages)
+		setfield!(c, f, fieldtype(typeof(c), f)())
+	end
+	c.namespace = nothing
+	c.actor = nothing
+	c.trigger = nothing
+	c.language = noindex(c)
+	return c
 end
 
-indextype(::StateMachine{I}) where{I} = I
-stringtype(::StateMachine{I,S}) where{I,S} = S
-actiontype(::StateMachine{I,S,T}) where{I,S,T} = T
-Base.keytype(m::StateMachine) = keytype(m.state_keys)
-statetype(m::StateMachine) = eltype(m.states)
-transitiontype(m::StateMachine) = eltype(m.transitions)
+# ««2 Indexing
+indextype(::Context{I,S}) where{I,S} = I
+stringtype(::Context{I,S}) where{I,S} = S
+actiontype(::Context{I,S,T}) where{I,S,T} = T
 
 # instead of doing lots of Union{Nothing,...}, we simply
 # mark invalid keys by 0xffff, which is how they will eventually be
 # written in the file anyway:
 isindex(i::Integer) = !iszero(~i)
-noindex(m::StateMachine) = ~zero(indextype(m))
-# special case: appending a `nothing` object to a collector does nothing:
-Base.push!(c::Collector, ::Nothing) = ~zero(valtype(c))
+noindex(i) = ~zero(i)
+noindex(c::Context) = noindex(indextype(c))
+# special case useful for handling '::Nothing' kwargs:
+Base.push!(c::Collector, ::Nothing) = noindex(valtype(c))
 
+string_idx(c::Context, ::Nothing) = noindex(c)
+string_idx(c::Context, s::AbstractString) =
+	(@assert isindex(c.language); push!(c.strings, (c.language, s)))
 
-transitions(m::StateMachine,s::State)= (m.transitions[i] for i in s.transitions)
+# ««2 Trigger handling: this is actually a push queue with a max length of 1
+"sets the current trigger value; only allowed if it is not set yet"
+trigger!(c::Context, str::AbstractString) =
+	(@assert isnothing(c.trigger); c.trigger = str)
+trigger!(c::Context, ::Nothing) = nothing
+"gets (and then erases) the current trigger value"
+trigger(c::Context) = (x = c.trigger; c.trigger = nothing; return x)
+"gets a trigger value, from either supplied x, or current trigger"
+get_trigger(c::Context, x) = (trigger!(c, x); return trigger(c))
 
-function Base.reset(m::StateMachine)
-	for f in (:states, :transitions, :state_keys, :strings, :actions, :triggers)
-		setfield!(m, f, fieldtype(typeof(m), f)())
-	end
-	m.current_state = ~zero(m.current_state)
-	m.current_transition = ~zero(m.current_transition)
-	m.current_namespace = nothing
-	m.current_actor = nothing
-	m.current_trigger_idx = noindex(m)
-	return m
+# function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)#««
+# 	str = collect(m.strings)
+# 	s_tri = collect(m.state_triggers)
+# 	t_tri = collect(m.transition_triggers)
+# 	act = collect(m.actions)
+# 	p = collect(pairs(m.states))
+# 	revk = collect(m.state_keys)
+# 	for (k, s) in sort(collect(pairs(m.states));
+# 		by=((k,s),)->(s.priority, -k), rev=true)
+# 		println(io, "state \e[1m<$k $(revk[k])>\e[m: ($(s.priority))",
+# 			"\e[34m$(str[s.text]|>repr)\e[m",
+# 		)
+# 		if isindex(s.trigger)
+# 			println(io, "  has trigger: \e[33m$(s_tri[s.trigger]|>repr)\e[m")
+# 		end
+# 		println(io, "  $(length(s.transitions)) transitions: $(s.transitions)")
+# 		for j in s.transitions
+# 			j ∈ eachindex(m.transitions) ||
+# 				(println(io, "\e[31;2mtransition not found: $j\e[m"); continue)
+# 
+# 			t = m.transitions[j]
+# 			print(io, "  $j = flags(", Flags.string(t.flags), ")  ",
+# # 					"=> \e[37m<$(get(m.state_keys,t.target,exit)) = $(t.target)>\e[m",
+# # 					"\e[36m$(get(str,t.text,nothing)|>repr)\e[m",
+# # 					" ",
+# # 					"\n$(t.action)=\e[31m$(get(act,t.action,nothing)|>repr)\e[m",
+# # 					 "\n\e[35m$(get(str,t.journal,nothing)|>repr)\e[m",
+# 				contains(t.flags, :terminates) ? "\e[7m(final)\e[m" :
+# 					"=> \e[37m<$(get(m.state_keys,t.target,undef))>\e[m",
+# 				" ",
+# 				contains(t.flags, :text) ? "\e[36m$(str[t.text]|>repr)\e[m" :
+# 					"(no text)",
+# 				" ",
+# 				contains(t.flags, :action) ? "\n\e[31m\"$(act[t.action])\"\e[m" :
+# 					"(no action)",
+# 				contains(t.flags, :journal) ? "\n\e[35m$(str[t.journal]|>repr)\e[m" :
+# 					"",
+# 			)
+# 			println(io)
+# 		end
+# 	end
+# end#»»
+# ««1 All code manipulating global data goes here
+# ««2 Initialization
+function new_context(I::Type{<:Integer}, S::DataType, T::DataType, X::DataType)
+	SK = StateKey{X}
+	SD = StateData{I}
+	TD = TransitionData{I}
+	SM = StateMachine{I,SD,TD,SK}
+	# strings are labelled with their language: (language, string)
+	# (language slightly expanded to also define PC gender)
+	return (Builder{I,SM}(), Context{I,Tuple{I,S},T}())
 end
 
-struct PrintData{S,T,X}
-	strings::Vector{S}
-	triggers::Vector{T}
-	actions::Vector{T}
-	keys::Vector{X}
-end
-	
-function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)
-	str = collect(m.strings)
-	tri = collect(m.triggers)
-	act = collect(m.actions)
-	p = collect(pairs(m.states))
-	revk = collect(m.state_keys)
-	for (k, s) in sort(collect(pairs(m.states));
-		by=((k,s),)->(s.priority, -k), rev=true)
-		println(io, "state \e[1m<$k>\e[m: ($(s.priority))",
-			"\e[34m\"$(str[s.text])\"\e[m",
-		)
-		if isindex(s.trigger)
-			println(io, "  has trigger: \e[33m\"$(tri[s.trigger])\"\e[m")
-		end
-		println(io, "  $(length(s.transitions)) transitions:")
-		for j in s.transitions
-			t = m.transitions[j]
-			print(io, "  $j = flags(", Flags.string(t.flags), ")  ",
-				contains(t.flags, :terminates) ? "\e[7m(final)\e[m" :
-					"=> \e[37m<$(get(m.state_keys,t.target,undef))>\e[m",
-				" ",
-				contains(t.flags, :text) ? "\e[36m\"$(str[t.text])\"\e[m" : "(no text)",
-				" ",
-				contains(t.flags, :action) ? "\n\e[31m\"$(act[t.action])\"\e[m" :
-					"(no action)",
-				contains(t.flags, :journal) ? "\n\e[35m\"$(str[t.journal])\"\e[m" : "",
-			)
-			println(io)
-		end
-	end
-end
+global (builder, context) = new_context(Int32, String, String, Any)
 
-struct StateKey{X}
-	namespace::String
-	actor::String
-	label::X
-end
-
-"global object describing the current state-machine being built."
-global machine = StateMachine{Int32,String,String,StateKey{Any}}()
-key(actor::AbstractString, label) =
-	keytype(machine)(machine.current_namespace,actor,label)
-key(label) = key(machine, machine.current_actor, label)
-
+#««2 Small stuff: key, namespace, actor, language
+key(namespace, actor, label) = keytype(builder)(namespace, actor, label)
+key(actor::AbstractString, label) = key(context.namespace, actor, label)
+key(label) = key(context.current_actor, label)
 # default constructor, used for when no key is needed (final transitions):
-key(::typeof(undef)) = keytype(machine)("", "", undef)
+key(::typeof(undef)) = key("", "", undef)
 
-#««2 Small stuff: namespace, actor, trigger
-namespace(text) = (machine.current_namespace = text)
-actor(text) = (machine.current_actor = text)
-
-"sets current trigger. It is an error to call this twice."
-function current_trigger!(m::StateMachine, text::AbstractString)
-	@assert !isindex(m.current_trigger_idx)
-	m.current_trigger_idx = push!(m.triggers, text)
-end
-current_trigger!(::StateMachine, ::Nothing) = nothing
-
-# methods called by add_state!, add_transition!:
-"erases current trigger, returning erased value."
-function current_trigger_idx(m::StateMachine)
-	x = m.current_trigger_idx
-	m.current_trigger_idx = noindex(m)
-	return x
-end
-"selects between current trigger and provided value"
-current_trigger_idx(m::StateMachine, text::Union{Nothing,AbstractString}) =
-	(current_trigger!(m, text); return current_trigger_idx(m))
+namespace(text) = (context.namespace = text)
+actor(text) = (context.actor = text)
+language(text) = (context.language = push!(context.languages, text))
 
 #««2 Higher-level: `trigger`, `action`, `journal`
-trigger(text::AbstractString) = current_trigger!(machine, text)
+trigger(str::AbstractString) = trigger!(context, str)
 
-function action(text::AbstractString; override=false)
-	t = current_transition(machine)
+function action(str::AbstractString; override=false)
+	t = current_transition(builder)
 	@assert(override || !contains(t.flags, :action),
 		"action already defined for this transition")
 	t.flags |= Flags.set(action = true)
-	t.action = push!(machine.actions, text)
-	machine
+	t.action = push!(builder.actions, str)
 end
 
-function journal(text::AbstractString; override=false)
-	t = current_transition(machine)
+function journal(str::AbstractString; override=false)
+	t = current_transition(builder)
 	@assert(override || !contains(t.flags, :journal),
 		"journal entry already defined for this transition")
 	t.flags |= Flags.set(journal = true)
-	t.journal = push!(machine.strings, text)
-	machine
+	t.journal = string_idx(builder, str)
 end
 
 #««2 States
-" lowest-level state adding function for a state machine."
-function add_state!(m::StateMachine, k, text;
-		trigger = nothing, kwargs...) # only priority in kwargs
-	k::keytype(m)
-	haskey(m.state_keys, key) && error("duplicate state key: $key")
-	text = push!(m.strings, text)
-	trigger = current_trigger_idx(m, trigger)
-	s = statetype(m)(;text, trigger, kwargs...)
-	# create implicit transition if needed
-	if !isempty(m.states) && isempty(last(m.states).transitions)
-		println("implicit transition from state $(length(m.states)) to next")
-		add_transition!(m, last(m.states), k)
-	end
-	push!(m.states, s)
-	push!(m.state_keys, k)
-	m.current_state = length(m.states)
-	m
+" lowest-level state creating function. context resolves triggers and text;
+we build the state data; builder bookkeeps current state."
+function add_state!(c::Context, b::Builder, key; text, trigger=nothing, kw...)
+	# kw... passed to StateData: priority
+	key::keytype(b)
+	text = string_idx(c, text)
+	trigger = push!(c.state_triggers, get_trigger(c, trigger))
+	data = statedata(b)(; text, trigger, kw...)
+	add_state!(b, key, data)
 end
-
-current_state(m::StateMachine) =
-	(@assert !isempty(m.states); m.states[m.current_state])
 
 """"
     state(actor, ([label =>] text)*; trigger)
@@ -546,9 +635,16 @@ actor, label). Labels are automatically generated if not provided.
 If more than one state is given then they are linked by implicit
 transitions.
 """
-state(actor::AbstractString, (label, text)::Pair{<:Any,<:AbstractString};
-		kw...) = 
-	add_state!(machine, key(actor, label), text; kw...)
+function state(actor::AbstractString,
+	(label, text)::Pair{<:Any,<:AbstractString}; kw...) 
+	println("** adding state with label $label")
+	k = key(actor, label)
+	if_current_state(builder) do s
+		println("add implicit transition from $s to $label")
+		isempty(s.transitions) && add_transition!(context, builder, s, k)
+	end
+	add_state!(context, builder, k; text, kw...)
+end
 state(actor::AbstractString, text::AbstractString; kw...) =
 	state(actor, gensym() => text; kw...)
 
@@ -558,45 +654,32 @@ state(actor::AbstractString, args::StateText...; kwargs...) =
 
 """    say([label =>] text...; trigger)
 
-Creates one (or more) state. The state keys are
+Creates one (or more) state(s). The state keys are
 `(current_namespace, current_actor, label)`.
 In other words this is equivalent to (and defined as)
 `state(current_actor, [label =>] text...)`.
 Labels are automatically generated (but unreachable) if not provided.
 """
-say(args::StateText...; kw...) = state(machine.current_actor, args...; kw...)
+say(args::StateText...; kw...) = state(context.actor, args...; kw...)
 
 #««2 Transitions
-"""    add_transition!(machine, source state, target key; position, payload...)
-
- - `position` is the insertion point in the transition table for this state (default is last).
-"""
-function add_transition!(m::StateMachine, s, target;
+"low-level transition adding function. context resolves triggers, text and journal; we build the transition data; builder inserts and bookkeeps."
+function add_transition!(c::Context, b::Builder, source, target;
 		text::Union{Nothing,AbstractString} = nothing,
 		journal::Union{Nothing,AbstractString} = nothing,
 		action::Union{Nothing,AbstractString} = nothing,
 		trigger::Union{Nothing,AbstractString} = nothing,
-		position::Union{Nothing,Integer} = nothing,
-		kwargs...) # KW: terminates
-	target::keytype(m)
-	s::statetype(m)
-	position = something(position, 1+length(s.transitions))
-	text = push!(m.strings, text)
-	journal = push!(m.strings, journal)
-	action = push!(m.strings, action)
-	trigger = current_trigger_idx(m, trigger)
-	flags = Flags.set(; text = isindex(text), journal = isindex(journal),
-		action = isindex(action), trigger = isindex(trigger), kwargs...)
-	t = transitiontype(m)(target; text, journal, trigger, action, flags)
-	push!(m.transitions, t)
-	insert!(s.transitions, position, length(m.transitions))
-	m.current_transition = position
-	m
-end
+		position::Integer = 1 + length(source.transitions),
+		kwargs...) # passed to TransitionData (and hence to Flags)
+	source::statetype(b)
+	target::keytype(b)
+	text = string_idx(c, text)
+	journal = string_idx(c, journal)
+	action = push!(c.actions, action)
+	trigger = push!(c.transition_triggers, get_trigger(c, trigger))
+	data = transitiondata(b)(;text, journal, trigger, action, kwargs...)
 
-current_transition(m::StateMachine) = let s = current_state(m)
-	@assert !isempty(s.transitions)
-	m.transitions[s.transitions[m.current_transition]]
+	add_transition!(b, source, target, data, position)
 end
 
 transition(actor::AbstractString, label, args...; kwargs...) =
@@ -605,9 +688,9 @@ transition(::typeof(exit), args...; kwargs...) =
 	transition_key(key(undef), args...; terminates = true, kwargs...)
 
 transition_key(k, text::AbstractString; kwargs...) =
-	add_transition!(machine, current_state(machine), k; text, kwargs...)
+	transition_key(k; text, kwargs...)
 transition_key(k; kwargs...) =
-	add_transition!(machine, current_state(machine), k; kwargs...)
+	add_transition!(context, builder, current_state(builder), k; kwargs...)
 
 """    answer(text => (actor, label); flags)
     answer(text => label; flags)
@@ -621,24 +704,28 @@ answer((text, label)::Pair{<:AbstractString,typeof(exit)}; kw...) =
 	transition(exit, text; kw...)
 answer((text, label)::Pair{<:AbstractString,<:Any}; kw...) =
 	transition(machine.current_actor, label, text; kw...)
+answer(::typeof(exit); kw...) = transition(exit; kw...)
 	
 #»»2
+#»»1
 
-export namespace, actor, trigger, action, journal
+export namespace, actor, trigger, action, journal, language
 export state, say, transition, answer
 end
-# D = Dialogs
-# for f in names(D); f == nameof(D) && continue
-# 	eval(:(@inline $f(args...; kwargs...) = D.$f(args...; kwargs...)))
-# end
-# 
-# namespace("g")
-# actor("Alice")
-# trigger("weather is nice")
-# say(:hello => "weather is nice today", "sunny and all!")
-#   answer("bye" => exit)
+D = Dialogs
+for f in names(D); f == nameof(D) && continue
+	eval(:(@inline $f(args...; kwargs...) = D.$f(args...; kwargs...)))
+end
+
+language("en")
+namespace("g")
+actor("Alice")
+trigger("weather is nice")
+say(:hello => "weather is nice today", "sunny and all!")
+  answer("bye" => exit)
 # 		action("i am gone")
 # say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
 # 	answer("let's hope so" => :hello)
 # 	answer("what does B say about this?" => ("Bob", :hithere); position=1)
 # 	  journal("Today I asked a question to Bob")
+# 	answer(exit)

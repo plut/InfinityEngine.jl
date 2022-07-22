@@ -421,8 +421,7 @@ if_current_transition(f::Function, b::Builder) = if_current_state(b) do s
 	!iszero(t) && f(b.machine.transitions[s.transitions[t]])
 end
 
-
-# State machine builder ««1
+#««1 State machine builder
 "state key type for the global state machine being built"
 struct StateKey{X}
 	namespace::String
@@ -472,7 +471,7 @@ module Flags
 	end
 end
 
-# Build context ««1
+#««1 Build context
 
 "context for the state machine builder. S is string type, T is action type."
 mutable struct Context{I<:Integer,S,T}
@@ -600,18 +599,17 @@ trigger(str::AbstractString) = trigger!(context, str)
 
 function action(str::AbstractString; override=false)
 	t = current_transition(builder)
-	@assert(override || !contains(t.flags, :action),
+	@assert(override || !contains(t.data.flags, :action),
 		"action already defined for this transition")
-	t.flags |= Flags.set(action = true)
-	t.action = push!(builder.actions, str)
+	t.data.flags |= Flags.set(action = true)
+	t.data.action = push!(context.actions, str)
 end
-
 function journal(str::AbstractString; override=false)
 	t = current_transition(builder)
-	@assert(override || !contains(t.flags, :journal),
+	@assert(override || !contains(t.data.flags, :journal),
 		"journal entry already defined for this transition")
-	t.flags |= Flags.set(journal = true)
-	t.journal = string_idx(builder, str)
+	t.data.flags |= Flags.set(journal = true)
+	t.data.journal = string_idx(context, str)
 end
 
 #««2 States
@@ -723,8 +721,8 @@ actor("Alice")
 trigger("weather is nice")
 say(:hello => "weather is nice today", "sunny and all!")
   answer("bye" => exit)
-# 		action("i am gone")
-# say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
+		action("i am gone")
+say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
 # 	answer("let's hope so" => :hello)
 # 	answer("what does B say about this?" => ("Bob", :hithere); position=1)
 # 	  journal("Today I asked a question to Bob")

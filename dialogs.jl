@@ -333,7 +333,7 @@ struct State{I,S}
 	transitions::Vector{I}
 	data::S
 end
-struct Transition{K,T}
+mutable struct Transition{K,T}
 	target::K
 	data::T
 end
@@ -425,14 +425,31 @@ mutable struct Builder{I<:Integer}
 	namespace::Union{Nothing,String}
 	actor::Union{Nothing,String}
 	trigger::Union{Nothing,String}
-	Builder{I}() where{I} = new{I}(0, 0, 0, nothing, nothing, nothing)
+	pending_transition::Bool
+	Builder{I}() where{I} = new{I}(0, 0, 0, nothing, nothing, nothing, false)
 end
 
-add_state!(b::Builder, m::StateMachine, args...) =
-	(add_state!(m, args...); b.state = length(m.states))
-add_transition!(b::Builder, m::StateMachine, source, target, data, position) =
-	(add_transition!(m, source, target, data, position);
-	b.transition = position)
+function add_state!(b::Builder, m::StateMachine, key, args...)
+	println("add node $key")
+	b.pending_transition && println("\e[32m  solve pending transition to $key\e[m")
+	b.pending_transition &&
+		(current_transition(b, m).target = key; b.pending_transition = false)
+	add_state!(m, key, args...);
+	b.state = length(m.states)
+end
+
+function add_transition!(b::Builder, m::StateMachine, source, target,
+		data, position; pending = false)
+	@assert !b.pending_transition "unsolved pending transition"
+	if pending
+		println("  \e[31madd pending transition\e[m")
+	else
+		println("  add transition to $target")
+	end
+	add_transition!(m, source, target, data, position)
+	b.transition = position
+	b.pending_transition = pending
+end
 
 current_state(b::Builder, m::StateMachine) =
 	(@assert !iszero(b.state); m.states[b.state])
@@ -478,12 +495,13 @@ struct StateKey{X}
 end
 @inline (T::Type{<:StateKey})(b::Builder, c::Context, namespace::AbstractString,
 	actor::AbstractString, label) = T(namespace, actor, label)
+# special case — exit transition keys are canonicalized:
+@inline (T::Type{<:StateKey})(b::Builder, c::Context, ::AbstractString,
+	::AbstractString, ::typeof(exit)) = T("", "", exit)
 @inline (T::Type{<:StateKey})(b::Builder, c::Context, actor::AbstractString,
 		label) = T(b, c, b.namespace, actor, label)
 @inline (T::Type{<:StateKey})(b::Builder, c::Context, label) =
 	T(b, c, b.actor, label)
-@inline (T::Type{<:StateKey})(b::Builder, c::Context, ::typeof(exit)) =
-	T("", "", undef)
 
 # ««2 State data
 "state data type for the global state machine being built"
@@ -558,11 +576,12 @@ end
 end
 "low-level transition adding function. context resolves triggers, text and journal; we build the transition data; builder inserts and bookkeeps."
 @inline function add_transition!(b::Builder, c::Context, m::StateMachine,
-		source, target; position::Integer = 1+length(source.transitions), kwargs...)
+		source, target; position::Integer = 1+length(source.transitions),
+		pending = false, kwargs...)
 	source::statetype(m)
 	target::keytype(m)
 	data = transitiondata(m)(b, c; kwargs...)
-	add_transition!(b, m, source, target, data, position)
+	add_transition!(b, m, source, target, data, position; pending)
 end
 
 # ««1 All code manipulating global data goes here
@@ -577,7 +596,7 @@ function init(I::Type{<:Integer}, S::DataType, T::DataType, X::DataType)
 	global machine = SM()
 	global context = Context{I,Tuple{I,S},T}()
 end
-#««2 Misc.: key, namespace, actor, language
+#««2 Misc.: namespace, actor, language, trigger
 
 @inline namespace(text) = (builder.namespace = text)
 @inline actor(text) = (builder.actor = text)
@@ -613,11 +632,13 @@ The multi-state form is equivalent to consecutive invocations of `state`.
 """
 function state(actor::AbstractString,
 	(label, text)::Pair{<:Any,<:AbstractString}; kw...) 
-	println("** adding state with label $label")
 	k = keytype(machine)(builder, context, actor, label)
 	if_current_state(builder, machine) do s
-		println("add implicit transition from $s to $label")
-		isempty(s.transitions) && add_transition!(builder, context, machine, s, k)
+		if isempty(s.transitions)
+			println("  implicit transition needed")
+			transition()
+# 			add_transition!(builder, context, machine, s, k)
+		end
 	end
 	add_state!(builder, context, machine, k; text, kw...)
 end
@@ -640,44 +661,58 @@ Labels are automatically generated (but unreachable) if not provided.
 say(args::StateText...; kw...) = state(builder.actor, args...; kw...)
 
 #««2 Transitions
-"""    transition(actor, label, (text => label)*)
-
-Creates a state transition from the current state to the one indicated
-by `key`.
-
-`key` may be either a pair `(actor::String, label)`,
-a single `label` (the current actor will be used),
-or the single word `exit`, indicating a final transition
-(i.e. this terminates dialog).
-
-This function call will consume any existing `trigger()` definition.
 """
-@inline transition(actor::AbstractString, label, args...; kw...) =
-	transition(keytype(machine)(builder, context, actor, label), args...; kw...)
-@inline transition(::typeof(exit), args...; kwargs...) =
-	transition(keytype(machine)(builder, context, exit), args...;
-		terminates = true, kwargs...)
+    transition(namespace, actor, label; text...)
+    transition(actor, label; text...)
+    transition(label; text...)
+    transition(exit) # special case of the previous
+		transition() # not needed: this is the implicit transition!
 
-@inline transition(k::StateKey, text::AbstractString; kwargs...) =
-	transition(k; text, kwargs...)
-@inline transition(k::StateKey; kwargs...) =
-	add_transition!(builder, context, machine,
-		current_state(builder, machine), k; kwargs...)
+		answer(text => (namespace, actor, label))
+    answer(text => (actor, label))
+    answer(text => label)
+    answer(text => exit) # special case of previous
+    answer(text)
 
-"""    answer(text => (actor, label); flags)
-    answer(text => label; flags)
+Special considerations:
+ - an exit key sets the `terminates` flag.
+ - `answer` always has text, transition (in general) does not.
+ - if no label is provied then the transition will point to the next state.
+"""
+@inline function transition(namespace::AbstractString, actor::AbstractString,
+	label; kw...)
+	key = keytype(machine)(builder, context, namespace, actor, label)
+	add_transition!(builder, context, machine, current_state(builder, machine),
+		key; terminates = (key.label == exit), kw...)
+end
+@inline transition(actor::AbstractString, label; kw...) =
+	transition(builder.namespace, actor, label; kw...)
+@inline transition(label; kw...) =
+	transition(builder.namespace, builder.actor, label; kw...)
+@inline transition(; kw...) = transition(undef; pending = true, kw...)
 
-Creates a transition from the current state. Equivalent to
-`transition(actor, label, text)`.
-In the second form, the current actor is used for the target."""
-answer((text, k)::Pair{<:AbstractString,Tuple}; kw...) =
-	transition(keytype(m)(k...), text; kw...)
-answer((text, label)::Pair{<:AbstractString,typeof(exit)}; kw...) =
-	transition(exit, text; kw...)
-answer((text, label)::Pair{<:AbstractString,<:Any}; kw...) =
-	transition(builder.actor, label, text; kw...)
-answer(::typeof(exit); kw...) = transition(exit; kw...)
+@inline answer((text, k)::Pair{<:AbstractString,<:Tuple}; kw...) =
+	transition(k...; text, kw...)
+@inline answer((text, label)::Pair{<:AbstractString}; kw...) =
+	transition(label; text, kw...)
+@inline answer(text::AbstractString; kw...) = transition(; text, kw...)
+
 # ««1 (disabled for now) printing
+Base.show(io::IO, k::StateKey) =
+	print(io, "\"", k.namespace, "/", k.actor, "\"", k.label|>repr, "")
+function Base.show(io::IO, mime::MIME"text/plain", m::StateMachine)
+	show(io, mime, m.keys|>collect|>pairs)
+	println(io)
+	for (i, s) in pairs(m.states)
+		println(io, "state \e[1m<$i>:\e[m")
+		for j in s.transitions
+			t = m.transitions[j]
+			println(io, "  => \e[38;5;7m<", t.target,
+				haskey(m.keys, t.target) ? "="*string(m.keys[t.target]) : "",
+				">\e[m")
+		end
+	end
+end
 # function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)#««
 # 	str = collect(m.strings)
 # 	s_tri = collect(m.state_triggers)
@@ -735,11 +770,16 @@ language("en")
 namespace("main")
 actor("Alice")
 trigger("weather is nice")
+say(:toto => "this morning...")
+transition()
 say(:hello => "weather is nice today", "sunny and all!")
   answer("bye" => exit)
 		action("i am gone")
 say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
 	answer("let's hope so" => :hello)
-	answer("what does B say about this?" => ("Bob", :hithere); position=1)
+	answer("what does B say about this?" => ("Bob", :hello); position=1)
 	  journal("Today I asked a question to Bob")
-	answer(exit)
+	transition(exit)
+actor("Bob")
+say(:hello => "I am Bob!!!")
+	transition(exit)

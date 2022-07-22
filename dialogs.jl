@@ -12,13 +12,13 @@
 	 - FIXME: should we rename this condition()?
   - priority() (is this useful? check if it is used at all in WeiDU examples)
 	+ journal()
-	 - TODO first: load state machine from .dlg resource
-	 - check in examples about solved/unsolved etc.
+	 * TODO first: load state machine from .dlg resource
+	 * check in examples about solved/unsolved etc.
 	+ action)
-	 - check about strrefs in action code!
+	 * check about strrefs in action code!
 	 - define a Julia syntax for action code?
  - Editing existing entries
-  - define edition types (defer to end once everything is loaded ?)
+  - define edition actions (defer to end once everything is loaded ?)
 	 - MUCH easier to load state machine first...
 	- primary need = interjections
 	- main edit types:
@@ -323,6 +323,9 @@ function Base.get(f::Function, c::Collector, x)
 	i = get(c, x, nothing)
 	!isnothing(i) && f(i)
 end
+function Base.findfirst(c::Collector, i::Integer)
+	for (k, j) in pairs(c); i == j && return k; end
+end
 
 export Collector
 end
@@ -620,36 +623,51 @@ end
 
 #««2 States
 """
-    state(actor, ([label =>] text)*; trigger)
+    state(namespace, actor, label; text)
+    state(actor, label; text) # adds a state with text
+    state(label; text) # idem (shorthand)
+    state(actor, label) # moves to this label (to edit it)
+    state(label)
+    say(args...)
 
-Creates one (or more) states. The state keys are `(current_namespace,
-actor, label)`. Labels are automatically generated if not provided.
+where each `say` argument is either:
+
+    (actor, label) => text
+    label => text
+    text
 
 If more than one state is given then they are linked by implicit
 transitions.
 
 The multi-state form is equivalent to consecutive invocations of `state`.
 """
-function state(actor::AbstractString,
-	(label, text)::Pair{<:Any,<:AbstractString}; kw...) 
-	k = keytype(machine)(builder, context, actor, label)
+function state(namespace::AbstractString, actor::AbstractString, label;
+		text::Union{Nothing,AbstractString} = nothing, kw...)
+	key = keytype(machine)(builder, context, namespace, actor, label)
 	if_current_state(builder, machine) do s
 		if isempty(s.transitions)
 			println("  implicit transition needed")
-			transition()
-# 			add_transition!(builder, context, machine, s, k)
+# 			transition()
+			add_transition!(builder, context, machine, s, key)
 		end
 	end
-	add_state!(builder, context, machine, k; text, kw...)
+	state(key, text; kw...)
 end
-@inline state(actor::AbstractString, text::AbstractString; kw...) =
-	state(actor, gensym() => text; kw...)
+@inline state(actor::AbstractString, label; kw...) =
+	state(builder.namespace, actor, label; kw...)
+@inline state(label; kw...) = state(builder.actor, label; kw...)
 
-const StateText = Union{AbstractString,Pair{<:Any,<:AbstractString}}
-@inline state(actor::AbstractString, args::StateText...; kwargs...) =
-	for a in args; state(actor, a; kwargs...); end
-@inline state(::Nothing, args...; kw...) = error("no current actor defined")
+function state(k::StateKey, ::Nothing; override = false,
+		trigger::Union{Nothing,AbstractString} = nothing)
+	error("todo: move current_state around")
+end
+@inline state(k::StateKey, text::AbstractString; kw...) =
+	add_state!(builder, context, machine, k; text, kw...)
 
+# @inline state(actor::AbstractString, args::SayText...; kwargs...) =
+# 	for a in args; state(actor, a; kwargs...); end
+# @inline state(::Nothing, args...; kw...) = error("no current actor defined")
+# 
 """    say([label =>] text...; trigger)
 
 Creates one (or more) state(s). The state keys are
@@ -658,7 +676,14 @@ In other words this is equivalent to (and defined as)
 `state(current_actor, [label =>] text...)`.
 Labels are automatically generated (but unreachable) if not provided.
 """
-say(args::StateText...; kw...) = state(builder.actor, args...; kw...)
+@inline say((key, text)::Pair{<:Any,<:AbstractString}; kw...) =
+	say2(text, key; kw...)
+@inline say(text::AbstractString; kw...) = say(gensym() => text; kw...)
+@inline say(args::Union{AbstractString,Pair{<:Any,<:AbstractString}}...;kw...)=
+	say.(args; kw...)
+@inline say2(text, key::Tuple; kw...) = state(key...; text, kw...)
+@inline say2(text, key; kw...) = state(key; text, kw...)
+
 
 #««2 Transitions
 """
@@ -666,9 +691,9 @@ say(args::StateText...; kw...) = state(builder.actor, args...; kw...)
     transition(actor, label; text...)
     transition(label; text...)
     transition(exit) # special case of the previous
-		transition() # not needed: this is the implicit transition!
+    transition() # not needed: this is the implicit transition!
 
-		answer(text => (namespace, actor, label))
+    answer(text => (namespace, actor, label))
     answer(text => (actor, label))
     answer(text => label)
     answer(text => exit) # special case of previous
@@ -700,61 +725,60 @@ end
 # ««1 (disabled for now) printing
 Base.show(io::IO, k::StateKey) =
 	print(io, "\"", k.namespace, "/", k.actor, "\"", k.label|>repr, "")
-function Base.show(io::IO, mime::MIME"text/plain", m::StateMachine)
-	show(io, mime, m.keys|>collect|>pairs)
+
+function printmachine(io::IO, m::StateMachine;
+		printstate = nothing, printtransition = nothing, printkey = nothing)
+	keylist = m.keys|>collect
+	for (i,k) in keylist|>pairs
+		!isnothing(printkey) && printkey(io, i, k)
+	end
 	println(io)
 	for (i, s) in pairs(m.states)
-		println(io, "state \e[1m<$i>:\e[m")
+		println(io, "state \e[1m<", keylist[i], '=', i, ">:\e[m")
+		!isnothing(printstate) && printstate(io, s.data)
 		for j in s.transitions
 			t = m.transitions[j]
-			println(io, "  => \e[38;5;7m<", t.target,
-				haskey(m.keys, t.target) ? "="*string(m.keys[t.target]) : "",
-				">\e[m")
+			if t.target.label == exit
+				print(io, "  \e[7m(final)\e[m")
+			else
+				print(io, " `-> \e[38;5;7m<", t.target, haskey(m.keys, t.target) ?
+					"="*string(m.keys[t.target]) : " \e[7mnot found\e[m", ">\e[m")
+			end
+			!isnothing(printtransition) && printtransition(io, t.data)
 		end
 	end
 end
-# function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)#««
-# 	str = collect(m.strings)
-# 	s_tri = collect(m.state_triggers)
-# 	t_tri = collect(m.transition_triggers)
-# 	act = collect(m.actions)
-# 	p = collect(pairs(m.states))
-# 	revk = collect(m.state_keys)
-# 	for (k, s) in sort(collect(pairs(m.states));
-# 		by=((k,s),)->(s.priority, -k), rev=true)
-# 		println(io, "state \e[1m<$k $(revk[k])>\e[m: ($(s.priority))",
-# 			"\e[34m$(str[s.text]|>repr)\e[m",
-# 		)
-# 		if isindex(s.trigger)
-# 			println(io, "  has trigger: \e[33m$(s_tri[s.trigger]|>repr)\e[m")
-# 		end
-# 		println(io, "  $(length(s.transitions)) transitions: $(s.transitions)")
-# 		for j in s.transitions
-# 			j ∈ eachindex(m.transitions) ||
-# 				(println(io, "\e[31;2mtransition not found: $j\e[m"); continue)
-# 
-# 			t = m.transitions[j]
-# 			print(io, "  $j = flags(", Flags.string(t.flags), ")  ",
-# # 					"=> \e[37m<$(get(m.state_keys,t.target,exit)) = $(t.target)>\e[m",
-# # 					"\e[36m$(get(str,t.text,nothing)|>repr)\e[m",
-# # 					" ",
-# # 					"\n$(t.action)=\e[31m$(get(act,t.action,nothing)|>repr)\e[m",
-# # 					 "\n\e[35m$(get(str,t.journal,nothing)|>repr)\e[m",
-# 				contains(t.flags, :terminates) ? "\e[7m(final)\e[m" :
-# 					"=> \e[37m<$(get(m.state_keys,t.target,undef))>\e[m",
-# 				" ",
-# 				contains(t.flags, :text) ? "\e[36m$(str[t.text]|>repr)\e[m" :
-# 					"(no text)",
-# 				" ",
-# 				contains(t.flags, :action) ? "\n\e[31m\"$(act[t.action])\"\e[m" :
-# 					"(no action)",
-# 				contains(t.flags, :journal) ? "\n\e[35m$(str[t.journal]|>repr)\e[m" :
-# 					"",
-# 			)
-# 			println(io)
-# 		end
-# 	end
-# end#»»
+
+@inline printkey(io::IO, i, k) = println(io, i, '=', k)
+function printstate(io::IO, c::Context, s::StateData)
+	isindex(s.trigger) && println(io, "trigger=\e[33m",
+		findfirst(c.state_triggers,s.trigger)|>repr, "\e[m")
+	isindex(s.text) && println(io, "\e[34m",
+		findfirst(c.strings, s.text)|>repr, "\e[m")
+end
+@inline printstate() = (io::IO, s) -> printstate(io, context, s)
+
+function printtransition(io::IO, c::Context, t::TransitionData)
+	!iszero(t.flags) && print(io, "  flags=", Flags.string(t.flags))
+	println(io)
+	isindex(t.trigger) && println(io, "trigger=\e[33m",
+		findfirst(c.transition_triggers, t.trigger)|>repr, "\e[m")
+	isindex(t.text) && println(io, "  \e[36m",
+		findfirst(c.strings, t.text)|>repr, "  \e[m")
+	isindex(t.action) && println(io, "  action=\e[31m",
+		findfirst(c.actions, t.action)|>repr, "\e[m")
+	isindex(t.journal) && println(io, "  \e[35m",
+		findfirst(c.strings, t.journal)|>repr, "  \e[m")
+end
+@inline printtransition() = (io::IO, t) -> printtransition(io, context, t)
+Base.show(io::IO, ::MIME"text/plain", m::StateMachine) =
+	printmachine(io, m; printkey = printkey)
+
+@inline printmachine() =
+	printmachine(stdout, machine;
+		printkey = printkey, printstate = printstate(),
+		printtransition = printtransition())
+
 # »»1
 export namespace, actor, trigger, action, journal, language
 export state, say, transition, answer
@@ -769,12 +793,11 @@ Dialogs.init(Int32, String, String, Any)
 language("en")
 namespace("main")
 actor("Alice")
-trigger("weather is nice")
+trigger("WEATHER(NICE)")
 say(:toto => "this morning...")
-transition()
 say(:hello => "weather is nice today", "sunny and all!")
   answer("bye" => exit)
-		action("i am gone")
+		action("QUIT()")
 say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
 	answer("let's hope so" => :hello)
 	answer("what does B say about this?" => ("Bob", :hello); position=1)
@@ -783,3 +806,5 @@ say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
 actor("Bob")
 say(:hello => "I am Bob!!!")
 	transition(exit)
+
+D.printmachine()

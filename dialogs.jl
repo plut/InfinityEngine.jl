@@ -347,7 +347,14 @@ by the state.
 struct StateMachine{I,S,T,K}
 	states::Vector{State{I,S}}
 	transitions::Vector{Transition{K,T}}
-	keys::Collector{K}
+	# the “proper” way to be able to compile out the keys would be to
+	# instead use a C <: AbstractDict{K,I} type, with the option to use
+	# either Collector or some trivial collector implementing identity map
+	# (+ count number of entries — to be able to list all the keys).
+	#
+	# also: reorder states? (harder, we need to build a list of *incoming*
+	# transitions)
+	keys::Collector{K,I}
 	StateMachine{I,S,T,K}() where{I,S,T,K} = new{I,S,T,K}([], [], ())
 end
 
@@ -377,58 +384,108 @@ function add_transition!(m::StateMachine, source, target, data, position)
 	return t
 end
 
-struct Builder{I<:Integer,M<:StateMachine{I}}
-	machine::M
-	# current values of state and transition:
-	current_state::Base.RefValue{I} #  into machine.states
-	current_transition::Base.RefValue{I} # into machine.transitions[state]
-	Builder{I,M}() where{I<:Integer,M<:StateMachine{I}} =
-		new{I,M}(M(), Ref(zero(I)), Ref(zero(I)))
+#««1 Interpretation context
+
+"structure translating all numerical info held in the machine to string values"
+struct Context{I<:Integer,S,T}
+	strings::Collector{S,I}
+	actions::Collector{T,I}
+	state_triggers::Collector{T,I}
+	transition_triggers::Collector{T,I}
+	languages::Collector{String,I}
+
+	# XXX default constructor is needed for functoriality?
+	Context{I,S,T}() where{I<:Integer,S,T} = new{I,S,T}((), (), (), (), ())
 end
-machinetype(::Builder{I,M}) where{I,M} = M
-indextype(::Builder{I}) where{I} = I
-statedata(b::Builder) = statedata(b.machine)
-transitiondata(b::Builder) = transitiondata(b.machine)
-statetype(b::Builder) = statetype(b.machine)
-transitiontype(b::Builder) = transitiontype(b.machine)
-Base.keytype(b::Builder) = keytype(b.machine)
+Base.empty!(c::Context) = for f in fieldnames(typeof(c))
+	empty!(getfield(c, f))
+end
+# ««2 Indexing
+indextype(::Context{I,S}) where{I,S} = I
+stringtype(::Context{I,S}) where{I,S} = S
+actiontype(::Context{I,S,T}) where{I,S,T} = T
 
-set_state!(b::Builder, key) = b.current_state[] = b.machine.keys[key]
+# instead of doing lots of Union{Nothing,...}, we simply
+# mark invalid keys by 0xffff, which is how they will eventually be
+# written in the file anyway:
+isindex(i::Integer) = !iszero(~i)
+noindex(i) = ~zero(i)
+noindex(c::Context) = noindex(indextype(c))
+# special case useful for handling '::Nothing' kwargs:
+Base.push!(c::Collector, ::Nothing) = noindex(valtype(c))
 
-function add_state!(b::Builder, args...)
-	add_state!(b.machine, args...)
-	b.current_state[] = length(b.machine.states)
+#««1 State machine builder: mutable information while machine is being built
+
+"pointers to current status of machine being built, i.e. all data which
+becomes useless once the build is complete"
+mutable struct Builder{I<:Integer}
+	state::I
+	transition::I
+	language::I
+	namespace::Union{Nothing,String}
+	actor::Union{Nothing,String}
+	trigger::Union{Nothing,String}
+	Builder{I}() where{I} = new{I}(0, 0, 0, nothing, nothing, nothing)
 end
 
-set_transition!(b::Builder, i) = b.current_transition[] = i
+add_state!(b::Builder, m::StateMachine, args...) =
+	(add_state!(m, args...); b.state = length(m.states))
+add_transition!(b::Builder, m::StateMachine, source, target, data, position) =
+	(add_transition!(m, source, target, data, position);
+	b.transition = position)
 
-function add_transition!(b::Builder, source, target, data, position)
-	add_transition!(b.machine, source, target, data, position)
-	b.current_transition[] = position
+current_state(b::Builder, m::StateMachine) =
+	(@assert !iszero(b.state); m.states[b.state])
+if_current_state(f::Function, b::Builder, m::StateMachine) =
+	!iszero(b.state) && f(m.states[b.state])
+
+current_transition(b::Builder, m::StateMachine) = let s = current_state(b, m)
+	t = b.transition
+	m.transitions[s.transitions[t]]
+end
+if_current_transition(f::Function, b::Builder, m::StateMachine) =
+	if_current_state(b, m) do s
+	t = b.transition
+	!iszero(t) && f(m.transitions[s.transitions[t]])
 end
 
-current_state(b::Builder) =
-	(@assert !iszero(b.current_state[]); b.machine.states[b.current_state[]])
-if_current_state(f::Function, b::Builder) =
-	!iszero(b.current_state[]) && f(b.machine.states[b.current_state[]])
+#««2 Language indexing
+string_idx(::Builder, c::Context, ::Nothing) = noindex(c)
+string_idx(b::Builder, c::Context, s::AbstractString) =
+	(@assert isindex(b.language); push!(c.strings, (b.language, s)))
 
-current_transition(b::Builder) = let s = current_state(b)
-	t = b.current_transition[]
-	b.machine.transitions[s.transitions[t]]
-end
-if_current_transition(f::Function, b::Builder) = if_current_state(b) do s
-	t = b.current_transition[]
-	!iszero(t) && f(b.machine.transitions[s.transitions[t]])
-end
+# ««2 Trigger handling: this is actually a push queue with a max length of 1
+"sets the current trigger value; only allowed if it is not set yet"
+trigger!(b::Builder, str::AbstractString) =
+	(@assert isnothing(b.trigger); b.trigger = str)
+trigger!(b::Builder, ::Nothing) = nothing
+"gets (and then erases) the current trigger value"
+trigger(b::Builder) = (x = b.trigger; b.trigger = nothing; return x)
+"gets a trigger value, from either supplied x, or current trigger"
+get_trigger(b::Builder, x) = (trigger!(b, x); return trigger(b))
 
-#««1 State machine builder
+
+
+# ««1 Data fields for the global machine
+# ««2 State keys
 "state key type for the global state machine being built"
 struct StateKey{X}
 	namespace::String
 	actor::String
 	label::X
+	@inline StateKey{X}(ns::AbstractString, a::AbstractString, l::X) where{X} =
+		new{X}(ns, a, l)
 end
+@inline (T::Type{<:StateKey})(b::Builder, c::Context, namespace::AbstractString,
+	actor::AbstractString, label) = T(namespace, actor, label)
+@inline (T::Type{<:StateKey})(b::Builder, c::Context, actor::AbstractString,
+		label) = T(b, c, b.namespace, actor, label)
+@inline (T::Type{<:StateKey})(b::Builder, c::Context, label) =
+	T(b, c, b.actor, label)
+@inline (T::Type{<:StateKey})(b::Builder, c::Context, ::typeof(exit)) =
+	T("", "", undef)
 
+# ««2 State data
 "state data type for the global state machine being built"
 mutable struct StateData{I<:Integer}
 	priority::Float32
@@ -438,23 +495,21 @@ mutable struct StateData{I<:Integer}
 	StateData{I}(; text=~zero(I), trigger=~zero(I), priority=-eps(Float32)
 		) where{I<:Integer}= new{I}(priority, text, trigger)
 end
-
-"transition data type for the global state machine being built"
-mutable struct TransitionData{I<:Integer}
-	text::I
-	journal::I
-	trigger::I
-	action::I
-	flags::UInt32
-	function TransitionData{I}(; text, journal, trigger, action,
-			flags = nothing, kwargs...) where{I<:Integer}
-		flags = something(flags, Flags.set(;
-			text = isindex(text), journal = isindex(journal),
-			action = isindex(action), trigger = isindex(trigger), kwargs...))
-		return new{I}(text, journal, trigger, action, flags)
-	end
+@inline function (T::Type{<:StateData})(b::Builder, c::Context;
+		text, trigger = nothing, kw...) # kw = priority
+	text = string_idx(b, c, text)
+	trigger = push!(c.state_triggers, get_trigger(b, trigger))
+	return T(; text, trigger, kw...)
+end
+" lowest-level state creating function. context resolves triggers and text;
+we build the state data; builder bookkeeps current state."
+@inline function add_state!(b::Builder, c::Context, m::StateMachine, key; kw...)
+	key::keytype(m)
+	add_state!(b, m, key, statedata(m)(b, c; kw...))
 end
 
+
+# ««2 Transition flags
 "module holding syntactic sugar for transition flags"
 module Flags
 	set(; text = false, trigger = false, action = false, terminates = false,
@@ -471,62 +526,158 @@ module Flags
 	end
 end
 
-#««1 Build context
 
-"context for the state machine builder. S is string type, T is action type."
-mutable struct Context{I<:Integer,S,T}
-	strings::Collector{S,I}
-	actions::Collector{T,I}
-	state_triggers::Collector{T,I}
-	transition_triggers::Collector{T,I}
-	languages::Collector{String,I}
-
-	namespace::Union{Nothing,String}
-	actor::Union{Nothing,String}
-	trigger::Union{Nothing,T}
-	language::I
-	# XXX default constructor is needed for functoriality?
-	Context{I,S,T}() where{I<:Integer,S,T} = reset(new{I,S,T}())
-end
-function Base.reset(c::Context)
-	for f in (:strings, :actions, :state_triggers,:transition_triggers,:languages)
-		setfield!(c, f, fieldtype(typeof(c), f)())
+# ««2 Transition data
+"transition data type for the global state machine being built"
+mutable struct TransitionData{I<:Integer}
+	text::I
+	journal::I
+	trigger::I
+	action::I
+	flags::UInt32
+	function TransitionData{I}(; text, journal, trigger, action,
+			flags = nothing, kwargs...) where{I<:Integer}
+		flags = something(flags, Flags.set(;
+			text = isindex(text), journal = isindex(journal),
+			action = isindex(action), trigger = isindex(trigger), kwargs...))
+		return new{I}(text, journal, trigger, action, flags)
 	end
-	c.namespace = nothing
-	c.actor = nothing
-	c.trigger = nothing
-	c.language = noindex(c)
-	return c
 end
 
-# ««2 Indexing
-indextype(::Context{I,S}) where{I,S} = I
-stringtype(::Context{I,S}) where{I,S} = S
-actiontype(::Context{I,S,T}) where{I,S,T} = T
+@inline function (T::Type{<:TransitionData})(b::Builder, c::Context;
+		text::Union{Nothing,AbstractString} = nothing,
+		journal::Union{Nothing,AbstractString} = nothing,
+		action::Union{Nothing,AbstractString} = nothing,
+		trigger::Union{Nothing,AbstractString} = nothing,
+		kwargs...) # passed to TransitionData (and hence to Flags)
+	text = string_idx(b, c, text)
+	journal = string_idx(b, c, journal)
+	action = push!(c.actions, action)
+	trigger = push!(c.transition_triggers, get_trigger(b, trigger))
+	return T(; text, journal, trigger, action, kwargs...)
+end
+"low-level transition adding function. context resolves triggers, text and journal; we build the transition data; builder inserts and bookkeeps."
+@inline function add_transition!(b::Builder, c::Context, m::StateMachine,
+		source, target; position::Integer = 1+length(source.transitions), kwargs...)
+	source::statetype(m)
+	target::keytype(m)
+	data = transitiondata(m)(b, c; kwargs...)
+	add_transition!(b, m, source, target, data, position)
+end
 
-# instead of doing lots of Union{Nothing,...}, we simply
-# mark invalid keys by 0xffff, which is how they will eventually be
-# written in the file anyway:
-isindex(i::Integer) = !iszero(~i)
-noindex(i) = ~zero(i)
-noindex(c::Context) = noindex(indextype(c))
-# special case useful for handling '::Nothing' kwargs:
-Base.push!(c::Collector, ::Nothing) = noindex(valtype(c))
+# ««1 All code manipulating global data goes here
+function init(I::Type{<:Integer}, S::DataType, T::DataType, X::DataType)
+	SK = StateKey{X}
+	SD = StateData{I}
+	TD = TransitionData{I}
+	SM = StateMachine{I,SD,TD,SK}
+	# strings are labelled with their language: (language, string)
+	# (language slightly expanded to also define PC gender)
+	global builder = Builder{I}()
+	global machine = SM()
+	global context = Context{I,Tuple{I,S},T}()
+end
+#««2 Misc.: key, namespace, actor, language
 
-string_idx(c::Context, ::Nothing) = noindex(c)
-string_idx(c::Context, s::AbstractString) =
-	(@assert isindex(c.language); push!(c.strings, (c.language, s)))
+@inline namespace(text) = (builder.namespace = text)
+@inline actor(text) = (builder.actor = text)
+@inline language(text) = (builder.language = push!(context.languages, text))
+@inline trigger(str::AbstractString) = trigger!(builder, str)
 
-# ««2 Trigger handling: this is actually a push queue with a max length of 1
-"sets the current trigger value; only allowed if it is not set yet"
-trigger!(c::Context, str::AbstractString) =
-	(@assert isnothing(c.trigger); c.trigger = str)
-trigger!(c::Context, ::Nothing) = nothing
-"gets (and then erases) the current trigger value"
-trigger(c::Context) = (x = c.trigger; c.trigger = nothing; return x)
-"gets a trigger value, from either supplied x, or current trigger"
-get_trigger(c::Context, x) = (trigger!(c, x); return trigger(c))
+function action(str::AbstractString; override=false)
+	t = current_transition(builder, machine)
+	@assert(override || !contains(t.data.flags, :action),
+		"action already defined for this transition")
+	t.data.flags |= Flags.set(action = true)
+	t.data.action = push!(context.actions, str)
+end
+function journal(str::AbstractString; override=false)
+	t = current_transition(builder, machine)
+	@assert(override || !contains(t.data.flags, :journal),
+		"journal entry already defined for this transition")
+	t.data.flags |= Flags.set(journal = true)
+	t.data.journal = string_idx(builder, context, str)
+end
 
+#««2 States
+"""
+    state(actor, ([label =>] text)*; trigger)
+
+Creates one (or more) states. The state keys are `(current_namespace,
+actor, label)`. Labels are automatically generated if not provided.
+
+If more than one state is given then they are linked by implicit
+transitions.
+
+The multi-state form is equivalent to consecutive invocations of `state`.
+"""
+function state(actor::AbstractString,
+	(label, text)::Pair{<:Any,<:AbstractString}; kw...) 
+	println("** adding state with label $label")
+	k = keytype(machine)(builder, context, actor, label)
+	if_current_state(builder, machine) do s
+		println("add implicit transition from $s to $label")
+		isempty(s.transitions) && add_transition!(builder, context, machine, s, k)
+	end
+	add_state!(builder, context, machine, k; text, kw...)
+end
+@inline state(actor::AbstractString, text::AbstractString; kw...) =
+	state(actor, gensym() => text; kw...)
+
+const StateText = Union{AbstractString,Pair{<:Any,<:AbstractString}}
+@inline state(actor::AbstractString, args::StateText...; kwargs...) =
+	for a in args; state(actor, a; kwargs...); end
+@inline state(::Nothing, args...; kw...) = error("no current actor defined")
+
+"""    say([label =>] text...; trigger)
+
+Creates one (or more) state(s). The state keys are
+`(current_namespace, current_actor, label)`.
+In other words this is equivalent to (and defined as)
+`state(current_actor, [label =>] text...)`.
+Labels are automatically generated (but unreachable) if not provided.
+"""
+say(args::StateText...; kw...) = state(builder.actor, args...; kw...)
+
+#««2 Transitions
+"""    transition(actor, label, (text => label)*)
+
+Creates a state transition from the current state to the one indicated
+by `key`.
+
+`key` may be either a pair `(actor::String, label)`,
+a single `label` (the current actor will be used),
+or the single word `exit`, indicating a final transition
+(i.e. this terminates dialog).
+
+This function call will consume any existing `trigger()` definition.
+"""
+@inline transition(actor::AbstractString, label, args...; kw...) =
+	transition(keytype(machine)(builder, context, actor, label), args...; kw...)
+@inline transition(::typeof(exit), args...; kwargs...) =
+	transition(keytype(machine)(builder, context, exit), args...;
+		terminates = true, kwargs...)
+
+@inline transition(k::StateKey, text::AbstractString; kwargs...) =
+	transition(k; text, kwargs...)
+@inline transition(k::StateKey; kwargs...) =
+	add_transition!(builder, context, machine,
+		current_state(builder, machine), k; kwargs...)
+
+"""    answer(text => (actor, label); flags)
+    answer(text => label; flags)
+
+Creates a transition from the current state. Equivalent to
+`transition(actor, label, text)`.
+In the second form, the current actor is used for the target."""
+answer((text, k)::Pair{<:AbstractString,Tuple}; kw...) =
+	transition(keytype(m)(k...), text; kw...)
+answer((text, label)::Pair{<:AbstractString,typeof(exit)}; kw...) =
+	transition(exit, text; kw...)
+answer((text, label)::Pair{<:AbstractString,<:Any}; kw...) =
+	transition(builder.actor, label, text; kw...)
+answer(::typeof(exit); kw...) = transition(exit; kw...)
+# ««1 (disabled for now) printing
 # function Base.show(io::IO, ::MIME"text/plain", m::StateMachine)#««
 # 	str = collect(m.strings)
 # 	s_tri = collect(m.state_triggers)
@@ -569,144 +720,7 @@ get_trigger(c::Context, x) = (trigger!(c, x); return trigger(c))
 # 		end
 # 	end
 # end#»»
-# ««1 All code manipulating global data goes here
-# ««2 Initialization
-function new_context(I::Type{<:Integer}, S::DataType, T::DataType, X::DataType)
-	SK = StateKey{X}
-	SD = StateData{I}
-	TD = TransitionData{I}
-	SM = StateMachine{I,SD,TD,SK}
-	# strings are labelled with their language: (language, string)
-	# (language slightly expanded to also define PC gender)
-	return (Builder{I,SM}(), Context{I,Tuple{I,S},T}())
-end
-
-global (builder, context) = new_context(Int32, String, String, Any)
-
-#««2 Small stuff: key, namespace, actor, language
-key(namespace, actor, label) = keytype(builder)(namespace, actor, label)
-key(actor::AbstractString, label) = key(context.namespace, actor, label)
-key(label) = key(context.current_actor, label)
-# default constructor, used for when no key is needed (final transitions):
-key(::typeof(undef)) = key("", "", undef)
-
-namespace(text) = (context.namespace = text)
-actor(text) = (context.actor = text)
-language(text) = (context.language = push!(context.languages, text))
-
-#««2 Higher-level: `trigger`, `action`, `journal`
-trigger(str::AbstractString) = trigger!(context, str)
-
-function action(str::AbstractString; override=false)
-	t = current_transition(builder)
-	@assert(override || !contains(t.data.flags, :action),
-		"action already defined for this transition")
-	t.data.flags |= Flags.set(action = true)
-	t.data.action = push!(context.actions, str)
-end
-function journal(str::AbstractString; override=false)
-	t = current_transition(builder)
-	@assert(override || !contains(t.data.flags, :journal),
-		"journal entry already defined for this transition")
-	t.data.flags |= Flags.set(journal = true)
-	t.data.journal = string_idx(context, str)
-end
-
-#««2 States
-" lowest-level state creating function. context resolves triggers and text;
-we build the state data; builder bookkeeps current state."
-function add_state!(c::Context, b::Builder, key; text, trigger=nothing, kw...)
-	# kw... passed to StateData: priority
-	key::keytype(b)
-	text = string_idx(c, text)
-	trigger = push!(c.state_triggers, get_trigger(c, trigger))
-	data = statedata(b)(; text, trigger, kw...)
-	add_state!(b, key, data)
-end
-
-""""
-    state(actor, ([label =>] text)*; trigger)
-
-Creates one (or more) states. The state keys are (current_namespace,
-actor, label). Labels are automatically generated if not provided.
-
-If more than one state is given then they are linked by implicit
-transitions.
-"""
-function state(actor::AbstractString,
-	(label, text)::Pair{<:Any,<:AbstractString}; kw...) 
-	println("** adding state with label $label")
-	k = key(actor, label)
-	if_current_state(builder) do s
-		println("add implicit transition from $s to $label")
-		isempty(s.transitions) && add_transition!(context, builder, s, k)
-	end
-	add_state!(context, builder, k; text, kw...)
-end
-state(actor::AbstractString, text::AbstractString; kw...) =
-	state(actor, gensym() => text; kw...)
-
-const StateText = Union{AbstractString,Pair{<:Any,<:AbstractString}}
-state(actor::AbstractString, args::StateText...; kwargs...) =
-	for a in args; state(actor, a; kwargs...); end
-
-"""    say([label =>] text...; trigger)
-
-Creates one (or more) state(s). The state keys are
-`(current_namespace, current_actor, label)`.
-In other words this is equivalent to (and defined as)
-`state(current_actor, [label =>] text...)`.
-Labels are automatically generated (but unreachable) if not provided.
-"""
-say(args::StateText...; kw...) = state(context.actor, args...; kw...)
-
-#««2 Transitions
-"low-level transition adding function. context resolves triggers, text and journal; we build the transition data; builder inserts and bookkeeps."
-function add_transition!(c::Context, b::Builder, source, target;
-		text::Union{Nothing,AbstractString} = nothing,
-		journal::Union{Nothing,AbstractString} = nothing,
-		action::Union{Nothing,AbstractString} = nothing,
-		trigger::Union{Nothing,AbstractString} = nothing,
-		position::Integer = 1 + length(source.transitions),
-		kwargs...) # passed to TransitionData (and hence to Flags)
-	source::statetype(b)
-	target::keytype(b)
-	text = string_idx(c, text)
-	journal = string_idx(c, journal)
-	action = push!(c.actions, action)
-	trigger = push!(c.transition_triggers, get_trigger(c, trigger))
-	data = transitiondata(b)(;text, journal, trigger, action, kwargs...)
-
-	add_transition!(b, source, target, data, position)
-end
-
-transition(actor::AbstractString, label, args...; kwargs...) =
-	transition_key(key(actor, label), args...; kwargs...)
-transition(::typeof(exit), args...; kwargs...) =
-	transition_key(key(undef), args...; terminates = true, kwargs...)
-
-transition_key(k, text::AbstractString; kwargs...) =
-	transition_key(k; text, kwargs...)
-transition_key(k; kwargs...) =
-	add_transition!(context, builder, current_state(builder), k; kwargs...)
-
-"""    answer(text => (actor, label); flags)
-    answer(text => label; flags)
-
-Creates a transition from the current state. Equivalent to
-`transition(actor, label, text)`.
-In the second form, the current actor is used for the target."""
-answer((text, (actor, label))::Pair{<:AbstractString,Tuple{<:AbstractString,<:Any}}; kw...) =
-	transition(actor, label, text; kw...)
-answer((text, label)::Pair{<:AbstractString,typeof(exit)}; kw...) =
-	transition(exit, text; kw...)
-answer((text, label)::Pair{<:AbstractString,<:Any}; kw...) =
-	transition(machine.current_actor, label, text; kw...)
-answer(::typeof(exit); kw...) = transition(exit; kw...)
-	
-#»»2
-#»»1
-
+# »»1
 export namespace, actor, trigger, action, journal, language
 export state, say, transition, answer
 end
@@ -715,15 +729,17 @@ for f in names(D); f == nameof(D) && continue
 	eval(:(@inline $f(args...; kwargs...) = D.$f(args...; kwargs...)))
 end
 
+Dialogs.init(Int32, String, String, Any)
+
 language("en")
-namespace("g")
+namespace("main")
 actor("Alice")
 trigger("weather is nice")
 say(:hello => "weather is nice today", "sunny and all!")
   answer("bye" => exit)
 		action("i am gone")
 say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
-# 	answer("let's hope so" => :hello)
-# 	answer("what does B say about this?" => ("Bob", :hithere); position=1)
-# 	  journal("Today I asked a question to Bob")
-# 	answer(exit)
+	answer("let's hope so" => :hello)
+	answer("what does B say about this?" => ("Bob", :hithere); position=1)
+	  journal("Today I asked a question to Bob")
+	answer(exit)

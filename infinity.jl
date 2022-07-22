@@ -1057,6 +1057,29 @@ end
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in read(seek(io, offset), DLG_string, count)]
 
+struct DLG_Context
+end
+struct DLG_StateData
+	text::Strref
+	trigger::String
+	DLG_StateData(c::DLG_Context; text, trigger, kwargs...) = new(text, trigger)
+end
+struct DLG_TransitionData
+	text::Strref
+	journal::Strref
+	trigger::String
+	action::String
+	flags::UInt32
+	DLG_TransitionData(c::DLG_Context; text, journal, trigger, action, flags) =
+		new(text, journal, trigger, action, flags)
+end
+
+Base.read(c::DLG_Context, (dlg, st)::Tuple{Resref"dlg",Integer}) =
+	"$(nameof(dlg)):$s"
+
+Base.read(c::DLG_Context, s::DLG_StateData) = s
+Base.read(c::DLG_Context, t::DLG_TransitionData) = t
+	
 function read(f::Resource"DLG", io::IO)
 	self = Resref(f)
 	header = read(io, DLG_hdr)
@@ -1070,15 +1093,14 @@ function read(f::Resource"DLG", io::IO)
 			header.number_transition_triggers)
 	actions = dialog_strings(io, header.offset_actions, header.number_actions)
 
-	global ST=states; global TR=transitions
-	SD = StateData{Strref}
-	TD = TransitionData{I}
-	machine = Dialogs.StateMachine{Int32,Strref,String,Any}()
-	builder = Dialogs.Builder{Int32}()
-	context = Dialogs.Context{Int32,Strref,String}()
-	getval(list, i) = iszero(~i) ? nothing : list[i+1]
+	machine = Dialogs.StateMachine{Int32,DLG_StateData,DLG_TransitionData,Any,DLG_Context}()
+	println("tr_triggers = $(length(tr_triggers))")
+	println(tr_triggers)
+	global S = states
+	global H = header
+	getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
 	for (i, s) in pairs(states)
-		state = Dialogs.add_state!(builder, context, machine, (self, i-1);
+		state = Dialogs.add_state!(machine, (self, i-1);
 			text = s.text, trigger = getval(st_triggers, s.trigger))
 		for j in s.first_transition+1:s.first_transition+s.number_transitions
 			t = transitions[j]
@@ -1271,6 +1293,8 @@ game = IE.Game("../bg/game")
 str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
 # IE.search(game, str, IE.Resource"ITM", "Varscona")
 key = IE.KeyIndex("../bg/game/chitin.key")
+# dlg = read(game, IE.Resref"melica.dlg")
+# dlg = read(game, IE.Resref"zorl.dlg")
 # dia = read(IE.Resource"dlg"(key, "abazigal"))
 # dia=read(IE.Resource"../bg2/game/override/hull.dlg")
 # dia=read(IE.Resource"../bg2/game/override/abazigal.dlg")

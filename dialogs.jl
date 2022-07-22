@@ -1,23 +1,24 @@
 #= TODO:
-# annotate strings with language
+ Figure a way to make the global `machine` a constant
+ and still export the `say` functions etc.
+ “simple” way: make the machine a constant in InfinityEngine,
+ export the say/answer etc. functions from Dialogs -> InfinityEngine,
+ and overload the *single* method calling the global for each function
+  => maybe even better: make this a method, current_machine() ?
+ or call Dialogs.eval(quote init(...))
+
  State machine description:
-  + state()
-	 + actor()
-	 + say()
-	+ transition()
-	 + answer()
-	 + implicit transitions
-   - transition without text: transition()
 	+ trigger()
-	 - FIXME: should we rename this condition()?
+	 - FIXME: should we rename this as: condition()?
   - priority() (is this useful? check if it is used at all in WeiDU examples)
 	+ journal()
 	 * TODO first: load state machine from .dlg resource
 	 * check in examples about solved/unsolved etc.
 	+ action)
-	 * check about strrefs in action code!
+	 - check about strrefs in action code!
 	 - define a Julia syntax for action code?
  - Editing existing entries
+  - finish writing state() so that it allows pointing to an existing state
   - define edition actions (defer to end once everything is loaded ?)
 	 - MUCH easier to load state machine first...
 	- primary need = interjections
@@ -324,6 +325,7 @@ function Base.get(f::Function, c::Collector, x)
 	!isnothing(i) && f(i)
 end
 function Base.findfirst(c::Collector, i::Integer)
+	i ∈ 1:length(c) || return nothing # O(1) shortcut for frequent case
 	for (k, j) in pairs(c); i == j && return k; end
 end
 
@@ -341,8 +343,6 @@ mutable struct Transition{K,T}
 	data::T
 end
 
-abstract type AbstractContext end
-
 """    StateMachine{I,S,T,K,C}
 
 `I` is index type, `S` is state payload, `T` is transition payload,
@@ -353,10 +353,16 @@ by the state.
 `C` is context type. This is also used for building state and transition data,
 via constructors for the `S` and `T` types:
 
-    S(::C, args...; kwargs...)
-    T(::C, args...; kwargs...)
+    S(context; text, trigger, priority)
+    T(context; text, journal, action, trigger, flags)
+
+For displaying the following methods need to exist:
+
+    read(context, K) -> (isexit, string)
+    read(context, S) -> (text, trigger)
+    read(context, T) -> (text, journal, trigger, action, flags)
 """
-struct StateMachine{I,S,T,K,C<:AbstractContext}
+struct StateMachine{I,S,T,K,C}
 	states::Vector{State{I,S}}
 	transitions::Vector{Transition{K,T}}
 	# the “proper” way to be able to compile out the keys would be to
@@ -390,6 +396,7 @@ Base.keys(m::StateMachine) = collect(m.keys)
 @inline statekey(m::StateMachine, args...; kwargs...) =
 	keytype(m)(m.context, args...; kwargs...)
 
+"    add_state!(machine, key; state_args....)"
 function add_state!(m::StateMachine, key, args...; kwargs...)
 	println("add node $key")
 	if m.pending_transition[]
@@ -441,7 +448,7 @@ end
 #««1 Test types
 # These structures hold the API for interacting with another module:
 #««2 Context
-mutable struct Context{I,S,T} <: AbstractContext
+mutable struct Context{I,S,T}
 	language::I
 	namespace::Union{Nothing,String}
 	actor::Union{Nothing,String}
@@ -512,6 +519,9 @@ end
 @inline (T::Type{<:StateKey})(c::Context, ::AbstractString,
 	::AbstractString, ::typeof(exit)) = T("", "", exit)
 
+# displaying API: return
+Base.read(c::Context, k::StateKey) = string(k)
+
 # ««2 State data
 struct StateData{I<:Integer}
 	priority::Float32
@@ -527,12 +537,9 @@ function (T::Type{<:StateData})(c::Context;
 	trigger = push!(c.state_triggers, get_trigger(c, trigger))
 	return T(priority, text, trigger)
 end
-function printstate(io::IO, c::Context, s::StateData)
-	!iszero(s.trigger) && println(io, "trigger=\e[33m",
-		findfirst(c.state_triggers,s.trigger)|>repr, "\e[m")
-	!iszero(s.text) && println(io, "\e[34m",
-		findfirst(c.strings, s.text)|>repr, "\e[m")
-end
+Base.read(c::Context, x::StateData) = (
+	text = findfirst(c.strings,x.text),
+	trigger = findfirst(c.state_triggers,x.trigger))
 
 # ««2 Transition flags
 "module holding syntactic sugar for transition flags"
@@ -574,18 +581,13 @@ function (T::Type{<:TransitionData})(c::Context;
 		action = !iszero(action), trigger = !iszero(trigger), kwargs...))
 	return T(text, journal, trigger, action, flags)
 end
-function printtransition(io::IO, c::Context, t::TransitionData)
-	!iszero(t.flags) && print(io, "  flags=", Flags.string(t.flags))
-	println(io)
-	!iszero(t.trigger) && println(io, "trigger=\e[33m",
-		findfirst(c.transition_triggers, t.trigger)|>repr, "\e[m")
-	!iszero(t.text) && println(io, "  \e[36m",
-		findfirst(c.strings, t.text)|>repr, "  \e[m")
-	!iszero(t.action) && println(io, "  action=\e[31m",
-		findfirst(c.actions, t.action)|>repr, "\e[m")
-	!iszero(t.journal) && println(io, "  \e[35m",
-		findfirst(c.strings, t.journal)|>repr, "  \e[m")
-end
+
+Base.read(c::Context, x::TransitionData) = (
+	text = findfirst(c.strings, x.text),
+	journal = findfirst(c.strings, x.journal),
+	trigger = findfirst(c.transition_triggers, x.trigger),
+	action = findfirst(c.actions, x.action),
+	flags = flags)
 
 # ««1 Dialog-building API: all code manipulating global data goes here
 function init(I::Type{<:Integer}, S::DataType, T::DataType, X::DataType)
@@ -696,6 +698,8 @@ Special considerations:
 Base.show(io::IO, k::StateKey) =
 	print(io, "\"", k.namespace, "/", k.actor, "\"", k.label|>repr, "")
 
+function printstate(io::IO, c::Context, s::StateData)
+end
 function Base.show(io::IO, mime::MIME"text/plain", m::StateMachine)
 	keylist = m.keys|>collect
 	for (i,k) in keylist|>pairs
@@ -703,17 +707,31 @@ function Base.show(io::IO, mime::MIME"text/plain", m::StateMachine)
 	end
 	println(io)
 	for (i, s) in pairs(m.states)
-		println(io, "state \e[1m<", keylist[i], '=', i, ">:\e[m")
-		printstate(io, m.context, s.data)
+		x = read(m.context, s.data)
+		println(io, "state \e[1m<", keylist[i], '=', i, ">:\e[m with ",
+			length(s.transitions), " transitions")
+		!isnothing(x.trigger) &&
+			println(io, "trigger=\e[33m", x.trigger|>repr, "\e[m")
+		!isnothing(x.text) && println(io, "\e[34m", x.text|>repr, "\e[m")
 		for j in s.transitions
 			t = m.transitions[j]
-			if t.target.label == exit
-				print(io, "  \e[7m(final)\e[m")
-			else
-				print(io, " `-> \e[38;5;7m<", t.target, haskey(m.keys, t.target) ?
-					"="*string(m.keys[t.target]) : " \e[7mnot found\e[m", ">\e[m")
-			end
-			printtransition(io, m.context, t.data)
+			y = read(m.context, t.data)
+# 			if hasfield(typeof(t),:target) && getfield(t.target,:.label == exit
+# 				print(io, "  \e[7m(final)\e[m")
+# 			else
+			print(io, " `-> \e[38;5;7m<", t.target, haskey(m.keys, t.target) ?
+				"="*string(m.keys[t.target]) : " \e[7mnot found\e[m", ">\e[m")
+# 			end
+			!iszero(y.flags) && print(io, "  flags=", Flags.string(y.flags))
+			println(io)
+			!isnothing(y.trigger) &&
+				println(io, "  trigger=\e[33m", y.trigger|>repr, "\e[m")
+			!isnothing(y.text) &&
+				println(io, "  \e[36m", y.text|>repr, "\e[m")
+			!isnothing(y.action) &&
+				println(io, "  action=\e[31m", y.action|>repr, "\e[m")
+			!isnothing(y.journal) &&
+				println(io, "  \e[35m", y.journal|>repr, "\e[m")
 		end
 	end
 end
@@ -722,28 +740,28 @@ end
 export namespace, actor, trigger, action, journal, language
 export state, say, transition, answer
 end
-D = Dialogs
-for f in names(D); f == nameof(D) && continue
-	eval(:(@inline $f(args...; kwargs...) = D.$f(args...; kwargs...)))
-end
-
-Dialogs.init(Int32, String, String, Any)
-
-language("en")
-namespace("main")
-actor("Alice")
-trigger("WEATHER(NICE)")
-say(:toto => "this morning...")
-say(:hello => "weather is nice today", "sunny and all!")
-  answer("bye" => exit)
-		action("QUIT()")
-say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
-	answer("let's hope so" => :hello)
-	answer("what does B say about this?" => ("Bob", :hello); position=1)
-	  journal("Today I asked a question to Bob")
-	transition(exit)
-actor("Bob")
-say(:hello => "I am Bob!!!")
-	transition(exit)
-
-D.machine
+# D = Dialogs
+# for f in names(D); f == nameof(D) && continue
+# 	eval(:(@inline $f(args...; kwargs...) = D.$f(args...; kwargs...)))
+# end
+# 
+# Dialogs.init(Int32, String, String, Any)
+# 
+# language("en")
+# namespace("main")
+# actor("Alice")
+# trigger("WEATHER(NICE)")
+# say(:toto => "this morning...")
+# say(:hello => "weather is nice today", "sunny and all!")
+#   answer("bye" => exit)
+# 		action("QUIT()")
+# say(:hello2 => "it rains.. again", "but tomorrow it will be sunny"; priority=-1)
+# 	answer("let's hope so" => :hello)
+# 	answer("what does B say about this?" => ("Bob", :hello); position=1)
+# 	  journal("Today I asked a question to Bob")
+# 	transition(exit)
+# actor("Bob")
+# say(:hello => "I am Bob!!!")
+# 	transition(exit)
+# 
+# D.machine

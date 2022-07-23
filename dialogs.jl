@@ -521,7 +521,7 @@ const top = Dialog{Int32,Any}()
     state(actor, label) # moves to this label (to edit it)
     state(label)
 """
-state(args...) = set_state!(top, args)
+@inline state(args...) = set_state!(top, args)
 
 """    say(args...)
 
@@ -543,7 +543,6 @@ The multi-state form is equivalent to consecutive invocations of `state`.
 	say.(args; kw...)
 @inline say2(text, key; kw...) = say2(text, (key,); kw...)
 say2(text, key::Tuple; kw...) = add_state!(top, key; text, kw...)
-
 
 #««2 Transitions
 """

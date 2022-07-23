@@ -1,5 +1,7 @@
 #=
 # TODO:
+# - use real `StructIO` to simplify
+# - make nice flags modules like dialog transitions
 # - check translation format
 #  - needs xgettext (or at least a very basic version)
 #  - languages ?
@@ -53,19 +55,23 @@ readfield(io::IO, fieldtype::DataType, structtype::DataType, fieldname) =
 	readfield(io, fieldtype, structtype)
 readfield(io::IO, fieldtype::DataType, structtype::DataType) = 
 	readfield(io, fieldtype)
-readfield(io::IO, fieldtype::DataType) =
-	readfield_isbits(Val(isbitstype(fieldtype)), io, fieldtype)
-readfield_isbits(::Val{true}, io::IO, fieldtype::DataType) =
-	unpack(io, fieldtype)
+readfield(io::IO, T::DataType) =
+	readfield_traits(Val(isstructtype(T)), Val(isbitstype(T)), io, T)
 
-# Somewhat sensible values for non-`isbits` types:
-readfield_isbits(::Val{false}, ::IO, T::DataType) =
-	error("Impossible to read field \"$T\"")
-readfield_isbits(::Val{false}, ::IO, ::Type{String}) = ""
+# recurse for struct types:
+readfield_traits(::Val{true}, ::Val{false}, io::IO, T::DataType) = unpack(io, T)
+# leaf case for primitive types:
+readfield_traits(::Val, ::Val{true}, io::IO, T::DataType) = unpack(io, T)
+# a few “sensible” default cases:
+readfield_traits(::Val, ::Val{false}, ::IO, ::Type{String}) = ""
 # note: NOT AbstractArray — we want StaticVectors to be readable:
-readfield_isbits(::Val{false}, ::IO, T::Type{<:Array}) =
+readfield_traits(::Val, ::Val{false}, ::IO, T::Type{<:Array}) =
 	T(undef, zeros(Int, ndims(T))...)
-readfield_isbits(::Val{false}, ::IO, T::Type{<:Union{Dict,Set}}) = T()
+readfield_traits(::Val, ::Val{false}, ::IO, T::Type{<:Union{Dict,Set}}) = T()
+
+# remaining cases — we don't know what to do:
+readfield_traits(::Val{false}, ::Val{false}, ::IO, T::DataType) =
+	error("Impossible to read field \"$T\"")
 
 """    unpack(io::IO, T)
 
@@ -306,10 +312,6 @@ using .StructIO
 include("dottedenums.jl"); using .DottedEnums
 include("dialogs.jl")
 
-abstract type AbstractBlock end
-# @inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer...) =
-# 	StructIO.unpack(io, T, n...)
-
 using Printf
 using StaticArrays
 
@@ -348,24 +350,12 @@ end
 
 @inline read(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
 
-# ««2 Type wrapper
-struct Typewrap{S,T}
-	data::T
-	@inline Typewrap{S,T}(args...) where{S,T} = new{S,T}(T(args...))
-end
-@inline read(io::IO, X::Type{<:Typewrap{S,T}}) where{S,T} = X(read(io, T))
-@inline Typewrap{S,T}(x::Typewrap{S,T}) where{S,T} = x
-@inline Base.show(io::IO, x::Typewrap{S}) where{S} =
-	(print(io, S, '('); show(io, x.data); print(io, ')'))
-@inline (J::Type{<:Union{Integer,AbstractString}})(x::Typewrap) = J(x.data)
-
 # ««2 Indices: Strref etc.
 """    Strref
 
 Index (32-bit) referring to a translated string in dialog.tlk/dialogF.tlk.
 """
-const Strref = Typewrap{:Strref, Int32}
-Base.show(io::IO, ::Type{Strref}) = print(io, "Strref")
+struct Strref; index::Int32; end
 
 """    Resref{Type}, Resref"Type"
 
@@ -385,7 +375,6 @@ struct Resref{T}
 end
 Base.nameof(r::Resref) = r.name
 
-# const Resref{T} =Typewrap{:Resref, Typewrap{T, StaticString{8}}}
 macro Resref_str(s)
 	s = uppercase(s)
 	i = findlast('.', s)
@@ -400,17 +389,17 @@ Base.show(io::IO, r::Resref{T}) where{T} =
 """    BifIndex
 32-bit index of resource in bif files.
 """
-const BifIndex = Typewrap{:BifIndex,UInt32} # bif indexing
-@inline sourcefile(r::BifIndex) = Int32(r) >> 20
-@inline tilesetindex(r::BifIndex) = (Int32(r) >> 14) && 0x3f
-@inline resourceindex(r::BifIndex) = Int32(r) & 0x3fff
+struct BifIndex; data::UInt32; end
+@inline sourcefile(r::BifIndex) = r.data >> 20
+@inline tilesetindex(r::BifIndex) = (r.data >> 14) && 0x3f
+@inline resourceindex(r::BifIndex) = r.data & 0x3fff
 
-"""    Resindex
+"""    Restype
 
 16-bit value indexing a resource type in key file.
 (This is immediately translated to a string value when reading this file).
 """
-const Resindex = Typewrap{:Resindex,UInt16} # 16-bit version
+struct Restype; data::UInt16; end
 # ««2 Resource type table
 
 # Static correspondence between UInt16 and strings (actually symbols).
@@ -456,8 +445,8 @@ const RESOURCE_TABLE = Dict{UInt16,String}(
 	0x0802 => "INI",
 	0x0803 => "SRC",
 )
-@inline String(x::Resindex) = get(RESOURCE_TABLE, UInt16(x), repr(UInt16(x)))
-@inline Base.Symbol(x::Resindex) = Symbol(String(x))
+@inline String(x::Restype) = get(RESOURCE_TABLE, x.data, x.data|>repr)
+@inline Base.Symbol(x::Restype) = Symbol(String(x))
 
 # ««2 Resource type (marked IO object)
 """    Resource{Type}, Resource"TYPE"
@@ -516,6 +505,7 @@ end
 Resref(r::Resource{T}) where{T} = Resref{T}(nameof(r))
 
 # ««1 tlk
+# TODO: remove type variable
 struct TlkStrings{X}
 	strings::Vector{X}
 	index::Dict{String,Int32}
@@ -524,19 +514,19 @@ struct TlkStrings{X}
 		new{X}(strings, Dict(s.string=>i for (i,s) in pairs(strings)))
 end
 
-function Base.getindex(f::TlkStrings{X}, i::Strref) where{X}
-	i = UInt32(i)
-	i >= length(f.strings) && (i = 0)
+function Base.getindex(f::TlkStrings{X}, s::Strref) where{X}
+	i = s.index
+	i ∈ eachindex(f.strings) || (i = 0)
 	f.strings[i+1]::X
 end
 
-struct TLK_hdr <: AbstractBlock
+struct TLK_hdr
 	Constant"TLK V1  "
 	lang::UInt16
 	nstr::UInt32
 	offset::UInt32
 end
-struct TLK_str <: AbstractBlock
+struct TLK_str
 	flags::UInt16
 	sound::Resref"WAV"
 	volume::UInt32
@@ -565,22 +555,22 @@ function Strref(tlk::TlkStrings, s::AbstractString)
 end
 
 # ««1 key/bif
-struct KEY_hdr <: AbstractBlock
+struct KEY_hdr
 	Constant"KEY V1  "
 	nbif::Int32
 	nres::Int32
 	bifoffset::UInt32
 	resoffset::UInt32
 end
-struct KEY_bif <: AbstractBlock
+struct KEY_bif
 	filelength::UInt32
 	offset::UInt32
 	namelength::UInt16
 	location::UInt16
 end
-struct KEY_res <: AbstractBlock
+struct KEY_res
 	name::StaticString{8}
-	type::Resindex
+	type::Restype
 	location::BifIndex
 end
 
@@ -627,22 +617,22 @@ function decrypt(io::IO)
 	end
 	return IOBuffer(buf)
 end
-struct BIF_hdr <: AbstractBlock
+struct BIF_hdr
 	Constant"BIFFV1  "
 	nres::UInt32
 	ntilesets::UInt32
 	offset::UInt32
 end
 
-struct BIF_resource <: AbstractBlock
+struct BIF_resource
 	locator::BifIndex
 	offset::UInt32
 	size::UInt32
-	type::Resindex
+	type::Restype
 	_1::Ignored{UInt16}
 end
 
-struct BIF_tileset <: AbstractBlock
+struct BIF_tileset
 	locator::BifIndex
 	offset::UInt32
 	ntiles::UInt32
@@ -733,6 +723,139 @@ function read(f::Resource"2DA", io::IO; debug=false, aligned=false)
 		mat = [ match(r"^\S+", line[i:end]).match for line in lines, i in positions]
 		MatrixWithHeaders([match(r"^\S+", line).match for line in lines], cols,mat)
 	end
+end
+# ««1 cre
+mutable struct CRE_colour
+	metal::UInt8
+	minor::UInt8
+	major::UInt8
+	skin::UInt8
+	leather::UInt8
+	armor::UInt8
+	hair::UInt8
+end
+mutable struct CRE_armor_class
+	natural::UInt16
+	effective::UInt16
+	crushing::UInt16 # 4 modifiers
+	missile::UInt16
+	piercing::UInt16
+	slashing::UInt16
+end
+mutable struct CRE_saves
+	death::UInt8
+	wands::UInt8
+	polymorph::UInt8
+	breath::UInt8
+	spells::UInt8
+end
+mutable struct CRE_resist
+	fire::UInt8
+	cold::UInt8
+	electricity::UInt8
+	acid::UInt8
+	magic::UInt8
+	magic_fire::UInt8
+	magic_cold::UInt8
+	slashing::UInt8
+	crushing::UInt8
+	piercing::UInt8
+	missile::UInt8
+end
+mutable struct CRE_abilities
+	strength::UInt8
+	strength_extra::UInt8
+	intelligence::UInt8
+	wisdom::UInt8
+	dexterity::UInt8
+	constitution::UInt8
+	charisma::UInt8
+end
+mutable struct CRE_scripts
+	override::Resref"bcs"
+	class::Resref"bcs"
+	race::Resref"bcs"
+	general::Resref"bcs"
+	default::Resref"bcs"
+end
+mutable struct CRE_hdr
+	Constant"CRE V1.0"
+	long_name::Strref
+	short_name::Strref # tooltip
+	flags::UInt32
+	xp_value::UInt32
+	xp_level::UInt32
+	gold::UInt32
+	status::UInt32 # state.ids
+	hp::UInt16
+	max_hp::UInt16
+	animation::UInt32 # animate.ids
+	colour::CRE_colour
+	eff_Version::UInt8
+	small_portrait::Resref"BMP"
+	large_portrait::Resref"BMP"
+	reputation::Int8
+	hide_in_shadows::UInt8
+	armor_class::CRE_armor_class
+	thac0::UInt8
+	number_attacks::UInt8
+	saves::CRE_saves
+	resist::CRE_resist
+	detect_illusion::UInt8
+	set_traps::UInt8
+	lore::UInt8
+	lockpicking::UInt8
+	move_silently::UInt8
+	find_traps::UInt8
+	pickpockets::UInt8
+	fatigue::UInt8
+	intoxication::UInt8
+	luck::Int8
+	proficiency::StaticString{15}
+	nightmare_mode::UInt8
+	translucency::UInt8
+	reputation_killed::Int8
+	reputation_join::Int8
+	reputation_leave::Int8
+	turn_undead::UInt8
+	tracking::Int8
+	tracking_target::StaticString{32}
+	sounds::SVector{100,Strref} # soundoff.ids, sndslot.ids
+	level_class::SVector{3,UInt8}
+	sex::UInt8
+	abilities::CRE_abilities
+	morale::UInt8
+	morale_break::UInt8
+	racial_enemy::UInt8 # race.ids
+	morale_recovery::UInt16
+	kits::UInt32
+	scripts::CRE_scripts
+	enemy_ally::UInt8 # ea.ids
+	general::UInt8 # general.ids
+	race::UInt8 # race.ids
+	class::UInt8 # class.ids
+	specific::UInt8 # specific.ids
+	gender::UInt8 # gender.ids
+	object::SVector{5,UInt8} # object.ids
+	alignment::UInt8 # alignmen.ids
+	global_actor::UInt16
+	local_actor::UInt16
+	death_variable::StaticString{32}
+	known_spells_offset::UInt32
+	known_spells_count::UInt32
+	spell_memorization_offset::UInt32
+	spell_memorization_count::UInt32
+	memorized_spells_offset::UInt32
+	memorized_spells_count::UInt32
+	item_slots_offset::UInt32
+	items_offset::UInt32
+	items_count::UInt32
+	effects_offset::UInt32
+	effects_count::UInt32
+	dialog::Resref"DLG"
+end
+function read(f::Resource"CRE", io::IO)
+	unpack(io, CRE_hdr)
 end
 # ««1 itm
 # ««2 Enums etc.
@@ -863,7 +986,7 @@ end
 	Druid
 	HalfOrc
 end
-const ItemAnimation = Typewrap{:ItemAnimation,StaticString{2}}
+struct ItemAnimation; name::StaticString{2}; end
 @dottedenum WProf::UInt8 begin # WPROF.IDS
 	None = 0x00
 	BastardSword = 0x59
@@ -931,7 +1054,7 @@ end
 	BluntMissile = 9 # bugged
 end
 # ««2 Data blocks
-struct ITM_hdr{S} <: AbstractBlock
+struct ITM_hdr{S}
 	resource_name::String
 	Constant"ITM V1  "
 	unidentified_name::S
@@ -971,7 +1094,7 @@ struct ITM_hdr{S} <: AbstractBlock
 	feature_count::UInt16
 end
 @inline searchkey(i::ITM_hdr) = i.identified_name
-struct ITM_ability <: AbstractBlock
+struct ITM_ability
 	attack_type::UInt8
 	must_identify::UInt8
 	location::UInt8
@@ -1006,10 +1129,10 @@ struct ITM_ability <: AbstractBlock
 end
 # ««2 Item function
 function read(f::Resource"ITM", io::IO)
-	read(io, ITM_hdr{Strref})
+	unpack(io, ITM_hdr{Strref})
 end
 # ««1 dlg
-struct DLG_hdr <: AbstractBlock
+struct DLG_hdr
 	Constant"DLG V1.0"
 	number_states::Int32
 	offset_states::Int32
@@ -1023,13 +1146,13 @@ struct DLG_hdr <: AbstractBlock
 	number_actions::Int32
 	flags::UInt32
 end
-struct DLG_state{S} <: AbstractBlock
+struct DLG_state{S}
 	text::S
 	first_transition::Int32
 	number_transitions::Int32
 	trigger::Int32
 end
-struct DLG_transition{S} <: AbstractBlock
+struct DLG_transition{S}
 	flags::UInt32
 	text::S
 	journal::S
@@ -1039,7 +1162,7 @@ struct DLG_transition{S} <: AbstractBlock
 	next_state::Int32
 end
 # this is the same type for state trigger, transition trigger, actions:
-struct DLG_string <: AbstractBlock
+struct DLG_string
 	offset::Int32 # of trigger string
 	length::Int32 # idem
 end
@@ -1047,7 +1170,7 @@ end
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in unpack(seek(io, offset), DLG_string, count)]
 
-Dialogs.get_string(c::Dialogs.Context, ref::Strref) = ref.data
+Dialogs.get_string(c::Dialogs.Context, ref::Strref) = ref.index
 
 Dialogs.StateKey{Any}(::Any, n::Resref"dlg", s::Integer) =
 	Dialogs.StateKey{Any}("main", nameof(n), s)
@@ -1067,10 +1190,6 @@ function read(f::Resource"DLG", io::IO)
 
 	dialog = Dialogs.top
 	Dialogs.namespace("main")
-	println("tr_triggers = $(length(tr_triggers))")
-	println(tr_triggers)
-	global S = states
-	global H = header
 	getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
 	for (i, s) in pairs(states)
 		state = Dialogs.add_state!(dialog, (self|>nameof, i-1);
@@ -1182,7 +1301,7 @@ end
 	filetype(game, Resource{T}, resref)
 
 @inline Base.names(game::Game, ::Type{Resource{T}}) where{T} =
-	game.override[T] ∪ names(game.key, Resource{T})
+	get(game.override,T, String[]) ∪ names(game.key, Resource{T})
 @inline Base.findall(R::Type{<:Resource}, game::Game) =
 	(R(game, n) for n in names(game, R))
 
@@ -1203,7 +1322,7 @@ end
 end
 IE=InfinityEngine; S=IE.StructIO
 game = IE.Game("../bg/game")
-# str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
+str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
 # IE.search(game, str, IE.Resource"ITM", "Varscona")
 key = IE.KeyIndex("../bg/game/chitin.key")
 # dlg = read(game, IE.Resref"melica.dlg")

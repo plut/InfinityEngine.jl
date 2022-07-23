@@ -1,11 +1,14 @@
 #= TODO:
  Figure a way to make the global `machine` a constant
  and still export the `say` functions etc.
- “simple” way: make the machine a constant in InfinityEngine,
- export the say/answer etc. functions from Dialogs -> InfinityEngine,
- and overload the *single* method calling the global for each function
-  => maybe even better: make this a method, current_machine() ?
- or call Dialogs.eval(quote init(...))
+ “simple” way: once we figure the appropriate type,
+ make __init__ call init with really constant types
+
+#  “simple” way: make the machine a constant in InfinityEngine,
+#  export the say/answer etc. functions from Dialogs -> InfinityEngine,
+#  and overload the *single* method calling the global for each function
+#   => maybe even better: make this a method, current_machine() ?
+#  or call Dialogs.eval(quote init(...))
 
  State machine description:
 	+ trigger()
@@ -393,18 +396,20 @@ transitiontype(m::StateMachine) = eltype(m.transitions)
 
 Base.keys(m::StateMachine) = collect(m.keys)
 
-@inline statekey(m::StateMachine, args...; kwargs...) =
-	keytype(m)(m.context, args...; kwargs...)
+@inline statekey(m::StateMachine, args) =
+	keytype(m)(m.context, args...)
 
-"    add_state!(machine, key; state_args....)"
-function add_state!(m::StateMachine, key, args...; kwargs...)
-	println("add node $key")
+"    add_state!(machine, args...; kwargs...)
+
+Builds a state with key defined from args and data from kwargs.
+"
+function add_state!(m::StateMachine, kargs; kwargs...)
+	key = statekey(m, kargs)::keytype(m)
 	if m.pending_transition[]
-		println("\e[32m  solve pending transition to $key\e[m")
 		current_transition(m, m).target = key
 		m.pending_transition[] = false
 	end
-	data = statedata(m)(m.context, args...; kwargs...)
+	data = statedata(m)(m.context; kwargs...)::statedata(m)
 	s = statetype(m)(transitiontype(m)[], data)
 	i = push!(m.keys, key; unique=true)
 	push!(m.states, s)
@@ -417,10 +422,10 @@ function add_transition!(m::StateMachine, source, ::Nothing, args...; kwargs...)
 	add_transition(m, source, first(keys(m.keys)); kwargs...)
 	m.pending_transition[] = true
 end
-function add_transition!(m::StateMachine, source, target, args...;
+function add_transition!(m::StateMachine, source, kdata, args...;
 		position = 1 + length(source.transitions), kwargs...)
 	source::statetype(m)
-	target::keytype(m)
+	target = statekey(m, kdata)::keytype(m)
 	@assert !m.pending_transition[] "unsolved pending transition"
 	data = transitiondata(m)(m.context, args...; kwargs...)
 	t = transitiontype(m)(target, data)
@@ -497,9 +502,19 @@ trigger!(c::Context, str::AbstractString) =
 	(@assert isnothing(c.trigger); c.trigger = str)
 trigger!(c::Context, ::Nothing) = nothing
 "gets (and then erases) the current trigger value"
-trigger(c::Context) = (x = c.trigger; c.trigger = nothing; return x)
+get_trigger(c::Context) = (x = c.trigger; c.trigger = nothing; return x)
 "gets a trigger value, from either supplied x, or current trigger"
-get_trigger(c::Context, x) = (trigger!(c, x); return trigger(c))
+get_trigger(c::Context, x) = (trigger!(c, x); return get_trigger(c))
+
+get_state_trigger(c::Context, x) =
+	push!(c.state_triggers, get_trigger(c, x))
+get_transition_trigger(c::Context, x) =
+	push!(c.transition_triggers, get_trigger(c, x))
+
+get_string(c::Context, str::AbstractString) =
+	(@assert !iszero(c.language); LangString(c.language, str))
+# special case: no text
+get_string(c::Context, ::Nothing) = LangString(0, "")
 
 # ««2 State keys
 struct StateKey{X}
@@ -509,7 +524,7 @@ struct StateKey{X}
 	@inline StateKey{X}(ns::AbstractString, a::AbstractString, l) where{X} =
 		new{X}(ns, a, l)
 end
-@inline (T::Type{<:StateKey})(c::Context, namespace::AbstractString,
+@inline (T::Type{<:StateKey})(::Context, namespace::AbstractString,
 	actor::AbstractString, label) = T(namespace, actor, label)
 @inline (T::Type{<:StateKey})(c::Context, actor::AbstractString, label) =
 	T(c, c.namespace, actor, label)
@@ -522,23 +537,26 @@ end
 # displaying API: return
 Base.read(c::Context, k::StateKey) = string(k)
 
-# ««2 State data
+# ««2 String with language
+struct LangString
+	lang::Int8
+	str::String
+end
+lang(s::LangString) = s.lang
+str(s::LangString) = s.string
+# ««2 Stte data
 struct StateData{I<:Integer}
 	priority::Float32
-	text::I
+	text::Union{Int32,LangString}
 	trigger::I
 # 	@inline StateData{I}(p::Float32, t, i) where{I} = new{I}(p, t, i)
 end
-function (T::Type{<:StateData})(c::Context;
-		text::Union{Nothing,AbstractString} = nothing,
-		trigger::Union{Nothing,AbstractString} = nothing,
-		priority::Real = -eps(Float32))
-	text = string_idx(c, text)
-	trigger = push!(c.state_triggers, get_trigger(c, trigger))
-	return T(priority, text, trigger)
-end
+@inline (T::Type{<:StateData})(c::Context; text = nothing, trigger = nothing,
+		priority::Real = -eps(Float32)) =
+	T(priority, get_string(c, text), get_state_trigger(c, trigger))
+
 Base.read(c::Context, x::StateData) = (
-	text = findfirst(c.strings,x.text),
+	text = string(x.text),
 	trigger = findfirst(c.state_triggers,x.trigger))
 
 # ««2 Transition flags
@@ -560,22 +578,19 @@ end
 
 # ««2 Transition data
 mutable struct TransitionData{I<:Integer}
-	text::I
-	journal::I
+	text::Union{Int32,LangString}
+	journal::Union{Int32,LangString}
 	trigger::I
 	action::I
 	flags::UInt32
 end
 function (T::Type{<:TransitionData})(c::Context;
-		text::Union{Nothing,AbstractString} = nothing,
-		journal::Union{Nothing,AbstractString} = nothing,
-		action::Union{Nothing,AbstractString} = nothing,
-		trigger::Union{Nothing,AbstractString} = nothing,
-		flags::UInt32 = Flags.set(), kwargs...)
-	text = string_idx(c, text)
-	journal = string_idx(c, journal)
+	text = nothing, journal = nothing, action = nothing, trigger = nothing,
+	flags = UInt32(0), kwargs...)
+	text = get_string(c, text)
+	journal = get_string(c, journal)
 	action = push!(c.actions, action)
-	trigger = push!(c.transition_triggers, get_trigger(c, trigger))
+	trigger = get_transition_trigger(c, trigger)
 	flags = something(flags, Flags.set(;
 		text = !iszero(text), journal = !iszero(journal),
 		action = !iszero(action), trigger = !iszero(trigger), kwargs...))
@@ -583,14 +598,24 @@ function (T::Type{<:TransitionData})(c::Context;
 end
 
 Base.read(c::Context, x::TransitionData) = (
-	text = findfirst(c.strings, x.text),
-	journal = findfirst(c.strings, x.journal),
+	text = x.text, journal = x.journal, flags = x.flags,
 	trigger = findfirst(c.transition_triggers, x.trigger),
-	action = findfirst(c.actions, x.action),
-	flags = flags)
+	action = findfirst(c.actions, x.action))
 
 # ««1 Dialog-building API: all code manipulating global data goes here
-function init(I::Type{<:Integer}, S::DataType, T::DataType, X::DataType)
+"""    init(I,S,T,K,C)
+
+Sets up the global state machine to have index type `I`, state data type `S`,
+transition data type `T`, state key type `K`, and context type `C`.
+
+This function should be removed once we figure the correct value
+for all its parameters (and thus are able to turn them into constants).
+"""
+function init(I::Type{<:Integer}, S::DataType, T::DataType,
+	K::DataType, C::DataType)
+	global machine = StateMachine{I,S,T,K,C}()
+end
+function init_test(I::Type{<:Integer}, S::DataType, T::DataType, X::DataType)
 	SK = StateKey{X}
 	SD = StateData{I}
 	TD = TransitionData{I}
@@ -629,9 +654,9 @@ transitions.
 
 The multi-state form is equivalent to consecutive invocations of `state`.
 """
-function state(args...; text::Union{Nothing,AbstractString} = nothing, kw...)
+function state(kargs...; text::Union{Nothing,AbstractString} = nothing, kw...)
 	# k is key data:
-	key = statekey(machine, args...)
+# 	key = statekey(machine, args...)
 	if_current_state(machine) do s
 		if isempty(s.transitions)
 			println("  implicit transition needed")
@@ -745,7 +770,7 @@ end
 # 	eval(:(@inline $f(args...; kwargs...) = D.$f(args...; kwargs...)))
 # end
 # 
-# Dialogs.init(Int32, String, String, Any)
+# Dialogs.init_test(Int32, String, String, Any)
 # 
 # language("en")
 # namespace("main")

@@ -20,10 +20,12 @@
 module InfinityEngine
 
 module StructIO
-# apparently there already exists a registered module with this name,
+# ↑ apparently there already exists a registered module with this name,
 # but it is listed as “experimental” and its code was last updated in
 # June 2018...
-# We tried to maintain compatibility, hence the `unpack` method.
+# We try to maintain some degree of compatibility, at least in the
+# method names (`pack`, `unpack`), but we add more functionality
+# (allow user to require specific behaviour for some structure fields, etc.)
 using Printf
 using StaticArrays
 using Markdown
@@ -381,6 +383,7 @@ struct Resref{T}
 	name::StaticString{8}
 	Resref{T}(s::AbstractString) where{T} = new{T}(uppercase(first(s,8)))
 end
+Base.nameof(r::Resref) = r.name
 
 # const Resref{T} =Typewrap{:Resref, Typewrap{T, StaticString{8}}}
 macro Resref_str(s)
@@ -391,7 +394,8 @@ macro Resref_str(s)
 	return Resref{Symbol(s[i+1:end])}(s[begin:i-1])
 end
 Base.show(io::IO, ::Type{Resref{T}}) where{T} = print(io, "Resref\"", T, "\"")
-Base.show(io::IO, r::Resref{T}) where{T} = print(io,"Resref\"",r.name,'.',T,'"')
+Base.show(io::IO, r::Resref{T}) where{T} =
+	print(io, "Resref\"", nameof(r), '.', T, '"')
 
 """    BifIndex
 32-bit index of resource in bif files.
@@ -471,13 +475,14 @@ Defined methods include:
  - `Resource"EXT"`: macro defining static value for this file type.
  - `read(::Resource{T})` (this opens the IO).
 
-Concrete subtypes must implement:
+Concrete subtypes (i.e. `ResourceBuf`, `ResourceFile`) must implement:
  - `open(resource)`: returns an IO (this will automatically enable
    `open(f, resource)`; see `"base/io.jl"`).
  - `nameof(resource)`: returns the resource name as a String.
 
-Specializations must implement:
- - `read(::Resource{T}, io)`.
+Specializations (i.e. `Resource"DLG"` etc.) must implement:
+ - `read(::Resource{T}, io::IO)`.
+ - (**TODO**) `write(::Resource{T}, io::IO)`.
 """
 abstract type Resource{T} end
 macro Resource_str(str)
@@ -579,7 +584,19 @@ struct KEY_res <: AbstractBlock
 	location::BifIndex
 end
 
+"""    KeyIndex
+
+Structure containing the index of BIF resources as described in `"chitin.key"`.
+Methods include:
+
+ - `Resource(key, resref)`: converts a `Resref` to a `Resource` of matching type.
+ - `read(key, resref)`: opens the resource and reads it.
+ - `names(key, Resource"type")`: returns an iterator over all names of resources
+   of this type present in the game.
+ - `findall(Resource"type", key)`: returns an iterator over all resources.
+"""
 struct KeyIndex{X}
+	# TODO: remove this type parameter, X is always the same tuple type
 	directory::String
 	bif::Vector{String}
 	resources::Vector{X}
@@ -1057,29 +1074,11 @@ end
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in read(seek(io, offset), DLG_string, count)]
 
-struct DLG_Context
-end
-struct DLG_StateData
-	text::Strref
-	trigger::String
-	DLG_StateData(c::DLG_Context; text, trigger, kwargs...) = new(text, trigger)
-end
-struct DLG_TransitionData
-	text::Strref
-	journal::Strref
-	trigger::String
-	action::String
-	flags::UInt32
-	DLG_TransitionData(c::DLG_Context; text, journal, trigger, action, flags) =
-		new(text, journal, trigger, action, flags)
-end
+Dialogs.get_string(c::Dialogs.Context, ref::Strref) = ref.data
 
-Base.read(c::DLG_Context, (dlg, st)::Tuple{Resref"dlg",Integer}) =
-	"$(nameof(dlg)):$s"
+Dialogs.StateKey{Any}(::Any, n::Resref"dlg", s::Integer) =
+	Dialogs.StateKey{Any}("main", nameof(n), s)
 
-Base.read(c::DLG_Context, s::DLG_StateData) = s
-Base.read(c::DLG_Context, t::DLG_TransitionData) = t
-	
 function read(f::Resource"DLG", io::IO)
 	self = Resref(f)
 	header = read(io, DLG_hdr)
@@ -1093,7 +1092,9 @@ function read(f::Resource"DLG", io::IO)
 			header.number_transition_triggers)
 	actions = dialog_strings(io, header.offset_actions, header.number_actions)
 
-	machine = Dialogs.StateMachine{Int32,DLG_StateData,DLG_TransitionData,Any,DLG_Context}()
+	Dialogs.init(Int32, Dialogs.StateData{Int32}, Dialogs.TransitionData{Int32},
+		Dialogs.StateKey{Any}, Dialogs.Context{Int32,String,String})
+	machine = Dialogs.machine
 	println("tr_triggers = $(length(tr_triggers))")
 	println(tr_triggers)
 	global S = states
@@ -1205,14 +1206,15 @@ Main structure holding all top-level data for a game installation, including:
 
 Methods include:
 
- - `read(game, resref)`: reads a `Resref` value, returning a Julia structure
-   depending on the Resref type (e.g. `Resref"blun01.itm"` will return
-   an item structure, etc.).
+ - `Resource(game, resref)`: converts a `Resref` to a `Resource`
+   (i.e. file descriptor) of the same type.
+ - `read(game, resref)`: opens the corresponding resource and returns the
+   appropriate Julia structure depending on the `Resref` type.
  - `filetype(game, resref)`: returns either 0 (resource not found),
-    1 (resource found in bif), or 2 (resource found in override).
+   1 (resource found in bif), or 2 (resource found in override).
  - `names(game, Resource"type")`: returns a vector of all names of
    existing resources of this type.
- - `all(game, Resource"type")`: returns an iterator over all existing
+ - `findall(Resource"type", game)`: returns an iterator over all existing
    resource descriptors of this type.
 """
 struct Game
@@ -1260,17 +1262,17 @@ function Resource{T}(game::Game, name::AbstractString) where{T}
 		error("resource not found: $name.$T")
 	end
 end
-@inline Resource(k::Union{Game,KeyIndex}, name::Resref{T}) where{T} =
-	Resource{T}(k, name.name)
+@inline Resource(k::Union{Game,KeyIndex}, resref::Resref{T}) where{T} =
+	Resource{T}(k, nameof(resref))
 
-@inline read(k::Union{Game,KeyIndex}, name::Resref; kw...) =
-	read(Resource(k, name); kw...)
-@inline filetype(game::Game, name::Resref{T}) where{T} =
-	filetype(game, Resource{T}, name)
+@inline read(k::Union{Game,KeyIndex}, resref::Resref; kw...) =
+	read(Resource(k, resref); kw...)
+@inline filetype(game::Game, resref::Resref{T}) where{T} =
+	filetype(game, Resource{T}, resref)
 
 @inline Base.names(game::Game, ::Type{Resource{T}}) where{T} =
 	game.override[T] ∪ names(game.key, Resource{T})
-@inline Base.all(game::Game, R::Type{<:Resource}) =
+@inline Base.findall(R::Type{<:Resource}, game::Game) =
 	(R(game, n) for n in names(game, R))
 
 """    search(game, strings, Resource"type", text)
@@ -1290,11 +1292,11 @@ end
 end
 IE=InfinityEngine; S=IE.StructIO
 game = IE.Game("../bg/game")
-str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
+# str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
 # IE.search(game, str, IE.Resource"ITM", "Varscona")
 key = IE.KeyIndex("../bg/game/chitin.key")
 # dlg = read(game, IE.Resref"melica.dlg")
-# dlg = read(game, IE.Resref"zorl.dlg")
+dlg = read(game, IE.Resref"zorl.dlg")
 # dia = read(IE.Resource"dlg"(key, "abazigal"))
 # dia=read(IE.Resource"../bg2/game/override/hull.dlg")
 # dia=read(IE.Resource"../bg2/game/override/abazigal.dlg")
@@ -1303,4 +1305,3 @@ key = IE.KeyIndex("../bg/game/chitin.key")
 # dia=read(key["abaziga", "dlg"])
 # dia1=str*dia
 # IE.printdialog(dia,str)
-nothing

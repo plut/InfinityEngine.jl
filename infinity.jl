@@ -307,8 +307,8 @@ include("dottedenums.jl"); using .DottedEnums
 include("dialogs.jl")
 
 abstract type AbstractBlock end
-@inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer...) =
-	StructIO.unpack(io, T, n...)
+# @inline Base.read(io::IO, T::Type{<:AbstractBlock}, n::Integer...) =
+# 	StructIO.unpack(io, T, n...)
 
 using Printf
 using StaticArrays
@@ -546,8 +546,8 @@ struct TLK_str <: AbstractBlock
 end
 
 function read(f::Resource"TLK", io::IO)
-	header = read(io, TLK_hdr)
-	strref = read(io, TLK_str, header.nstr)
+	header = unpack(io, TLK_hdr)
+	strref = unpack(io, TLK_str, header.nstr)
 	return TlkStrings([ (string = string0(io, header.offset + s.offset, s.length),
 		flags = s.flags, sound = s.sound, volume = s.volume, pitch = s.pitch)
 		for s in strref ])
@@ -608,12 +608,12 @@ struct KeyIndex{X}
 end
 KeyIndex(filename::AbstractString) = open(filename) do io
 	dir = dirname(filename)
-	header = read(io, KEY_hdr)
+	header = unpack(io, KEY_hdr)
 	seek(io, header.bifoffset)
-	bifentries = read(io, KEY_bif, header.nbif)
+	bifentries = unpack(io, KEY_bif, header.nbif)
 	bifnames = [ string0(io, x.offset, x.namelength) for x in bifentries ]
 	seek(io, header.resoffset)
-	resentries = read(io, KEY_res, header.nres)
+	resentries = unpack(io, KEY_res, header.nres)
 	return KeyIndex(dir, bifnames, resentries)
 end
 
@@ -652,9 +652,9 @@ struct BIF_tileset <: AbstractBlock
 end
 
 bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
-	header = read(io, BIF_hdr)
+	header = unpack(io, BIF_hdr)
 	seek(io, header.offset)
-	resources = read(io, BIF_resource, header.nres)
+	resources = unpack(io, BIF_resource, header.nres)
 	IOBuffer(read(seek(io, resources[index+1].offset), resources[index+1].size))
 end
 
@@ -1009,18 +1009,6 @@ function read(f::Resource"ITM", io::IO)
 	read(io, ITM_hdr{Strref})
 end
 # ««1 dlg
-@dottedflags DialogTransitionFlags::UInt32 begin
-	HasText
-	HasTrigger
-	HasAction
-	TerminatesDialog
-	Interrupt
-	AddUnsolvedQuest
-	AddJournalNote
-	AddSolvedQuest
-	ImmediateScriptActions
-	ClearActions
-end
 struct DLG_hdr <: AbstractBlock
 	Constant"DLG V1.0"
 	number_states::Int32
@@ -1042,7 +1030,7 @@ struct DLG_state{S} <: AbstractBlock
 	trigger::Int32
 end
 struct DLG_transition{S} <: AbstractBlock
-	flags::DialogTransitionFlags
+	flags::UInt32
 	text::S
 	journal::S
 	trigger::Int32
@@ -1056,23 +1044,8 @@ struct DLG_string <: AbstractBlock
 	length::Int32 # idem
 end
 
-"""    Dialog{S}
-
-Describes the state machine associated with a dialog.
-`S` is the type used for dialog strings (either `Strref` or `String`).
-"""
-struct Dialog{S}
-	self::Resref"DLG"
-	flags::UInt32
-	states::Vector{DLG_state{S}}
-	transitions::Vector{DLG_transition{S}}
-	state_triggers::Vector{String}
-	transition_triggers::Vector{String}
-	actions::Vector{String}
-end
-
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
-	for s in read(seek(io, offset), DLG_string, count)]
+	for s in unpack(seek(io, offset), DLG_string, count)]
 
 Dialogs.get_string(c::Dialogs.Context, ref::Strref) = ref.data
 
@@ -1081,10 +1054,10 @@ Dialogs.StateKey{Any}(::Any, n::Resref"dlg", s::Integer) =
 
 function read(f::Resource"DLG", io::IO)
 	self = Resref(f)
-	header = read(io, DLG_hdr)
-	states = read(seek(io,header.offset_states), DLG_state{Strref},
+	header = unpack(io, DLG_hdr)
+	states = unpack(seek(io,header.offset_states), DLG_state{Strref},
 		header.number_states)
-	transitions = read(seek(io, header.offset_transitions),
+	transitions = unpack(seek(io, header.offset_transitions),
 		DLG_transition{Strref}, header.number_transitions)
 	st_triggers = dialog_strings(io, header.offset_state_triggers,
 			header.number_state_triggers)
@@ -1092,25 +1065,24 @@ function read(f::Resource"DLG", io::IO)
 			header.number_transition_triggers)
 	actions = dialog_strings(io, header.offset_actions, header.number_actions)
 
-	Dialogs.init(Int32, Dialogs.StateData{Int32}, Dialogs.TransitionData{Int32},
-		Dialogs.StateKey{Any}, Dialogs.Context{Int32,String,String})
-	machine = Dialogs.machine
+	dialog = Dialogs.top
+	Dialogs.namespace("main")
 	println("tr_triggers = $(length(tr_triggers))")
 	println(tr_triggers)
 	global S = states
 	global H = header
 	getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
 	for (i, s) in pairs(states)
-		state = Dialogs.add_state!(machine, (self, i-1);
+		state = Dialogs.add_state!(dialog, (self|>nameof, i-1);
 			text = s.text, trigger = getval(st_triggers, s.trigger))
 		for j in s.first_transition+1:s.first_transition+s.number_transitions
 			t = transitions[j]
-			Dialogs.add_transition!(machine, state, (t.next_actor, t.next_state);
+			Dialogs.add_transition!(dialog, state, (nameof(t.next_actor), t.next_state);
 				t.text, t.journal, trigger = getval(tr_triggers, t.trigger),
 				action = getval(actions, t.action), flags = UInt32(t.flags))
 		end
 	end
-	return machine
+	return dialog
 	#= patterns observed in Bioware dialogues:
 	* normal reply: (text) action=-1 journal=strref(0) trigger=-1
 	* (action|terminates) target=("",0) text=strref(0) journal=strref(0)
@@ -1123,80 +1095,19 @@ function read(f::Resource"DLG", io::IO)
 		other indices are -1
 	* 
 	=#
-
-# 	return Dialog{Strref}(Resref"DLG"(first(nameof(f),8)), header.flags,
-# 		read(seek(io,header.offset_states), DLG_state{Strref},
-# 			header.number_states),
-# 		read(seek(io, header.offset_transitions), DLG_transition{Strref},
-# 			header.number_transitions),
-# 		dialog_strings(io, header.offset_state_triggers,
-# 			header.number_state_triggers),
-# 		dialog_strings(io, header.offset_transition_triggers,
-# 			header.number_transition_triggers),
-# 		dialog_strings(io, header.offset_actions, header.number_actions))
-end
-function printtransition(io::IO, dialog::Dialog, i, doneactions)
-	t = dialog.transitions[i+1]
-	print(io, "  \e[31m", i,
-# 				t.flags
-# 				&~DialogTransitionFlags.HasText
-# 				&~DialogTransitionFlags.TerminatesDialog
-		)
-	if t.flags ∋ DialogTransitionFlags.TerminatesDialog
-		print(io, " (final)")
-	else
-		print(io, " =>")
-		t.next_actor ≠ dialog.self && print(io, " ", t.next_actor)
-		print(io, " <$(t.next_state)>")
-	end
-	print(io, "\e[m")
-	if t.flags ∋ DialogTransitionFlags.HasText
-		print(io, "\e[36m\"", t.text, "\"\e[m")
-	else
-		print(io, "(no text)")
-	end
-	println(io)
-	if t.flags ∋ DialogTransitionFlags.HasAction
-		a = t.action
-		println(io, " action $a:")
-		if a ∉ doneactions
-			push!(doneactions, a)
-			println(io, "\e[32m", dialog.actions[t.action+1], "\e[m")
-		end
-	end
 end
 
-function Base.show(io::IO, ::MIME"text/plain", dialog::Dialog)
-	donetransitions = Set{Int}()
-	doneactions = Set{Int}()
-	println(io, "Dialog $(dialog.self)")
-	for (i,s) in pairs(dialog.states)
-		t = s.trigger
-		print(io, "\e[1mstate <$(i-1)>\e[m")
-		tr = get(dialog.state_triggers, t, nothing)
-		if !isnothing(tr)
-			println(io, "  trigger: ")
-			printstyled(io, tr, color=:yellow)
-		end
-		println(io, " \e[34m\"", s.text, "\"\e[m")
-		trans = s.first_transition:s.first_transition+s.number_transitions-1
-		println(io, "  transitions: $trans")
-		for i in trans
-			i ∈ donetransitions && continue; push!(donetransitions, i)
-			printtransition(io, dialog, i, doneactions)
-		end
-	end
-end
 #««1 Game
 # shorthand: strings*dialog instantiates Strrefs
-for T in (:Dialog,:ITM_hdr)
+for T in (:ITM_hdr,)
 	@eval @inline Base.:*(str::TlkStrings, x::$T{Strref}) =
 		Functors.functor(x->str[x].string::String, $T, x)
 end
 
-Base.:*(str::TlkStrings, x::Dialogs.StateMachine{Int32,Strref,String,Any}) =
-	Functors.functor(x->str[x].string::String,
-		Dialogs.StateMachine{Int32,S,String,Any} where{S}, x)
+# Base.:*(str::TlkStrings, x::Dialogs.StateMachine{Int32,Any}) =
+# 	Functors.functor(x->str[x].string::String,
+# 		Dialogs.StateMachine{Int32,S,String,Any} where{S}, x)
+
 """    Game
 
 Main structure holding all top-level data for a game installation, including:
@@ -1301,7 +1212,19 @@ dlg = read(game, IE.Resref"zorl.dlg")
 # dia=read(IE.Resource"../bg2/game/override/hull.dlg")
 # dia=read(IE.Resource"../bg2/game/override/abazigal.dlg")
 
+D=IE.Dialogs
+D.language("en")
+D.namespace("test")
+D.actor("zorl")
 
-# dia=read(key["abaziga", "dlg"])
-# dia1=str*dia
-# IE.printdialog(dia,str)
+D.trigger("// new dialogue")
+D.say(1 => "hello <CHARNAME>")
+	D.reply(" hello Zorl" => 1)
+	D.reply(" go on...")
+D.say(2 => "Yes I go on.")
+
+D.state(1)
+	D.reply("I attack!" => exit)
+
+nothing
+# dlg;

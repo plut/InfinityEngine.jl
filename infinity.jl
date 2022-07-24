@@ -1,6 +1,7 @@
 #=
 # TODO:
-# - use real `StructIO` to simplify
+# - download packages: StructIO + whatever provides @with_kw
+# - TEST 1: define an item
 # - make nice flags modules like dialog transitions
 # - check translation format
 #  - needs xgettext (or at least a very basic version)
@@ -42,7 +43,7 @@ in a structure.
 
 This function has a default cascade of generic methods allowing the user
 to define behaviour in specific cases by overriding one of the following:
- - `$(@__MODULE__).readfield(io, fieldtype, structtype, fieldname)`
+ - `$(@__MODULE__).readfield(io, fieldtype, structtype, ::Val{fieldname})`
  - `$(@__MODULE__).readfield(io, fieldtype, structtype)`
  - `$(@__MODULE__).readfield(io fieldtype)`
 
@@ -51,27 +52,39 @@ This last method in turn is by default:
  - a somewhat sensible default value for other types where possible,
    (currently: empty strings, arrays, dictionaries and sets).
 """
-readfield(io::IO, fieldtype::DataType, structtype::DataType, fieldname) =
+readfield(io::IO, fieldtype::DataType, structtype::DataType, ::Val) =
 	readfield(io, fieldtype, structtype)
 readfield(io::IO, fieldtype::DataType, structtype::DataType) = 
 	readfield(io, fieldtype)
-readfield(io::IO, T::DataType) =
-	readfield_traits(Val(isstructtype(T)), Val(isbitstype(T)), io, T)
-
-# recurse for struct types:
-readfield_traits(::Val{true}, ::Val{false}, io::IO, T::DataType) = unpack(io, T)
-# leaf case for primitive types:
-readfield_traits(::Val, ::Val{true}, io::IO, T::DataType) = unpack(io, T)
-# a few “sensible” default cases:
-readfield_traits(::Val, ::Val{false}, ::IO, ::Type{String}) = ""
+# a few sensible default cases:
+readfield(::IO, ::Type{String}) = ""
 # note: NOT AbstractArray — we want StaticVectors to be readable:
-readfield_traits(::Val, ::Val{false}, ::IO, T::Type{<:Array}) =
-	T(undef, zeros(Int, ndims(T))...)
-readfield_traits(::Val, ::Val{false}, ::IO, T::Type{<:Union{Dict,Set}}) = T()
+readfield(::IO, T::Type{<:Array}) = T(undef, zeros(Int, ndims(T))...)
+readfield(::IO, T::Type{<:Union{Dict,Set}}) = T()
+
+readfield(io::IO, T::DataType) =
+	readfield_traits(Val(isstructtype(T)|| isbitstype(T)), io, T)
+
+# recurse for struct types + leaf case for primitive types:
+readfield_traits(::Val{true}, io::IO, T::DataType) = unpack(io, T)
 
 # remaining cases — we don't know what to do:
-readfield_traits(::Val{false}, ::Val{false}, ::IO, T::DataType) =
+readfield_traits(::Val{false}, ::IO, T::DataType) =
 	error("Impossible to read field \"$T\"")
+
+const field_vector_prop = Dict{Tuple{DataType,Symbol},NTuple{2,Symbol}}()
+"""    @field_vector_prop T.f offset count
+
+Declares field `f` of structure `T` to be a vector, with the corresponding
+fields `offset` and `count` encoding its offset in the file and the number
+of blocks present.
+"""
+macro field_vector_prop(T_field, offset, count)
+	@assert Meta.isexpr(T_field, :(.))
+	T, field = T_field.args
+	:(field_vector_prop[($(esc(T)),$field)] = $((offset, count)))
+end
+using InteractiveUtils
 
 """    unpack(io::IO, T)
 
@@ -87,16 +100,27 @@ Some fields behave a bit differently; see `Constant` and `Ignored`.
 """
 @generated function unpack(io::IO, ::Type{T}) where{T}
 	isstructtype(T) || return :(read(io, T))
-	code = Expr[]
+	code = Expr[:(start = position(io))]
 	vars = Symbol[]
+	# Generate the name of the temporary variable holding field `fn`:
+	# The following code also works for Tuple, generating read_1, read_2 etc.:
+	fvar = fn -> Symbol("read_"*string(fn))
 	for i in 1:fieldcount(T)
-		# The following code also works for Tuple, generating read_1, read_2 etc.:
-		# (We could also simply use `gensym()` but the resulting code would
-		# be less readable).
-		v = Symbol("read_"*string(fieldname(T,i)))
-# 		v = (T <: Tuple) ? Symbol("field"*string(i)) : fieldname(T, i)
-		push!(vars, v)
-		push!(code, :($v = readfield(io, $(fieldtype(T,i)), T, $(QuoteNode(fieldname(T,i))))))
+		fn, ft = fieldname(T, i), fieldtype(T, i)
+		v = fvar(fn); push!(vars, v)
+		if fn == :transitions
+			println("\e[35m**transitions**\e[m")
+			println(field_vector_prop)
+			println(ft <: AbstractVector)
+		end
+		if (ft <: AbstractVector) &&
+			(x = get(field_vector_prop, (T, fn), nothing); !isnothing(x))
+			(offset, count) = x
+			push!(code, :($v = unpack(seek(io, start + $(fvar(offset))),
+				$(eltype(ft)), $(fvar(count)))))
+		else
+			push!(code, :($v = readfield(io, $ft, T, Val($(QuoteNode(fn))))))
+		end
 	end
 	expr = if T <: Tuple
 		# Tuple{Int,Int}(Int, Int) constructor does not exist...
@@ -150,11 +174,16 @@ function packed_layout(T::DataType)
 		(type, name) = fieldtype(T,i), fieldname(T, i)
 		push!(l.sizes, packed_sizeof(type))
 		push!(l.types, repr(type))
-		push!(l.names, _fieldname(type, name))
+		push!(l.names, packed_fieldname(type, name))
 	end
 	l
 end
-_fieldname(type, name) = String(name)
+"""    packed_fieldname(structtype, name)
+
+Returns a string representation of the name of the corresponding field
+of the struct `structtype`. By default this is `String(name)` but the
+user may customize this for any field."""
+packed_fieldname(type, name) = String(name)
 
 """    kwconstructor(T; fields...)
 
@@ -235,7 +264,6 @@ Defines a field with irrelevant name and `Ignored` type.
 const Ignored = FixedValue{true}
 macro Ignored_str(s) fixed_str(:Ignored, s) end
 
-
 export Constant, Ignored, @Constant_str, @Ignored_str, unpack, packed_layout
 
 end
@@ -314,6 +342,7 @@ include("dialogs.jl")
 
 using Printf
 using StaticArrays
+using Parameters
 
 # ««1 Basic types
 # ««2 Extract zero-terminated string from IO
@@ -1054,46 +1083,6 @@ end
 	BluntMissile = 9 # bugged
 end
 # ««2 Data blocks
-struct ITM_hdr{S}
-	resource_name::String
-	Constant"ITM V1  "
-	unidentified_name::S
-	identified_name::S
-	replacement::Resref"ITM"
-	flags::ItemFlag
-	item_type::ItemCat
-	usability::UsabilityFlags
-	animation::ItemAnimation
-	minlevel::UInt16
-	minstrength::UInt16
-	minstrenghtbonus::UInt8
-	kit1::UInt8
-	minintelligence::UInt8
-	kit2::UInt8
-	mindexterity::UInt8
-	kit3::UInt8
-	minwisdom::UInt8
-	kit4::UInt8
-	minconstitution::UInt8
-	proficiency::WProf
-	mincharisma::UInt16
-	price::UInt32
-	stackamount::UInt16
-	inventoryicon::Resref"BAM"
-	lore::UInt16
-	groundicon::Resref"BAM"
-	weight::UInt32
-	unidentified_description::S
-	identified_description::S
-	description_icon::Resref"BAM"
-	enchantment::UInt32
-	ext_header_offset::UInt32
-	ext_header_count::UInt16
-	feature_offset::UInt32
-	feature_index::UInt16
-	feature_count::UInt16
-end
-@inline searchkey(i::ITM_hdr) = i.identified_name
 struct ITM_ability
 	attack_type::UInt8
 	must_identify::UInt8
@@ -1127,25 +1116,54 @@ struct ITM_ability
 	is_bolt::UInt16
 	is_bullet::UInt16
 end
+@with_kw struct ITM_hdr{S}
+	resource_name::String
+	Constant"ITM V1  "
+	unidentified_name::S
+	identified_name::S
+	replacement::Resref"ITM"
+	flags::ItemFlag
+	item_type::ItemCat
+	usability::UInt32 # UsabilityFlags
+	animation::ItemAnimation
+	minlevel::UInt16
+	minstrength::UInt16
+	minstrenghtbonus::UInt8
+	kit1::UInt8
+	minintelligence::UInt8
+	kit2::UInt8
+	mindexterity::UInt8
+	kit3::UInt8
+	minwisdom::UInt8
+	kit4::UInt8
+	minconstitution::UInt8
+	proficiency::WProf
+	mincharisma::UInt16
+	price::UInt32
+	stackamount::UInt16
+	inventoryicon::Resref"BAM"
+	lore::UInt16
+	groundicon::Resref"BAM"
+	weight::UInt32
+	unidentified_description::S
+	identified_description::S
+	description_icon::Resref"BAM"
+	enchantment::UInt32
+	ext_header_offset::UInt32
+	ext_header_count::UInt16
+	feature_offset::UInt32
+	feature_index::UInt16
+	feature_count::UInt16
+	abilities::Vector{ITM_ability}
+end
+StructIO.field_vector_prop[(ITM_hdr{Strref}, :abilities)] =
+	(:ext_header_offset, :ext_header_count)
+@inline searchkey(i::ITM_hdr) = i.identified_name
 # ««2 Item function
 function read(f::Resource"ITM", io::IO)
 	unpack(io, ITM_hdr{Strref})
 end
 # ««1 dlg
-struct DLG_hdr
-	Constant"DLG V1.0"
-	number_states::Int32
-	offset_states::Int32
-	number_transitions::Int32
-	offset_transitions::Int32
-	offset_state_triggers::Int32
-	number_state_triggers::Int32
-	offset_transition_triggers::Int32
-	number_transition_triggers::Int32
-	offset_actions::Int32
-	number_actions::Int32
-	flags::UInt32
-end
 struct DLG_state{S}
 	text::S
 	first_transition::Int32
@@ -1166,6 +1184,32 @@ struct DLG_string
 	offset::Int32 # of trigger string
 	length::Int32 # idem
 end
+struct DLG_hdr
+	Constant"DLG V1.0"
+	number_states::Int32
+	offset_states::Int32
+	number_transitions::Int32
+	offset_transitions::Int32
+	offset_state_triggers::Int32
+	number_state_triggers::Int32
+	offset_transition_triggers::Int32
+	number_transition_triggers::Int32
+	offset_actions::Int32
+	number_actions::Int32
+	flags::UInt32
+	states::Vector{DLG_state{Strref}}
+	transitions::Vector{DLG_transition{Strref}}
+# 	st_triggers::Vector{DLG_string}
+# 	tr_triggers::Vector{DLG_string}
+# 	actions::Vector{DLG_string}
+end
+StructIO.@field_vector_prop DLG_hdr.states offset_states number_states
+StructIO.@field_vector_prop DLG_hdr.transitions offset_transitions number_transitions
+# StructIO.field_vector_prop(DLG_hdr, :st_triggers, :offset_state_triggers,
+# 	:number_state_triggers)
+# StructIO.field_vector_prop(DLG_hdr, :tr_triggers, :offset_transition_triggers,
+# 	:number_transition_triggers)
+# StructIO.field_vector_prop(DLG_hdr, :actions, :offset_actions, :number_actions)
 
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in unpack(seek(io, offset), DLG_string, count)]
@@ -1178,24 +1222,25 @@ Dialogs.StateKey{Any}(::Any, n::Resref"dlg", s::Integer) =
 function read(f::Resource"DLG", io::IO)
 	self = Resref(f)
 	header = unpack(io, DLG_hdr)
-	states = unpack(seek(io,header.offset_states), DLG_state{Strref},
-		header.number_states)
-	transitions = unpack(seek(io, header.offset_transitions),
-		DLG_transition{Strref}, header.number_transitions)
+# 	states = unpack(seek(io,header.offset_states), DLG_state{Strref},
+# 		header.number_states)
+# 	transitions = unpack(seek(io, header.offset_transitions),
+# 		DLG_transition{Strref}, header.number_transitions)
 	st_triggers = dialog_strings(io, header.offset_state_triggers,
 			header.number_state_triggers)
 	tr_triggers = dialog_strings(io, header.offset_transition_triggers,
 			header.number_transition_triggers)
 	actions = dialog_strings(io, header.offset_actions, header.number_actions)
 
+	global H = header
 	dialog = Dialogs.top
 	Dialogs.namespace("main")
 	getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
-	for (i, s) in pairs(states)
+	for (i, s) in pairs(header.states)
 		state = Dialogs.add_state!(dialog, (self|>nameof, i-1);
 			text = s.text, trigger = getval(st_triggers, s.trigger))
 		for j in s.first_transition+1:s.first_transition+s.number_transitions
-			t = transitions[j]
+			t = header.transitions[j]
 			Dialogs.add_transition!(dialog, state, (nameof(t.next_actor), t.next_state);
 				t.text, t.journal, trigger = getval(tr_triggers, t.trigger),
 				action = getval(actions, t.action), flags = UInt32(t.flags))

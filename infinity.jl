@@ -1360,11 +1360,14 @@ end
 	identified_description::S
 	description_icon::Resref"BAM"
 	enchantment::UInt32
-	ext_header_offset::UInt32
-	ext_header_count::UInt16
+	offset(abilities)::UInt32
+	length(abilities)::UInt16
+# 	ext_header_offset::UInt32
+# 	ext_header_count::UInt16
 	feature_offset::UInt32
 	feature_index::UInt16
 	feature_count::UInt16
+	abilities::Vector{ITM_ability}
 end
 @inline searchkey(i::ITM_hdr) = i.identified_name
 
@@ -1376,11 +1379,11 @@ struct Item
 end
 function read(io::IO, ::Resource"ITM")
 	header = unpack(io, ITM_hdr{Strref})
-	abilities = unpack(seek(io, header.ext_header_offset), ITM_ability,
-		header.ext_header_count)
-	features = unpack(seek(io, header.feature_offset), ITM_feature,
-		header.feature_count)
-	return Item(header, abilities, features)
+# 	abilities = unpack(seek(io, header.ext_header_offset), ITM_ability,
+# 		header.ext_header_count)
+# 	features = unpack(seek(io, header.feature_offset), ITM_feature,
+# 		header.feature_count)
+# 	return Item(header, abilities, features)
 end
 function write(io::IO, itm::Item)
 	itm.header.ext_header_offset = 114
@@ -1581,8 +1584,9 @@ end
 end
 IE=InfinityEngine; S=IE.Pack
 IE.language("en")
-game = IE.Game("../bg/game")
-itm=read(game, IE.Resref"blun01.itm")
+itm = read(IE.Resource"../ciopfs/bg2/game/override/sw1h06.itm")
+# game = IE.Game("../bg/game")
+# itm=read(game, IE.Resref"blun01.itm")
 # str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
 # # # IE.search(game, str, IE.Resource"ITM", "Varscona")
 # # key = IE.KeyIndex("../bg/game/chitin.key")

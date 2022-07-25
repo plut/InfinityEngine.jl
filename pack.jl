@@ -127,8 +127,8 @@ macro pack(defn)
 					@assert !isnothing(len) "length not found for vector field $fn"
 					off = get(offsets, fn, nothing)
 					seek_io = isnothing(off) ? :(io) : :(seek(io, $(off)))
-					elt = ft.args[2]
-					push!(readcode, :($fv = $unpack($seek_io, $elt, $(len))))
+					elt = ftn.args[2]
+					push!(readcode, :($fv = $unpack($seek_io, $(esc(elt)), $(len))))
 					push!(typelayoutcode, :(push!(l.sizes, -1)))
 					push!(vallayoutcode, :(push!(l.sizes, length(x.$fn)*sizeof($elt))))
 				else

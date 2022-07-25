@@ -1329,7 +1329,6 @@ end
 	saving_throw_bonus::Int32
 end
 @pack mutable struct ITM_hdr{S}
-	resource_name::String
 	"ITM V1  "
 	unidentified_name::S
 	identified_name::S
@@ -1583,25 +1582,26 @@ end
 IE=InfinityEngine; S=IE.Pack
 IE.language("en")
 game = IE.Game("../bg/game")
-str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
-# # IE.search(game, str, IE.Resource"ITM", "Varscona")
-# key = IE.KeyIndex("../bg/game/chitin.key")
-# # dlg = read(game, IE.Resref"melica.dlg")
-dlg = read(game, IE.Resref"zorl.dlg")
-# # dia = read(IE.Resource"dlg"(key, "abazigal"))
+itm=read(game, IE.Resref"blun01.itm")
+# str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
+# # # IE.search(game, str, IE.Resource"ITM", "Varscona")
+# # key = IE.KeyIndex("../bg/game/chitin.key")
+# # # dlg = read(game, IE.Resref"melica.dlg")
+# dlg = read(game, IE.Resref"zorl.dlg")
+# # # dia = read(IE.Resource"dlg"(key, "abazigal"))
+# # 
+# D=IE.Dialogs
+# D.namespace("test")
+# D.actor("zorl")
 # 
-D=IE.Dialogs
-D.namespace("test")
-D.actor("zorl")
-
-D.trigger("// new dialogue")
-D.say(1 => "hello <CHARNAME>")
-	D.reply(" hello Zorl" => 1)
-	D.reply(" go on...")
-D.say(2 => "Yes I go on.")
-
-D.state(1)
-	D.reply("I attack!" => exit)
+# D.trigger("// new dialogue")
+# D.say(1 => "hello <CHARNAME>")
+# 	D.reply(" hello Zorl" => 1)
+# 	D.reply(" go on...")
+# D.say(2 => "Yes I go on.")
 # 
-# nothing
-# dlg;
+# D.state(1)
+# 	D.reply("I attack!" => exit)
+# # 
+# # nothing
+# # dlg;

@@ -111,15 +111,18 @@ macro pack(defn)
 		# constructor
 		(isexpr(f,:(=)) || isexpr(f,:function)) && (push!(structcode, f); continue)
 		if isexpr(f, :(::))
-# 			println("reading one field: $f \e[34;1m head=$(f.head) args=$(f.args)\e[m")
-			f.args[2] = Core.eval(__module__,
-				:($(f.args[2]) where {$(typeparams...)}))
-			fn, ft = f.args
+# 			f.args[2] = Core.eval(__module__,
+# 				:($(f.args[2]) where {$(typeparams...)}))
+			fn, ftn = f.args
+			ft = Core.eval(__module__, :($ftn where {$(typeparams...)}))
+			f.args[2] = ft
+			@assert ft isa DataType
 			if fn isa Symbol
 				fv = fieldvar(fn)
 				push!(fieldvars, fv)
 				push!(structcode, f)
-				if isexpr(ft, :curly) && ft.args[1] == :Vector
+				ftn ∈ typeparams && (ft = ftn)
+				if isexpr(ftn, :curly) && ftn.args[1] == :Vector
 					len = get(lengths, fn, nothing)
 					@assert !isnothing(len) "length not found for vector field $fn"
 					off = get(offsets, fn, nothing)
@@ -129,7 +132,7 @@ macro pack(defn)
 					push!(typelayoutcode, :(push!(l.sizes, -1)))
 					push!(vallayoutcode, :(push!(l.sizes, length(x.$fn)*sizeof($elt))))
 				else
-					push!(readcode, :($fv = read(io, $ft)))
+					push!(readcode, :($fv = unpack(io, $ft)))
 					push!(typelayoutcode, :(push!(l.sizes, sizeof($ft))))
 					push!(vallayoutcode, :(push!(l.sizes, sizeof($ft))))
 				end
@@ -142,8 +145,8 @@ macro pack(defn)
 				else
 					error("unknown function: $ff")
 				end
-				push!(readcode, :($fv = read(io, $ft)))
-				push!(vallayoutcode, :(push!(l.sizes, sizeof($ft))))
+				push!(readcode, :($fv = read(io, $ftn)))
+				push!(vallayoutcode, :(push!(l.sizes, sizeof($ftn))))
 			end
 		else
 			fn, fs, ft = f, sizeof(f), typeof(f)

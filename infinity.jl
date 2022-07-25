@@ -174,7 +174,10 @@ end
 struct StaticString{N} <: AbstractString
 	chars::SVector{N,UInt8}
 	@inline StaticString{N}(chars::AbstractVector{<:Integer}) where{N} =
+	begin
+		println("chars = $chars")
 		new{N}(chars)
+	end
 end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) = sizeof(s)
@@ -680,12 +683,6 @@ function Base.getindex(f::TlkStrings, s::Strref)
 	f.strings[i+1]
 end
 
-@pack struct TLK_hdr
-	"TLK V1  "
-	lang::UInt16
-	nstr::UInt32
-	offset::UInt32
-end
 struct TLK_str
 	flags::UInt16
 	sound::Resref"WAV"
@@ -694,13 +691,22 @@ struct TLK_str
 	offset::UInt32
 	length::UInt32
 end
+@pack struct TLK_hdr
+	"TLK V1  "
+	lang::UInt16
+	length(strings)::UInt32
+	offset(strings)::UInt32
+	strings::Vector{TLK_str}
+# 	nstr::UInt32
+# 	offset::UInt32
+end
 
 function read(io::IO, f::Resource"TLK")
 	header = unpack(io, TLK_hdr)
-	println(header.lang)
-	strref = unpack(io, TLK_str, header.nstr)
+	return header
+# 	strref = unpack(io, TLK_str, header.nstr)
 	return TlkStrings([ TlkString(string0(io, header.offset + s.offset, s.length),
-		s.flags, s.sound, s.volume, s.pitch) for s in strref ])
+		s.flags, s.sound, s.volume, s.pitch) for s in header.strings ])
 # 	return TlkStrings([ (string = string0(io, header.offset + s.offset, s.length),
 # 		flags = s.flags, sound = s.sound, volume = s.volume, pitch = s.pitch)
 # 		for s in strref ])
@@ -1587,7 +1593,7 @@ IE.language("en")
 itm = read(IE.Resource"../ciopfs/bg2/game/override/sw1h06.itm")
 # game = IE.Game("../bg/game")
 # itm=read(game, IE.Resref"blun01.itm")
-# str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
+str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
 # # # IE.search(game, str, IE.Resource"ITM", "Varscona")
 # # key = IE.KeyIndex("../bg/game/chitin.key")
 # # # dlg = read(game, IE.Resref"melica.dlg")

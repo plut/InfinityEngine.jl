@@ -272,18 +272,17 @@ The intermedia
 
 """
 module Dialogs
-
+using ..Languages
 using InternedStrings
 using UniqueVectors
 #««1 Basic types
 #««2 Context
 mutable struct Context
-	language::Int
 	namespace::Union{Nothing,String}
 	actor::Union{Nothing,String}
 	trigger::Union{Nothing,String}
 
-	@inline Context() = new(0, nothing, nothing, nothing)
+	@inline Context() = new(nothing, nothing, nothing)
 end
 
 #««2 Context accessors
@@ -303,24 +302,6 @@ end
 @inline intern_string(::Nothing) = ""
 @inline intern_string(s::AbstractString) = intern(s)
 
-# ««2 String annotated with language
-struct LangString
-	lang::Int8
-	str::String
-end
-lang(s::LangString) = s.lang
-str(s::LangString) = s.string
-
-# our string type is Union{Int32,LangString}; methods for this go here:
-isstring(::Int32) = true
-isstring(s::LangString) = !iszero(s.lang)
-
-get_string(c::Context, str::AbstractString) =
-	(@assert !iszero(c.language); LangString(c.language, str))
-# special case: no text
-get_string(c::Context, ::Nothing) = LangString(0, "")
-
-
 # ««2 State keys
 struct StateKey{X}
 	namespace::String
@@ -329,11 +310,15 @@ struct StateKey{X}
 	@inline StateKey{X}(ns::AbstractString, a::AbstractString, l) where{X} =
 		new{X}(ns, a, l)
 end
+Base.show(io::IO, k::StateKey) =
+	print(io, k.actor, ":", k.namespace, "/", k.label|>repr, "")
+
 @inline (T::Type{<:StateKey})(::Context, namespace::AbstractString,
 	actor::AbstractString, label) = T(namespace, actor, label)
 @inline (T::Type{<:StateKey})(c::Context, actor::AbstractString, label) =
 	T(c, c.namespace, actor, label)
 @inline (T::Type{<:StateKey})(c::Context, label) = T(c, c.actor, label)
+
 
 # special case 1: exit transition keys are canonicalized
 @inline (T::Type{<:StateKey})(c::Context, ::AbstractString,
@@ -343,12 +328,12 @@ end
 struct State{I}
 	transitions::Vector{I}
 	priority::Float32
-	text::Union{Int32,LangString}
+	text::GameText
 	trigger::String
 end
 @inline State{I}(c::Context; text = nothing, trigger = nothing,
 		priority::Real = -eps(Float32)) where{I} =
-	State{I}(I[], priority, get_string(c, text), get_trigger(c, trigger))
+	State{I}(I[], priority, GameText(text), get_trigger(c, trigger))
 
 # ««2 Transition flags
 "module holding syntactic sugar for transition flags"
@@ -370,8 +355,8 @@ end
 # ««2 Transitions
 mutable struct Transition{X}
 	target::StateKey{X}
-	text::Union{Int32,LangString}
-	journal::Union{Int32,LangString}
+	text::GameText
+	journal::GameText
 	trigger::String
 	action::String
 	flags::UInt32
@@ -379,12 +364,12 @@ end
 function Transition{X}(c::Context, target;
 		text = nothing, journal = nothing, action = nothing, trigger = nothing,
 		flags = nothing, kwargs...) where{X}
-	text = get_string(c, text)::Union{Int32,LangString}
-	journal = get_string(c, journal)::Union{Int32,LangString}
+	text = GameText(text)
+	journal = GameText(journal)
 	trigger = get_trigger(c, trigger)::String
 	action = intern_string(action)::String
 	flags = something(flags, Flags.set(;
-		text = isstring(text), journal = isstring(journal),
+		text = isvalid(text), journal = isvalid(journal),
 		action = !isempty(action), trigger = !isempty(trigger), kwargs...))
 	Transition{X}(target, text, journal, trigger, intern_string(action), flags)
 end
@@ -578,10 +563,6 @@ end
 @inline reply(text::AbstractString; kw...) = transition(; text, kw...)
 
 # ««1 printing
-Base.show(io::IO, k::StateKey) =
-	print(io, k.actor, ":", k.namespace, "/", k.label|>repr, "")
-Base.show(io::IO, s::LangString) = print(io, s.lang, s.str|>repr)
-
 function Base.show(io::IO, mime::MIME"text/plain", m::Dialog)
 	keylist = m.keys|>collect
 	for (i,k) in keylist|>pairs

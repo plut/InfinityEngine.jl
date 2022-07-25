@@ -85,8 +85,7 @@ macro pack(defn)
 	# args[2] is the struct header, which is either
 	#   structname or <: ( structname, supertype)
 	structheader = defn.args[2]
-	structname = isexpr(structheader, :(<:)) ? structheader.args[1] :
-		structheader
+	structname = isexpr(structheader,:(<:)) ? structheader.args[1] : structheader
 	if isexpr(structname, :curly)
 		typeparams = structname.args[2:end]
 		structname = Expr(:curly, esc(structname.args[1]), typeparams...)
@@ -112,8 +111,9 @@ macro pack(defn)
 		# constructor
 		(isexpr(f,:(=)) || isexpr(f,:function)) && (push!(structcode, f); continue)
 		if isexpr(f, :(::))
-			println("reading one field: $f \e[34;1m head=$(f.head) args=$(f.args)\e[m")
-			f.args[2] = Core.eval(__module__, f.args[2])
+# 			println("reading one field: $f \e[34;1m head=$(f.head) args=$(f.args)\e[m")
+			f.args[2] = Core.eval(__module__,
+				:($(f.args[2]) where {$(typeparams...)}))
 			fn, ft = f.args
 			if fn isa Symbol
 				fv = fieldvar(fn)
@@ -218,14 +218,6 @@ export packed_layout, unpack, @pack
 
 end
 
-struct Blah
-	x::Int8
-end
-
-Pack.@pack struct Foo
-	a::Int8
-	x::Blah
-end
 # Pack.@pack mutable struct Foo{X}
 # 	"1234"
 # 	header::X

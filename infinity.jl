@@ -127,6 +127,7 @@ Index (32-bit) referring to a translated string in dialog.tlk or dialogF.tlk.
 struct Strref <: GameText
 	index::Int32
 end
+@inline Base.show(io::IO, s::Strref) = print(io, "Strref(", s.index, ")")
 
 """    LangString
 
@@ -163,7 +164,7 @@ include("dialogs.jl")
 using Printf
 using StaticArrays
 using Parameters
-import Base.read
+import Base.read, Base.write
 
 # ««1 Basic types
 # ««2 Extract zero-terminated string from IO
@@ -177,8 +178,8 @@ end
 # ««2 Static length strings
 struct StaticString{N} <: AbstractString
 	chars::SVector{N,UInt8}
-	@inline StaticString{N}(chars::AbstractVector{<:Integer}) where{N} =
-		new{N}(chars)
+	@inline StaticString{N}(chars::AbstractVector{UInt8}) where{N} = new{N}(
+		SVector{N,UInt8}(i ≤ length(chars) ? chars[i] : zero(UInt8) for i in 1:N))
 end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) = sizeof(s)
@@ -194,11 +195,11 @@ end
 end
 @inline function StaticString{N}(s::AbstractString) where{N}
 	@assert length(s) ≤ N "string must be at most $N characters long: \"$s\""
-	return StaticString{N}(codeunits(rpad(uppercase(s), N, '\0')))
+	return StaticString{N}(codeunits(uppercase(s)))
 end
 @inline StaticString{N}(s::StaticString{N}) where{N} = s
 
-@inline read(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
+@inline Pack.unpack(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
 
 # ««2 Indices: Resref etc.
 """    Resref{Type}, Resref"Type"
@@ -603,8 +604,8 @@ Minimum_base_stats
 	end
 end
 using .Opcodes: Opcode
-# ««2 Resource type (marked IO object)
-"""    Resource{Type}, Resource"TYPE"
+# ««2 ResIO type (marked IO object)
+"""    ResIO{Type}, ResIO"TYPE"
 
 A structure describing the physical location of a game resource
 (either from filesystem or from a BIF content),
@@ -616,48 +617,54 @@ marked with the resource name + type.
    as a field. The name is canonicalized as upper-case.
 
 Defined methods include:
- - `Resource"EXT"`: macro defining static value for this file type.
- - `read(::Resource{T})` (this opens the IO).
+ - `ResIO"EXT"`: macro defining static value for this file type.
+ - `read(::ResIO{T})` (this opens the IO).
 
-Concrete subtypes (i.e. `ResourceBuf`, `ResourceFile`) must implement:
+Concrete subtypes (i.e. `ResIOBuf`, `ResIOFile`) must implement:
  - `open(resource)`: returns an IO (this will automatically enable
    `open(f, resource)`; see `"base/io.jl"`).
  - `nameof(resource)`: returns the resource name as a String.
 
-Specializations (i.e. `Resource"DLG"` etc.) must implement:
- - `read(::Resource{T}, io::IO)`.
- - (**TODO**) `write(::Resource{T}, io::IO)`.
+Specializations (i.e. `ResIO"DLG"` etc.) must implement:
+ - `read(::ResIO{T}, io::IO)`.
+ - (**TODO**) `write(::ResIO{T}, io::IO)`.
 """
-abstract type Resource{T} end
-macro Resource_str(str)
+abstract type ResIO{T} end
+macro ResIO_str(str)
 	if contains(str, '.')
 		(_, b) = splitext(str)
-		return :(Resource{$(QuoteNode(Symbol(uppercase(b[2:end]))))}($str))
+		return :(ResIO{$(QuoteNode(Symbol(uppercase(b[2:end]))))}($str))
 	else
-		return :(Resource{$(QuoteNode(Symbol(uppercase(str))))})
+		return :(ResIO{$(QuoteNode(Symbol(uppercase(str))))})
 	end
 end
-# macro Resource_str(s) Resource{Symbol(uppercase(s))} end
-@inline read(f::Resource; kw...) = open(f) do io; read(io, f; kw...); end
+# macro Resource_str(s) ResIO{Symbol(uppercase(s))} end
+@inline read(f::ResIO; kw...) = open(f) do io; read(io, f; kw...); end
 
-mutable struct ResourceFile{T} <:Resource{T}
+mutable struct ResIOFile{T} <:ResIO{T}
 	filename::String
 end
-@inline Resource{T}(f::AbstractString) where{T} = ResourceFile{T}(f)
-@inline Resource(f::AbstractString) = 
-	Resource{Symbol(uppercase(splitext(basename(f))[2])[2:end])}(f)
-@inline Base.open(r::ResourceFile) = open(r.filename)
-@inline Base.nameof(r::ResourceFile) =
+@inline ResIO{T}(f::AbstractString) where{T} = ResIOFile{T}(f)
+@inline ResIO(f::AbstractString) = 
+	ResIO{Symbol(uppercase(splitext(basename(f))[2])[2:end])}(f)
+@inline Base.open(r::ResIOFile) = open(r.filename)
+@inline Base.nameof(r::ResIOFile) =
 	uppercase(splitext(basename(r.filename))[1])
 
-mutable struct ResourceBuf{T} <: Resource{T}
+mutable struct ResIOBuf{T} <: ResIO{T}
 	name::String
 	buffer::IOBuffer
 end
-@inline Base.open(r::ResourceBuf) = r.buffer
-@inline Base.nameof(r::ResourceBuf) = r.name
+@inline Base.open(r::ResIOBuf) = r.buffer
+@inline Base.nameof(r::ResIOBuf) = r.name
 
-Resref(r::Resource{T}) where{T} = Resref{T}(nameof(r))
+Resref(r::ResIO{T}) where{T} = Resref{T}(nameof(r))
+
+# abstract type Resource{T} end
+# macro Resource_str(str) :(Resource{$(QuoteNode(Symbol(uppercase(str))))}) end
+# function write(filename::AbstractString, res::Resource)
+# 	open(filename, "w") do io; write(io, res); end
+# end
 
 # ««1 tlk
 # TODO: remove type variable
@@ -692,16 +699,15 @@ struct TLK_str
 	offset::UInt32
 	length::UInt32
 end
-@pack struct TLK_hdr
-	"TLK V1  "
+struct TLK_hdr
+	constant::Constant"TLK V1  "
 	lang::UInt16
 	nstr::UInt32
 	offset::UInt32
 end
 
-function read(io::IO, f::Resource"TLK")
+function read(io::IO, f::ResIO"TLK")
 	header = unpack(io, TLK_hdr)
-	println(header.lang)
 	strref = unpack(io, TLK_str, header.nstr)
 	return TlkStrings([ TlkString(string0(io, header.offset + s.offset, s.length),
 		s.flags, s.sound, s.volume, s.pitch) for s in strref ])
@@ -737,7 +743,7 @@ struct BifIndex; data::UInt32; end
 (This is immediately translated to a string value when reading this file).
 """
 struct Restype; data::UInt16; end
-# ««2 Resource type table
+# ««2 ResIO type table
 
 # Static correspondence between UInt16 and strings (actually symbols).
 const RESOURCE_TABLE = Dict{UInt16,String}(#««
@@ -786,8 +792,8 @@ const RESOURCE_TABLE = Dict{UInt16,String}(#««
 @inline Base.Symbol(x::Restype) = Symbol(String(x))
 
 # ««2 File blocks
-@pack struct KEY_hdr
-	"KEY V1  "
+struct KEY_hdr
+	constant::StaticString{8} # "KEY V1  "
 	nbif::Int32
 	nres::Int32
 	bifoffset::UInt32
@@ -810,11 +816,11 @@ end
 Structure containing the index of BIF resources as described in `"chitin.key"`.
 Methods include:
 
- - `Resource(key, resref)`: converts a `Resref` to a `Resource` of matching type.
+ - `ResIO(key, resref)`: converts a `Resref` to a `ResIO` of matching type.
  - `read(key, resref)`: opens the resource and reads it.
- - `names(key, Resource"type")`: returns an iterator over all names of resources
+ - `names(key, ResIO"type")`: returns an iterator over all names of resources
    of this type present in the game.
- - `findall(Resource"type", key)`: returns an iterator over all resources.
+ - `findall(ResIO"type", key)`: returns an iterator over all resources.
 """
 struct KeyIndex
 	directory::String
@@ -847,8 +853,8 @@ function decrypt(io::IO)
 	end
 	return IOBuffer(buf)
 end
-@pack struct BIF_hdr
-	"BIFFV1  "
+struct BIF_hdr
+	constant::StaticString{8} # "BIFFV1  "
 	nres::UInt32
 	ntilesets::UInt32
 	offset::UInt32
@@ -862,12 +868,12 @@ struct BIF_resource
 	_1::UInt16
 end
 
-@pack struct BIF_tileset
+struct BIF_tileset
 	locator::BifIndex
 	offset::UInt32
 	ntiles::UInt32
 	size::UInt32
-	0x03eb
+	constant::UInt16 # 0x03eb
 	_1::UInt16
 end
 
@@ -878,21 +884,21 @@ bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
 	IOBuffer(read(seek(io, resources[index+1].offset), resources[index+1].size))
 end
 
-function (::Type{<:Resource{T}})(key::KeyIndex, name) where{T}
+function (::Type{<:ResIO{T}})(key::KeyIndex, name) where{T}
 	name = uppercase(name)
 	loc = get(key.location, (StaticString{8}(name), T), nothing)
 	isnothing(loc) && return nothing
 	bif = joinpath(key.directory, key.bif[1+sourcefile(loc)])
-	return ResourceBuf{T}(String(name), bifcontent(bif, resourceindex(loc)))
+	return ResIOBuf{T}(String(name), bifcontent(bif, resourceindex(loc)))
 end
-Base.names(key::KeyIndex, ::Type{Resource{T}}) where{T} =
+Base.names(key::KeyIndex, ::Type{ResIO{T}}) where{T} =
 	(r[1] for r in keys(key.location) if r[2] == T)
-Base.findall(T::Type{<:Resource}, key::KeyIndex) =
+Base.findall(T::Type{<:ResIO}, key::KeyIndex) =
 	(T(key, x) for x in names(key,T))
 
 # ««1 ids
 # useful ones: PROJECTL SONGLIST ITEMCAT NPC ANISND ?
-function read(io::IO, f::Resource"IDS"; debug=false)
+function read(io::IO, f::ResIO"IDS"; debug=false)
 	io = decrypt(io)
 	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
 	line = readline(io)
@@ -932,7 +938,7 @@ function Base.getindex(m::MatrixWithHeaders,
 	@assert !isnothing(i2) "Row header not found: '$s2'"
 	return m.matrix[i1,i2]
 end
-function read(io::IO, f::Resource"2DA"; debug=false, aligned=false)
+function read(io::IO, f::ResIO"2DA"; debug=false, aligned=false)
 	io = decrypt(io)
 	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
 	line = readline(io)
@@ -1008,8 +1014,8 @@ mutable struct CRE_scripts
 	general::Resref"bcs"
 	default::Resref"bcs"
 end
-@pack mutable struct CRE_hdr
-	"CRE V1.0"
+mutable struct CRE_hdr
+	constant::StaticString{8} # "CRE V1.0"
 	long_name::Strref
 	short_name::Strref # tooltip
 	flags::UInt32
@@ -1084,7 +1090,7 @@ end
 	effects_count::UInt32
 	dialog::Resref"DLG"
 end
-function read(io::IO, f::Resource"CRE")
+function read(io::IO, f::ResIO"CRE")
 	unpack(io, CRE_hdr)
 end
 # ««1 itm
@@ -1252,7 +1258,6 @@ end
 	Abjurer
 	Conjurer
 end
-@SymbolicFlagsFrom ItemCat UsabilityFlags
 struct ItemAnimation; name::StaticString{2}; end
 @DottedEnum WProf::UInt8 begin # WPROF.IDS
 	None = 0x00
@@ -1320,12 +1325,13 @@ end
 	CrushingSlashing = 8
 	BluntMissile = 9 # bugged
 end
+@SymbolicFlagsFrom ItemCat UsabilityFlags WProf AttackType DamageType
 # ««2 Data blocks
 @with_kw mutable struct ITM_ability
-	attack_type::UInt8
-	must_identify::UInt8
-	location::UInt8
-	alternative_dice_sides::UInt8
+ 	attack_type::UInt8
+ 	must_identify::UInt8
+ 	location::UInt8
+ 	alternative_dice_sides::UInt8
 	use_icon::Resref"BAM"
 	target_type::UInt8
 	target_count::UInt8
@@ -1355,7 +1361,7 @@ end
 	is_bullet::UInt16
 end
 @with_kw mutable struct ITM_feature
-	opcode::Opcode
+	opcode::UInt16
 	target::UInt8
 	power::UInt8
 	parameters::SVector{2,UInt32}
@@ -1368,9 +1374,10 @@ end
 	dice_sides::Int32
 	saving_throw_type::UInt32
 	saving_throw_bonus::Int32
+	stacking_id::UInt32
 end
-@pack mutable struct ITM_hdr{S}
-	"ITM V1  "
+mutable struct ITM_hdr{S}
+	constant::StaticString{8} # "ITM V1  "
 	unidentified_name::S
 	identified_name::S
 	replacement::Resref"ITM"
@@ -1396,60 +1403,98 @@ end
 	inventoryicon::Resref"BAM"
 	lore::UInt16
 	groundicon::Resref"BAM"
-	weight::UInt32
+	weight::Int32
 	unidentified_description::S
 	identified_description::S
 	description_icon::Resref"BAM"
-	enchantment::UInt32
-	offset(abilities)::UInt32
-	length(abilities)::UInt16
-# 	ext_header_offset::UInt32
-# 	ext_header_count::UInt16
+	enchantment::Int32
+# 	offset(abilities)::UInt32
+# 	length(abilities)::UInt16
+	abilities_offset::UInt32
+	abilities_count::UInt16
+# 	offset(features)::UInt32
 	feature_offset::UInt32
 	feature_index::UInt16
+# 	length(features)::UInt16
 	feature_count::UInt16
 	abilities::Vector{ITM_ability}
+	features::Vector{ITM_feature}
 end
 @inline searchkey(i::ITM_hdr) = i.identified_name
+# create a phony “not_usable_by” item property which groups together
+# all the 5 usability fields in the item struct:
 @inline function Base.getproperty(i::ITM_hdr, name::Symbol)
 	name ∈ fieldnames(typeof(i)) && return getfield(i, name)
 	name == :not_usable_by && return UsabilityFlags(
 		UInt64(i.usability) | UInt64(i.kit1) << 32 | UInt64(i.kit2) << 40 |
 		UInt64(i.kit3) << 48 | UInt64(i.kit4) << 56)
 end
-@inline function Base.setproperty!(i::ITM_hdr, name::Symbol, value)
-	name ∈ fieldnames(typeof(i)) && return setfield!(i, name, value)
-	if name == :not_usable_by
-		i.usability = UInt64(value) % UInt32
-		i.kit1 = (UInt64(value) >> 32) % UInt8
-		i.kit2 = (UInt64(value) >> 40) % UInt8
-		i.kit3 = (UInt64(value) >> 48) % UInt8
-		i.kit4 = (UInt64(value) >> 56) % UInt8
+@inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
+	for (fn, ft) in zip(fieldnames(typeof(x)), fieldtypes(typeof(x)))
+		name == fn && return setfield!(x, name, ft(value))
 	end
-	return value
+	if name == :not_usable_by
+		x.usability = UInt64(value) % UInt32
+		x.kit1 = (UInt64(value) >> 32) % UInt8
+		x.kit2 = (UInt64(value) >> 40) % UInt8
+		x.kit3 = (UInt64(value) >> 48) % UInt8
+		x.kit4 = (UInt64(value) >> 56) % UInt8
+		return value
+	end
+	error("unknown field name \"$name\"")
 end
 
 # ««2 Item function
-struct Item
-	header::ITM_hdr
-	abilities::Vector{ITM_ability}
-	features::Vector{ITM_feature}
-end
-function read(io::IO, ::Resource"ITM")
+function read(io::IO, ::ResIO"ITM")
 	header = unpack(io, ITM_hdr{Strref})
-# 	abilities = unpack(seek(io, header.ext_header_offset), ITM_ability,
-# 		header.ext_header_count)
-# 	features = unpack(seek(io, header.feature_offset), ITM_feature,
+# 	header.abilities = unpack(seek(io, header.abilities_offset), ITM_ability,
+# 		header.abilities_count)
+# 	header.features = unpack(seek(io, header.feature_offset), ITM_feature,
 # 		header.feature_count)
-# 	return Item(header, abilities, features)
+	unpack!(seek(io, header.abilities_offset), header.abilities, ITM_ability,
+		header.abilities_count)
+	unpack!(seek(io, header.feature_offset), header.features, ITM_feature,
+		header.feature_count)
+	return header
 end
-function write(io::IO, itm::Item)
-	itm.header.ext_header_offset = 114
-	itm.header.ext_header_count = length(itm.abilities)
-	itm.header.feature_offset =
-		114 + length(itm.abilities)*packed_sizeof(ITM_ability)
-	itm.header.feature_index = 0 # FIXME
-	itm.header.feature_count = length(itm.features)
+function Base.write(io::IO, itm::ITM_hdr)
+	itm.abilities_offset = 114
+	itm.abilities_count = length(itm.abilities)
+	itm.feature_offset = 114 + length(itm.abilities)*packed_sizeof(ITM_ability)
+	itm.feature_index = 0 # FIXME
+	itm.feature_count = length(itm.features)
+	pack(io, itm)
+end
+function Base.show(io::IO, ::MIME"text/plain", itm::ITM_hdr)
+	header=@sprintf("%20s/%-20s weight:%-3d gold:%-5d lore:%-3d    ",
+		itm.unidentified_name, itm.identified_name, itm.weight, itm.price, itm.lore)
+	chars=@sprintf("Str:\e[35m%2d/%2d\e[m Dex:\e[35m%2d\e[m Con:\e[35m%2d\e[m Wis:\e[35m%2d\e[m Int:\e[35m%2d\e[m Cha:\e[35m%2d\e[m Level:\e[35m% 3d\e[m",
+		itm.minstrength, itm.minstrengthbonus,
+		itm.mindexterity, itm.minconstitution, itm.minwisdom, itm.minintelligence,
+		itm.mincharisma, itm.minlevel)
+	nub = itm.not_usable_by
+	rep=x->repr(x;context=(:compact=>true))
+	if count_ones(nub.n) > count_zeros(nub.n)
+		use = "Usable by: \e[32m"*rep(~nub)*"\e[m"
+	else
+		use = "Not usable by: \e[31m"*rep(nub)*"\e[m"
+	end
+	print(io, """
+\e[7m$header\e[m
+Flags: \e[36m$(rep(itm.flags))\e[m
+Type: \e[36m$(rep(itm.item_type))\e[m Proficiency: \e[36m$(rep(itm.proficiency))\e[m Ench.\e[36m$(itm.enchantment)\e[m
+$use
+Requires: $chars
+Inventory: \e[34m$(itm.inventoryicon.name)\e[m stack=\e[34m$(itm.stackamount)\e[m groundicon=\e[34m$(itm.groundicon.name)\e[m Animation: \e[34m$(itm.animation.name)\e[m Image=\e[34m$(itm.description_icon.name)\e[m
+""")
+	for (i,ab) in pairs(itm.abilities)
+	print(io,"""
+\e[34;7mAbility $i/$(itm.abilities_count)                            \e[m
+Attack_type:$(ab.attack_type) $(ab.dice_thrown)d$(ab.dice_sides)+$(ab.damage_bonus), thac0 $(ab.thac0_bonus), speed $(ab.speed_factor)
+Alternative $(ab.alternative_dice_thrown)d$(ab.alternative_dice_sides)
+Range $(ab.range), $(ab.target_count) target(s) of type $(ab.target_type)
+""")
+	end
 end
 # ««1 dlg
 struct DLG_state{S}
@@ -1472,8 +1517,8 @@ struct DLG_string
 	offset::Int32 # of trigger string
 	length::Int32 # idem
 end
-@pack struct DLG_hdr
-	"DLG V1.0"
+struct DLG_hdr
+	constant::StaticString{8} # "DLG V1.0"
 	number_states::Int32
 	offset_states::Int32
 	number_transitions::Int32
@@ -1494,7 +1539,7 @@ end
 	for s in unpack(seek(io, offset), DLG_string, count)]
 
 
-function read(io::IO, f::Resource"DLG")
+function read(io::IO, f::ResIO"DLG")
 	self = Resref(f)
 	header = unpack(io, DLG_hdr)
 	states = unpack(seek(io,header.offset_states), DLG_state{Strref},
@@ -1556,15 +1601,15 @@ Main structure holding all top-level data for a game installation, including:
 
 Methods include:
 
- - `Resource(game, resref)`: converts a `Resref` to a `Resource`
+ - `ResIO(game, resref)`: converts a `Resref` to a `ResIO`
    (i.e. file descriptor) of the same type.
  - `read(game, resref)`: opens the corresponding resource and returns the
    appropriate Julia structure depending on the `Resref` type.
  - `filetype(game, resref)`: returns either 0 (resource not found),
    1 (resource found in bif), or 2 (resource found in override).
- - `names(game, Resource"type")`: returns a vector of all names of
+ - `names(game, ResIO"type")`: returns a vector of all names of
    existing resources of this type.
- - `findall(Resource"type", game)`: returns an iterator over all existing
+ - `findall(ResIO"type", game)`: returns an iterator over all existing
    resource descriptors of this type.
 """
 struct Game
@@ -1595,62 +1640,92 @@ function Game(directory::AbstractString)
 	return Game(directory, key, override)
 end
 " returns 2 if override, 1 if key/bif, 0 if not existing."
-function filetype(game::Game,::Type{Resource{T}}, name::AbstractString) where{T}
+function filetype(game::Game,::Type{ResIO{T}}, name::AbstractString) where{T}
 	haskey(game.override, T) && uppercase(String(name)) ∈ game.override[T] &&
 		return 2
 	haskey(game.key.location, (StaticString{8}(name), T)) && return 1
 	return 0
 end
-function Resource{T}(game::Game, name::AbstractString) where{T}
-	t = filetype(game, Resource{T}, name)
+function ResIO{T}(game::Game, name::AbstractString) where{T}
+	t = filetype(game, ResIO{T}, name)
 	if t == 2
 		file = joinpath(game.directory, "override", String(name)*'.'*String(T))
-		return ResourceFile{T}(file)
+		return ResIOFile{T}(file)
 	elseif t == 1
-		return Resource{T}(game.key, name)
+		return ResIO{T}(game.key, name)
 	else
 		error("resource not found: $name.$T")
 	end
 end
-@inline Resource(k::Union{Game,KeyIndex}, resref::Resref{T}) where{T} =
-	Resource{T}(k, nameof(resref))
+@inline ResIO(k::Union{Game,KeyIndex}, resref::Resref{T}) where{T} =
+	ResIO{T}(k, nameof(resref))
 
 @inline read(k::Union{Game,KeyIndex}, resref::Resref; kw...) =
-	read(Resource(k, resref); kw...)
+	read(ResIO(k, resref); kw...)
 @inline filetype(game::Game, resref::Resref{T}) where{T} =
-	filetype(game, Resource{T}, resref)
+	filetype(game, ResIO{T}, resref)
 
-@inline Base.names(game::Game, ::Type{Resource{T}}) where{T} =
-	get(game.override,T, String[]) ∪ names(game.key, Resource{T})
-@inline Base.findall(R::Type{<:Resource}, game::Game) =
+@inline Base.names(game::Game, ::Type{ResIO{T}}) where{T} =
+	get(game.override,T, String[]) ∪ names(game.key, ResIO{T})
+@inline Base.findall(R::Type{<:ResIO}, game::Game) =
 	(R(game, n) for n in names(game, R))
 
-"""    search(game, strings, Resource"type", text)
+"""    search(game, strings, ResIO"type", text)
 
 Searches for the given text (string or regular expression)
 in the names of all resources of the given `type`.
 `strings` is the string database used for translation.
 """
-function search(game::Game, str::TlkStrings, R::Type{<:Resource}, text)
+function search(game::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 	for res in all(game, R)
 		s = str[searchkey(read(res))].string
 		contains(s, text) || continue
-		@printf("%c%-8s %s\n", res isa ResourceFile ? '*' : ' ', nameof(res), s)
+		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', nameof(res), s)
 	end
 end
 # »»1
 end
 IE=InfinityEngine; S=IE.Pack
 IE.language("en")
-itm = read(IE.Resource"../ciopfs/bg2/game/override/sw1h06.itm")
-# game = IE.Game("../bg/game")
-# itm=read(game, IE.Resref"blun01.itm")
-# str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
-# # # IE.search(game, str, IE.Resource"ITM", "Varscona")
+# itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h06.itm")
+# itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h08.itm")
+game = IE.Game("../bg/game")
+# itm=read(game, IE.Resref"sw1h34.itm") # Albruin
+itm=read(game, IE.Resref"blun01.itm")
+write("/tmp/a.itm", itm)
+
+using Printf
+
+function xxd(x::Vector{UInt8}; offset=0)
+	for i in 1:offset
+		print("..")
+		iseven(i) && print(" ")
+	end
+	for i in 0:length(x)-1
+		@printf("%02x", x[i+1])
+		isodd(i+offset) && print(" ")
+		iszero((i+offset+1)%16) && print("\n")
+	end
+end
+# read abilities (@0x72=114, *1) features (@0xaa, *20)
+# write abilities(@0x72=114, *1) features (@0xae, *20) soit 4 de trop
+#
+# write: off(abilities) @ 0x64 = 100  (+4)
+#        len(abilities) @ 0x68 = 104
+#        off(features) @ 0x6a = 106
+#        feature_index @ 0x6e = 110
+#        len(features) @ 0x70 = 112
+#        abilities @ 0x72 = 114
+#        features @ 0xae = 174
+#
+# open("/tmp/a.itm", "w") do io; IE.pack(io, itm); end
+#
+# str=read(IE.ResIO"../bg/game/lang/fr_FR/dialog.tlk")
+# # # IE.search(game, str, IE.ResIO"ITM", "Varscona")
 # # key = IE.KeyIndex("../bg/game/chitin.key")
 # # # dlg = read(game, IE.Resref"melica.dlg")
 # dlg = read(game, IE.Resref"zorl.dlg")
-# # # dia = read(IE.Resource"dlg"(key, "abazigal"))
+# # # dia = read(IE.ResIO"dlg"(key, "abazigal"))
 # # 
 # D=IE.Dialogs
 # D.namespace("test")

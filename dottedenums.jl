@@ -21,8 +21,10 @@ function showtypename(io::IO, tn::Core.TypeName)
 	print(io, tn.name)
 end
 function showenum(io::IO, T::DataType, n::Integer)
-	showtypename(io, T.name)
 	sym = get(namemap(T), n, nothing)
+	get(io, :compact, false) && 
+		(print(io, isnothing(sym) ? repr(n) : sym); return)
+	showtypename(io, T.name)
 	if isnothing(sym)
 		print(io, '(', repr(n), ')')
 	else

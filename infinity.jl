@@ -1,7 +1,11 @@
 #=
 # TODO:
+# - easy syntax: define SymbolicNames e.g. Fighter, Cleric such that
+# MyEnum = Fighter | Cleric
+#   goes through [:Fighter, :Cleric] -> convert to MyEnum
+#   (using the enum flags)
 # - TEST 1: define an item
-# - a type for marked-language strings (pull from dialogs.jl)
+# + a type for marked-language strings (pull from dialogs.jl)
 # - make nice flags modules like dialog transitions
 # - check translation format
 #  - needs xgettext (or at least a very basic version)
@@ -174,10 +178,7 @@ end
 struct StaticString{N} <: AbstractString
 	chars::SVector{N,UInt8}
 	@inline StaticString{N}(chars::AbstractVector{<:Integer}) where{N} =
-	begin
-		println("chars = $chars")
 		new{N}(chars)
-	end
 end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) = sizeof(s)
@@ -694,19 +695,16 @@ end
 @pack struct TLK_hdr
 	"TLK V1  "
 	lang::UInt16
-	length(strings)::UInt32
-	offset(strings)::UInt32
-	strings::Vector{TLK_str}
-# 	nstr::UInt32
-# 	offset::UInt32
+	nstr::UInt32
+	offset::UInt32
 end
 
 function read(io::IO, f::Resource"TLK")
 	header = unpack(io, TLK_hdr)
-	return header
-# 	strref = unpack(io, TLK_str, header.nstr)
+	println(header.lang)
+	strref = unpack(io, TLK_str, header.nstr)
 	return TlkStrings([ TlkString(string0(io, header.offset + s.offset, s.length),
-		s.flags, s.sound, s.volume, s.pitch) for s in header.strings ])
+		s.flags, s.sound, s.volume, s.pitch) for s in strref ])
 # 	return TlkStrings([ (string = string0(io, header.offset + s.offset, s.length),
 # 		flags = s.flags, sound = s.sound, volume = s.volume, pitch = s.pitch)
 # 		for s in strref ])
@@ -1091,7 +1089,7 @@ function read(io::IO, f::Resource"CRE")
 end
 # ««1 itm
 # ««2 Enums etc.
-@dottedflags ItemFlag::UInt32 begin # ITEMFLAG.IDS
+@DottedFlags ItemFlag::UInt32 begin # ITEMFLAG.IDS
 	Indestructible
 	TwoHanded
 	Droppable
@@ -1113,7 +1111,7 @@ end
 	Undispellable = 0x01000000
 	ToggleCriticalHitAversion
 end
-@dottedenum ItemCat::UInt16 begin # ITEMCAT.IDS
+@DottedEnum ItemCat::UInt16 begin # ITEMCAT.IDS
 	Misc = 0x0000
 	Amulet = 0x0001
 	Armor = 0x0002
@@ -1181,7 +1179,7 @@ end
   Hat = 0x0048
   Gauntlet = 0x0049
 end
-@dottedflags UsabilityFlags::UInt32 begin # not found
+@DottedFlags UsabilityFlags::UInt64 begin
 	Chaotic
 	Evil
 	Good
@@ -1217,9 +1215,46 @@ end
 	Monk
 	Druid
 	HalfOrc
+	# byte 5 (kit 1)
+	Cleric_Talos
+	Cleric_Helm
+	Cleric_Lathander
+	Totemic_Druid
+	Shapeshifter
+	Avenger
+	Barbarian
+	Wildmage
+	# byte 6 (kit 2)
+	Stalker
+	Beastmaster
+	Assassin
+	Bounty_Hunter
+	Swashbuckler
+	Blade
+	Jester
+	Skald
+	# byte 7 (kit 3)
+	Diviner
+	Enchanter
+	Illusionist
+	Invoker
+	Necromancer
+	Transmuter
+	Generalist
+	Archer
+	# Byte 8 (kit 4)
+	Berserker
+	Wizard_Slayer
+	Kensai
+	Cavalier
+	Inquisitor
+	Undead_Hunter
+	Abjurer
+	Conjurer
 end
+@SymbolicFlagsFrom ItemCat UsabilityFlags
 struct ItemAnimation; name::StaticString{2}; end
-@dottedenum WProf::UInt8 begin # WPROF.IDS
+@DottedEnum WProf::UInt8 begin # WPROF.IDS
 	None = 0x00
 	BastardSword = 0x59
 	LongSword
@@ -1249,14 +1284,14 @@ struct ItemAnimation; name::StaticString{2}; end
 	TwoWeaponStyle
 	Club
 end
-@dottedenum AttackType::UInt8 begin # not found
+@DottedEnum AttackType::UInt8 begin # not found
 	None = 0
 	Melee
 	Ranged
 	Magical
 	Launcher
 end
-@dottedenum TargetType::UInt8 begin # not found
+@DottedEnum TargetType::UInt8 begin # not found
 	Invalid = 0
 	LivingActor = 1
 	Inventory = 2
@@ -1265,7 +1300,7 @@ end
 	Caster = 5
 	CasterInstant = 7
 end
-@dottedenum LauncherType::UInt8 begin # not found
+@DottedEnum LauncherType::UInt8 begin # not found
 	None = 0
 	Bow
 	Crossbow
@@ -1273,7 +1308,7 @@ end
 	Spear = 40
 	ThrowingAxe = 100
 end
-@dottedenum DamageType::UInt8 begin # not found
+@DottedEnum DamageType::UInt8 begin # not found
 	None = 0
 	Piercing = 1
 	Crushing = 2
@@ -1376,6 +1411,23 @@ end
 	abilities::Vector{ITM_ability}
 end
 @inline searchkey(i::ITM_hdr) = i.identified_name
+@inline function Base.getproperty(i::ITM_hdr, name::Symbol)
+	name ∈ fieldnames(typeof(i)) && return getfield(i, name)
+	name == :not_usable_by && return UsabilityFlags(
+		UInt64(i.usability) | UInt64(i.kit1) << 32 | UInt64(i.kit2) << 40 |
+		UInt64(i.kit3) << 48 | UInt64(i.kit4) << 56)
+end
+@inline function Base.setproperty!(i::ITM_hdr, name::Symbol, value)
+	name ∈ fieldnames(typeof(i)) && return setfield!(i, name, value)
+	if name == :not_usable_by
+		i.usability = UInt64(value) % UInt32
+		i.kit1 = (UInt64(value) >> 32) % UInt8
+		i.kit2 = (UInt64(value) >> 40) % UInt8
+		i.kit3 = (UInt64(value) >> 48) % UInt8
+		i.kit4 = (UInt64(value) >> 56) % UInt8
+	end
+	return value
+end
 
 # ««2 Item function
 struct Item
@@ -1593,7 +1645,7 @@ IE.language("en")
 itm = read(IE.Resource"../ciopfs/bg2/game/override/sw1h06.itm")
 # game = IE.Game("../bg/game")
 # itm=read(game, IE.Resref"blun01.itm")
-str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
+# str=read(IE.Resource"../bg/game/lang/fr_FR/dialog.tlk")
 # # # IE.search(game, str, IE.Resource"ITM", "Varscona")
 # # key = IE.KeyIndex("../bg/game/chitin.key")
 # # # dlg = read(game, IE.Resref"melica.dlg")

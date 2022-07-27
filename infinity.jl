@@ -1,27 +1,21 @@
 #=
 # TODO:
-# - easy syntax: define SymbolicNames e.g. Fighter, Cleric such that
-# MyEnum = Fighter | Cleric
-#   goes through [:Fighter, :Cleric] -> convert to MyEnum
-#   (using the enum flags)
+# - improve SymbolicFlags/SymbolicEnum:
+#  * auto generate SymbolicNames
+#   * with warning if they exist and are not SymbolicNames
+#  * display method is EnumType(SymbolicName) (if not compact)
+#  *
 # - TEST 1: define an item
 # + a type for marked-language strings (pull from dialogs.jl)
 # - make nice flags modules like dialog transitions
 # - check translation format
 #  - needs xgettext (or at least a very basic version)
-#  - languages ?
-#   - use one master language (typ. en_US) for determining when to add
-#     strings, then compile strings for all languages with same strrefs
-#     (obviously!)
+# * nice display methods for items, creatures, dialog etc.
 # - forbidden NTFS chars to choose a prefix: <>:"/\|?*
-# * `.d` => julia syntactic transformation
-# - nice display methods for items, creatures, dialog etc.
 # - namespace conflict resolution: resources have a symbolic and concrete
 # name, use a table for resolving
 #  - store the table in a .ids file
-# - Pack: allow invisible fields (i.e. present in the structure
-#   but not in the file)
-#   + add extra constructors: init(fieldtype, structtype, fieldname)
+# - `.d` => julia syntactic transformation
 =#
 
 module InfinityEngine
@@ -150,7 +144,8 @@ end
 struct StaticString{N} <: AbstractString
 	chars::SVector{N,UInt8}
 	@inline StaticString{N}(chars::AbstractVector{UInt8}) where{N} = new{N}(
-		SVector{N,UInt8}(i ≤ length(chars) ? chars[i] : zero(UInt8) for i in 1:N))
+		SVector{N,UInt8}(i ≤ length(chars) ?
+			chars[i]|>Char|>lowercase|>UInt8 : zero(UInt8) for i in 1:N))
 end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) = sizeof(s)
@@ -203,7 +198,8 @@ Base.show(io::IO, r::Resref{T}) where{T} =
 	print(io, "Resref\"", nameof(r), '.', T, '"')
 
 module Opcodes
-	@enum Opcode::UInt16 begin
+using ..DottedEnums
+	@SymbolicEnum Opcode::UInt16 begin
 AC_bonus = 0
 Modify_attacks_per_round
 Cure_sleep
@@ -731,46 +727,46 @@ struct Restype; data::UInt16; end
 
 # Static correspondence between UInt16 and strings (actually symbols).
 const RESOURCE_TABLE = Dict{UInt16,String}(#««
-	0x0001 => "BMP",
-	0x0002 => "MVE",
-	0x0004 => "WAV",
-	0x0006 => "PLT",
-	0x03e8 => "BAM",
-	0x03e9 => "WED",
-	0x03ea => "CHU",
-	0x03eb => "TIS",
-	0x03ec => "MOS",
-	0x03ed => "ITM",
-	0x03ee => "SPL",
-	0x03ef => "BCS",
-	0x03f0 => "IDS",
-	0x03f1 => "CRE",
-	0x03f2 => "ARE",
-	0x03f3 => "DLG",
-	0x03f4 => "2DA",
-	0x03f5 => "GAM",
-	0x03f6 => "STO",
-	0x03f7 => "WMP",
-	0x03f8 => "CHR",
-	0x03f9 => "BS",
-	0x03fa => "CHR2",
-	0x03fb => "VVC",
-	0x03fc => "VFC",
-	0x03fd => "PRO",
-	0x03fe => "BIO",
-	0x03ff => "WBM",
-	0x0400 => "FNT",
-	0x0402 => "GUI",
-	0x0403 => "SQL",
-	0x0404 => "PVRZ",
-	0x0405 => "GLSL",
-	0x0408 => "MENU",
-	0x0409 => "LUA",
-	0x040a => "TTF",
-	0x040b => "PNG",
-	0x044c => "BAH",
-	0x0802 => "INI",
-	0x0803 => "SRC",
+	0x0001 => "bmp",
+	0x0002 => "mve",
+	0x0004 => "wav",
+	0x0006 => "plt",
+	0x03E8 => "bam",
+	0x03E9 => "wed",
+	0x03EA => "chu",
+	0x03EB => "tis",
+	0x03EC => "mos",
+	0x03ED => "itm",
+	0x03EE => "spl",
+	0x03EF => "bcs",
+	0x03F0 => "ids",
+	0x03F1 => "cre",
+	0x03F2 => "are",
+	0x03F3 => "dlg",
+	0x03F4 => "2da",
+	0x03F5 => "gam",
+	0x03F6 => "sto",
+	0x03F7 => "wmp",
+	0x03F8 => "chr",
+	0x03F9 => "bs",
+	0x03FA => "chr2",
+	0x03FB => "vvc",
+	0x03FC => "vfc",
+	0x03FD => "pro",
+	0x03FE => "bio",
+	0x03FF => "wbm",
+	0x0400 => "fnt",
+	0x0402 => "gui",
+	0x0403 => "sql",
+	0x0404 => "pvrz",
+	0x0405 => "glsl",
+	0x0408 => "menu",
+	0x0409 => "lua",
+	0x040A => "ttf",
+	0x040B => "png",
+	0x044C => "bah",
+	0x0802 => "ini",
+	0x0803 => "src",
 )#»»
 @inline String(x::Restype) = get(RESOURCE_TABLE, x.data, x.data|>repr)
 @inline Base.Symbol(x::Restype) = Symbol(String(x))
@@ -837,7 +833,6 @@ init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
 end
 
 KeyIndex(filename::AbstractString) = init!(KeyIndex(), filename)
-
 const XOR_KEY = "88a88fba8ad3b9f5edb1cfeaaae4b5fbeb82f990cac9b5e7dc8eb7aceef7e0ca8eeaca80cec5adb7c4d08493d5f0ebc8b49dccafa595ba9987d29de391ba90ca"|>hex2bytes
 
 function decrypt(io::IO)
@@ -1090,7 +1085,7 @@ function read(io::IO, f::ResIO"CRE")
 end
 # ««1 itm
 # ««2 Enums etc.
-@DottedFlags ItemFlag::UInt32 begin # ITEMFLAG.IDS
+@SymbolicFlags ItemFlag::UInt32 begin # ITEMFLAG.IDS
 	Indestructible
 	TwoHanded
 	Droppable
@@ -1112,7 +1107,7 @@ end
 	Undispellable = 0x01000000
 	ToggleCriticalHitAversion
 end
-@DottedEnum ItemCat::UInt16 begin # ITEMCAT.IDS
+@SymbolicEnum ItemCat::UInt16 begin # ITEMCAT.IDS
 	Misc = 0x0000
 	Amulet = 0x0001
 	Armor = 0x0002
@@ -1180,7 +1175,7 @@ end
   Hat = 0x0048
   Gauntlet = 0x0049
 end
-@DottedFlags UsabilityFlags::UInt64 begin
+@SymbolicFlags UsabilityFlags::UInt64 begin
 	Chaotic
 	Evil
 	Good
@@ -1254,7 +1249,7 @@ end
 	Conjurer
 end
 struct ItemAnimation; name::StaticString{2}; end
-@DottedEnum WProf::UInt8 begin # WPROF.IDS
+@SymbolicEnum WProf::UInt8 begin # WPROF.IDS
 	None = 0x00
 	BastardSword = 0x59
 	LongSword
@@ -1284,14 +1279,14 @@ struct ItemAnimation; name::StaticString{2}; end
 	TwoWeaponStyle
 	Club
 end
-@DottedEnum AttackType::UInt8 begin # not found
+@SymbolicEnum AttackType::UInt8 begin # not found
 	None = 0
 	Melee
 	Ranged
 	Magical
 	Launcher
 end
-@DottedEnum TargetType::UInt8 begin # not found
+@SymbolicEnum TargetType::UInt8 begin # not found
 	Invalid = 0
 	LivingActor = 1
 	Inventory = 2
@@ -1300,7 +1295,19 @@ end
 	Caster = 5
 	CasterInstant = 7
 end
-@DottedEnum LauncherType::UInt8 begin # not found
+@SymbolicEnum FeatureTarget::UInt8 begin
+	None = 0
+	Self = 1
+	Projectile_Target = 2
+	Party = 3
+	Everyone = 4
+	Everyone_except_party = 5
+	Caster_group = 6
+	Target_group = 7
+	Everyone_except_self = 8
+	Original_caster = 9
+end
+@SymbolicEnum LauncherType::UInt8 begin # not found
 	None = 0
 	Bow
 	Crossbow
@@ -1308,7 +1315,7 @@ end
 	Spear = 40
 	ThrowingAxe = 100
 end
-@DottedEnum DamageType::UInt8 begin # not found
+@SymbolicEnum DamageType::UInt8 begin # not found
 	None = 0
 	Piercing = 1
 	Crushing = 2
@@ -1320,15 +1327,14 @@ end
 	CrushingSlashing = 8
 	BluntMissile = 9 # bugged
 end
-@SymbolicFlagsFrom ItemCat UsabilityFlags WProf AttackType DamageType
 # ««2 Data blocks
 @with_kw mutable struct ITM_ability
- 	attack_type::UInt8
+ 	attack_type::AttackType
  	must_identify::UInt8
  	location::UInt8
  	alternative_dice_sides::UInt8
 	use_icon::Resref"BAM"
-	target_type::UInt8
+	target_type::TargetType
 	target_count::UInt8
 	range::UInt16
 	launcher_required::UInt8
@@ -1341,7 +1347,7 @@ end
 	dice_thrown::UInt8
 	secondary_type::UInt8
 	damage_bonus::UInt16
-	damage_type::UInt16
+	damage_type::DamageType
 	nfeatures::UInt16
 	idxfeatures::UInt16
 	max_charges::UInt16
@@ -1356,8 +1362,8 @@ end
 	is_bullet::UInt16
 end
 @with_kw mutable struct ITM_feature
-	opcode::UInt16
-	target::UInt8
+	opcode::Opcodes.Opcode
+	target::FeatureTarget
 	power::UInt8
 	parameters::SVector{2,UInt32}
 	timing_mode::UInt8
@@ -1461,7 +1467,7 @@ function Base.write(io::IO, itm::ITM_hdr)
 	pack(io, itm)
 end
 function Base.show(io::IO, ::MIME"text/plain", itm::ITM_hdr)
-	header=@sprintf("%24s/%-28s ⚖%-3d ❍%-5d ❝%-3d ",
+	header=@sprintf("%26s/%-32s ⚖%-3d ❍%-5d ❝%-3d ",
 		str(itm.unidentified_name), str(itm.identified_name),
 		itm.weight, itm.price, itm.lore)
 	chars=@sprintf("Str:\e[35m%2d/%2d\e[m Dex:\e[35m%2d\e[m Con:\e[35m%2d\e[m Wis:\e[35m%2d\e[m Int:\e[35m%2d\e[m Cha:\e[35m%2d\e[m Level:\e[35m% 3d\e[m",
@@ -1485,10 +1491,16 @@ Inventory: \e[34m$(itm.inventoryicon.name)\e[m stack=\e[34m$(itm.stackamount)\e[
 """)
 	for (i,ab) in pairs(itm.abilities)
 	print(io,"""
-\e[34;7mAbility $i/$(itm.abilities_count)                            \e[m
-Attack_type:$(ab.attack_type) $(ab.dice_thrown)d$(ab.dice_sides)+$(ab.damage_bonus), thac0 $(ab.thac0_bonus), speed $(ab.speed_factor)
+\e[34;7mAbility $i/$(itm.abilities_count)$(' '^40)\e[m
+Attack_type:$(rep(ab.attack_type)) $(rep(ab.damage_type)) $(ab.dice_thrown)d$(ab.dice_sides)+$(ab.damage_bonus), thac0 $(ab.thac0_bonus), speed $(ab.speed_factor)
 Alternative $(ab.alternative_dice_thrown)d$(ab.alternative_dice_sides)
-Range $(ab.range), $(ab.target_count) target(s) of type $(ab.target_type)
+Range $(ab.range), $(ab.target_count) target(s) of type $(rep(ab.target_type))
+""")
+	end
+	for (i, ft) in pairs(itm.features)
+	print(io, """
+\e[32;7mFeature $i/$(itm.feature_count)$(' '^30)\e[m
+Opcode: $(rep(ft.opcode))  target:$(rep(ft.target))
 """)
 	end
 end
@@ -1631,26 +1643,28 @@ function Base.show(io::IO, game::Game)
 end
 
 const LANGUAGE_FILES = (#««
+	# We need to put the xxF before xx, because the regexp search goes
+	# linearly through this list:
 	r"^en.*" => "en_US/dialog.tlk", # first value is default value
 	r"^c[sz].*"i => "cs_CZ/dialog.tlk",
-	r"^de.*"i => "de_DE/dialog.tlk",
 	r"^de.*F"i => "de_DE/dialogF.tlk",
-	r"^es.*"i => "es_ES/dialog.tlk",
+	r"^de.*"i => "de_DE/dialog.tlk",
 	r"^es.*F"i => "es_ES/dialogF.tlk",
-	r"^fr.*"i => "fr_FR/dialog.tlk",
+	r"^es.*"i => "es_ES/dialog.tlk",
 	r"^fr.F*"i => "fr_FR/dialogF.tlk",
+	r"^fr.*"i => "fr_FR/dialog.tlk",
 	r"^hu.*"i => "hu_HU/dialog.tlk",
-	r"^it.*"i => "it_IT/dialog.tlk",
 	r"^it.*F"i => "it_IT/dialogF.tlk",
-	r"^ja.*"i => "ja_JP/dialog.tlk",
+	r"^it.*"i => "it_IT/dialog.tlk",
 	r"^ja.*F"i => "ja_JP/dialogF.tlk",
+	r"^ja.*"i => "ja_JP/dialog.tlk",
 	r"^ko.*"i => "ko_KR/dialog.tlk",
-	r"^pl.*"i => "pl_PL/dialog.tlk",
 	r"^pl.*F"i => "pl_PL/dialogF.tlk",
-	r"^pt.*"i => "pt_BR/dialog.tlk",
+	r"^pl.*"i => "pl_PL/dialog.tlk",
 	r"^pt.*F"i => "pt_BR/dialogF.tlk",
-	r"^ru.*"i => "ru_RU/dialog.tlk",
+	r"^pt.*"i => "pt_BR/dialog.tlk",
 	r"^ru.*F"i => "ru_RU/dialogF.tlk",
+	r"^ru.*"i => "ru_RU/dialog.tlk",
 	r"^tr.*"i => "tr_TR/dialog.tlk",
 	r"^uk.*"i => "uk_UA/dialog.tlk",
 	r"^zh.*"i => "zh_CN/dialog.tlk",
@@ -1754,7 +1768,23 @@ function search(game::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', nameof(res), s)
 	end
 end
+
+# Item generator ««1
+# TODO: make this work even for non-mutable types:
+# (hard since we are overloading setproperty!)
+function clone(x::T; kwargs...) where{T}
+	vars = (get(kwargs, fn, getfield(x, fn)) for fn in fieldnames(T))
+	y = T(vars...)
+	# TODO: add "args..." field and push stuff to kwargs depending
+	# on args and T (e.g. Item => identified_name)
+	for (k, v) in pairs(kwargs)
+		setproperty!(y, k, v)
+	end
+	y
+end
+
 # »»1
+
 
 const game = Game()
 for f in (:language, :init!, :str, :strref)
@@ -1773,6 +1803,7 @@ IE=InfinityEngine; S=IE.Pack
 # itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h06.itm")
 # itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h08.itm")
 IE.init!("../bg/game")
+r=IE.Resref"sw1h34.itm"
 # game = IE.Game("../bg/game")
 itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
  

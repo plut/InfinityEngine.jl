@@ -243,6 +243,10 @@ Base.convert(T::Type{<:DottedEnum}, f::SymbolicFlags) =
 	getproperty(T, only(f.members))
 (T::Type{<:DottedEnum})(f::SymbolicFlags) = convert(T,f)
 
+Base.:(==)(e::T, f::Union{SymbolicFlags,SymbolicNot}
+	) where{T<:Union{DottedEnum,DottedFlags}} = convert(T,f) == e
+	
+
 Base.:|(f1::DottedFlags, f2::SymbolicFlags) = f1 | typeof(f1)(f2)
 Base.:&(f1::DottedFlags, f2::SymbolicFlags) = f1 & typeof(f1)(f2)
 Base.:⊻(f1::DottedFlags, f2::SymbolicFlags) = f1 ⊻ typeof(f1)(f2)

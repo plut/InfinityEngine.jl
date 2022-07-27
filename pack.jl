@@ -73,12 +73,19 @@ Unpacks `n` objects and returns a vector.
 """
 function unpack(io::IO, T::DataType)
 	# default value for non-`@pack` types
+# 	println("   unpacking \e[31m$T\e[m at position \e[34m$(position(io))\e[m")
 	isstructtype(T) || return read(io, T)
+# 	fieldvars = []
+# 	for (ft, fn) in zip(fieldtypes(T), fieldnames(T))
+# 		println("\e[31;1m$T\e[m: field $ft at positoin \e[32m$(position(io))\e[m")
+# 		push!(fieldvars, unpack(io, ft))
+# 	end
 	fieldvars = [ unpack(io, ft) for ft in fieldtypes(T) ]
 	return T <: Tuple ? T((fieldvars...,),) : T(fieldvars...)
 end
 unpack(io::IO, T::DataType, n::Integer) = [ unpack(io, T) for _ in 1:n ]
 unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
+unpack(io::IO, T::Type{<:Dict}) = T()
 unpack(io::IO, ::Type{String}) = ""
 function unpack!(io::IO, array::AbstractVector, T::DataType, n::Integer)
 	resize!(array, n)
@@ -108,6 +115,8 @@ end
 pack(io::IO, x::Vector) = sum(pack(io, y) for y in x)
 
 struct Constant{V} end
+@inline Base.convert(T::Type{<:Constant}, ::Tuple{}) = T()
+
 @inline value(::Type{Constant{V}}) where{V} = V
 @inline function unpack(io::IO, ::Type{Constant{V}}) where{V}
 	x = read(io, sizeof(V))

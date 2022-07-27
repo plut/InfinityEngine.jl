@@ -93,25 +93,6 @@ function functor(f, T::UnionAll, x::TX, B = nothing) where{TX}
 end
 end
 module Languages
-using UniqueVectors
-
-# TODO: should we make this a static list? There are 30 languages total...
-const languages = UniqueVector{String}()
-const current_language = Ref(0)
-
-"""    language(l)
-
-Sets current language to `l`. This will be used for future invocations
-of `LangString(l)`.
-"""
-@inline language(str::AbstractString) =
-	current_language[] = findfirst!(isequal(str), languages)
-"""    language()
-
-Returns current language (as a string).
-"""
-@inline language() = language(current_language[])
-
 """    GameText
 
 A value describing a translated in-game string: either a `Strref`
@@ -138,23 +119,12 @@ struct LangString <: GameText
 	string::String
 end
 
-@inline language(s::LangString) = languages[s.lang]
-@inline str(s::LangString) = s.string
-
 @inline Base.show(io::IO, s::LangString) = print(io, s|>language, s|>str|>repr)
-
-"""    GameText(string)
-
-Converts `string` to a `GameText`; usually a `LangString` using current
-language."""
-@inline GameText(str::AbstractString) = LangString(current_language[], str)
-@inline GameText(::Nothing) = Strref(0) # graceful fail...
-@inline GameText(t::GameText) = t
 
 @inline Base.isvalid(::LangString) = true
 @inline Base.isvalid(s::Strref) = (s.index > 0)
 
-export GameText, Strref, LangString, language
+export GameText, Strref, LangString
 end
 using .Languages
 include("pack.jl"); using .Pack
@@ -164,6 +134,7 @@ include("dialogs.jl")
 using Printf
 using StaticArrays
 using Parameters
+using UniqueVectors
 import Base.read, Base.write
 
 # ««1 Basic types
@@ -667,64 +638,66 @@ Resref(r::ResIO{T}) where{T} = Resref{T}(nameof(r))
 # end
 
 # ««1 tlk
-# TODO: remove type variable
-struct TlkString
-	string::String
-	flags::UInt16
-	sound::Resref"WAV"
-	volume::UInt32
-	pitch::UInt32
-end
-struct TlkStrings
-	strings::Vector{TlkString}
-	index::Dict{String,Int32}
-	# i is the Julia index, not the strref
-	@inline TlkStrings(strings::AbstractVector{TlkString}) =
-		new(strings, Dict(s.string=>i for (i,s) in pairs(strings)))
-end
-@inline Base.show(io::IO, tlk::TlkStrings) =
-	print(io, "<TlkStrings with ", length(tlk.strings), " entries>")
-
-function Base.getindex(f::TlkStrings, s::Strref)
-	i = s.index
-	i ∈ eachindex(f.strings) || (i = 0)
-	f.strings[i+1]
-end
-
-struct TLK_str
+# ««2 Type and constructors
+mutable struct TLK_str
 	flags::UInt16
 	sound::Resref"WAV"
 	volume::UInt32
 	pitch::UInt32
 	offset::UInt32
 	length::UInt32
+	string::String
 end
-struct TLK_hdr
+struct TlkStrings
 	constant::Constant"TLK V1  "
 	lang::UInt16
 	nstr::UInt32
 	offset::UInt32
+	entries::Vector{TLK_str}
+	index::Dict{String,Int32}
+end
+@inline TlkStrings() = TlkStrings((), 0, 0, 0, TLK_str[], Dict{String,Int32}())
+@inline Base.show(io::IO, tlk::TlkStrings) =
+	print(io, "<TlkStrings with ", length(tlk.entries), " entries>")
+@inline Base.isempty(v::TlkStrings) = isempty(v.entries)
+@inline Base.length(v::TlkStrings) = length(v.entries)
+
+#««2 Read from TLK (TODO merge this with previous section)
+
+function read(io::IO, ::Type{<:TlkStrings})
+	f = unpack(io, TlkStrings)
+	unpack!(io, f.entries, TLK_str, f.nstr)
+	sizehint!(empty!(f.index), f.nstr)
+	for (i,s) in pairs(f.entries)
+		s.string = string0(io, f.offset + s.offset, s.length)
+		f.index[s.string] = i
+	end
+	return f
 end
 
-function read(io::IO, f::ResIO"TLK")
-	header = unpack(io, TLK_hdr)
-	strref = unpack(io, TLK_str, header.nstr)
-	return TlkStrings([ TlkString(string0(io, header.offset + s.offset, s.length),
-		s.flags, s.sound, s.volume, s.pitch) for s in strref ])
-# 	return TlkStrings([ (string = string0(io, header.offset + s.offset, s.length),
-# 		flags = s.flags, sound = s.sound, volume = s.volume, pitch = s.pitch)
-# 		for s in strref ])
-end
+#««2 Dictionary interface
 Base.findall(r::Union{Regex,AbstractString}, tlk::TlkStrings) =
-	[ Strref(i-1) for (i,s) in pairs(tlk.strings) if contains(s.string, r) ]
+	[ Strref(i-1) for (i,s) in pairs(tlk.entries) if contains(s.string, r) ]
 
-function Strref(tlk::TlkStrings, s::AbstractString)
+function Base.push!(tlk::TlkStrings, s::AbstractString)
 	i = get(tlk.index, s, nothing)
 	if isnothing(i)
-		push!(tlk.strings, s)
-		i = tlk.index[s] = length(tlk.strings)
+		push!(tlk.entries, s)
+		i = tlk.index[s] = length(tlk.entries)
 	end
 	return Strref(i-1)
+end
+
+function Base.get(f::TlkStrings, s::AbstractString, n)
+	i = get(f.index, s, nothing)
+	isnothing(i) && return n
+	return Strref(i-1)
+end
+
+function Base.getindex(f::TlkStrings, s::Strref)
+	i = s.index
+	i ∈ eachindex(f.entries) || (i = 0)
+	f.entries[i+1]
 end
 
 # ««1 key/bif
@@ -823,25 +796,36 @@ Methods include:
  - `findall(ResIO"type", key)`: returns an iterator over all resources.
 """
 struct KeyIndex
-	directory::String
+	directory::Base.RefValue{String}
 	bif::Vector{String}
-	resources::Vector{KEY_res}
+# 	resources::Vector{KEY_res}
 	location::Dict{Tuple{StaticString{8},Symbol},BifIndex}
 	function KeyIndex(dir, bif, res::AbstractVector{KEY_res})
 		loc = Dict((uppercase(r.name), Symbol(r.type)) => r.location for r in res)
-		new(dir, bif, res, loc)
+		new(Ref(dir), bif, res, loc)
 	end
+	@inline KeyIndex() =
+		new(Ref(""), [], Dict{Tuple{StaticString{8},Symbol},BifIndex}())
 end
-KeyIndex(filename::AbstractString) = open(filename) do io
-	dir = dirname(filename)
+function Base.push!(key::KeyIndex, res::KEY_res)
+	k = (res.name, Symbol(res.type))
+	key.location[k] = res.location
+# 	push!(key.resources, res)
+end
+@inline Base.length(key::KeyIndex) = length(key.location)
+
+init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
+	key.directory[] = dirname(filename)
 	header = unpack(io, KEY_hdr)
-	seek(io, header.bifoffset)
-	bifentries = unpack(io, KEY_bif, header.nbif)
-	bifnames = [ string0(io, x.offset, x.namelength) for x in bifentries ]
-	seek(io, header.resoffset)
-	resentries = unpack(io, KEY_res, header.nres)
-	return KeyIndex(dir, bifnames, resentries)
+	bifentries = unpack(seek(io, header.bifoffset), KEY_bif, header.nbif)
+	push!(key.bif, (string0(io, x.offset, x.namelength) for x in bifentries)...)
+	for res in unpack(seek(io, header.resoffset), KEY_res, header.nres)
+		push!(key, res)
+	end
+	return key
 end
+
+KeyIndex(filename::AbstractString) = init!(KeyIndex(), filename)
 
 const XOR_KEY = "88a88fba8ad3b9f5edb1cfeaaae4b5fbeb82f990cac9b5e7dc8eb7aceef7e0ca8eeaca80cec5adb7c4d08493d5f0ebc8b49dccafa595ba9987d29de391ba90ca"|>hex2bytes
 
@@ -888,7 +872,7 @@ function (::Type{<:ResIO{T}})(key::KeyIndex, name) where{T}
 	name = uppercase(name)
 	loc = get(key.location, (StaticString{8}(name), T), nothing)
 	isnothing(loc) && return nothing
-	bif = joinpath(key.directory, key.bif[1+sourcefile(loc)])
+	bif = joinpath(key.directory[], key.bif[1+sourcefile(loc)])
 	return ResIOBuf{T}(String(name), bifcontent(bif, resourceindex(loc)))
 end
 Base.names(key::KeyIndex, ::Type{ResIO{T}}) where{T} =
@@ -1431,6 +1415,7 @@ end
 end
 @inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
 	for (fn, ft) in zip(fieldnames(typeof(x)), fieldtypes(typeof(x)))
+		ft == Strref && value isa AbstractString && (value = strref(game, value))
 		name == fn && return setfield!(x, name, ft(value))
 	end
 	if name == :not_usable_by
@@ -1443,7 +1428,6 @@ end
 	end
 	error("unknown field name \"$name\"")
 end
-
 # ««2 Item function
 function read(io::IO, ::ResIO"ITM")
 	header = unpack(io, ITM_hdr{Strref})
@@ -1466,8 +1450,9 @@ function Base.write(io::IO, itm::ITM_hdr)
 	pack(io, itm)
 end
 function Base.show(io::IO, ::MIME"text/plain", itm::ITM_hdr)
-	header=@sprintf("%20s/%-20s weight:%-3d gold:%-5d lore:%-3d    ",
-		itm.unidentified_name, itm.identified_name, itm.weight, itm.price, itm.lore)
+	header=@sprintf("%24s/%-28s ⚖%-3d ❍%-5d ❝%-3d ",
+		str(itm.unidentified_name), str(itm.identified_name),
+		itm.weight, itm.price, itm.lore)
 	chars=@sprintf("Str:\e[35m%2d/%2d\e[m Dex:\e[35m%2d\e[m Con:\e[35m%2d\e[m Wis:\e[35m%2d\e[m Int:\e[35m%2d\e[m Cha:\e[35m%2d\e[m Level:\e[35m% 3d\e[m",
 		itm.minstrength, itm.minstrengthbonus,
 		itm.mindexterity, itm.minconstitution, itm.minwisdom, itm.minintelligence,
@@ -1611,34 +1596,109 @@ Methods include:
    existing resources of this type.
  - `findall(ResIO"type", game)`: returns an iterator over all existing
    resource descriptors of this type.
+
+# Language data a list of pairs
+ (regular expression, language file)
 """
 struct Game
-	directory::String
+	directory::Base.RefValue{String}
 	key::KeyIndex
 	override::Dict{Symbol, Set{String}}
+	language::Base.RefValue{Int}
+	strings::Vector{TlkStrings}
+	# we collect all new strings (for any language) in the same structure,
+	# so that all the strref numbers advance in sync:
+	new_strings::UniqueVector{Tuple{Int8,String}}
+	@inline Game() = new(Ref(""), KeyIndex(), Dict{Symbol,Set{String}}(),
+		Ref(0), [ TlkStrings() for _ in LANGUAGE_FILES ],
+		UniqueVector{Tuple{Int8,String}}())
 end
+
+function Base.show(io::IO, game::Game)
+	print(io, "<Game: ", length(game.key), " keys, ", length(game.override),
+		" overrides, ", count(!isempty, game.strings), " languages>")
+end
+
+const LANGUAGE_FILES = (#««
+	r"^en.*" => "en_US/dialog.tlk", # first value is default value
+	r"^c[sz].*"i => "cs_CZ/dialog.tlk",
+	r"^de.*"i => "de_DE/dialog.tlk",
+	r"^de.*F"i => "de_DE/dialogF.tlk",
+	r"^es.*"i => "es_ES/dialog.tlk",
+	r"^es.*F"i => "es_ES/dialogF.tlk",
+	r"^fr.*"i => "fr_FR/dialog.tlk",
+	r"^fr.F*"i => "fr_FR/dialogF.tlk",
+	r"^hu.*"i => "hu_HU/dialog.tlk",
+	r"^it.*"i => "it_IT/dialog.tlk",
+	r"^it.*F"i => "it_IT/dialogF.tlk",
+	r"^ja.*"i => "ja_JP/dialog.tlk",
+	r"^ja.*F"i => "ja_JP/dialogF.tlk",
+	r"^ko.*"i => "ko_KR/dialog.tlk",
+	r"^pl.*"i => "pl_PL/dialog.tlk",
+	r"^pl.*F"i => "pl_PL/dialogF.tlk",
+	r"^pt.*"i => "pt_BR/dialog.tlk",
+	r"^pt.*F"i => "pt_BR/dialogF.tlk",
+	r"^ru.*"i => "ru_RU/dialog.tlk",
+	r"^ru.*F"i => "ru_RU/dialogF.tlk",
+	r"^tr.*"i => "tr_TR/dialog.tlk",
+	r"^uk.*"i => "uk_UA/dialog.tlk",
+	r"^zh.*"i => "zh_CN/dialog.tlk",
+)#»»
 """    Game(directory)
 
 Initializes a `Game` structure from the game directory
 (i.e. the directory containing the `"chitin.key"` file).
 """
-function Game(directory::AbstractString)
-	key = KeyIndex(joinpath(directory, "chitin.key"))
-	println("read $(length(key.resources)) key resources")
-	override = Dict{Symbol,Set{String}}()
+Game(directory::AbstractString) = init!(Game(), directory)
+
+function init!(game::Game, directory::AbstractString)
+	game.directory[] = directory
+	init!(game.key, joinpath(directory, "chitin.key"))
+	println("read ", length(game.key), " key resources")
+	empty!(game.override)
 	o_dir = joinpath(directory, "override")
 	if !isdir(o_dir)
 		println("created override directory: ", o_dir)
 		mkdir(o_dir)
 	else
-		for f in readdir(joinpath(directory, "override"))
+		for f in readdir(o_dir)
 			(n, e) = splitext(uppercase(basename(f))); t = Symbol(e[2:end])
-			push!(get!(override, t, Set{String}()), n)
+			push!(get!(game.override, t, Set{String}()), n)
 		end
-		println("read $(sum(length(v) for (_,v) in override; init=0)) override resources")
+		println("read $(sum(length(v) for (_,v) in game.override; init=0)) override resources")
 	end
-	return Game(directory, key, override)
+	set_language!(game, 1) # default language
+	return game
 end
+
+function set_language!(game::Game, i::Integer)
+	game.language[] = i
+	isempty(game.strings[i]) || return
+	game.strings[i] =
+		read(joinpath(game.directory[], "lang", LANGUAGE_FILES[i][2]), TlkStrings)
+end
+function language(game::Game, s::AbstractString)
+	for (i, (r, f)) in pairs(LANGUAGE_FILES)
+		contains(s, r) || continue
+		set_language!(game, i)
+		return i
+	end
+	error("unknown language: "*s)
+end
+@inline language(game::Game) = game.language[]
+@inline strings(game::Game, i = language(game)) = game.strings[i]
+function Strref(game::Game, s::AbstractString)
+	i = get(strings(game), s, nothing)
+	isnothing(i) || return i
+	i = findfirst!(isequal((language(game), s),), game.new_strings)
+	return Strref(i-1 + length(strings(game)))
+end
+function str(game::Game, s::Strref)
+	i = s.index+1
+	i ≤ length(strings(game)) && return strings(game).entries[i].string
+	return game.new_strings[i - length(strings(game))][2]
+end
+
 " returns 2 if override, 1 if key/bif, 0 if not existing."
 function filetype(game::Game,::Type{ResIO{T}}, name::AbstractString) where{T}
 	haskey(game.override, T) && uppercase(String(name)) ∈ game.override[T] &&
@@ -1684,42 +1744,43 @@ function search(game::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 	end
 end
 # »»1
+
+const game = Game()
+for f in (:language, :init!, :str, :strref)
+	@eval function $f(args...; kwargs...)
+		!isempty(args) && first(args) isa Game &&
+			error("no such method: ", $(string(f)), typeof.(args[2:end]), )
+		$f(game, args...; kwargs...)
+	end
 end
+
+end # module
 IE=InfinityEngine; S=IE.Pack
-IE.language("en")
+
+# str = read("../bg/game/lang/en_US/dialog.tlk", IE.TLK_hdr)
+
 # itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h06.itm")
 # itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h08.itm")
-game = IE.Game("../bg/game")
-# itm=read(game, IE.Resref"sw1h34.itm") # Albruin
-itm=read(game, IE.Resref"blun01.itm")
-write("/tmp/a.itm", itm)
+IE.init!("../bg/game")
+# game = IE.Game("../bg/game")
+itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
+ 
+# itm=read(game, IE.Resref"blun01.itm")
+# write("/tmp/a.itm", itm)
 
-using Printf
+# using Printf
+# function xxd(x::Vector{UInt8}; offset=0)#««
+# 	for i in 1:offset
+# 		print("..")
+# 		iseven(i) && print(" ")
+# 	end
+# 	for i in 0:length(x)-1
+# 		@printf("%02x", x[i+1])
+# 		isodd(i+offset) && print(" ")
+# 		iszero((i+offset+1)%16) && print("\n")
+# 	end
+# end#»»
 
-function xxd(x::Vector{UInt8}; offset=0)
-	for i in 1:offset
-		print("..")
-		iseven(i) && print(" ")
-	end
-	for i in 0:length(x)-1
-		@printf("%02x", x[i+1])
-		isodd(i+offset) && print(" ")
-		iszero((i+offset+1)%16) && print("\n")
-	end
-end
-# read abilities (@0x72=114, *1) features (@0xaa, *20)
-# write abilities(@0x72=114, *1) features (@0xae, *20) soit 4 de trop
-#
-# write: off(abilities) @ 0x64 = 100  (+4)
-#        len(abilities) @ 0x68 = 104
-#        off(features) @ 0x6a = 106
-#        feature_index @ 0x6e = 110
-#        len(features) @ 0x70 = 112
-#        abilities @ 0x72 = 114
-#        features @ 0xae = 174
-#
-# open("/tmp/a.itm", "w") do io; IE.pack(io, itm); end
-#
 # str=read(IE.ResIO"../bg/game/lang/fr_FR/dialog.tlk")
 # # # IE.search(game, str, IE.ResIO"ITM", "Varscona")
 # # key = IE.KeyIndex("../bg/game/chitin.key")

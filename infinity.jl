@@ -166,7 +166,7 @@ end
 end
 @inline function StaticString{N}(s::AbstractString) where{N}
 	@assert length(s) ≤ N "string must be at most $N characters long: \"$s\""
-	return StaticString{N}(codeunits(uppercase(s)))
+	return StaticString{N}(codeunits(lowercase(s)))
 end
 @inline StaticString{N}(s::StaticString{N}) where{N} = s
 
@@ -187,12 +187,12 @@ Shortcut for `Resref"type"("value")`.
 """
 struct Resref{T}
 	name::StaticString{8}
-	Resref{T}(s::AbstractString) where{T} = new{T}(uppercase(first(s,8)))
+	Resref{T}(s::AbstractString) where{T} = new{T}(lowercase(first(s,8)))
 end
 Base.nameof(r::Resref) = r.name
 
 macro Resref_str(s)
-	s = uppercase(s)
+	s = lowercase(s)
 	i = findlast('.', s)
 	isnothing(i) && return Resref{Symbol(s)}
 	@assert i ≤ 9
@@ -604,12 +604,12 @@ abstract type ResIO{T} end
 macro ResIO_str(str)
 	if contains(str, '.')
 		(_, b) = splitext(str)
-		return :(ResIO{$(QuoteNode(Symbol(uppercase(b[2:end]))))}($str))
+		return :(ResIO{$(QuoteNode(Symbol(lowercase(b[2:end]))))}($str))
 	else
-		return :(ResIO{$(QuoteNode(Symbol(uppercase(str))))})
+		return :(ResIO{$(QuoteNode(Symbol(lowercase(str))))})
 	end
 end
-# macro Resource_str(s) ResIO{Symbol(uppercase(s))} end
+# macro Resource_str(s) ResIO{Symbol(lowercase(s))} end
 @inline read(f::ResIO; kw...) = open(f) do io; read(io, f; kw...); end
 
 mutable struct ResIOFile{T} <:ResIO{T}
@@ -617,10 +617,10 @@ mutable struct ResIOFile{T} <:ResIO{T}
 end
 @inline ResIO{T}(f::AbstractString) where{T} = ResIOFile{T}(f)
 @inline ResIO(f::AbstractString) = 
-	ResIO{Symbol(uppercase(splitext(basename(f))[2])[2:end])}(f)
+	ResIO{Symbol(lowercase(splitext(basename(f))[2])[2:end])}(f)
 @inline Base.open(r::ResIOFile) = open(r.filename)
 @inline Base.nameof(r::ResIOFile) =
-	uppercase(splitext(basename(r.filename))[1])
+	lowercase(splitext(basename(r.filename))[1])
 
 mutable struct ResIOBuf{T} <: ResIO{T}
 	name::String
@@ -632,7 +632,7 @@ end
 Resref(r::ResIO{T}) where{T} = Resref{T}(nameof(r))
 
 # abstract type Resource{T} end
-# macro Resource_str(str) :(Resource{$(QuoteNode(Symbol(uppercase(str))))}) end
+# macro Resource_str(str) :(Resource{$(QuoteNode(Symbol(lowercase(str))))}) end
 # function write(filename::AbstractString, res::Resource)
 # 	open(filename, "w") do io; write(io, res); end
 # end
@@ -642,17 +642,17 @@ Resref(r::ResIO{T}) where{T} = Resref{T}(nameof(r))
 mutable struct TLK_str
 	flags::UInt16
 	sound::Resref"WAV"
-	volume::UInt32
-	pitch::UInt32
-	offset::UInt32
-	length::UInt32
+	volume::Int32
+	pitch::Int32
+	offset::Int32
+	length::Int32
 	string::String
 end
-struct TlkStrings
+mutable struct TlkStrings
 	constant::Constant"TLK V1  "
 	lang::UInt16
-	nstr::UInt32
-	offset::UInt32
+	nstr::Int32
+	offset::Int32
 	entries::Vector{TLK_str}
 	index::Dict{String,Int32}
 end
@@ -662,8 +662,7 @@ end
 @inline Base.isempty(v::TlkStrings) = isempty(v.entries)
 @inline Base.length(v::TlkStrings) = length(v.entries)
 
-#««2 Read from TLK (TODO merge this with previous section)
-
+#««2 I/O from tlk file
 function read(io::IO, ::Type{<:TlkStrings})
 	f = unpack(io, TlkStrings)
 	unpack!(io, f.entries, TLK_str, f.nstr)
@@ -674,11 +673,23 @@ function read(io::IO, ::Type{<:TlkStrings})
 	end
 	return f
 end
-
+function write(io::IO, f::TlkStrings)
+	f.offset = 18 + 26*length(f.entries)
+	f.nstr = length(f.entries)
+	offset = 0
+	for s in f.entries
+		s.length = length(codeunits(s.string)) # zero byte not included
+		s.offset = offset
+		offset+= s.length
+	end
+	pack(io, f) # this also writes the TLK_str entries (without the strings)
+	@assert position(io) == f.offset
+	for s in f.entries
+		@assert position(io) == f.offset + s.offset
+		write(io, codeunits(s.string)) # zero byte not included
+	end
+end
 #««2 Dictionary interface
-Base.findall(r::Union{Regex,AbstractString}, tlk::TlkStrings) =
-	[ Strref(i-1) for (i,s) in pairs(tlk.entries) if contains(s.string, r) ]
-
 function Base.push!(tlk::TlkStrings, s::AbstractString)
 	i = get(tlk.index, s, nothing)
 	if isnothing(i)
@@ -687,18 +698,18 @@ function Base.push!(tlk::TlkStrings, s::AbstractString)
 	end
 	return Strref(i-1)
 end
-
 function Base.get(f::TlkStrings, s::AbstractString, n)
 	i = get(f.index, s, nothing)
 	isnothing(i) && return n
 	return Strref(i-1)
 end
-
 function Base.getindex(f::TlkStrings, s::Strref)
 	i = s.index
 	i ∈ eachindex(f.entries) || (i = 0)
 	f.entries[i+1]
 end
+Base.findall(r::Union{Regex,AbstractString}, tlk::TlkStrings) =
+	[ Strref(i-1) for (i,s) in pairs(tlk.entries) if contains(s.string, r) ]
 
 # ««1 key/bif
 # ««2 Integer types
@@ -801,7 +812,7 @@ struct KeyIndex
 # 	resources::Vector{KEY_res}
 	location::Dict{Tuple{StaticString{8},Symbol},BifIndex}
 	function KeyIndex(dir, bif, res::AbstractVector{KEY_res})
-		loc = Dict((uppercase(r.name), Symbol(r.type)) => r.location for r in res)
+		loc = Dict((lowercase(r.name), Symbol(r.type)) => r.location for r in res)
 		new(Ref(dir), bif, res, loc)
 	end
 	@inline KeyIndex() =
@@ -869,7 +880,7 @@ bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
 end
 
 function (::Type{<:ResIO{T}})(key::KeyIndex, name) where{T}
-	name = uppercase(name)
+	name = lowercase(name)
 	loc = get(key.location, (StaticString{8}(name), T), nothing)
 	isnothing(loc) && return nothing
 	bif = joinpath(key.directory[], key.bif[1+sourcefile(loc)])
@@ -1662,7 +1673,7 @@ function init!(game::Game, directory::AbstractString)
 		mkdir(o_dir)
 	else
 		for f in readdir(o_dir)
-			(n, e) = splitext(uppercase(basename(f))); t = Symbol(e[2:end])
+			(n, e) = splitext(lowercase(basename(f))); t = Symbol(e[2:end])
 			push!(get!(game.override, t, Set{String}()), n)
 		end
 		println("read $(sum(length(v) for (_,v) in game.override; init=0)) override resources")
@@ -1701,7 +1712,7 @@ end
 
 " returns 2 if override, 1 if key/bif, 0 if not existing."
 function filetype(game::Game,::Type{ResIO{T}}, name::AbstractString) where{T}
-	haskey(game.override, T) && uppercase(String(name)) ∈ game.override[T] &&
+	haskey(game.override, T) && lowercase(String(name)) ∈ game.override[T] &&
 		return 2
 	haskey(game.key.location, (StaticString{8}(name), T)) && return 1
 	return 0

@@ -112,7 +112,18 @@ function pack(io::IO, x::T) where{T}
 # 	0
 	sum(pack(io, getfield(x, fn)) for fn in fieldnames(T))
 end
-pack(io::IO, x::Vector) = sum(pack(io, y) for y in x)
+function pack(io::IO, x::Vector)
+	n = 0
+	@assert eltype(x) != UInt8 || length(x) < 63000
+	for (i,y) in pairs(x)
+		println("packing $(eltype(x))[$i]=$y")
+		n+= pack(io, y)
+	end
+	n
+end
+@inline pack(io::IO, ::Dict) = 0
+# pack(io::IO, x::Vector) = sum(pack(io, y) for y in x)
+pack(io::IO, ::String) = 0
 
 struct Constant{V} end
 @inline Base.convert(T::Type{<:Constant}, ::Tuple{}) = T()

@@ -272,17 +272,16 @@ The intermedia
 
 """
 module Dialogs
-using ..Languages
+import ..Strref # note, we are importing a single data type, not a module
 using InternedStrings
 using UniqueVectors
 #««1 Basic types
 #««2 Context
 mutable struct Context
-	namespace::Union{Nothing,String}
 	actor::Union{Nothing,String}
 	trigger::Union{Nothing,String}
 
-	@inline Context() = new(nothing, nothing, nothing)
+	@inline Context() = new(nothing, nothing)
 end
 
 #««2 Context accessors
@@ -328,12 +327,12 @@ Base.show(io::IO, k::StateKey) =
 struct State{I}
 	transitions::Vector{I}
 	priority::Float32
-	text::GameText
+	text::Strref
 	trigger::String
 end
 @inline State{I}(c::Context; text = nothing, trigger = nothing,
 		priority::Real = -eps(Float32)) where{I} =
-	State{I}(I[], priority, GameText(text), get_trigger(c, trigger))
+	State{I}(I[], priority, Strref(text), get_trigger(c, trigger))
 
 # ««2 Transition flags
 "module holding syntactic sugar for transition flags"
@@ -355,8 +354,8 @@ end
 # ««2 Transitions
 mutable struct Transition{X}
 	target::StateKey{X}
-	text::GameText
-	journal::GameText
+	text::Strref
+	journal::Strref
 	trigger::String
 	action::String
 	flags::UInt32
@@ -364,8 +363,8 @@ end
 function Transition{X}(c::Context, target;
 		text = nothing, journal = nothing, action = nothing, trigger = nothing,
 		flags = nothing, kwargs...) where{X}
-	text = GameText(text)
-	journal = GameText(journal)
+	text = Strref(text)
+	journal = Strref(journal)
 	trigger = get_trigger(c, trigger)::String
 	action = intern_string(action)::String
 	flags = something(flags, Flags.set(;

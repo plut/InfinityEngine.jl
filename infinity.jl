@@ -1,11 +1,26 @@
 #=
 # TODO:
-# - improve SymbolicFlags/SymbolicEnum:
-#  * auto generate SymbolicNames
-#   * with warning if they exist and are not SymbolicNames
-#  * display method is EnumType(SymbolicName) (if not compact)
-#  *
 # - TEST 1: define an item
+# - long references: (namespace, name)
+#  - operations needed for references (longref):
+#   - map longref -> associated resource
+#   - resource -> longref of this: for user
+#   - convert(resref, longref)
+#   - list of all existing longref: for unicity, conversion
+#  - to translate to short references, there needs to exist a global hash
+#  table (long ref) => (short ref) at some point
+#  - during construction, a list of existing long refs is enough
+#    (as well as a way to mark the long ref for each object and resref use)
+#  - idea 1: use the resref itself as (namespace)/(name), which is invalid
+#    (2^24 namespaces, 2^32 names should be enough)
+#    this needs a global hash table (long ref) => (pseudo-resref)
+#
+#  - idea 2: use a Union{} type (less memory-efficient)
+#
+#  - syntax for long ref of an object? e.g. Item(reference="...")
+#  - by default, use the search key (i.e. identified name for an item)
+#  - entering a pointer: convert(Item, Resref)
+#
 # + a type for marked-language strings (pull from dialogs.jl)
 # - make nice flags modules like dialog transitions
 # - check translation format
@@ -86,44 +101,8 @@ function functor(f, T::UnionAll, x::TX, B = nothing) where{TX}
 	replacetypevars(f, T.body, V, B, x)
 end
 end
-module Languages
-"""    GameText
-
-A value describing a translated in-game string: either a `Strref`
-(i.e. already present in the game), or a `LangString` (a user-added string,
-annotated with its language tag, and to be later translated and converted
-to a `Strref`). """
-abstract type GameText end
-
-"""    Strref
-
-Index (32-bit) referring to a translated string in dialog.tlk or dialogF.tlk.
-"""
-struct Strref <: GameText
-	index::Int32
-end
-@inline Base.show(io::IO, s::Strref) = print(io, "Strref(", s.index, ")")
-
-"""    LangString
-
-A string annotated with its source language.
-"""
-struct LangString <: GameText
-	lang::Int8 # entry in the language type; no more than 256 languages...
-	string::String
-end
-
-@inline Base.show(io::IO, s::LangString) = print(io, s|>language, s|>str|>repr)
-
-@inline Base.isvalid(::LangString) = true
-@inline Base.isvalid(s::Strref) = (s.index > 0)
-
-export GameText, Strref, LangString
-end
-using .Languages
 include("pack.jl"); using .Pack
 include("dottedenums.jl"); using .DottedEnums
-include("dialogs.jl")
 
 using Printf
 using StaticArrays
@@ -168,6 +147,17 @@ end
 @inline Pack.unpack(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
 
 # ««2 Indices: Resref etc.
+"""    Strref
+
+Index (32-bit) referring to a translated string in dialog.tlk or dialogF.tlk.
+"""
+struct Strref
+	index::Int32
+end
+@inline Strref(x::Strref) = x
+@inline Base.isvalid(s::Strref) = (s.index > 0)
+@inline Base.show(io::IO, s::Strref) = print(io, "Strref(", s.index, ")")
+
 """    Resref{Type}, Resref"Type"
 
 Index (64-bit, or 8 char string) referring to a resource.
@@ -196,6 +186,27 @@ end
 Base.show(io::IO, ::Type{Resref{T}}) where{T} = print(io, "Resref\"", T, "\"")
 Base.show(io::IO, r::Resref{T}) where{T} =
 	print(io, "Resref\"", nameof(r), '.', T, '"')
+
+"""    Resource{T}
+
+A long resource descriptor: this contains a (static) type and a (dynamic)
+namespace and name uniquely identifying the resource.
+
+This is converted to a short `Resref` on compilation.
+
+`Resref` (i.e. short resource identifers) are converted to `Resource`
+using the namespace `""` (and keeping their short name).
+"""
+struct Resource{T}
+	namespace::String
+	name::String
+end
+@inline (T::Type{<:Resource})(x::Resource) = T(x.namespace, x.name)
+@inline Pack.unpack(io::IO, T::Type{<:Resource}) =
+	T("", unpack(io, StaticString{8}))
+macro Resource_str(s)
+	return Resource{Symbol(lowercase(s))}
+end
 
 module Opcodes
 using ..DottedEnums
@@ -594,7 +605,6 @@ Concrete subtypes (i.e. `ResIOBuf`, `ResIOFile`) must implement:
 
 Specializations (i.e. `ResIO"DLG"` etc.) must implement:
  - `read(::ResIO{T}, io::IO)`.
- - (**TODO**) `write(::ResIO{T}, io::IO)`.
 """
 abstract type ResIO{T} end
 macro ResIO_str(str)
@@ -615,8 +625,7 @@ end
 @inline ResIO(f::AbstractString) = 
 	ResIO{Symbol(lowercase(splitext(basename(f))[2])[2:end])}(f)
 @inline Base.open(r::ResIOFile) = open(r.filename)
-@inline Base.nameof(r::ResIOFile) =
-	lowercase(splitext(basename(r.filename))[1])
+@inline Base.nameof(r::ResIOFile) = lowercase(splitext(basename(r.filename))[1])
 
 mutable struct ResIOBuf{T} <: ResIO{T}
 	name::String
@@ -627,12 +636,12 @@ end
 
 Resref(r::ResIO{T}) where{T} = Resref{T}(nameof(r))
 
-# abstract type Resource{T} end
-# macro Resource_str(str) :(Resource{$(QuoteNode(Symbol(lowercase(str))))}) end
 # function write(filename::AbstractString, res::Resource)
 # 	open(filename, "w") do io; write(io, res); end
 # end
 
+#»»1
+include("dialogs.jl") # this needs Strref, so we put it here
 # ««1 tlk
 # ««2 Type and constructors
 mutable struct TLK_str
@@ -1378,10 +1387,11 @@ end
 	stacking_id::UInt32
 end
 mutable struct ITM_hdr{S}
+	self::Resource"itm"
 	constant::StaticString{8} # "ITM V1  "
 	unidentified_name::S
 	identified_name::S
-	replacement::Resref"ITM"
+	replacement::Resource"ITM"
 	flags::ItemFlag
 	item_type::ItemCat
 	usability::UInt32 # UsabilityFlags
@@ -1401,13 +1411,13 @@ mutable struct ITM_hdr{S}
 	mincharisma::UInt16
 	price::UInt32
 	stackamount::UInt16
-	inventoryicon::Resref"BAM"
+	inventoryicon::Resource"BAM"
 	lore::UInt16
-	groundicon::Resref"BAM"
+	groundicon::Resource"BAM"
 	weight::Int32
 	unidentified_description::S
 	identified_description::S
-	description_icon::Resref"BAM"
+	description_icon::Resource"BAM"
 	enchantment::Int32
 # 	offset(abilities)::UInt32
 # 	length(abilities)::UInt16
@@ -1421,6 +1431,10 @@ mutable struct ITM_hdr{S}
 	abilities::Vector{ITM_ability}
 	features::Vector{ITM_feature}
 end
+# make "self" field transparent
+@inline Pack.unpackfield(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
+@inline Pack.packfield(::IO, ::Val{:self}, ::Resource) = 0
+
 @inline searchkey(i::ITM_hdr) = i.identified_name
 # create a phony “not_usable_by” item property which groups together
 # all the 5 usability fields in the item struct:
@@ -1432,7 +1446,7 @@ end
 end
 @inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
 	for (fn, ft) in zip(fieldnames(typeof(x)), fieldtypes(typeof(x)))
-		ft == Strref && value isa AbstractString && (value = strref(game, value))
+		ft == Strref && value isa AbstractString && (value = Strref(game, value))
 		name == fn && return setfield!(x, name, ft(value))
 	end
 	if name == :not_usable_by
@@ -1446,8 +1460,9 @@ end
 	error("unknown field name \"$name\"")
 end
 # ««2 Item function
-function read(io::IO, ::ResIO"ITM")
+function read(io::IO, res::ResIO"ITM")
 	header = unpack(io, ITM_hdr{Strref})
+	header.self = Resource"itm"("", nameof(res))
 # 	header.abilities = unpack(seek(io, header.abilities_offset), ITM_ability,
 # 		header.abilities_count)
 # 	header.features = unpack(seek(io, header.feature_offset), ITM_feature,
@@ -1499,8 +1514,9 @@ Range $(ab.range), $(ab.target_count) target(s) of type $(rep(ab.target_type))
 	end
 	for (i, ft) in pairs(itm.features)
 	print(io, """
-\e[32;7mFeature $i/$(itm.feature_count)$(' '^30)\e[m
-Opcode: $(rep(ft.opcode))  target:$(rep(ft.target))
+\e[32;7mFeature $i/$(itm.feature_count) $(@sprintf("%50s  ", rep(ft.opcode))*"("*rep(ft.power)*") on "*rep(ft.target))\e[m
+$(ft.dice_thrown)d$(ft.dice_sides), save $(ft.saving_throw_type)$(@sprintf("%+d", ft.saving_throw_bonus)) parameters $(ft.parameters[1]),$(ft.parameters[2])
+Duration $(ft.duration) timing_mode $(ft.timing_mode) dispel res. $(ft.dispel_resist) probabilities $(ft.probabilities[1]),$(ft.probabilities[2])
 """)
 	end
 end
@@ -1560,9 +1576,8 @@ function read(io::IO, f::ResIO"DLG")
 			header.number_transition_triggers)
 	actions = dialog_strings(io, header.offset_actions, header.number_actions)
 
-	global H = header
 	dialog = Dialogs.top
-	Dialogs.namespace("main")
+	Dialogs.namespace("")
 	getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
 	for (i, s) in pairs(states)
 		state = Dialogs.add_state!(dialog, (self|>nameof, i-1);
@@ -1590,16 +1605,6 @@ function read(io::IO, f::ResIO"DLG")
 end
 
 #««1 Game
-# shorthand: strings*dialog instantiates Strrefs
-for T in (:ITM_hdr,)
-	@eval @inline Base.:*(str::TlkStrings, x::$T{Strref}) =
-		Functors.functor(x->str[x].string::String, $T, x)
-end
-
-# Base.:*(str::TlkStrings, x::Dialogs.StateMachine{Int32,Any}) =
-# 	Functors.functor(x->str[x].string::String,
-# 		Dialogs.StateMachine{Int32,S,String,Any} where{S}, x)
-
 """    Game
 
 Main structure holding all top-level data for a game installation, including:
@@ -1628,12 +1633,19 @@ struct Game
 	key::KeyIndex
 	override::Dict{Symbol, Set{String}}
 	language::Base.RefValue{Int}
+	namespace::Base.RefValue{String}
+	# FIXME: each tlk file is quite heavy (5 Mbytes in a fresh BG1
+	# install), we could use a rotation system to not keep more than 4 or 5
+	# in memory at the same time
+	# (this is already likely during resource building since most mods are
+	# written in 3 languages, but should be ensured during final
+	# compilation)
 	strings::Vector{TlkStrings}
 	# we collect all new strings (for any language) in the same structure,
 	# so that all the strref numbers advance in sync:
 	new_strings::UniqueVector{Tuple{Int8,String}}
 	@inline Game() = new(Ref(""), KeyIndex(), Dict{Symbol,Set{String}}(),
-		Ref(0), [ TlkStrings() for _ in LANGUAGE_FILES ],
+		Ref(0), Ref(""), [ TlkStrings() for _ in LANGUAGE_FILES ],
 		UniqueVector{Tuple{Int8,String}}())
 end
 
@@ -1645,29 +1657,29 @@ end
 const LANGUAGE_FILES = (#««
 	# We need to put the xxF before xx, because the regexp search goes
 	# linearly through this list:
-	r"^en.*" => "en_US/dialog.tlk", # first value is default value
-	r"^c[sz].*"i => "cs_CZ/dialog.tlk",
-	r"^de.*F"i => "de_DE/dialogF.tlk",
-	r"^de.*"i => "de_DE/dialog.tlk",
-	r"^es.*F"i => "es_ES/dialogF.tlk",
-	r"^es.*"i => "es_ES/dialog.tlk",
-	r"^fr.F*"i => "fr_FR/dialogF.tlk",
-	r"^fr.*"i => "fr_FR/dialog.tlk",
-	r"^hu.*"i => "hu_HU/dialog.tlk",
-	r"^it.*F"i => "it_IT/dialogF.tlk",
-	r"^it.*"i => "it_IT/dialog.tlk",
-	r"^ja.*F"i => "ja_JP/dialogF.tlk",
-	r"^ja.*"i => "ja_JP/dialog.tlk",
-	r"^ko.*"i => "ko_KR/dialog.tlk",
-	r"^pl.*F"i => "pl_PL/dialogF.tlk",
-	r"^pl.*"i => "pl_PL/dialog.tlk",
-	r"^pt.*F"i => "pt_BR/dialogF.tlk",
-	r"^pt.*"i => "pt_BR/dialog.tlk",
-	r"^ru.*F"i => "ru_RU/dialogF.tlk",
-	r"^ru.*"i => "ru_RU/dialog.tlk",
-	r"^tr.*"i => "tr_TR/dialog.tlk",
-	r"^uk.*"i => "uk_UA/dialog.tlk",
-	r"^zh.*"i => "zh_CN/dialog.tlk",
+	r"^en.*"i => joinpath("en_US", "dialog.tlk"), # first value is default value
+	r"^c[sz].*"i => joinpath("cs_CZ", "dialog.tlk"),
+	r"^de.*F"i => joinpath("de_DE", "dialogF.tlk"),
+	r"^de.*"i => joinpath("de_DE", "dialog.tlk"),
+	r"^es.*F"i => joinpath("es_ES", "dialogF.tlk"),
+	r"^es.*"i => joinpath("es_ES", "dialog.tlk"),
+	r"^fr.*F"i => joinpath("fr_FR", "dialogF.tlk"),
+	r"^fr.*"i => joinpath("fr_FR", "dialog.tlk"),
+	r"^hu.*"i => joinpath("hu_HU", "dialog.tlk"),
+	r"^it.*F"i => joinpath("it_IT", "dialogF.tlk"),
+	r"^it.*"i => joinpath("it_IT", "dialog.tlk"),
+	r"^ja.*F"i => joinpath("ja_JP", "dialogF.tlk"),
+	r"^ja.*"i => joinpath("ja_JP", "dialog.tlk"),
+	r"^ko.*"i => joinpath("ko_KR", "dialog.tlk"),
+	r"^pl.*F"i => joinpath("pl_PL", "dialogF.tlk"),
+	r"^pl.*"i => joinpath("pl_PL", "dialog.tlk"),
+	r"^pt.*F"i => joinpath("pt_BR", "dialogF.tlk"),
+	r"^pt.*"i => joinpath("pt_BR", "dialog.tlk"),
+	r"^ru.*F"i => joinpath("ru_RU", "dialogF.tlk"),
+	r"^ru.*"i => joinpath("ru_RU", "dialog.tlk"),
+	r"^tr.*"i => joinpath("tr_TR", "dialog.tlk"),
+	r"^uk.*"i => joinpath("uk_UA", "dialog.tlk"),
+	r"^zh.*"i => joinpath("zh_CN", "dialog.tlk"),
 )#»»
 """    Game(directory)
 
@@ -1677,6 +1689,7 @@ Initializes a `Game` structure from the game directory
 Game(directory::AbstractString) = init!(Game(), directory)
 
 function init!(game::Game, directory::AbstractString)
+	game.namespace[] = ""
 	game.directory[] = directory
 	init!(game.key, joinpath(directory, "chitin.key"))
 	println("read ", length(game.key), " key resources")
@@ -1693,8 +1706,19 @@ function init!(game::Game, directory::AbstractString)
 		println("read $(sum(length(v) for (_,v) in game.override; init=0)) override resources")
 	end
 	set_language!(game, 1) # default language
+	game.namespace[] = "user"
 	return game
 end
+"""    namespace(game, s)
+
+Sets the current namespace for game resources being defined to `s`.
+The following default namespaces are used:
+ - `"main"` for original game resources;
+ - `"user"` is the default namespace for added resources.
+"""
+@inline namespace(game::Game, s::AbstractString) =
+	(game.namespace[] = s; return s)
+@inline namespace(game::Game) = game.namespace[]
 
 function set_language!(game::Game, i::Integer)
 	game.language[] = i
@@ -1702,6 +1726,15 @@ function set_language!(game::Game, i::Integer)
 	game.strings[i] =
 		read(joinpath(game.directory[], "lang", LANGUAGE_FILES[i][2]), TlkStrings)
 end
+"""    language(game, s)
+
+Sets the current language of the game (i.e. the language in which
+strings entered as parameters for functions will be interpreted)
+to the one given by string `s`.
+
+Allowed values are:
+$(join([replace(replace(repr(x[1]), r"(^r\"\^|\"i$|\.\*)"=>""), "*" => "\\*") for x in LANGUAGE_FILES], ", ")).
+"""
 function language(game::Game, s::AbstractString)
 	for (i, (r, f)) in pairs(LANGUAGE_FILES)
 		contains(s, r) || continue
@@ -1718,6 +1751,8 @@ function Strref(game::Game, s::AbstractString)
 	i = findfirst!(isequal((language(game), s),), game.new_strings)
 	return Strref(i-1 + length(strings(game)))
 end
+@inline Base.convert(T::Type{Strref}, s::AbstractString) = T(game, s)
+
 function str(game::Game, s::Strref)
 	i = s.index+1
 	i ≤ length(strings(game)) && return strings(game).entries[i].string
@@ -1769,7 +1804,7 @@ function search(game::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 	end
 end
 
-# Item generator ««1
+# Item/etc. generator ««1
 # TODO: make this work even for non-mutable types:
 # (hard since we are overloading setproperty!)
 function clone(x::T; kwargs...) where{T}
@@ -1785,6 +1820,15 @@ end
 
 # »»1
 
+# shorthand: strings*dialog instantiates Strrefs
+for T in (:ITM_hdr,)
+	@eval @inline Base.:*(str::TlkStrings, x::$T{Strref}) =
+		Functors.functor(x->str[x].string::String, $T, x)
+end
+
+# Base.:*(str::TlkStrings, x::Dialogs.StateMachine{Int32,Any}) =
+# 	Functors.functor(x->str[x].string::String,
+# 		Dialogs.StateMachine{Int32,S,String,Any} where{S}, x)
 
 const game = Game()
 for f in (:language, :init!, :str, :strref)

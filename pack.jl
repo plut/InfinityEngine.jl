@@ -80,13 +80,26 @@ function unpack(io::IO, T::DataType)
 # 		println("\e[31;1m$T\e[m: field $ft at positoin \e[32m$(position(io))\e[m")
 # 		push!(fieldvars, unpack(io, ft))
 # 	end
-	fieldvars = [ unpack(io, ft) for ft in fieldtypes(T) ]
+	fieldvars = (unpackfield(io, T, Val(fn), ft)
+		for (fn, ft) in zip(fieldnames(T), fieldtypes(T)))
+# 	fieldvars = [ unpack(io, ft) for ft in fieldtypes(T) ]
 	return T <: Tuple ? T((fieldvars...,),) : T(fieldvars...)
 end
+"""    unpackfield(io, structtype, Val(fieldname), fieldtype)
+
+Hook allowing the user to override `unpack`'s behaviour for a specific field.
+"""
+@inline unpackfield(io::IO, st::DataType, fn::Val, ft::DataType) =
+	unpackfield(io, fn, ft)
+@inline unpackfield(io::IO, fn::Val, ft::DataType) = unpackfield(io, ft)
+@inline unpackfield(io::IO, ft::DataType) = unpack(io, ft)
+
 unpack(io::IO, T::DataType, n::Integer) = [ unpack(io, T) for _ in 1:n ]
 unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
-unpack(io::IO, T::Type{<:Dict}) = T()
-unpack(io::IO, ::Type{String}) = ""
+@inline unpack(io::IO, T::Type{<:Dict}) = T()
+@inline unpack(io::IO, ::Type{String}) = ""
+@inline unpack(filename::AbstractString, T::DataType, n::Integer...) =
+	open(filename) do io; unpack(io, T, n...); end
 function unpack!(io::IO, array::AbstractVector, T::DataType, n::Integer)
 	resize!(array, n)
 	for i in 1:n
@@ -110,13 +123,22 @@ function pack(io::IO, x::T) where{T}
 # 		pack(io, getfield(x, i))
 # 	end
 # 	0
-	sum(pack(io, getfield(x, fn)) for fn in fieldnames(T))
+	sum(packfield(io, ft, Val(fn), getfield(x, fn))
+		for (fn, ft) in zip(fieldnames(T), fieldtypes(T)))
 end
+
+"""    packfield(io, structtype, Val(fieldname), value)
+
+Hook allowing the user to override `unpack`'s behaviour for a specific field.
+"""
+@inline packfield(io::IO, st::DataType, fn::Val, x) = packfield(io, fn, x)
+@inline packfield(io::IO, fn::Val, x) = packfield(io, x)
+@inline packfield(io::IO, x) = pack(io, x)
+
 function pack(io::IO, x::Vector)
 	n = 0
 	@assert eltype(x) != UInt8 || length(x) < 63000
 	for (i,y) in pairs(x)
-		println("packing $(eltype(x))[$i]=$y")
 		n+= pack(io, y)
 	end
 	n

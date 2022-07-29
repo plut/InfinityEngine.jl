@@ -164,36 +164,45 @@ Base.:~(x::T) where{T<:SymbolicFlags} = T(~(x.n))
 Base.iszero(x::SymbolicFlags) = iszero(x.n)
 Base.:∈(x::T, y::T) where{T<:SymbolicFlags} = !iszero(x&y)
 
-function Base.show(io::IO, x::T) where{T<:SymbolicEnum}
-	long = !get(io, :compact, false)
-	long &&  (showtypename(io, T.name); print(io, '('))
 
-	print(io,  get(namemap(T), x.n, x.n))
-	long && print(io, ')')
-end
-function Base.show(io::IO, x::T) where{T<:SymbolicFlags}
-	long = !get(io, :compact, false)
-	long &&  (showtypename(io, T.name); print(io, '('))
-
-	f = one(x.n); b = false; n = x.n
+enumtext(namemap, n) = get(namemap, n, n)
+function flagstext(namemap, n)
+	s = ""
+	f = one(n); b = false; n = n
 	if iszero(n)
-		print(io, '0')
+		return string(get(namemap, zero(n), 0))
 	else
-		for i in 1:8*sizeof(x)
-			s = get(namemap(T), f, nothing)
-			if !iszero(x.n & f) && !isnothing(s)
-				b && print(io, '|'); b = true
-				print(io, s)
+		for i in 1:8*sizeof(n)
+			t = get(namemap, f, nothing)
+			if !iszero(n & f) && !isnothing(t)
+				b && (s*= '|'); b = true
+				s*= String(t)
 				n&=~f
 			end
 			f<<= 1
 		end
 		# remainder: unnamed flags
 		if !iszero(n)
-			b && print(io, '|')
-			print(io, "0x", string(n, base=16))
+			b && (s*='|')
+			s*= "0x"*string(n, base=16)
 		end
 	end
+	s
+end
+
+function Base.show(io::IO, x::T) where{T<:SymbolicEnum}
+	long = !get(io, :compact, false)
+	long &&  (showtypename(io, T.name); print(io, '('))
+
+	print(io,  enumtext(namemap(T), x.n))
+	long && print(io, ')')
+end
+
+function Base.show(io::IO, x::T) where{T<:SymbolicFlags}
+	long = !get(io, :compact, false)
+	long &&  (showtypename(io, T.name); print(io, '('))
+
+	print(io, flagstext(namemap(T), x.n))
 	long && print(io, ')')
 end
 

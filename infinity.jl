@@ -8,6 +8,13 @@
 #   - convert(resref, longref)
 #   - list of all existing longref: for unicity, conversion
 #  - to translate to short references, there needs to exist a global hash
+#  + idea 3: use longref = ((interned) namespace, name)
+#   - make this hierarchical by searching in all parent namespaces?
+#  - create a fresh longref when creating new objects
+#   - either from searchkey if available (and iterating suffix as needed
+#   when cloning: .1, .2 etc);
+#   - or from random string otherwise
+#  - convert object to longref: take object.self
 #  table (long ref) => (short ref) at some point
 #  - during construction, a list of existing long refs is enough
 #    (as well as a way to mark the long ref for each object and resref use)
@@ -18,6 +25,7 @@
 #  - idea 2: use a Union{} type (less memory-efficient)
 #
 #  - syntax for long ref of an object? e.g. Item(reference="...")
+#   - we now have Item(self="..."); can easily be changed
 #  - by default, use the search key (i.e. identified name for an item)
 #  - entering a pointer: convert(Item, Resref)
 #
@@ -208,379 +216,7 @@ macro Resource_str(s)
 	return Resource{Symbol(lowercase(s))}
 end
 
-module Opcodes
-using ..DottedEnums
-	@SymbolicEnum Opcode::UInt16 begin
-AC_bonus = 0
-Modify_attacks_per_round
-Cure_sleep
-Berserk
-Cure_berserk
-Charm_creature
-Charisma_bonus
-Set_color
-Set_color_glow_solid
-Set_color_glow_pulse
-Constitution_bonus
-Cure_poison
-Damage
-Kill_target
-Defrost
-Dexterity_bonus
-Haste
-Current_HP_bonus
-Maximum_HP_bonus
-Intelligence_bonus
-Invisibility
-Lore_bonus
-Luck_bonus
-Reset_morale
-Panic
-Poison
-Remove_curse
-Acid_resistance_bonus
-Cold_resistance_bonus
-Electricity_resistance_bonus
-Fire_resistance_bonus
-Magic_damage_resistance_bonus
-Raise_dead
-Save_vs_death_bonus
-Save_vs_wand_bonus
-Save_vs_polymorph_bonus
-Save_vs_breath_bonus
-Save_vs_spell_bonus
-Silence
-Sleep
-Slow
-Sparkle
-Bonus_wizard_spells
-Stone_to_flesh
-Strength_bonus
-Stun
-Cure_stun
-Remove_invisibility
-Vocalize
-Wisdom_bonus
-Character_color_pulse
-Character_tint_solid
-Character_tint_bright
-Animation_change
-Base_THAC0_bonus
-Slay
-Invert_alignment
-Change_alignment
-Dispel_effects
-Move_silently_bonus
-Casting_failure
-Creature_RGB_color_fade
-Bonus_priest_spells
-Infravision
-Remove_infravision
-Blur
-Translucency
-Summon_creature
-Unsummon_creature
-Nondetection
-Remove_nondetection
-Change_gender
-Change_AI_type
-Attack_damage_bonus
-Blindness
-Cure_blindness
-Feeblemindedness
-Cure_feeblemindedness
-Disease
-Cure_disease
-Deafness
-Cure_deafness
-Set_AI_script
-Immunity_to_projectile
-Magical_fire_resistance_bonus
-Magical_cold_resistance_bonus
-Slashing_resistance_bonus
-Crushing_resistance_bonus
-Piercing_resistance_bonus
-Missile_resistance_bonus
-Open_locks_bonus
-Find_traps_bonus
-Pick_pockets_bonus
-Fatigue_bonus
-Intoxication_bonus
-Tracking_bonus
-Change_level
-Exceptional_strength_bonus
-Regeneration
-Modify_duration
-Protection_from_creature_type
-Immunity_to_effect
-Immunity_to_spell_level
-Change_name
-XP_bonus
-Remove_gold
-Morale_break
-Change_portrait
-Reputation_bonus
-Paralyze
-Retreat_from
-Create_weapon
-Remove_item
-Equip_weapon
-Dither
-Detect_alignment
-Detect_invisible
-Clairvoyance
-Show_creatures
-Mirror_image
-Immunity_to_weapons
-Visual_animation_effect
-Create_inventory_item
-Remove_inventory_item
-Teleport
-Unlock
-Movement_rate_bonus
-Summon_monsters
-Confusion
-Aid_non_cumulative
-Bless_non_cumulative
-Chant_non_cumulative
-Draw_upon_holy_might_non_cumulative
-Luck_non_cumulative
-Petrification
-Polymorph
-Force_visible
-Bad_chant_non_cumulative
-Set_animation_sequence
-Display_string
-Casting_glow
-Lighting_effects
-Display_portrait_icon
-Create_item_in_slot
-Disable_button
-Disable_spellcasting
-Cast_spell
-Learn_spell
-Cast_spell_at_point
-Identify
-Find_traps
-Replace_self
-Play_movie
-Sanctuary
-Entangle_overlay
-Minor_globe_overlay
-Protection_from_normal_missiles_overlay
-Web_effect
-Grease_overlay
-Mirror_image_effect
-Remove_sanctuary
-Remove_fear
-Remove_paralysis
-Free_action
-Remove_intoxication
-Pause_target
-Magic_resistance_bonus
-Missile_THAC0_bonus
-Remove_creature
-Prevent_portrait_icon
-Play_damage_animation
-Give_innate_ability
-Remove_spell
-Poison_resistance_bonus
-Play_sound
-Hold_creature
-Movement_rate_bonus_2
-Use_EFF_file
-THAC0_vs_type_bonus
-Damage_vs_type_bonus
-Disallow_item
-Disallow_item_type
-Use_EFF_file_do_not_use
-Use_EFF_file_while_on_type
-No_collision_detection
-Hold_creature_2
-Move_creature
-Set_local_variable
-Increase_spells_cast_per_round
-Increase_casting_speed_factor
-Increase_attack_speed_factor
-Casting_level_bonus
-Find_familiar
-Invisibility_detection
-Ignore_dialogue_pause
-Drain_CON_and_HP_on_death
-Disable_familiar
-Physical_mirror
-Reflect_specified_effect
-Reflect_spell_level
-Spell_turning
-Spell_deflection
-Reflect_spell_school
-Reflect_spell_type
-Protection_from_spell_school
-Protection_from_spell_type
-Protection_from_spell
-Reflect_specified_spell
-Minimum_HP
-Power_word_kill
-Power_word_stun
-Imprisonment
-Freedom
-Maze
-Select_spell
-Play_visual_effect
-Level_drain
-Power_word_sleep
-Stoneskin_effect
-Attack_and_Saving_Throw_roll_penalty
-Remove_spell_school_protections
-Remove_spell_type_protections
-Teleport_field
-Spell_school_deflection
-Restoration
-Detect_magic
-Spell_type_deflection
-Spell_school_turning
-Spell_type_turning
-Remove_protection_by_school
-Remove_protection_by_type
-Time_stop
-Cast_spell_on_condition
-Modify_proficiencies
-Create_contingency
-Wing_buffet
-Project_image
-Set_image_type
-Disintegrate
-Farsight
-Remove_portrait_icon
-Control_creature
-Cure_confusion
-Drain_item_charges
-Drain_wizard_spells
-Check_for_berserk
-Berserk_effect
-Attack_nearest_creature
-Melee_hit_effect
-Ranged_hit_effect
-Maximum_damage_each_hit
-Change_bard_song
-Set_trap
-Set_automap_note
-Remove_automap_note
-Create_item_days
-Spell_sequencer
-Create_spell_sequencer
-Activate_spell_sequencer
-Spell_trap
-Activate_spell_sequencer_at_point
-Restore_lost_spells
-Visual_range_bonus
-Backstab_bonus
-Drop_item
-Modify_global_variable
-Remove_protection_from_spell
-Disable_display_string
-Clear_fog_of_war
-Shake_screen
-Unpause_target
-Disable_creature
-Use_EFF_file_on_condition
-Zone_of_sweet_air
-Phase
-Hide_in_shadows_bonus
-Detect_illusion_bonus
-Set_traps_bonus
-THAC0_bonus
-Enable_button
-Wild_magic
-Wild_surge_bonus
-Modify_script_state
-Use_EFF_file_as_curse
-Melee_THAC0_bonus
-Melee_weapon_damage_bonus
-Missile_weapon_damage_bonus
-Remove_feet_circle
-Fist_THAC0_bonus
-Fist_damage_bonus
-Change_title
-Disable_visual_effects
-Immunity_to_backstab
-Set_persistent_AI
-Set_existence_delay
-Disable_permanent_death
-Immunity_to_specific_animation
-Immunity_to_turn_undead
-Pocket_plane
-Chaos_shield_effect
-Modify_collision_behavior
-Critical_hit_bonus
-Can_use_any_item
-Backstab_every_hit
-Mass_raise_dead
-Off_hand_THAC0_bonus
-Main_hand_THAC0_bonus
-Tracking
-Immunity_to_tracking
-Modify_local_variable
-Immunity_to_time_stop
-Wish
-Immunity_to_sequester
-High_level_ability
-Stoneskin_protection
-Remove_animation
-Rest
-Haste_2
-Protection_from_resource
-Restrict_item
-Change_weather
-Remove_effects_by_resource
-AoE_evade_check_deprecated
-Turn_undead_level
-Immunity_to_resource_and_message
-All_saving_throws_bonus
-Apply_effects_list
-Show_visual_effect
-Set_spell_state
-Slow_poison
-Float_text
-Summon_creatures_2
-Attack_damage_type_bonus
-Static_charge
-Turn_undead
-Seven_eyes
-Seven_eyes_overlay
-Remove_effects_by_opcode
-Disable_rest_or_save
-Alter_visual_animation_effect
-Backstab_hit_effect
-Critical_hit_effect
-Override_creature_data
-HP_swap
-Enchantment_vs_creature_type
-Enchantment_bonus
-Save_vs_school_bonus
-Move_view_to_target
-Unknown_348
-Unknown_349
-Unknown_350
-Unknown_351
-Change_Background
-Tint_screen
-Flash_screen
-Soul_exodus
-Stop_all_actions
-Set_state
-Set_AI_script_2
-Unknown_359
-Ignore_reputation_breaking_point
-Cast_spell_on_critical_miss
-Critical_miss_bonus
-Movement_check
-Unknown_364
-Make_unselectable
-Apply_spell_on_movement
-Minimum_base_stats
-	end
-end
+include("opcodes.jl")
 using .Opcodes: Opcode
 # ««2 ResIO type (marked IO object)
 """    ResIO{Type}, ResIO"TYPE"
@@ -1388,6 +1024,7 @@ end
 end
 mutable struct ITM_hdr{S}
 	self::Resource"itm"
+	modified::Bool
 	constant::StaticString{8} # "ITM V1  "
 	unidentified_name::S
 	identified_name::S
@@ -1431,12 +1068,20 @@ mutable struct ITM_hdr{S}
 	abilities::Vector{ITM_ability}
 	features::Vector{ITM_feature}
 end
-# make "self" field transparent
+# ignore "self" field on IO
+# even better: make all game data <: a common type and move this code
+# into read(ResIO) so that it applies to all game data
+# TODO: add a “modified” flag to decide which files need to be rewritten
+# (also make it ignored)
 @inline Pack.unpackfield(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
 @inline Pack.packfield(::IO, ::Val{:self}, ::Resource) = 0
+@inline setself!(x::T, res::ResIO) where{T} =
+	x.self = fieldtype(T, :self)("", nameof(res))
+@inline Pack.unpackfield(::IO, ::Val{:modified}, ::Type{Bool}) = false
+@inline Pack.packfield(::IO, ::Val{:modified}, ::Bool) = 0
 
 @inline searchkey(i::ITM_hdr) = i.identified_name
-# create a phony “not_usable_by” item property which groups together
+# create a virtual “not_usable_by” item property which groups together
 # all the 5 usability fields in the item struct:
 @inline function Base.getproperty(i::ITM_hdr, name::Symbol)
 	name ∈ fieldnames(typeof(i)) && return getfield(i, name)
@@ -1445,6 +1090,7 @@ end
 		UInt64(i.kit3) << 48 | UInt64(i.kit4) << 56)
 end
 @inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
+	setfield!(x, :modified, true)
 	for (fn, ft) in zip(fieldnames(typeof(x)), fieldtypes(typeof(x)))
 		ft == Strref && value isa AbstractString && (value = Strref(game, value))
 		name == fn && return setfield!(x, name, ft(value))
@@ -1462,11 +1108,7 @@ end
 # ««2 Item function
 function read(io::IO, res::ResIO"ITM")
 	header = unpack(io, ITM_hdr{Strref})
-	header.self = Resource"itm"("", nameof(res))
-# 	header.abilities = unpack(seek(io, header.abilities_offset), ITM_ability,
-# 		header.abilities_count)
-# 	header.features = unpack(seek(io, header.feature_offset), ITM_feature,
-# 		header.feature_count)
+	setself!(header, res)
 	unpack!(seek(io, header.abilities_offset), header.abilities, ITM_ability,
 		header.abilities_count)
 	unpack!(seek(io, header.feature_offset), header.features, ITM_feature,
@@ -1512,9 +1154,11 @@ Alternative $(ab.alternative_dice_thrown)d$(ab.alternative_dice_sides)
 Range $(ab.range), $(ab.target_count) target(s) of type $(rep(ab.target_type))
 """)
 	end
+	# TODO: make a nice display method for opcodes, move this to Opcodes
+	# (and double that with a constructor)
 	for (i, ft) in pairs(itm.features)
 	print(io, """
-\e[32;7mFeature $i/$(itm.feature_count) $(@sprintf("%50s  ", rep(ft.opcode))*"("*rep(ft.power)*") on "*rep(ft.target))\e[m
+\e[32;7mFeature $i/$(itm.feature_count) $(@sprintf("%64s  ", Opcodes.str(ft.opcode, ft.parameters...)*string(Int16(ft.opcode);base=16)*" on "*rep(ft.target)))\e[m
 $(ft.dice_thrown)d$(ft.dice_sides), save $(ft.saving_throw_type)$(@sprintf("%+d", ft.saving_throw_bonus)) parameters $(ft.parameters[1]),$(ft.parameters[2])
 Duration $(ft.duration) timing_mode $(ft.timing_mode) dispel res. $(ft.dispel_resist) probabilities $(ft.probabilities[1]),$(ft.probabilities[2])
 """)

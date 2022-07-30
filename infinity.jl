@@ -130,20 +130,23 @@ end
 # ««2 Static length strings
 struct StaticString{N} <: AbstractString
 	chars::SVector{N,UInt8}
+	# once we encounter a zero character, all that follows is zero:
 	@inline StaticString{N}(chars::AbstractVector{UInt8}) where{N} = new{N}(
-		SVector{N,UInt8}(i ≤ length(chars) ?
-			chars[i]|>Char|>lowercase|>UInt8 : zero(UInt8) for i in 1:N))
+		SVector{N,UInt8}(any(iszero, view(chars, 1:min(i-1,length(chars)))) ?
+			zero(UInt8) : get(chars, i, zero(UInt8)) for i in 1:N))
 end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) = sizeof(s)
 @inline Base.codeunit(s::StaticString, i::Integer) = s.chars[i]
 @inline Base.codeunit(::StaticString) = UInt8
+@inline Base.lowercase(s::StaticString{N}) where{N} =
+	StaticString{N}(SVector{N,UInt8}(UInt8(lowercase(Char(c))) for c in s.chars))
 # We handle only ASCII strings...
 @inline Base.isvalid(::StaticString, ::Integer) = true
 @inline function Base.iterate(s::StaticString, i::Integer = 1)
 	i > length(s) && return nothing
 	c = s.chars[i]
-	iszero(c) && return nothing
+# 	iszero(c) && return nothing
 	(Char(c), i+1)
 end
 @inline function StaticString{N}(s::AbstractString) where{N}
@@ -153,6 +156,7 @@ end
 @inline StaticString{N}(s::StaticString{N}) where{N} = s
 
 @inline Pack.unpack(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
+@inline Pack.pack(io::IO, s::StaticString) = write(io, s.chars)
 
 # ««2 Indices: Resref etc.
 """    Strref
@@ -182,6 +186,9 @@ struct Resref{T}
 	name::StaticString{8}
 	Resref{T}(s::AbstractString) where{T} = new{T}(lowercase(first(s,8)))
 end
+@inline Pack.unpack(io::IO, T::Type{<:Resref}) =
+	T(lowercase(unpack(io, StaticString{8})))
+# @inline Pack.fieldunpack(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
 Base.nameof(r::Resref) = r.name
 
 macro Resref_str(s)
@@ -209,9 +216,14 @@ struct Resource{T}
 	namespace::String
 	name::String
 end
+@inline Base.nameof(r::Resource) = r.name
 @inline (T::Type{<:Resource})(x::Resource) = T(x.namespace, x.name)
+
 @inline Pack.unpack(io::IO, T::Type{<:Resource}) =
 	T("", unpack(io, StaticString{8}))
+@inline Pack.packed_sizeof(::Type{<:Resource}) = 8
+@inline Pack.pack(io::IO, r::Resource) = write(io, StaticString{8}(r.name))
+
 macro Resource_str(s)
 	return Resource{Symbol(lowercase(s))}
 end
@@ -460,7 +472,7 @@ struct KeyIndex
 		new(Ref(""), [], Dict{Tuple{StaticString{8},Symbol},BifIndex}())
 end
 function Base.push!(key::KeyIndex, res::KEY_res)
-	k = (res.name, Symbol(res.type))
+	k = (lowercase(res.name), Symbol(res.type))
 	key.location[k] = res.location
 # 	push!(key.resources, res)
 end
@@ -960,7 +972,7 @@ end
 	Spear = 40
 	ThrowingAxe = 100
 end
-@SymbolicEnum DamageType::UInt8 begin # not found
+@SymbolicEnum DamageType::UInt16 begin # not found
 	None = 0
 	Piercing = 1
 	Crushing = 2
@@ -1068,17 +1080,17 @@ mutable struct ITM_hdr{S}
 	abilities::Vector{ITM_ability}
 	features::Vector{ITM_feature}
 end
-# ignore "self" field on IO
-# even better: make all game data <: a common type and move this code
-# into read(ResIO) so that it applies to all game data
-# TODO: add a “modified” flag to decide which files need to be rewritten
-# (also make it ignored)
-@inline Pack.unpackfield(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
-@inline Pack.packfield(::IO, ::Val{:self}, ::Resource) = 0
+# ignore "self" and "modified" field on IO
+@inline Pack.fieldunpack(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
+@inline Pack.fieldpack(::IO, ::Val{:self}, ::Resource) = 0
+@inline Pack.packed_sizeof(::Val{:self}, ::Type{<:Resource}) = 0
+
+@inline Pack.fieldunpack(::IO, ::Val{:modified}, ::Type{Bool}) = false
+@inline Pack.fieldpack(::IO, ::Val{:modified}, ::Bool) = 0
+@inline Pack.packed_sizeof(::Val{:modified}, ::Type{Bool}) = 0
+
 @inline setself!(x::T, res::ResIO) where{T} =
 	x.self = fieldtype(T, :self)("", nameof(res))
-@inline Pack.unpackfield(::IO, ::Val{:modified}, ::Type{Bool}) = false
-@inline Pack.packfield(::IO, ::Val{:modified}, ::Bool) = 0
 
 @inline searchkey(i::ITM_hdr) = i.identified_name
 # create a virtual “not_usable_by” item property which groups together
@@ -1494,6 +1506,8 @@ IE.init!("../bg/game")
 r=IE.Resref"sw1h34.itm"
 # game = IE.Game("../bg/game")
 itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
+itm1=IE.clone(itm, unidentified_name="Imoen")
+write("../bg/game/override/jp01.itm", itm1)
  
 # itm=read(game, IE.Resref"blun01.itm")
 # write("/tmp/a.itm", itm)

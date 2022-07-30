@@ -10,7 +10,9 @@ using StaticArrays
 using Printf
 using Base.Meta: isexpr
 
-#««1 Layout
+@inline fieldnt(T::DataType) = zip(fieldnames(T), fieldtypes(T))
+
+#««1 Layout/packed_sizeof
 struct Layout
 	sizes::Vector{Int}
 	types::Vector{DataType}
@@ -30,9 +32,11 @@ function packed_layout(T::DataType)
 	# default value for non-`@pack` types
 	isstructtype(T) || return Layout([sizeof(T)], [T], [""])
 	l = Layout([], [], [])
-	for (fn, ft) in zip(fieldnames(T), fieldtypes(T))
+	for (fn, ft) in fieldnt(T)
 		ft <: Array && break
-		push!(l.sizes, sizeof(ft))
+		s = packed_sizeof(T, Val(fn), ft)
+		iszero(s) && continue
+		push!(l.sizes, s)
 		push!(l.types, ft)
 		push!(l.names, string(fn))
 	end
@@ -42,7 +46,7 @@ function Base.show(io::IO, ::MIME"text/plain", l::Layout)
 	offset = 0
 	for (fs, ft, fn) in zip(l.sizes, l.types, l.names)
 		s1 = fs < 0 ? "????" : @sprintf("%4d", fs)
-		o1 = offset < 0 ? "????" : @sprintf("%04d", offset)
+		o1 = offset < 0 ? "????" : @sprintf("0x%04x=%04d ", offset, offset)
 		@printf("\e[1m%s\e[m \e[31m%s\e[m \e[36m%-16s\e[m %s\n",
 			o1, s1, string(ft), string(fn))
 		offset = (fs < 0 || offset < 0) ? -1 : offset + fs
@@ -53,15 +57,19 @@ end
 
 Returns the size of the packed representation of type `T`.
 """
+@inline packed_sizeof(st::DataType, fn::Val, ft::DataType) =
+	packed_sizeof(fn, ft)
+@inline packed_sizeof(fn::Val, ft::DataType) = packed_sizeof(ft)
 @inline function packed_sizeof(::Type{T}) where{T}
-	# FIXME: allow user hooks to override e.g. String
 	isstructtype(T) || return sizeof(T)
-	v = [packed_sizeof(fieldtype(T,i)) for i in 1:fieldcount(T) ]
-	return sum(v; init=0)
-	return sum(packed_sizeof(fieldtype(T,i)) for i in 1:fieldcount(T); init=0)
+	r = 0
+	for (fn, ft) in fieldnt(T)
+		r+= packed_sizeof(T, Val(fn), ft)
+	end
+	return r
 end
 
-#««1 Pack/unpack: default behaviour
+#««1 Unpack
 """    unpack(io, T)
 
 Unpacks an object from a binary IO according to its packed layout.
@@ -80,19 +88,18 @@ function unpack(io::IO, T::DataType)
 # 		println("\e[31;1m$T\e[m: field $ft at positoin \e[32m$(position(io))\e[m")
 # 		push!(fieldvars, unpack(io, ft))
 # 	end
-	fieldvars = (unpackfield(io, T, Val(fn), ft)
-		for (fn, ft) in zip(fieldnames(T), fieldtypes(T)))
+	fieldvars = (fieldunpack(io, T, Val(fn), ft) for (fn, ft) in fieldnt(T))
 # 	fieldvars = [ unpack(io, ft) for ft in fieldtypes(T) ]
 	return T <: Tuple ? T((fieldvars...,),) : T(fieldvars...)
 end
-"""    unpackfield(io, structtype, Val(fieldname), fieldtype)
+"""    fieldunpack(io, structtype, Val(fieldname), fieldtype)
 
 Hook allowing the user to override `unpack`'s behaviour for a specific field.
 """
-@inline unpackfield(io::IO, st::DataType, fn::Val, ft::DataType) =
-	unpackfield(io, fn, ft)
-@inline unpackfield(io::IO, fn::Val, ft::DataType) = unpackfield(io, ft)
-@inline unpackfield(io::IO, ft::DataType) = unpack(io, ft)
+@inline fieldunpack(io::IO, st::DataType, fn::Val, ft::DataType) =
+	fieldunpack(io, fn, ft)
+@inline fieldunpack(io::IO, fn::Val, ft::DataType) = fieldunpack(io, ft)
+@inline fieldunpack(io::IO, ft::DataType) = unpack(io, ft)
 
 unpack(io::IO, T::DataType, n::Integer) = [ unpack(io, T) for _ in 1:n ]
 unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
@@ -108,6 +115,7 @@ function unpack!(io::IO, array::AbstractVector, T::DataType, n::Integer)
 	return n*sizeof(T)
 end
 
+#««1 Pack
 """    pack(io, x)
 
 Packs an object to a binary IO according to its packed layout.
@@ -117,23 +125,26 @@ function pack(io::IO, x::T) where{T}
 	@assert length(string(T)) ≤ 120
 # 	isstructtype(T) || (println("   value is $x::$T"); return write(io,x))
 	isstructtype(T) || return write(io, x)
-# 	for i in 1:fieldcount(T)
-# 		fn, ft = fieldname(T,i), fieldtype(T,i)
-# # 		println("at position $(position(io)): pack field $fn::$ft = $(getfield(x,i))")
-# 		pack(io, getfield(x, i))
-# 	end
-# 	0
-	sum(packfield(io, ft, Val(fn), getfield(x, fn))
-		for (fn, ft) in zip(fieldnames(T), fieldtypes(T)))
+	s = 0
+	for i in 1:fieldcount(T)
+		fn, ft = fieldname(T,i), fieldtype(T,i)
+		if contains(string(T), "ITM") && contains(string(fn), "opcode")
+			println("$T \e[1mx$(string(position(io), base=16))\e[m: pack field $fn::$ft = $(getfield(x,i))")
+		end
+		s+= fieldpack(io, ft, Val(fn), getfield(x, i))
+	end
+	return s
+# 	sum(fieldpack(io, ft, Val(fn), getfield(x, fn))
+# 		for (fn, ft) in zip(fieldnames(T), fieldtypes(T)))
 end
 
-"""    packfield(io, structtype, Val(fieldname), value)
+"""    fieldpack(io, structtype, Val(fieldname), value)
 
 Hook allowing the user to override `unpack`'s behaviour for a specific field.
 """
-@inline packfield(io::IO, st::DataType, fn::Val, x) = packfield(io, fn, x)
-@inline packfield(io::IO, fn::Val, x) = packfield(io, x)
-@inline packfield(io::IO, x) = pack(io, x)
+@inline fieldpack(io::IO, st::DataType, fn::Val, x) = fieldpack(io, fn, x)
+@inline fieldpack(io::IO, fn::Val, x) = fieldpack(io, x)
+@inline fieldpack(io::IO, x) = pack(io, x)
 
 function pack(io::IO, x::Vector)
 	n = 0
@@ -147,23 +158,26 @@ end
 # pack(io::IO, x::Vector) = sum(pack(io, y) for y in x)
 pack(io::IO, ::String) = 0
 
+# ««1 Constant fields
 struct Constant{V} end
 @inline Base.convert(T::Type{<:Constant}, ::Tuple{}) = T()
 
 @inline value(::Type{Constant{V}}) where{V} = V
+
 @inline function unpack(io::IO, ::Type{Constant{V}}) where{V}
 	x = read(io, sizeof(V))
 	@assert x == V "Bad value \""*string(x)*"\" (should have been \""*string(V)*"\")"
 	return Constant{V}()
 end
 @inline pack(io::IO, ::Constant{V}) where{V} = write(io, V)
+@inline packed_sizeof(::Constant{V}) where{V} = sizeof(V)
 
 macro Constant_str(s); :(Constant{SA[$(codeunits(s)...)]}); end
 
 
 
 
-#««1 @pack: special behaviour for structures
+#««1 (OBSOLETE) @pack: special behaviour for structures
 """    @pack [struct definition]
 
 Defines a struct type together with methods for (TODO) packing to,
@@ -326,7 +340,7 @@ of `Parameters`' `@with_kw` macro.
 """
 @generated function kwconstructor(::Type{T}; kwargs...) where{T}
 	args = [ :(get(kwargs, $(QuoteNode(fn)), kwconstructor($ft)))
-		for (fn, ft) in zip(fieldnames(T), fieldtypes(T)) ]
+		for (fn, ft) in fieldnt(T) ]
 	# the tuple test is there to cover NamedTuples; this function is quite
 	# useless for ordinary Tuples:
 	return T <: Tuple ? :($T(($(args...),))) : :($T($(args...)))

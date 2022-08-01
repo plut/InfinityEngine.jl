@@ -119,8 +119,9 @@ using UniqueVectors
 import Base.read, Base.write
 
 # ««1 Basic types
+# Compact representation, useful for Flags and Enums
+@inline rp(x) = repr(x;context=(:compact=>true))
 # ««2 Extract zero-terminated string from IO
-
 @inline function string0(v::AbstractVector{UInt8})
 	l = findfirst(iszero, v)
 	String(isnothing(l) ? v : view(v, 1:l-1))
@@ -952,7 +953,7 @@ end
 	Caster = 5
 	CasterInstant = 7
 end
-@SymbolicEnum FeatureTarget::UInt8 begin
+@SymbolicEnum EffectTarget::UInt8 begin
 	None = 0
 	Self = 1
 	Projectile_Target = 2
@@ -984,7 +985,40 @@ end
 	CrushingSlashing = 8
 	BluntMissile = 9 # bugged
 end
+@SymbolicEnum TimingMode::UInt8 begin
+	Seconds = 0
+	Permanent
+	While_Equipped
+	Delay_Seconds
+	Delay_Permanent
+	Delay_While_Equipped
+	Limited_after_duration
+	Permanent_after_duration
+	While_Equipped_after_duration
+	Never_expires
+	Ticks
+end
+@SymbolicFlags DispelMode::UInt8 begin
+	Dispellable
+	NotResistable
+end
 # ««2 Data blocks
+@with_kw mutable struct ITM_effect
+	opcode::Opcodes.Opcode
+	target::EffectTarget
+	power::UInt8
+	parameters::SVector{2,UInt32}
+	timing_mode::TimingMode
+	dispel_mode::DispelMode
+	duration::UInt32
+	probabilities::SVector{2,UInt8}
+	resource::Resref"spl"
+	dice_thrown::Int32
+	dice_sides::Int32
+	saving_throw_type::UInt32
+	saving_throw_bonus::Int32
+	stacking_id::UInt32
+end
 @with_kw mutable struct ITM_ability
  	attack_type::AttackType
  	must_identify::UInt8
@@ -1005,8 +1039,8 @@ end
 	secondary_type::UInt8
 	damage_bonus::UInt16
 	damage_type::DamageType
-	nfeatures::UInt16
-	idxfeatures::UInt16
+	effect_count::UInt16
+	effect_index::UInt16
 	max_charges::UInt16
 	depletion::UInt16
 	flags::UInt32
@@ -1017,22 +1051,7 @@ end
 	is_arrow::UInt16
 	is_bolt::UInt16
 	is_bullet::UInt16
-end
-@with_kw mutable struct ITM_feature
-	opcode::Opcodes.Opcode
-	target::FeatureTarget
-	power::UInt8
-	parameters::SVector{2,UInt32}
-	timing_mode::UInt8
-	dispel_resist::UInt8
-	duration::UInt32
-	probabilities::SVector{2,UInt8}
-	resource::Resref"spl"
-	dice_thrown::Int32
-	dice_sides::Int32
-	saving_throw_type::UInt32
-	saving_throw_bonus::Int32
-	stacking_id::UInt32
+	effects::Vector{ITM_effect}
 end
 mutable struct ITM_hdr{S}
 	self::Resource"itm"
@@ -1072,13 +1091,13 @@ mutable struct ITM_hdr{S}
 # 	length(abilities)::UInt16
 	abilities_offset::UInt32
 	abilities_count::UInt16
-# 	offset(features)::UInt32
-	feature_offset::UInt32
-	feature_index::UInt16
-# 	length(features)::UInt16
-	feature_count::UInt16
+# 	offset(effects)::UInt32
+	effect_offset::UInt32
+	effect_index::UInt16
+# 	length(effects)::UInt16
+	effect_count::UInt16
 	abilities::Vector{ITM_ability}
-	features::Vector{ITM_feature}
+	effects::Vector{ITM_effect}
 end
 # ignore "self" and "modified" field on IO
 @inline Pack.fieldunpack(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
@@ -1088,6 +1107,9 @@ end
 @inline Pack.fieldunpack(::IO, ::Val{:modified}, ::Type{Bool}) = false
 @inline Pack.fieldpack(::IO, ::Val{:modified}, ::Bool) = 0
 @inline Pack.packed_sizeof(::Val{:modified}, ::Type{Bool}) = 0
+
+# effects are written “by hand” at the end of the item file
+@inline Pack.fieldpack(::IO, ::Val{:effects}, ::Vector{ITM_effect}) = 0
 
 @inline setself!(x::T, res::ResIO) where{T} =
 	x.self = fieldtype(T, :self)("", nameof(res))
@@ -1119,23 +1141,62 @@ end
 end
 # ««2 Item function
 function read(io::IO, res::ResIO"ITM")
-	header = unpack(io, ITM_hdr{Strref})
-	setself!(header, res)
-	unpack!(seek(io, header.abilities_offset), header.abilities, ITM_ability,
-		header.abilities_count)
-	unpack!(seek(io, header.feature_offset), header.features, ITM_feature,
-		header.feature_count)
-	return header
+	itm = unpack(io, ITM_hdr{Strref})
+	setself!(itm, res)
+	unpack!(seek(io, itm.abilities_offset), itm.abilities, ITM_ability,
+		itm.abilities_count)
+	unpack!(seek(io, itm.effect_offset), itm.effects, ITM_effect,
+		itm.effect_count)
+	for (i, ab) in pairs(itm.abilities)
+		unpack!(io, ab.effects, ITM_effect, ab.effect_count)
+	end
+	return itm
 end
 function Base.write(io::IO, itm::ITM_hdr)
 	itm.abilities_offset = 114
 	itm.abilities_count = length(itm.abilities)
-	itm.feature_offset = 114 + length(itm.abilities)*packed_sizeof(ITM_ability)
-	itm.feature_index = 0 # FIXME
-	itm.feature_count = length(itm.features)
+	itm.effect_offset = 114 + length(itm.abilities)*packed_sizeof(ITM_ability)
+	itm.effect_index = 0 # FIXME
+	n = itm.effect_count = length(itm.effects)
+	for ab in itm.abilities
+		ab.effect_index = n
+		ab.effect_count = length(ab.effects)
+		n+= ab.effect_count
+	end
 	pack(io, itm)
+	@printf("\e[32mpacking main effects at %d = 0x%x\e[m", position(io), position(io))
+	pack(io, itm.effects)
+	for ab in itm.abilities;
+	@printf("\e[32mpacking ab effects at offset %d = 0x%x\e[m", position(io), position(io))
+	pack(io, ab.effects); end
 end
-function Base.show(io::IO, ::MIME"text/plain", itm::ITM_hdr)
+function show_effect(io::IO, eff::ITM_effect)
+	print(io, """
+\e[48;5;13m  $(@sprintf("%63s  ", string(Int16(eff.opcode);base=16)*Opcodes.str(eff.opcode, eff.parameters...)*" on "*rp(eff.target)))\e[m
+$(eff.dice_thrown)d$(eff.dice_sides), save $(eff.saving_throw_type)$(@sprintf("%+d", eff.saving_throw_bonus)) parameters $(eff.parameters[1]),$(eff.parameters[2])
+Duration $(eff.duration) timing_mode $(eff.timing_mode|>rp) dispel res. $(eff.dispel_mode|>rp) probabilities $(eff.probabilities[1]),$(eff.probabilities[2])
+""")
+end
+function show_ability(io::IO, itm::ITM_hdr, i::Integer)
+	ab = itm.abilities[i]
+	h = @sprintf("%s %+d %dd%d%+d %s speed %d",
+		rp(ab.attack_type), ab.thac0_bonus,
+		ab.dice_thrown, ab.dice_sides, ab.damage_bonus, rp(ab.damage_type), ab.speed_factor)
+	print(io, """
+\e[48;5;12m ($i/$(length(itm.abilities))) $(rpad(h, 60))\e[m
+Range $(ab.range), $(ab.target_count)*$(rp(ab.target_type))
+Alternative $(ab.alternative_dice_thrown)d$(ab.alternative_dice_sides)
+Effects $(ab.effect_index+1):$(ab.effect_index+ab.effect_count) ($(ab.effect_count) total)
+""")
+	for eff in ab.effects; show_effect(io, eff); end
+# 	print(io,"""
+# \e[34;7mAbility $i/$(itm.abilities_count)$(' '^40)\e[m
+# Attack_type:$(rp(ab.attack_type)) $(rp(ab.damage_type)) $(ab.dice_thrown)d$(ab.dice_sides)+$(ab.damage_bonus), thac0 $(ab.thac0_bonus), speed $(ab.speed_factor)
+# Alternative $(ab.alternative_dice_thrown)d$(ab.alternative_dice_sides)
+# Range $(ab.range), $(ab.target_count) target(s) of type $(rp(ab.target_type))
+# """)
+end
+function Base.show(io::IO, mime::MIME"text/plain", itm::ITM_hdr)
 	header=@sprintf("%26s/%-32s ⚖%-3d ❍%-5d ❝%-3d ",
 		str(itm.unidentified_name), str(itm.identified_name),
 		itm.weight, itm.price, itm.lore)
@@ -1144,37 +1205,28 @@ function Base.show(io::IO, ::MIME"text/plain", itm::ITM_hdr)
 		itm.mindexterity, itm.minconstitution, itm.minwisdom, itm.minintelligence,
 		itm.mincharisma, itm.minlevel)
 	nub = itm.not_usable_by
-	rep=x->repr(x;context=(:compact=>true))
 	if count_ones(nub.n) > count_zeros(nub.n)
-		use = "Usable by: \e[32m"*rep(~nub)*"\e[m"
+		use = "Usable by: \e[32m"*rp(~nub)*"\e[m"
 	else
-		use = "Not usable by: \e[31m"*rep(nub)*"\e[m"
+		use = "Not usable by: \e[31m"*rp(nub)*"\e[m"
 	end
 	print(io, """
 \e[7m$header\e[m
-Flags: \e[36m$(rep(itm.flags))\e[m
-Type: \e[36m$(rep(itm.item_type))\e[m Proficiency: \e[36m$(rep(itm.proficiency))\e[m Ench.\e[36m$(itm.enchantment)\e[m
+Flags: \e[36m$(rp(itm.flags))\e[m
+Type: \e[36m$(rp(itm.item_type))\e[m Proficiency: \e[36m$(rp(itm.proficiency))\e[m Ench.\e[36m$(itm.enchantment)\e[m
 $use
 Requires: $chars
 Inventory: \e[34m$(itm.inventoryicon.name)\e[m stack=\e[34m$(itm.stackamount)\e[m groundicon=\e[34m$(itm.groundicon.name)\e[m Animation: \e[34m$(itm.animation.name)\e[m Image=\e[34m$(itm.description_icon.name)\e[m
+Casting effects: $(itm.effect_index)
 """)
-	for (i,ab) in pairs(itm.abilities)
-	print(io,"""
-\e[34;7mAbility $i/$(itm.abilities_count)$(' '^40)\e[m
-Attack_type:$(rep(ab.attack_type)) $(rep(ab.damage_type)) $(ab.dice_thrown)d$(ab.dice_sides)+$(ab.damage_bonus), thac0 $(ab.thac0_bonus), speed $(ab.speed_factor)
-Alternative $(ab.alternative_dice_thrown)d$(ab.alternative_dice_sides)
-Range $(ab.range), $(ab.target_count) target(s) of type $(rep(ab.target_type))
-""")
-	end
+	for eff in itm.effects; show_effect(io, eff); end
+	for i in eachindex(itm.abilities); show_ability(io, itm, i); end
+# 	print(io,"""
+# \e[34;7mAbility $i/$(itm.abilities_count)$(' '^40)\e[m
+# Attack_type:$(rp(ab.attack_type)) $(rp(ab.damage_type)) $(ab.dice_thrown)d$(ab.dice_sides)+$(ab.damage_bonus), thac0 $(ab.thac0_bonus), speed $(ab.speed_factor)
+# """)
 	# TODO: make a nice display method for opcodes, move this to Opcodes
 	# (and double that with a constructor)
-	for (i, ft) in pairs(itm.features)
-	print(io, """
-\e[32;7mFeature $i/$(itm.feature_count) $(@sprintf("%64s  ", Opcodes.str(ft.opcode, ft.parameters...)*string(Int16(ft.opcode);base=16)*" on "*rep(ft.target)))\e[m
-$(ft.dice_thrown)d$(ft.dice_sides), save $(ft.saving_throw_type)$(@sprintf("%+d", ft.saving_throw_bonus)) parameters $(ft.parameters[1]),$(ft.parameters[2])
-Duration $(ft.duration) timing_mode $(ft.timing_mode) dispel res. $(ft.dispel_resist) probabilities $(ft.probabilities[1]),$(ft.probabilities[2])
-""")
-	end
 end
 # ««1 dlg
 struct DLG_state{S}

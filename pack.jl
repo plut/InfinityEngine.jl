@@ -146,16 +146,18 @@ Hook allowing the user to override `unpack`'s behaviour for a specific field.
 @inline fieldpack(io::IO, fn::Val, x) = fieldpack(io, x)
 @inline fieldpack(io::IO, x) = pack(io, x)
 
-function pack(io::IO, x::Vector)
-	n = 0
-	@assert eltype(x) != UInt8 || length(x) < 63000
-	for (i,y) in pairs(x)
-		n+= pack(io, y)
-	end
-	n
-end
+@inline pack(io::IO, x::AbstractVector) =
+	sum(pack(io, y) for y in x; init = 0)
+	
+# function pack(io::IO, x::Vector)
+# 	n = 0
+# 	@assert eltype(x) != UInt8 || length(x) < 63000
+# 	for (i,y) in pairs(x)
+# 		n+= pack(io, y)
+# 	end
+# 	n
+# end
 @inline pack(io::IO, ::Dict) = 0
-# pack(io::IO, x::Vector) = sum(pack(io, y) for y in x)
 pack(io::IO, ::String) = 0
 
 # ««1 Constant fields

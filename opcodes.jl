@@ -374,14 +374,31 @@ Minimum_base_stats
 #««1 Individual opcodes
 str(op::Opcode, parameters...) =
 	repr(op; context=(:compact=>true)) *'('*
-	join(str(Val(UInt16(op)), parameters...), ", ")*')'
-str(::Val, parameters...) = string.(parameters)
+	join(argstr(Val(UInt16(op)), parameters...), ", ")*')'
+argstr(::Val, parameters...) = string.(parameters)
 #««2 0 AC bonus
 # @SymbolicEnum AC_Type All=0 Crushing=1 Missile Piercing Slashing Base
 const AC_types = Dict(0x00 => "All", 0x01 => "Crushing",
 	0x02 => "Missile", 0x04 => "Piercing", 0x08 => "Slashing",
 	0x10 => "Set Base AC")
-str(::Val{0x0000}, ac_mod, type) = (flagstext(AC_types, type), string(ac_mod))
+argstr(::Val{0x0000}, ac_mod, type) = (flagstext(AC_types, type), string(ac_mod))
+#««2 1 APR bonus
+argstr(::Val{0x0001}, j, type) = statmod(((2*j)%11)/2, type)
+argstr(::Val{0x0003}, _, type) = (isone(type) ? "permanent" : "in combat",)
+general_ids = Dict(0 => "general_item", 1 => "humanoid", 2 => "animal",
+	3 => "dead", 4 => "undead", 5 => "giant humanoid", 6 => "frozen",
+	7 => "plant", 101 => "weapon", 102 => "armor", 103 => "amulet",
+	104 => "belt", 105 => "boots", 106 => "ammo", 107 => "helmet",
+	108 => "key", 109 => "potion", 110 => "ring", 111 => "scroll",
+	112 => "shield", 113 => "gloves", 255 => "monster")
+function argstr(::Val{0x0005}, gt, ct)
+	charmtypes = ["neutral", "hostile", "neutral dire", "hostile dire",
+		"cleric controlled", "thrall"]
+	sct = charmtypes[1+(ct%1000)]
+	ct ≥ 1000 && (sct *= " silent")
+	return (enumtext(general_ids, gt), sct)
+end
+
 #««2 7 Set color
 const Color_types = Dict(0x00 => "Buckle/Amulet", 0x01 => "Minor",
 	0x02 => "Major", 0x03 => "Skin", 0x04 => "Strap",
@@ -442,27 +459,30 @@ const Color_gradients = [ "Red Tinted Black", "Dark Bronze", "Dark Gold",
 "#A79361", "#933635", "#38484A", "#586D6F", "#606F58", "#8A3F3C", "#96938A",
 "#8A8C97", "#DBAE4F", "#829943", "#706815", "#7C6B41", "#3A392F", "#181818",]
  
-str(::Val{0x0007}, gradient, location) =
+argstr(::Val{0x0007}, gradient, location) =
 	(enumtext(Color_types, location), enumtext(Color_gradients, gradient))
+argstr(::Val{0x0008}, rgb, loc) =
+	(enumtext(Color_types, location), string(rgb))
 #««2 0x2a Bonus wizard spells / 0x3e priest spells
-str(::Val{0x002a}, amount, lvl) = iszero(lvl) ?
+argstr(::Val{0x002a}, amount, lvl) = iszero(lvl) ?
 	("double", "lvl≤"*string(amount)) :
 	("+"*string(amount), "lvl="*string(9-leading_zeros(UInt8(lvl-1))))
-str(::Val{0x003e}, amount, lvl) = str(Val(0x002a), amount, lvl)
+argstr(::Val{0x003e}, amount, lvl) = argstr(Val(0x002a), amount, lvl)
 #««2 Opcodes without parameters
 for x in (0x002, 0x0004, 0x000b, 0x000e, 0x001a, 0x0026, 0x0028, 0x002b, 0x002d, 0x002e, 0x002f, 0x0030, 0x0038, 0x003f, 0x0040, 0x0041, 0x0045, 0x0046, 0x004a, 0x004b, 0x004c, 0x004d, 0x004f, 0x0050, 0x0051, 0x006e, 0x0070, 0x0071, 0x0072)
-	@eval str(::Val{$x}, _...) = ()
+	@eval argstr(::Val{$x}, _...) = ()
 end
 statmod(val, type) =
 	(type == 1) ? ("="*string(val),) :
 	(type == 2) ? ("*="*string(val)*"%",) :
 	("+="*string(val),)
+#««2 Stat bonus
 for x in (0x0006, 0x000a, 0x000f, 0x0011, 0x0012, 0x0013, 0x0015, 0x0016, 0x0017, 0x001b, 0x001c, 0x001d, 0x001e, 0x001f, 0x0021, 0x0022, 0x0023, 0x0024, 0x0025, 0x002c, 0x0031, 0x0036, 0x003b, 0x0049, 0x0054, 0x0055, 0x0056, 0x0057, 0x0058, 0x0059, 0x005a, 0x005b, 0x005c, 0x005d, 0x005e, 0x005f, 0x0060, 0x0061, 0x0068, 0x0069, 0x006a, 0x006c, 0x007e, 0x00a6, 0x00a7, 0x00ad, 0x00b0, 0x0106, 0x0107, 0x0113, 0x0114, 0x0115, 0x0116, 0x0119, 0x011c, 0x011d, 0x011e, 0x0120, 0x0121, 0x0131, 0x0132, 0x0143, 0x0145, 0x015a,)
-	@eval @inline str(::Val{$x}, val, type) = statmod(val, type)
+	@eval @inline argstr(::Val{$x}, val, type) = statmod(val, type)
 end
 
 #««2 0x65 Immunity to effect
-str(::Val{0x0065}, _, opcode) = (repr(Opcode(opcode);context=(:compact=>true)),)
+argstr(::Val{0x0065}, _, opcode) = (repr(Opcode(opcode);context=(:compact=>true)),)
 #»»1
 
 #»»1

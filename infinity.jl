@@ -1,6 +1,68 @@
 #=
-# TODO:
+# Desired syntax for examples from WeiDU doc:
+# 10.1 
+# for item in items(game, r"sw1h.*")
+#   item.damage = d6
+# end
+#
+# 10.2
+# for script in scripts(game, r"ar[0.6].*")
+#   script = myscript * script
+# end
+#
+# 10.3: change all longswords to have minimum strength 10
+# for item in items(game)
+# 	(item.type == Longsword) && (item.min_strength = 10)
+# end
+# save(game)
+#
+# Additionnally:
+# # FIXME: this does not reliably create a reference
+# glamdring = Longsword("Glamdring", ...)
+# push!(game, glamdring)
+#
+# 10.4 add an item to a creature:
+# acolyte1 = creature(game, "acolyte1")
+# acolyte1.shield == nothing &&
+#   (acolyte1.shield = "shld01")
+# 
+# 10.5 add an item to a store:
+# ribald = store(game, "ribald")
+# push!(ribald.items, ("hamm05", 0, 0, 0))
+#   # or simply "hamm05" and charges will be auto-determined
+#   # or insert! to determine position
+#
+# 10.6 not applicable in EE
+# 10.7 set_2da_entry:
+# table(game, "kits")[i, j] = "value"
+#
+#  * we want items(game) to be a generator (likewise creatures(),
+#  spells() etc.)
+#  * it must return a real Item object
+#  * `setproperty!(::Item, ...)`
+#    pushes the item to a global “must be saved” list
+#    AND converts from a String to a reference as needed
+#  * Longsword(...) calls clone(Longsword, ...)
+#    AND creates a new entry (according to current namespace)
+#    AND registers the item in the global “must be saved” list
+#    AND returns a reference to the item
+#  * saving a creature reorders the items as needed
+#
 # - TEST 1: define an item
+# glamdring = Longsword()
+# add!(game, glamdring)
+#
+# * Features of modified items: Dict{resource => data}
+#  - mark existing item as modified:
+#    push (resref => modified item) in this list
+#  - create new item:
+#    create new resref (XXX how?)
+#    push (new resref => new item) in modified list
+#    XXX keep a reference to this item
+#  - i.e. a bijective map (longrefs => shortrefs)
+#    such that * existing shortrefs in namespace "main"
+#
+#
 # - long references: (namespace, name)
 #  - operations needed for references (longref):
 #   - map longref -> associated resource
@@ -30,7 +92,7 @@
 #  - entering a pointer: convert(Item, Resref)
 #
 # + a type for marked-language strings (pull from dialogs.jl)
-# - make nice flags modules like dialog transitions
+# + make nice flags modules like dialog transitions
 # - check translation format
 #  - needs xgettext (or at least a very basic version)
 # * nice display methods for items, creatures, dialog etc.
@@ -109,6 +171,7 @@ function functor(f, T::UnionAll, x::TX, B = nothing) where{TX}
 	replacetypevars(f, T.body, V, B, x)
 end
 end
+
 include("pack.jl"); using .Pack
 include("dottedenums.jl"); using .DottedEnums
 
@@ -1053,12 +1116,10 @@ end
 	is_bullet::UInt16
 	effects::Vector{ITM_effect}
 end
-mutable struct ITM_hdr{S}
-	self::Resource"itm"
-	modified::Bool
+struct ITM_hdr
 	constant::StaticString{8} # "ITM V1  "
-	unidentified_name::S
-	identified_name::S
+	unidentified_name::Strref
+	identified_name::Strref
 	replacement::Resource"ITM"
 	flags::ItemFlag
 	item_type::ItemCat
@@ -1083,8 +1144,8 @@ mutable struct ITM_hdr{S}
 	lore::UInt16
 	groundicon::Resource"BAM"
 	weight::Int32
-	unidentified_description::S
-	identified_description::S
+	unidentified_description::Strref
+	identified_description::Strref
 	description_icon::Resource"BAM"
 	enchantment::Int32
 # 	offset(abilities)::UInt32
@@ -1100,19 +1161,19 @@ mutable struct ITM_hdr{S}
 	effects::Vector{ITM_effect}
 end
 # ignore "self" and "modified" field on IO
-@inline Pack.fieldunpack(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
-@inline Pack.fieldpack(::IO, ::Val{:self}, ::Resource) = 0
-@inline Pack.packed_sizeof(::Val{:self}, ::Type{<:Resource}) = 0
-
-@inline Pack.fieldunpack(::IO, ::Val{:modified}, ::Type{Bool}) = false
-@inline Pack.fieldpack(::IO, ::Val{:modified}, ::Bool) = 0
-@inline Pack.packed_sizeof(::Val{:modified}, ::Type{Bool}) = 0
+# @inline Pack.fieldunpack(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
+# @inline Pack.fieldpack(::IO, ::Val{:self}, ::Resource) = 0
+# @inline Pack.packed_sizeof(::Val{:self}, ::Type{<:Resource}) = 0
+# 
+# @inline Pack.fieldunpack(::IO, ::Val{:modified}, ::Type{Bool}) = false
+# @inline Pack.fieldpack(::IO, ::Val{:modified}, ::Bool) = 0
+# @inline Pack.packed_sizeof(::Val{:modified}, ::Type{Bool}) = 0
 
 # effects are written “by hand” at the end of the item file
 @inline Pack.fieldpack(::IO, ::Val{:effects}, ::Vector{ITM_effect}) = 0
 
-@inline setself!(x::T, res::ResIO) where{T} =
-	x.self = fieldtype(T, :self)("", nameof(res))
+# @inline setself!(x::T, res::ResIO) where{T} =
+# 	x.self = fieldtype(T, :self)("", nameof(res))
 
 @inline searchkey(i::ITM_hdr) = i.identified_name
 # create a virtual “not_usable_by” item property which groups together
@@ -1124,7 +1185,7 @@ end
 		UInt64(i.kit3) << 48 | UInt64(i.kit4) << 56)
 end
 @inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
-	setfield!(x, :modified, true)
+# 	setfield!(x, :modified, true)
 	for (fn, ft) in zip(fieldnames(typeof(x)), fieldtypes(typeof(x)))
 		ft == Strref && value isa AbstractString && (value = Strref(game, value))
 		name == fn && return setfield!(x, name, ft(value))
@@ -1141,8 +1202,8 @@ end
 end
 # ««2 Item function
 function read(io::IO, res::ResIO"ITM")
-	itm = unpack(io, ITM_hdr{Strref})
-	setself!(itm, res)
+	itm = unpack(io, ITM_hdr)
+# 	setself!(itm, res)
 	unpack!(seek(io, itm.abilities_offset), itm.abilities, ITM_ability,
 		itm.abilities_count)
 	unpack!(seek(io, itm.effect_offset), itm.effects, ITM_effect,
@@ -1229,16 +1290,16 @@ Casting effects: $(itm.effect_index)
 	# (and double that with a constructor)
 end
 # ««1 dlg
-struct DLG_state{S}
-	text::S
+struct DLG_state
+	text::Strref
 	first_transition::Int32
 	number_transitions::Int32
 	trigger::Int32
 end
-struct DLG_transition{S}
+struct DLG_transition
 	flags::UInt32
-	text::S
-	journal::S
+	text::Strref
+	journal::Strref
 	trigger::Int32
 	action::Int32
 	next_actor::Resref"DLG"
@@ -1313,6 +1374,27 @@ function read(io::IO, f::ResIO"DLG")
 end
 
 #««1 Game
+#««2 Bijection - used for mapping longrefs to shortrefs
+struct Bijection{S,T}
+	f::Dict{S,T}
+	g::Dict{T,S} # inverse of f
+end
+@inline Bijection{S,T}() where{S,T} = Bijection{S,T}(Dict{S,T}(), Dict{T,S}())
+@inline inv(b::Bijection{S,T}) where{S,T} = Bijection{T,S}(b.g, b.f)
+@inline Base.haskey(b::Bijection, x) = haskey(b.f, x)
+@inline Base.keys(b::Bijection) = keys(b.f)
+@inline Base.values(b::Bijection) = keys(b.g)
+function Base.get!(b::Bijection, x, y)
+	z = get!(b.f, x, y)
+	get!(b.g, z, x)
+	return z
+end
+function Base.push!(b::Bijection, (x,y)::Pair)
+	@assert !haskey(b.f, x)
+	@assert !haskey(b.g, y)
+	b.f[x] = y; b.f[y] = x
+end
+#««2 Game data structure
 """    Game
 
 Main structure holding all top-level data for a game installation, including:
@@ -1340,6 +1422,7 @@ struct Game
 	directory::Base.RefValue{String}
 	key::KeyIndex
 	override::Dict{Symbol, Set{String}}
+	# Current values (mutable data):
 	language::Base.RefValue{Int}
 	namespace::Base.RefValue{String}
 	# FIXME: each tlk file is quite heavy (5 Mbytes in a fresh BG1
@@ -1352,10 +1435,97 @@ struct Game
 	# we collect all new strings (for any language) in the same structure,
 	# so that all the strref numbers advance in sync:
 	new_strings::UniqueVector{Tuple{Int8,String}}
+	# longrefs to shortrefs map:
+	resref::Dict{NTuple{2,String},StaticString{8}}
+	modified_items::Dict{NTuple{2,String},ITM_hdr}
 	@inline Game() = new(Ref(""), KeyIndex(), Dict{Symbol,Set{String}}(),
 		Ref(0), Ref(""), [ TlkStrings() for _ in LANGUAGE_FILES ],
-		UniqueVector{Tuple{Int8,String}}())
+		fieldtype(Game, :new_strings)(),
+		fieldtype(Game,:resref)(),
+		fieldtype(Game,:modified_items)(),
+	)
 end
+
+"""    ContextualizedResource{X}
+
+A “self-aware” game resource, i.e. knowing its name,
+but delegating `setproperty!` and `getproperty!` to the content.
+This allows communicating with the game when the resource is modified.
+
+ `root`: root resource
+
+API:
+  - `setproperty!`: resource.field = value
+	 * registers `resource` in the modified dict
+	  [i.e. we need the root resource + its key]
+	 * computes a pointer to the relevant field of the stored resource
+	  [i.e. we need current type and offset]
+	 * stores the value at the pointer location and returns it
+
+    ContextualizedResource{T,R,O}
+
+ `T` is the current type of the resource
+ `R` is the type of the root resource (i.e. item etc.)
+ `O` is the offset for the current resource
+
+"""
+struct ContextualizedResource{T,R,O,K}
+	data::T
+	root::R
+	key::K
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", r::ContextualizedResource)
+	print(io, "With context ", r.key, "\n")
+	show(io, mime, r.data)
+end
+
+ContextualizedResource(root::X, key::K) where{K,X} =
+	ContextualizedResource{X,X,0,K}(root, root, key)
+iscontextualized(T::DataType) = isstructtype(T)
+iscontextualized(T::Type{<:DottedEnums.EnumOrFlags}) = false
+
+function Base.getproperty(r::ContextualizedResource{T,R,O,K}, f::Symbol
+		) where{T,R,O,K}
+	f ∈ fieldnames(ContextualizedResource) && return getfield(r, f)
+# 	!hasfield(T, f) && return getproperty(r.data, f)
+ 	i = findfirst(isequal(f), fieldnames(T))
+	println("field index for $f is $i")
+	Tf, Of, Df = fieldtype(T, i), fieldoffset(T, i), getproperty(r.data, f)
+	println("   field type, offset, data are $Tf, $Of, $Df")
+	println("   struct? $(isstructtype(Tf))")
+	iscontextualized(Tf) || return Df
+	return ContextualizedResource{Tf, R, O+Of, K}(Df, r.root, r.key)
+end
+function Base.setproperty!(r::ContextualizedResource{T,R,O,K}, f::Symbol,
+		x) where{T,R,O,K}
+ 	i = findfirst(isequal(f), fieldnames(T))
+	Tf, Of = fieldtype(T, i), fieldoffset(T, i)
+	p = Base.unsafe_convert(Ptr{Nothing}, register!(r.key, r.root))
+	x1 = convert(Tf, x)
+	unsafe_store!(convert(Ptr{Tf}, p + Of), x1)
+	return x1
+end
+
+function refdict(dict::Dict, key)
+	i = Base.ht_keyindex(dict, key)
+	@assert i > 0
+	return Base.RefArray(dict.vals, i)
+end
+@inline refdict!(dict::Dict, key, value) =
+	# if slot exists, return slot index
+	# otherwise, create slot and return slot index
+	(get!(dict, key, value); refdict(dict, key))
+
+@inline register!((game, ns, name)::Tuple{Game,AbstractString,AbstractString},
+		itm::ITM_hdr) = refdict!(game.modified_items, (ns, name), itm)
+
+@inline function item(game, name)
+	i = read(game, Resref"itm"(name))
+	return ContextualizedResource(i, (game, "main", name))
+end
+
+	
 
 function Base.show(io::IO, game::Game)
 	print(io, "<Game: ", length(game.key), " keys, ", length(game.override),
@@ -1417,6 +1587,39 @@ function init!(game::Game, directory::AbstractString)
 	game.namespace[] = "user"
 	return game
 end
+
+" returns 2 if override, 1 if key/bif, 0 if not existing."
+function filetype(game::Game,::Type{ResIO{T}}, name::AbstractString) where{T}
+	haskey(game.override, T) && lowercase(String(name)) ∈ game.override[T] &&
+		return 2
+	haskey(game.key.location, (StaticString{8}(name), T)) && return 1
+	return 0
+end
+function ResIO{T}(game::Game, name::AbstractString) where{T}
+	t = filetype(game, ResIO{T}, name)
+	if t == 2
+		file = joinpath(game.directory, "override", String(name)*'.'*String(T))
+		return ResIOFile{T}(file)
+	elseif t == 1
+		return ResIO{T}(game.key, name)
+	else
+		error("resource not found: $name.$T")
+	end
+end
+@inline ResIO(k::Union{Game,KeyIndex}, resref::Resref{T}) where{T} =
+	ResIO{T}(k, nameof(resref))
+
+@inline read(k::Union{Game,KeyIndex}, resref::Resref; kw...) =
+	read(ResIO(k, resref); kw...)
+@inline filetype(game::Game, resref::Resref{T}) where{T} =
+	filetype(game, ResIO{T}, resref)
+
+@inline Base.names(game::Game, ::Type{ResIO{T}}) where{T} =
+	get(game.override,T, String[]) ∪ names(game.key, ResIO{T})
+@inline Base.findall(R::Type{<:ResIO}, game::Game) =
+	(R(game, n) for n in names(game, R))
+
+# ««2 Namespace and language
 """    namespace(game, s)
 
 Sets the current namespace for game resources being defined to `s`.
@@ -1452,6 +1655,7 @@ function language(game::Game, s::AbstractString)
 	error("unknown language: "*s)
 end
 @inline language(game::Game) = game.language[]
+# ««2 Strings
 @inline strings(game::Game, i = language(game)) = game.strings[i]
 function Strref(game::Game, s::AbstractString)
 	i = get(strings(game), s, nothing)
@@ -1467,37 +1671,6 @@ function str(game::Game, s::Strref)
 	return game.new_strings[i - length(strings(game))][2]
 end
 
-" returns 2 if override, 1 if key/bif, 0 if not existing."
-function filetype(game::Game,::Type{ResIO{T}}, name::AbstractString) where{T}
-	haskey(game.override, T) && lowercase(String(name)) ∈ game.override[T] &&
-		return 2
-	haskey(game.key.location, (StaticString{8}(name), T)) && return 1
-	return 0
-end
-function ResIO{T}(game::Game, name::AbstractString) where{T}
-	t = filetype(game, ResIO{T}, name)
-	if t == 2
-		file = joinpath(game.directory, "override", String(name)*'.'*String(T))
-		return ResIOFile{T}(file)
-	elseif t == 1
-		return ResIO{T}(game.key, name)
-	else
-		error("resource not found: $name.$T")
-	end
-end
-@inline ResIO(k::Union{Game,KeyIndex}, resref::Resref{T}) where{T} =
-	ResIO{T}(k, nameof(resref))
-
-@inline read(k::Union{Game,KeyIndex}, resref::Resref; kw...) =
-	read(ResIO(k, resref); kw...)
-@inline filetype(game::Game, resref::Resref{T}) where{T} =
-	filetype(game, ResIO{T}, resref)
-
-@inline Base.names(game::Game, ::Type{ResIO{T}}) where{T} =
-	get(game.override,T, String[]) ∪ names(game.key, ResIO{T})
-@inline Base.findall(R::Type{<:ResIO}, game::Game) =
-	(R(game, n) for n in names(game, R))
-
 """    search(game, strings, ResIO"type", text)
 
 Searches for the given text (string or regular expression)
@@ -1510,6 +1683,18 @@ function search(game::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 		contains(s, text) || continue
 		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', nameof(res), s)
 	end
+end
+#««2 Longrefs ←—→ shortrefs
+# We never need to convert shortref to longref
+
+shortref(game::Game, namespace::AbstractString, name::AbstractString) =
+	get!(game.resref, (namespace, name)) do
+		make_shortref(namespace, name, length(game.resref))
+	end
+@inline make_shortref(ns, n, l) = StaticString{8}(@sprintf("x%07x", l))
+
+function longrefs(game::Game)
+	sort(pairs(game.resref); by=last)
 end
 
 # Item/etc. generator ««1
@@ -1529,17 +1714,17 @@ end
 # »»1
 
 # shorthand: strings*dialog instantiates Strrefs
-for T in (:ITM_hdr,)
-	@eval @inline Base.:*(str::TlkStrings, x::$T{Strref}) =
-		Functors.functor(x->str[x].string::String, $T, x)
-end
+# for T in (:ITM_hdr,)
+# 	@eval @inline Base.:*(str::TlkStrings, x::$T{Strref}) =
+# 		Functors.functor(x->str[x].string::String, $T, x)
+# end
 
 # Base.:*(str::TlkStrings, x::Dialogs.StateMachine{Int32,Any}) =
 # 	Functors.functor(x->str[x].string::String,
 # 		Dialogs.StateMachine{Int32,S,String,Any} where{S}, x)
 
 const game = Game()
-for f in (:language, :init!, :str, :strref)
+for f in (:language, :init!, :str, :strref, :shortref)
 	@eval function $f(args...; kwargs...)
 		!isempty(args) && first(args) isa Game &&
 			error("no such method: ", $(string(f)), typeof.(args[2:end]), )
@@ -1558,7 +1743,7 @@ IE.init!("../bg/game")
 r=IE.Resref"sw1h34.itm"
 # game = IE.Game("../bg/game")
 itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
-itm1=IE.clone(itm, unidentified_name="Imoen")
+# itm1=IE.clone(itm, unidentified_name="Imoen")
 write("../bg/game/override/jp01.itm", itm1)
  
 # itm=read(game, IE.Resref"blun01.itm")

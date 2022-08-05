@@ -104,6 +104,38 @@
 =#
 
 module InfinityEngine
+module DiceThrows
+"""    Dice
+
+Allows D&D syntax for dice throws, e.g. 2d4+3.
+"""
+struct Dice{I}
+	thrown::I
+	sides::I
+	bonus::I
+end
+function Base.show(io::IO, d::Dice)
+	d.thrown > 1 && print(io, d.thrown)
+	print(io, 'd', d.sides)
+	d.bonus > 0 && print(io, '+', d.bonus)
+	d.bonus < 0 && print(io, d.bonus)
+end
+@inline Base.:*(a::Integer, d::Dice{I}) where{I} =
+	(@assert isone(d.thrown) && iszero(d.bonus); Dice{I}(I(a), d.sides, zero(I)))
+@inline Base.:+(d::Dice{I}, b::Integer) where{I} =
+	Dice{I}(d.thrown, d.sides, d.bonus + I(b))
+@inline Base.:-(d::Dice{I}, b::Integer) where{I} =
+	Dice{I}(d.thrown, d.sides, d.bonus - I(b))
+
+@inline Base.rand(d::Dice) =
+	sum(rand(Base.OneTo(d.sides)) for _ in Base.OneTo(d.thrown)) + d.bonus
+
+for i in (2,3,4,5,6,8,10,12,20)
+	@eval $(Symbol("d"*string(i))) = Dice{Int}(1,$i,0)
+end
+end
+
+
 module Functors
 """    find_typevar(T, TX)
 
@@ -324,7 +356,7 @@ macro ResIO_str(str)
 		(_, b) = splitext(str)
 		return :(ResIO{$(QuoteNode(Symbol(lowercase(b[2:end]))))}($str))
 	else
-		return :(ResIO{$(QuoteNode(Symbol(lowercase(str))))})
+		return :(ResIO{$(str|>lowercase|>Symbol|>QuoteNode)})
 	end
 end
 # macro Resource_str(s) ResIO{Symbol(lowercase(s))} end
@@ -1446,85 +1478,6 @@ struct Game
 	)
 end
 
-"""    ContextualizedResource{X}
-
-A “self-aware” game resource, i.e. knowing its name,
-but delegating `setproperty!` and `getproperty!` to the content.
-This allows communicating with the game when the resource is modified.
-
- `root`: root resource
-
-API:
-  - `setproperty!`: resource.field = value
-	 * registers `resource` in the modified dict
-	  [i.e. we need the root resource + its key]
-	 * computes a pointer to the relevant field of the stored resource
-	  [i.e. we need current type and offset]
-	 * stores the value at the pointer location and returns it
-
-    ContextualizedResource{T,R,O}
-
- `T` is the current type of the resource
- `R` is the type of the root resource (i.e. item etc.)
- `O` is the offset for the current resource
-
-"""
-struct ContextualizedResource{T,R,O,K}
-	data::T
-	root::R
-	key::K
-end
-
-function Base.show(io::IO, mime::MIME"text/plain", r::ContextualizedResource)
-	print(io, "With context ", r.key, "\n")
-	show(io, mime, r.data)
-end
-
-ContextualizedResource(root::X, key::K) where{K,X} =
-	ContextualizedResource{X,X,0,K}(root, root, key)
-iscontextualized(T::DataType) = isstructtype(T)
-iscontextualized(T::Type{<:DottedEnums.EnumOrFlags}) = false
-
-function Base.getproperty(r::ContextualizedResource{T,R,O,K}, f::Symbol
-		) where{T,R,O,K}
-	f ∈ fieldnames(ContextualizedResource) && return getfield(r, f)
-# 	!hasfield(T, f) && return getproperty(r.data, f)
- 	i = findfirst(isequal(f), fieldnames(T))
-	println("field index for $f is $i")
-	Tf, Of, Df = fieldtype(T, i), fieldoffset(T, i), getproperty(r.data, f)
-	println("   field type, offset, data are $Tf, $Of, $Df")
-	println("   struct? $(isstructtype(Tf))")
-	iscontextualized(Tf) || return Df
-	return ContextualizedResource{Tf, R, O+Of, K}(Df, r.root, r.key)
-end
-function Base.setproperty!(r::ContextualizedResource{T,R,O,K}, f::Symbol,
-		x) where{T,R,O,K}
- 	i = findfirst(isequal(f), fieldnames(T))
-	Tf, Of = fieldtype(T, i), fieldoffset(T, i)
-	p = Base.unsafe_convert(Ptr{Nothing}, register!(r.key, r.root))
-	x1 = convert(Tf, x)
-	unsafe_store!(convert(Ptr{Tf}, p + Of), x1)
-	return x1
-end
-
-function refdict(dict::Dict, key)
-	i = Base.ht_keyindex(dict, key)
-	@assert i > 0
-	return Base.RefArray(dict.vals, i)
-end
-@inline refdict!(dict::Dict, key, value) =
-	# if slot exists, return slot index
-	# otherwise, create slot and return slot index
-	(get!(dict, key, value); refdict(dict, key))
-
-@inline register!((game, ns, name)::Tuple{Game,AbstractString,AbstractString},
-		itm::ITM_hdr) = refdict!(game.modified_items, (ns, name), itm)
-
-@inline function item(game, name)
-	i = read(game, Resref"itm"(name))
-	return ContextualizedResource(i, (game, "main", name))
-end
-
 	
 
 function Base.show(io::IO, game::Game)
@@ -1618,6 +1571,113 @@ end
 	get(game.override,T, String[]) ∪ names(game.key, ResIO{T})
 @inline Base.findall(R::Type{<:ResIO}, game::Game) =
 	(R(game, n) for n in names(game, R))
+
+#««2 Named Resource
+"""    NamedResource{T,R,K}
+
+A “self-aware” game resource, i.e. knowing its name,
+but delegating `setproperty!` and `getproperty!` to the content.
+This allows communicating with the game when the resource is modified.
+
+ `root`: root resource
+
+API:
+  - `setproperty!`: resource.field = value
+	 * registers `resource` in the modified dict
+	  [i.e. we need the root resource + its key]
+	 * computes a pointer to the relevant field of the stored resource
+	  [i.e. we need current type and offset]
+	 * stores the value at the pointer location and returns it
+
+    NamedResource{T,R,K}
+
+ `T` is the current type of the resource
+ `R` is the type of the root resource (i.e. item etc.)
+ `K` is the key type (i.e. NTuple{2,String} in our case)
+"""
+struct NamedResource{T,R,K}
+	data::T
+	root::R
+	key::K
+	offset::Int
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", r::NamedResource)
+	print(io, "With context ", _key(r), "\n")
+	show(io, mime, _data(r))
+end
+
+NamedResource(root::X, key::K) where{K,X} =
+	NamedResource{X,X,K}(root, root, key, 0)
+@inline _data(r::NamedResource) = getfield(r, :data)
+@inline _key(r::NamedResource) = getfield(r, :key)
+@inline _root(r::NamedResource) = getfield(r, :root)
+@inline _offset(r::NamedResource) = getfield(r, :offset)
+
+iscontextualized(T::DataType) = isstructtype(T)
+iscontextualized(T::Type{<:DottedEnums.EnumOrFlags}) = false
+
+function Base.getproperty(r::NamedResource{T,R,K},
+		f::Symbol) where{T,R,K}
+# 	f ∈ fieldnames(NamedResource) && return getfield(r, f)
+# 	!hasfield(T, f) && return getproperty(r.data, f)
+ 	i = findfirst(isequal(f), fieldnames(T))
+# 	println("field index for $f is $i")
+	Tf, Of, Df = fieldtype(T, i), fieldoffset(T, i), getproperty(_data(r), f)
+# 	println("   field type, offset, data are $Tf, $Of, $Df")
+# 	println("   struct? $(isstructtype(Tf))")
+	iscontextualized(Tf) || return Df
+	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
+		_offset(r) + Of)
+end
+function Base.setproperty!(r::NamedResource{T,R,K},
+		f::Symbol, x) where{T,R,K}
+ 	i = findfirst(isequal(f), fieldnames(T))
+	Tf, Of = fieldtype(T, i), fieldoffset(T, i)
+	p = Base.unsafe_convert(Ptr{Nothing}, register!(_key(r), _root(r)))
+	x1 = convert(Tf, x)
+	unsafe_store!(convert(Ptr{Tf}, p + _offset(r) + Of), x1)
+	return x1
+end
+# Vector data: getindex, setindex!, push!, insert!
+function Base.getindex(r::NamedResource{T,R,K},
+		i::Int) where{T<:Vector,R,K}
+	Tf = eltype(T); Of, Df = (i-1)*sizeof(Tf), _data(r)[i]
+	iscontextualized(Tf) || return Df
+	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
+		_offset(r) + Of)
+end
+@inline Base.iterate(r::NamedResource{<:Vector}, i=1) =
+	(i-1 < length(_data(r)) ? (@inbounds r[i], i+1) : nothing)
+@inline Base.length(r::NamedResource{<:Vector}) = length(_data(r))
+@inline Base.eltype(r::NamedResource{T,R,K}) where{T<:Vector,R,K}=
+	let Tf = eltype(T)
+	iscontextualized(Tf) ? NamedResource{Tf,R,K} : Tf
+end
+
+for f in (:setindex!, :push!, :insert!, :delete!)
+	@eval Base.$f(r::NamedResource{<:Vector}, x...) =
+		(register!(_key(r), _root(r)); $f(_data(r), x...))
+end
+
+function refdict(dict::Dict, key)
+	i = Base.ht_keyindex(dict, key)
+	@assert i > 0
+	return Base.RefArray(dict.vals, i)
+end
+@inline refdict!(dict::Dict, key, value) =
+	# if slot exists, return slot index
+	# otherwise, create slot and return slot index
+	(get!(dict, key, value); refdict(dict, key))
+
+@inline register!((game, ns, name)::Tuple{Game,AbstractString,AbstractString},
+		itm::ITM_hdr) = refdict!(game.modified_items, (ns, name), itm)
+
+@inline function item(game, name)
+	i = read(game, Resref"itm"(name))
+	return NamedResource(i, (game, "main", name))
+end
+
 
 # ««2 Namespace and language
 """    namespace(game, s)
@@ -1744,7 +1804,7 @@ r=IE.Resref"sw1h34.itm"
 # game = IE.Game("../bg/game")
 itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
 # itm1=IE.clone(itm, unidentified_name="Imoen")
-write("../bg/game/override/jp01.itm", itm1)
+# write("../bg/game/override/jp01.itm", itm1)
  
 # itm=read(game, IE.Resref"blun01.itm")
 # write("/tmp/a.itm", itm)

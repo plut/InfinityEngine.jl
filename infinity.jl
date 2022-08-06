@@ -349,7 +349,19 @@ Concrete subtypes (i.e. `ResIOBuf`, `ResIOFile`) must implement:
 Specializations (i.e. `ResIO"DLG"` etc.) must implement:
  - `read(::ResIO{T}, io::IO)`.
 """
-abstract type ResIO{T} <: IO end
+struct ResIO{T,X<:IO}
+	name::String
+	io::X
+	@inline ResIO{T}(name, io::X) where{T,X<:IO} = new{T,X}(name, io)
+end
+
+@inline Base.read(r::ResIO, T) = read(r.io, T)
+@inline Base.seek(r::ResIO, n) = seek(r.io, n)
+@inline Base.close(r::ResIO) = close(r.io)
+@inline Base.position(r::ResIO) = position(r.io)
+@inline Base.nameof(r::ResIO) = r.name
+
+# abstract type ResIO{T} <: IO end
 macro ResIO_str(str)
 	if contains(str, '.')
 		(_, b) = splitext(str)
@@ -359,23 +371,23 @@ macro ResIO_str(str)
 	end
 end
 # macro Resource_str(s) ResIO{Symbol(lowercase(s))} end
-@inline read(f::ResIO; kw...) = open(f) do io; read(io, f; kw...); end
+# @inline read(f::ResIO; kw...) = open(f) do io; read(io, f; kw...); end
 
-mutable struct ResIOFile{T} <:ResIO{T}
-	filename::String
-end
-@inline ResIO{T}(f::AbstractString) where{T} = ResIOFile{T}(f)
-@inline ResIO(f::AbstractString) = 
-	ResIO{Symbol(lowercase(splitext(basename(f))[2])[2:end])}(f)
-@inline Base.open(r::ResIOFile) = open(r.filename)
-@inline Base.nameof(r::ResIOFile) = lowercase(splitext(basename(r.filename))[1])
+# mutable struct ResIOFile{T} <:ResIO{T}
+# 	filename::String
+# end
+# @inline ResIO{T}(f::AbstractString) where{T} = ResIOFile{T}(f)
+# @inline ResIO(f::AbstractString) = 
+# 	ResIO{Symbol(lowercase(splitext(basename(f))[2])[2:end])}(f)
+# @inline Base.open(r::ResIOFile) = open(r.filename)
+# @inline Base.nameof(r::ResIOFile) = lowercase(splitext(basename(r.filename))[1])
 
-mutable struct ResIOBuf{T} <: ResIO{T}
-	name::String
-	buffer::IOBuffer
-end
-@inline Base.open(r::ResIOBuf) = r.buffer
-@inline Base.nameof(r::ResIOBuf) = r.name
+# mutable struct ResIOBuf{T} <: ResIO{T}
+# 	name::String
+# 	buffer::IOBuffer
+# end
+# @inline Base.open(r::ResIOBuf) = r.buffer
+# @inline Base.nameof(r::ResIOBuf) = r.name
 
 Resref(r::ResIO{T}) where{T} = Resref{T}(nameof(r))
 
@@ -728,12 +740,11 @@ function (::Type{<:ResIO{T}})(key::KeyIndex, name) where{T}
 	loc = get(key.location, (StaticString{8}(name), T), nothing)
 	isnothing(loc) && return nothing
 	bif = joinpath(key.directory[], key.bif[1+sourcefile(loc)])
-	return ResIOBuf{T}(String(name), bifcontent(bif, resourceindex(loc)))
+	return ResIO{T}(name, bifcontent(bif, resourceindex(loc)))
 end
-Base.names(key::KeyIndex, ::Type{ResIO{T}}) where{T} =
+Base.names(key::KeyIndex, ::Type{Resref{T}}) where{T} =
 	(r[1] for r in keys(key.location) if r[2] == T)
-Base.findall(T::Type{<:ResIO}, key::KeyIndex) =
-	(T(key, x) for x in names(key,T))
+Base.findall(T::Type{<:Resref}, key::KeyIndex) = T.(names(key, T))
 
 # ««1 ids
 # useful ones: PROJECTL SONGLIST ITEMCAT NPC ANISND ?
@@ -1668,8 +1679,8 @@ end
 @inline filetype(game::Game, resref::Resref{T}) where{T} =
 	filetype(game, ResIO{T}, resref)
 
-@inline Base.names(game::Game, ::Type{ResIO{T}}) where{T} =
-	get(game.override,T, String[]) ∪ names(game.key, ResIO{T})
+@inline Base.names(game::Game, ::Type{Resref{T}}) where{T} =
+	get(game.override,T, String[]) ∪ names(game.key, Resref{T})
 @inline Base.findall(R::Type{<:ResIO}, game::Game) =
 	(R(game, n) for n in names(game, R))
 

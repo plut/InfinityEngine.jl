@@ -79,7 +79,11 @@ Unpacks an object from a binary IO according to its packed layout.
 
 Unpacks `n` objects and returns a vector.
 """
-function unpack(io::IO, T::DataType)
+@inline function unpack(io::IO, T::DataType)
+# 	if T <: Main.InfinityEngine.RootedResource
+# 		println("\e[34m $T: $(position(io))\e[m")
+# 	end
+# 	@assert !(T<:Main.InfinityEngine.ITM_hdr && position(io) == 1036)
 	# default value for non-`@pack` types
 # 	println("   unpacking \e[31m$T\e[m at position \e[34m$(position(io))\e[m")
 	isstructtype(T) || return read(io, T)
@@ -97,7 +101,14 @@ end
 Hook allowing the user to override `unpack`'s behaviour for a specific field.
 """
 @inline fieldunpack(io::IO, st::DataType, fn::Val, ft::DataType) =
+begin
+# 	st <: Main.InfinityEngine.RootedResource &&
+# 	println("general fieldunpack: $st/$fn/$ft @$(position(io))")
+# 	if fn == Val(:root)
+# 		println("\e[31;1m unpack(root) in $st/$fn/$ft\e[m")
+# 	end
 	fieldunpack(io, fn, ft)
+end
 @inline fieldunpack(io::IO, fn::Val, ft::DataType) = fieldunpack(io, ft)
 @inline fieldunpack(io::IO, ft::DataType) = unpack(io, ft)
 
@@ -107,7 +118,8 @@ unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
 @inline unpack(io::IO, ::Type{String}) = ""
 @inline unpack(filename::AbstractString, T::DataType, n::Integer...) =
 	open(filename) do io; unpack(io, T, n...); end
-function unpack!(io::IO, array::AbstractVector, T::DataType, n::Integer)
+function unpack!(io::IO, array::AbstractVector{T}, n::Integer) where{T}
+	# no need to give the type since it is the eltype of the array
 	resize!(array, n)
 	for i in 1:n
 		array[i] = unpack(io, T)

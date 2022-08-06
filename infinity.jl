@@ -1,4 +1,5 @@
 #=
+# * make ResIO <: IO (with seek method) for accessing name
 # Desired syntax for examples from WeiDU doc:
 # 10.1 
 # for item in items(game, r"sw1h.*")
@@ -134,8 +135,6 @@ for i in (2,3,4,5,6,8,10,12,20)
 	@eval $(Symbol("d"*string(i))) = Dice{Int}(1,$i,0)
 end
 end
-
-
 module Functors
 """    find_typevar(T, TX)
 
@@ -350,7 +349,7 @@ Concrete subtypes (i.e. `ResIOBuf`, `ResIOFile`) must implement:
 Specializations (i.e. `ResIO"DLG"` etc.) must implement:
  - `read(::ResIO{T}, io::IO)`.
 """
-abstract type ResIO{T} end
+abstract type ResIO{T} <: IO end
 macro ResIO_str(str)
 	if contains(str, '.')
 		(_, b) = splitext(str)
@@ -383,10 +382,19 @@ Resref(r::ResIO{T}) where{T} = Resref{T}(nameof(r))
 # function write(filename::AbstractString, res::Resource)
 # 	open(filename, "w") do io; write(io, res); end
 # end
+#««2 Longref
+struct Longref
+	namespace::String
+	resource::String
+end
+@inline Pack.fieldunpack(::IO, T::Type{<:Longref}) = T("main", "")
+@inline Pack.fieldpack(::IO, ::Longref) = 0
+@inline Pack.packed_sizeof(::Type{<:Longref}) = 0
 
 #»»1
 include("dialogs.jl") # this needs Strref, so we put it here
 # Rooted resources ««1
+# Data types««2
 """    RootedResource
 
 A game resource holding a reference to the root resource
@@ -400,7 +408,7 @@ The following methods needs to be defined:
 """
 abstract type RootedResource end
 # default field is x.root (actually the only field we use)
-@inline root(x::RootedResource) = x.root
+@inline root(x::RootedResource) = isdefined(x, :root) ? x.root : nothing
 @inline root!(x::RootedResource, r) = (x.root = r)
 """    RootResource
 
@@ -410,17 +418,34 @@ This resource also holds an identifier designating it (and the game file).
 abstract type RootResource <: RootedResource end
 # Root resource is always its own root
 @inline root(x::RootResource) = x
-@inline root!(x::RootResource) = nothing
-@inline register!(x::RootResource) = error("undefined for $(typeof(x))")
+@inline root!(x::RootResource, _) = nothing
+@inline register!(x::RootResource)=error("register! undefined for $(typeof(x))")
+@inline register!(::Nothing) = nothing # no root defined
 
+mutable struct RootedResourceVector{T<:RootedResource,
+		R<:RootResource} <: AbstractVector{T}
+	v::Vector{T}
+	root::R
+	# new is *not* a variadic function:
+	RootedResourceVector{T,R}(v,r) where{T,R} = new{T,R}(v,r)
+	RootedResourceVector{T,R}(v) where{T,R} = new{T,R}(v)
+end
+@inline RootedResourceVector{T,R}(::UndefInitializer) where{T,R} =
+	RootedResourceVector{T,R}()
+@inline root(v::RootedResourceVector) = isdefined(v, :root) ? v.root : nothing
+@inline root!(v::RootedResourceVector, r) = (v.root = r)
+
+#««2 Packing
 @inline Pack.fieldpack(::IO, ::Type{<:RootedResource}, ::Val{:root},
 	::RootResource) = 0
 @inline Pack.fieldunpack(::IO, ::Type{<:RootedResource}, ::Val{:root},
 	T::Type{<:RootResource}) = T(undef)
 @inline Pack.packed_sizeof(::Type{<:RootedResource}, ::Val{:root},
 	::Type{<:RootResource}) = 0
+@inline Pack.fieldunpack(::IO, T::Type{<:RootedResourceVector}) = T([])
 # the root resource has a default `key` property
 
+#««2 getproperty/setproperty! etc.
 @inline default_setproperty!(x, f::Symbol, v) =
 	# default code; duplicated from Base.jl
 	setfield!(x, f, convert(fieldtype(typeof(x), f), v))
@@ -428,14 +453,33 @@ abstract type RootResource <: RootedResource end
 	(register!(root(x)); default_setproperty!(x, f, v))
 @inline Base.setproperty!(x::RootedResource, f::Symbol, v) =
 	rr_setproperty!(x, f, v)
-@inline fieldnt(T::DataType) = zip(fieldnames(T), fieldtypes(T))
+
+# AbstractArray interface
+@inline Base.size(v::RootedResourceVector) = size(v.v)
+@inline Base.getindex(v::RootedResourceVector, i::Int) = v.v[i]
+@inline Base.setindex!(v::RootedResourceVector, x, i::Int) =
+	(register!(root(v)); setindex!(v.v, x, i))
+@inline Base.resize!(v::RootedResourceVector, n::Integer) =
+	(register!(root(v)); resize!(v.v, n); v)
 
 """    setroot!(x::RootedResource, newroot = x)
 
 Recursively sets the root object for `x` and all its sub-fields."""
-@inline setroot!(x, r) = nothing
-setroot!(x::RootedResource, r = x) = 
-	(root!(x, r); for i in 1:nfields(typeof(x)); setroot!(getfield(x, i), r); end)
+@inline setroot!(x, r) = x
+@inline function setroot!(x::RootedResource, r = x)
+	root!(x, r)
+	for i in 1:nfields(typeof(x))
+		setroot!(getfield(x, i), r)
+	end
+	return x
+end
+@inline function setroot!(x::RootedResourceVector, r)
+	root!(x, r)
+	for y in x
+		setroot!(y, r)
+	end
+	return x
+end
 setroot!(x::AbstractVector, r) = for y in x; setroot!(y, r); end
 
 # ««1 tlk
@@ -466,7 +510,7 @@ end
 #««2 I/O from tlk file
 function read(io::IO, ::Type{<:TlkStrings})
 	f = unpack(io, TlkStrings)
-	unpack!(io, f.entries, TLK_str, f.nstr)
+	unpack!(io, f.entries, f.nstr)
 	sizehint!(empty!(f.index), f.nstr)
 	for (i,s) in pairs(f.entries)
 		s.string = string0(io, f.offset + s.offset, s.length)
@@ -1150,7 +1194,8 @@ end
 	NotResistable
 end
 # ««2 Data blocks
-@with_kw mutable struct ITM_effect
+@with_kw mutable struct ITM_effect{R<:RootResource} <: RootedResource
+	root::R
 	opcode::Opcodes.Opcode
 	target::EffectTarget
 	power::UInt8
@@ -1166,7 +1211,8 @@ end
 	saving_throw_bonus::Int32
 	stacking_id::UInt32
 end
-@with_kw mutable struct ITM_ability
+@with_kw mutable struct ITM_ability{R<:RootResource} <: RootedResource
+	root::R
  	attack_type::AttackType
  	must_identify::UInt8
  	location::UInt8
@@ -1198,9 +1244,9 @@ end
 	is_arrow::UInt16
 	is_bolt::UInt16
 	is_bullet::UInt16
-	effects::Vector{ITM_effect}
+	effects::Vector{ITM_effect{R}}
 end
-struct ITM_hdr
+mutable struct ITM_hdr <: RootResource
 	constant::StaticString{8} # "ITM V1  "
 	unidentified_name::Strref
 	identified_name::Strref
@@ -1241,8 +1287,11 @@ struct ITM_hdr
 	effect_index::UInt16
 # 	length(effects)::UInt16
 	effect_count::UInt16
-	abilities::Vector{ITM_ability}
-	effects::Vector{ITM_effect}
+	abilities::RootedResourceVector{ITM_ability{ITM_hdr},ITM_hdr}
+	effects::RootedResourceVector{ITM_effect{ITM_hdr},ITM_hdr}
+	longref::Longref
+	@inline ITM_hdr(args...) = new(args...)
+	@inline ITM_hdr(::UndefInitializer) = new()
 end
 # ignore "self" and "modified" field on IO
 # @inline Pack.fieldunpack(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
@@ -1270,10 +1319,6 @@ end
 end
 @inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
 # 	setfield!(x, :modified, true)
-	for (fn, ft) in zip(fieldnames(typeof(x)), fieldtypes(typeof(x)))
-		ft == Strref && value isa AbstractString && (value = Strref(game, value))
-		name == fn && return setfield!(x, name, ft(value))
-	end
 	if name == :not_usable_by
 		x.usability = UInt64(value) % UInt32
 		x.kit1 = (UInt64(value) >> 32) % UInt8
@@ -1282,18 +1327,22 @@ end
 		x.kit4 = (UInt64(value) >> 56) % UInt8
 		return value
 	end
-	error("unknown field name \"$name\"")
+	rr_setproperty!(x, name, value)
+# 	for (fn, ft) in zip(fieldnames(typeof(x)), fieldtypes(typeof(x)))
+# 		ft == Strref && value isa AbstractString && (value = Strref(game, value))
+# 		name == fn && return setfield!(x, name, ft(value))
+# 	end
+# 	error("unknown field name \"$name\"")
 end
 # ««2 Item function
 function read(io::IO, res::ResIO"ITM")
 	itm = unpack(io, ITM_hdr)
+	setfield!(itm, :longref, Longref("main", nameof(res)))
 # 	setself!(itm, res)
-	unpack!(seek(io, itm.abilities_offset), itm.abilities, ITM_ability,
-		itm.abilities_count)
-	unpack!(seek(io, itm.effect_offset), itm.effects, ITM_effect,
-		itm.effect_count)
+	unpack!(seek(io, itm.abilities_offset), itm.abilities, itm.abilities_count)
+	unpack!(seek(io, itm.effect_offset), itm.effects, itm.effect_count)
 	for (i, ab) in pairs(itm.abilities)
-		unpack!(io, ab.effects, ITM_effect, ab.effect_count)
+		unpack!(io, ab.effects, ab.effect_count)
 	end
 	return itm
 end
@@ -1317,7 +1366,7 @@ function Base.write(io::IO, itm::ITM_hdr)
 end
 function show_effect(io::IO, eff::ITM_effect)
 	print(io, """
-\e[48;5;13m  $(@sprintf("%63s  ", string(Int16(eff.opcode);base=16)*Opcodes.str(eff.opcode, eff.parameters...)*" on "*rp(eff.target)))\e[m
+\e[48;5;13m  $(@sprintf("%63s  ", string(Int16(eff.opcode);base=16)*'='*Opcodes.str(eff.opcode, eff.parameters...)*" on "*rp(eff.target)))\e[m
 $(eff.dice_thrown)d$(eff.dice_sides), save $(eff.saving_throw_type)$(@sprintf("%+d", eff.saving_throw_bonus)) parameters $(eff.parameters[1]),$(eff.parameters[2])
 Duration $(eff.duration) timing_mode $(eff.timing_mode|>rp) dispel res. $(eff.dispel_mode|>rp) probabilities $(eff.probabilities[1]),$(eff.probabilities[2])
 """)
@@ -1342,7 +1391,7 @@ Effects $(ab.effect_index+1):$(ab.effect_index+ab.effect_count) ($(ab.effect_cou
 # """)
 end
 function Base.show(io::IO, mime::MIME"text/plain", itm::ITM_hdr)
-	header=@sprintf("%26s/%-32s ⚖%-3d ❍%-5d ❝%-3d ",
+	header=@sprintf("%26s/%-32s ⚖%-3d ❍%-5d ?%-3d ",
 		str(itm.unidentified_name), str(itm.identified_name),
 		itm.weight, itm.price, itm.lore)
 	chars=@sprintf("Str:\e[35m%2d/%2d\e[m Dex:\e[35m%2d\e[m Con:\e[35m%2d\e[m Wis:\e[35m%2d\e[m Int:\e[35m%2d\e[m Cha:\e[35m%2d\e[m Level:\e[35m% 3d\e[m",
@@ -1881,11 +1930,10 @@ IE=InfinityEngine; S=IE.Pack
 
 # itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h06.itm")
 # itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h08.itm")
-IE.init!("../bg/game")
+IE.init!(ENV["HOME"]*"/jeux/bg/game")
 r=IE.Resref"sw1h34.itm"
 # game = IE.Game("../bg/game")
 itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
-itm.
 # itm1=IE.clone(itm, unidentified_name="Imoen")
 # write("../bg/game/override/jp01.itm", itm1)
  

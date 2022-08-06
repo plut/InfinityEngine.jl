@@ -179,6 +179,23 @@ macro Constant_str(s); :(Constant{SA[$(codeunits(s)...)]}); end
 
 
 
+#««1 Ignored fields
+""" @ignorefield StructName.fieldname = default_value"""
+macro ignorefield(expr)
+	@assert isexpr(expr, :(=)) && isexpr(expr.args[1], :(.))
+	sname, fname, value =
+		expr.args[1].args[1]::Symbol, expr.args[1].args[2]::QuoteNode, expr.args[2]
+	ftype = fieldtype(Core.eval(__module__, sname), fname.value)
+	quote
+	# FIXME: make default value a `new` call
+	$(@__MODULE__).$(:fieldpack)(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
+		::$(esc(ftype))) = 0
+	$(@__MODULE__).$(:fieldunpack)(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
+		T::Type{<:$(esc(ftype))}) = eval(Expr(:new, $(esc(ftype))))
+	$(@__MODULE__).$(:packed_sizeof)(::Type{<:$(esc(sname))}, ::Val{$fname},
+		::Type{<:$(esc(ftype))}) = 0
+	end
+end
 #««1 (OBSOLETE) @pack: special behaviour for structures
 """    @pack [struct definition]
 

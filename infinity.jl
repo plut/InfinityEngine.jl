@@ -386,6 +386,58 @@ Resref(r::ResIO{T}) where{T} = Resref{T}(nameof(r))
 
 #»»1
 include("dialogs.jl") # this needs Strref, so we put it here
+# Rooted resources ««1
+"""    RootedResource
+
+A game resource holding a reference to the root resource
+(i.e. the one which will eventually be saved in a game file).
+
+The following methods needs to be defined:
+
+ - `root(x)`: returns the root object
+ - `root!(x, r)`: sets the root object
+ - `register!(root)`: marks this root object as modified.
+"""
+abstract type RootedResource end
+# default field is x.root (actually the only field we use)
+@inline root(x::RootedResource) = x.root
+@inline root!(x::RootedResource, r) = (x.root = r)
+"""    RootResource
+
+The root of a resource tree, i.e. a resource which will be saved in a game file.
+This resource also holds an identifier designating it (and the game file).
+"""
+abstract type RootResource <: RootedResource end
+# Root resource is always its own root
+@inline root(x::RootResource) = x
+@inline root!(x::RootResource) = nothing
+@inline register!(x::RootResource) = error("undefined for $(typeof(x))")
+
+@inline Pack.fieldpack(::IO, ::Type{<:RootedResource}, ::Val{:root},
+	::RootResource) = 0
+@inline Pack.fieldunpack(::IO, ::Type{<:RootedResource}, ::Val{:root},
+	T::Type{<:RootResource}) = T(undef)
+@inline Pack.packed_sizeof(::Type{<:RootedResource}, ::Val{:root},
+	::Type{<:RootResource}) = 0
+# the root resource has a default `key` property
+
+@inline default_setproperty!(x, f::Symbol, v) =
+	# default code; duplicated from Base.jl
+	setfield!(x, f, convert(fieldtype(typeof(x), f), v))
+@inline rr_setproperty!(x::RootedResource, f::Symbol, v) =
+	(register!(root(x)); default_setproperty!(x, f, v))
+@inline Base.setproperty!(x::RootedResource, f::Symbol, v) =
+	rr_setproperty!(x, f, v)
+@inline fieldnt(T::DataType) = zip(fieldnames(T), fieldtypes(T))
+
+"""    setroot!(x::RootedResource, newroot = x)
+
+Recursively sets the root object for `x` and all its sub-fields."""
+@inline setroot!(x, r) = nothing
+setroot!(x::RootedResource, r = x) = 
+	(root!(x, r); for i in 1:nfields(typeof(x)); setroot!(getfield(x, i), r); end)
+setroot!(x::AbstractVector, r) = for y in x; setroot!(y, r); end
+
 # ««1 tlk
 # ««2 Type and constructors
 mutable struct TLK_str
@@ -1572,113 +1624,6 @@ end
 @inline Base.findall(R::Type{<:ResIO}, game::Game) =
 	(R(game, n) for n in names(game, R))
 
-#««2 Named Resource
-"""    NamedResource{T,R,K}
-
-A “self-aware” game resource, i.e. knowing its name,
-but delegating `setproperty!` and `getproperty!` to the content.
-This allows communicating with the game when the resource is modified.
-
- `root`: root resource
-
-API:
-  - `setproperty!`: resource.field = value
-	 * registers `resource` in the modified dict
-	  [i.e. we need the root resource + its key]
-	 * computes a pointer to the relevant field of the stored resource
-	  [i.e. we need current type and offset]
-	 * stores the value at the pointer location and returns it
-
-    NamedResource{T,R,K}
-
- `T` is the current type of the resource
- `R` is the type of the root resource (i.e. item etc.)
- `K` is the key type (i.e. NTuple{2,String} in our case)
-"""
-struct NamedResource{T,R,K}
-	data::T
-	root::R
-	key::K
-	offset::Int
-end
-
-function Base.show(io::IO, mime::MIME"text/plain", r::NamedResource)
-	print(io, "With context ", _key(r), "\n")
-	show(io, mime, _data(r))
-end
-
-NamedResource(root::X, key::K) where{K,X} =
-	NamedResource{X,X,K}(root, root, key, 0)
-@inline _data(r::NamedResource) = getfield(r, :data)
-@inline _key(r::NamedResource) = getfield(r, :key)
-@inline _root(r::NamedResource) = getfield(r, :root)
-@inline _offset(r::NamedResource) = getfield(r, :offset)
-
-iscontextualized(T::DataType) = isstructtype(T)
-iscontextualized(T::Type{<:DottedEnums.EnumOrFlags}) = false
-
-function Base.getproperty(r::NamedResource{T,R,K},
-		f::Symbol) where{T,R,K}
-# 	f ∈ fieldnames(NamedResource) && return getfield(r, f)
-# 	!hasfield(T, f) && return getproperty(r.data, f)
- 	i = findfirst(isequal(f), fieldnames(T))
-# 	println("field index for $f is $i")
-	Tf, Of, Df = fieldtype(T, i), fieldoffset(T, i), getproperty(_data(r), f)
-# 	println("   field type, offset, data are $Tf, $Of, $Df")
-# 	println("   struct? $(isstructtype(Tf))")
-	iscontextualized(Tf) || return Df
-	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
-		_offset(r) + Of)
-end
-function Base.setproperty!(r::NamedResource{T,R,K},
-		f::Symbol, x) where{T,R,K}
- 	i = findfirst(isequal(f), fieldnames(T))
-	Tf, Of = fieldtype(T, i), fieldoffset(T, i)
-	p = Base.unsafe_convert(Ptr{Nothing}, register!(_key(r), _root(r)))
-	x1 = convert(Tf, x)
-	unsafe_store!(convert(Ptr{Tf}, p + _offset(r) + Of), x1)
-	return x1
-end
-# Vector data: getindex, setindex!, push!, insert!
-function Base.getindex(r::NamedResource{T,R,K},
-		i::Int) where{T<:Vector,R,K}
-	Tf = eltype(T); Of, Df = (i-1)*sizeof(Tf), _data(r)[i]
-	iscontextualized(Tf) || return Df
-	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
-		_offset(r) + Of)
-end
-@inline Base.iterate(r::NamedResource{<:Vector}, i=1) =
-	(i-1 < length(_data(r)) ? (@inbounds r[i], i+1) : nothing)
-@inline Base.length(r::NamedResource{<:Vector}) = length(_data(r))
-@inline Base.eltype(r::NamedResource{T,R,K}) where{T<:Vector,R,K}=
-	let Tf = eltype(T)
-	iscontextualized(Tf) ? NamedResource{Tf,R,K} : Tf
-end
-
-for f in (:setindex!, :push!, :insert!, :delete!)
-	@eval Base.$f(r::NamedResource{<:Vector}, x...) =
-		(register!(_key(r), _root(r)); $f(_data(r), x...))
-end
-
-function refdict(dict::Dict, key)
-	i = Base.ht_keyindex(dict, key)
-	@assert i > 0
-	return Base.RefArray(dict.vals, i)
-end
-@inline refdict!(dict::Dict, key, value) =
-	# if slot exists, return slot index
-	# otherwise, create slot and return slot index
-	(get!(dict, key, value); refdict(dict, key))
-
-@inline register!((game, ns, name)::Tuple{Game,AbstractString,AbstractString},
-		itm::ITM_hdr) = refdict!(game.modified_items, (ns, name), itm)
-
-@inline function item(game, name)
-	i = read(game, Resref"itm"(name))
-	return NamedResource(i, (game, "main", name))
-end
-
-
 # ««2 Namespace and language
 """    namespace(game, s)
 
@@ -1744,17 +1689,154 @@ function search(game::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', nameof(res), s)
 	end
 end
-#««2 Longrefs ←—→ shortrefs
-# We never need to convert shortref to longref
+#««2 Longrefs —→ shortrefs
+# (we never need to convert shortref to longref).
 
 shortref(game::Game, namespace::AbstractString, name::AbstractString) =
-	get!(game.resref, (namespace, name)) do
+	namespace == "main" ? name : get!(game.resref, (namespace, name)) do
 		make_shortref(namespace, name, length(game.resref))
 	end
 @inline make_shortref(ns, n, l) = StaticString{8}(@sprintf("x%07x", l))
 
 function longrefs(game::Game)
 	sort(pairs(game.resref); by=last)
+end
+
+#««2 Named Resource
+"""    NamedResource{T,R,K}
+
+ - `T` is the current type of the resource (this changes when taking fields)
+ - `R` is the type of the root resource (i.e. item etc.)
+ - `K` is the key type (i.e. NTuple{2,String} in our case)
+ - `root`: root resource (this is unchanged by taking fields)
+ - `offset`: current pointer offset relative to stored root resource
+ - `key`: global identifier for the resource.
+
+API:
+  - `getproperty`: also produces a `NamedResource` where useful (i.e.
+    for struct-type fields), otherwise the plain property value.
+  - `setproperty!`: resource.field = value
+	 * registers `resource` in the modified dict
+	  [i.e. we need the root resource + its key]
+	 * computes a pointer to the relevant field of the stored resource
+	  [i.e. we need current type and offset]
+	 * stores the value at the pointer location and returns it
+ - likewise array-reading: `getindex`, `iterate` and -modifying operations:
+   `setindex!`, `push!`, `insert!`, `delete!`
+   XXX: deleteat!, pushfirst!, pop!, popfirst!
+
+XXX possibly cleaner alternative (i.e. no pointers!; use real struct fields,
+  allowing for repl completion):
+append a `root` field in all resources pointing to the root resource
+(including to self for the root resource),
+and append to that resource the `modified` bit and resource ID.
+However, this needs circular types, and everything needs to be mutable
+(and still overwriting all the `setproperty!` etc. methods
+to register the modified parent; also vector-modifying methods, etc.
+Read-only methods are not affected though).
+
+This would also (reasonably) need to make all resource data types inherit a common types, for which the setproperty! method would be rewritten.
+"""
+struct NamedResource{T,R,K}
+	data::T
+	root::R
+	key::K
+	offset::Int
+end
+MaybeNamed{T} = Union{T,NamedResource{T}}
+
+function Base.show(io::IO, mime::MIME"text/plain", r::NamedResource)
+	print(io, "With context ", _key(r), "\n")
+	show(io, mime, _data(r))
+end
+
+NamedResource(root::X, key::K) where{K,X} =
+	NamedResource{X,X,K}(root, root, key, 0)
+@inline _data(r::NamedResource) = getfield(r, :data)
+@inline _key(r::NamedResource) = getfield(r, :key)
+@inline _root(r::NamedResource) = getfield(r, :root)
+@inline _offset(r::NamedResource) = getfield(r, :offset)
+
+@inline isnamedresource(T::DataType) = isstructtype(T)
+@inline isnamedresource(T::Type{<:DottedEnums.EnumOrFlags}) = false
+
+function Base.getproperty(r::NamedResource{T,R,K},
+		f::Symbol) where{T,R,K}
+# 	f ∈ fieldnames(NamedResource) && return getfield(r, f)
+# 	!hasfield(T, f) && return getproperty(r.data, f)
+ 	i = findfirst(isequal(f), fieldnames(T))
+# 	println("field index for $f is $i")
+	Tf, Of, Df = fieldtype(T, i), fieldoffset(T, i), getproperty(_data(r), f)
+# 	println("   field type, offset, data are $Tf, $Of, $Df")
+# 	println("   struct? $(isstructtype(Tf))")
+	isnamedresource(Tf) || return Df
+	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
+		_offset(r) + Of)
+end
+function Base.setproperty!(r::NamedResource{T}, f::Symbol, x) where{T}
+ 	i = findfirst(isequal(f), fieldnames(T))
+	Tf, Of = fieldtype(T, i), fieldoffset(T, i)
+	p = Base.unsafe_convert(Ptr{Nothing}, register!(_key(r), _root(r)))
+	x1 = convert(Tf, x)
+	unsafe_store!(convert(Ptr{Tf}, p + _offset(r) + Of), x1)
+	return x1
+end
+# Vector data: getindex, setindex!, push!, insert!
+function Base.getindex(r::NamedResource{T,R,K},
+		i::Int) where{T<:Vector,R,K}
+	Tf = eltype(T); Of, Df = (i-1)*sizeof(Tf), _data(r)[i]
+	isnamedresource(Tf) || return Df
+	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
+		_offset(r) + Of)
+end
+@inline Base.iterate(r::NamedResource{<:Vector}, i=1) =
+	(i-1 < length(_data(r)) ? (@inbounds r[i], i+1) : nothing)
+@inline Base.length(r::NamedResource{<:Vector}) = length(_data(r))
+@inline Base.eltype(r::NamedResource{T,R,K}) where{T<:Vector,R,K}=
+	let Tf = eltype(T)
+	isnamedresource(Tf) ? NamedResource{Tf,R,K} : Tf
+end
+
+for f in (:setindex!, :push!, :insert!, :delete!)
+	@eval Base.$f(r::NamedResource{<:Vector}, x...) =
+		(register!(_key(r), _root(r)); $f(_data(r), x...))
+end
+
+"""    refdict(dict, key)
+
+Returns a reference to `dict[key]`."""
+function refdict(dict::Dict, key)
+	i = Base.ht_keyindex(dict, key)
+	@assert i > 0
+	return Base.RefArray(dict.vals, i)
+end
+"""    refdict!(dict, key, value)
+
+Returns a reference to `dict[key]`, initializing it to `value` if absent."""
+@inline refdict!(dict::Dict, key, value) =
+	# if slot exists, return slot index
+	# otherwise, create slot and return slot index
+	(get!(dict, key, value); refdict(dict, key))
+
+#««2 Item accessor
+@inline register!((game, ns, name)::Tuple{Game,AbstractString,AbstractString},
+		itm::ITM_hdr) = refdict!(game.modified_items, (ns, name), itm)
+
+@inline function item(game, name)
+	i = read(game, Resref"itm"(name))
+	return NamedResource(i, (game, "main", name))
+end
+
+#««2 Saving game data
+function save(game)
+	# Modified items
+	println("\e[1mWriting modified items\e[m")
+	for (longref, itm) in pairs(game.modified_items)
+		s = shortref(game, longref...)
+		println("  Writing $longref => $s")
+		println(joinpath(game.directory, "override", s))
+		write(joinpath(game.directory, "override", s), itm)
+	end
 end
 
 # Item/etc. generator ««1
@@ -1803,6 +1885,7 @@ IE.init!("../bg/game")
 r=IE.Resref"sw1h34.itm"
 # game = IE.Game("../bg/game")
 itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
+itm.
 # itm1=IE.clone(itm, unidentified_name="Imoen")
 # write("../bg/game/override/jp01.itm", itm1)
  

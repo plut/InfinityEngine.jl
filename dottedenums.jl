@@ -267,9 +267,9 @@ end
 struct SymbolicNames; members::Set{Symbol}; end
 struct SymbolicNot; members::Set{Symbol}; end
 NamesOrNot = Union{SymbolicNames,SymbolicNot}
-# @inline SymbolicNames(s::Symbol...) = SymbolicNames(Set(s))
-# @inline Base.show(io::IO, f::SymbolicNames) =
-# 	isempty(f.members) ? print(io, false) : join(io, f.members, '|')
+@inline SymbolicNames(s::Symbol...) = SymbolicNames(Set(s))
+@inline Base.show(io::IO, f::SymbolicNames) =
+	isempty(f.members) ? print(io, false) : join(io, f.members, '|')
 # """    @SymbolicNames name1 name2 ...
 #     @SymbolicNames begin name1 name2 ... end
 # 

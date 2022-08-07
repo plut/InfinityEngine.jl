@@ -4,11 +4,13 @@
 # 10.1 
 # for item in items(game, r"sw1h.*")
 #   item.damage = d6
+#   XXX almost done, we have item.abilities[1].damage = d6
 # end
 #
 # 10.2
 # for script in scripts(game, r"ar[0.6].*")
 #   script = myscript * script
+#   XXX use prepend! ?
 # end
 #
 # 10.3: change all longswords to have minimum strength 10
@@ -77,7 +79,7 @@
 #   - either from searchkey if available (and iterating suffix as needed
 #   when cloning: .1, .2 etc);
 #   - or from random string otherwise
-#  - convert object to longref: take object.self
+#  - convert object to longref: take object.ref
 #  table (long ref) => (short ref) at some point
 #  - during construction, a list of existing long refs is enough
 #    (as well as a way to mark the long ref for each object and resref use)
@@ -88,7 +90,7 @@
 #  - idea 2: use a Union{} type (less memory-efficient)
 #
 #  - syntax for long ref of an object? e.g. Item(reference="...")
-#   - we now have Item(self="..."); can easily be changed
+#   - we now have Item(ref="..."); can easily be changed
 #  - by default, use the search key (i.e. identified name for an item)
 #  - entering a pointer: convert(Item, Resref)
 #
@@ -110,13 +112,15 @@ module DiceThrows
 
 Allows D&D syntax for dice throws, e.g. 2d4+3.
 """
-struct Dice{I}
+struct Dice{I<:Integer}
 	thrown::I
 	sides::I
 	bonus::I
 end
+@inline Dice(a, b) = Dice(promote(a,b)...)
+@inline Dice(a::I, b::I, c = zero(I)) where{I<:Integer} = Dice{I}(a,b,c)
 function Base.show(io::IO, d::Dice)
-	d.thrown > 1 && print(io, d.thrown)
+	!isone(d.thrown) && print(io, d.thrown)
 	print(io, 'd', d.sides)
 	d.bonus > 0 && print(io, '+', d.bonus)
 	d.bonus < 0 && print(io, d.bonus)
@@ -134,6 +138,7 @@ end
 for i in (2,3,4,5,6,8,10,12,20)
 	@eval $(Symbol("d"*string(i))) = Dice{Int}(1,$i,0)
 end
+export Dice, d2, d3, d4, d5, d6, d8, d10, d12, d20
 end
 module Functors
 """    find_typevar(T, TX)
@@ -203,6 +208,7 @@ function functor(f, T::UnionAll, x::TX, B = nothing) where{TX}
 end
 end
 
+using .DiceThrows
 include("pack.jl"); using .Pack
 include("dottedenums.jl"); using .DottedEnums
 include("opcodes.jl"); using .Opcodes: Opcode
@@ -211,6 +217,7 @@ using Printf
 using StaticArrays
 using Parameters
 using UniqueVectors
+using Random
 import Base.read, Base.write
 
 # ««1 Basic types
@@ -292,7 +299,6 @@ resourcetype(::Resref{T}) where{T} = T
 
 @inline Pack.unpack(io::IO, T::Type{<:Resref}) =
 	T(lowercase(unpack(io, StaticString{8})))
-# @inline Pack.fieldunpack(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
 
 macro Resref_str(s)
 	s = lowercase(s)
@@ -336,6 +342,8 @@ struct Longref
 	namespace::String
 	resource::String
 end
+rand(r::Longref) = Longref(r.namespace,
+	replace(r.resource, r"_.*" => "")*'_'*randstring(4))
 #««2 Rooted resources
 """    RootedResource
 
@@ -361,7 +369,6 @@ abstract type RootResource <: RootedResource end
 # Root resource is always its own root
 @inline root(x::RootResource) = x
 @inline root!(x::RootResource, _) = nothing
-@inline register!(x::RootResource)=error("register! undefined for $(typeof(x))")
 @inline register!(::Nothing) = nothing # no root defined
 
 mutable struct RootedResourceVector{T<:RootedResource,
@@ -468,7 +475,7 @@ end
 	::Type{<:RootResource}) = 0
 @inline Pack.fieldunpack(::IO, T::Type{<:RootedResourceVector}) = T([])
 # the root resource has a default `key` property
-@inline Pack.fieldunpack(io::ResIO, ::Val{:self}, T::Type{<:Longref}) =
+@inline Pack.fieldunpack(io::ResIO, ::Val{:ref}, T::Type{<:Longref}) =
 	T("main", nameof(io))
 @inline unpack_root(io::ResIO, T::Type{<:RootResource}) =
 	(r = unpack(io, T); root!(io, r); r)
@@ -1188,7 +1195,7 @@ end
 	Dispellable
 	NotResistable
 end
-# ««2 Data blocks
+#««2 Item effect
 @with_kw mutable struct ITM_effect{R<:RootResource} <: RootedResource
 	root::R
 	opcode::Opcodes.Opcode
@@ -1206,6 +1213,28 @@ end
 	saving_throw_bonus::Int32
 	stacking_id::UInt32
 end
+@inline function Base.getproperty(eff::ITM_effect, f::Symbol)
+	f == :damage && return Dice(eff.dice_thrown, eff.dice_sides)
+	getfield(eff, f)
+end
+@inline function Base.setproperty!(eff::ITM_effect, f::Symbol, x)
+	if f == :damage
+		@assert x isa Dice
+		@assert iszero(x.bonus)
+		eff.dice_thrown = x.thrown
+		eff.dice_sides = x.sides
+		return x
+	end
+	setfield!(eff, f, x)
+end
+function Base.show(io::IO, ::MIME"text/plain", eff::ITM_effect)
+	print(io, """
+\e[48;5;13m  $(@sprintf("%63s  ", string(Int16(eff.opcode);base=16)*'='*Opcodes.str(eff.opcode, eff.parameters...)*" on "*rp(eff.target)))\e[m
+$(eff.damage), save $(eff.saving_throw_type)$(@sprintf("%+d", eff.saving_throw_bonus)) parameters $(eff.parameters[1]),$(eff.parameters[2])
+Duration $(eff.duration) $(eff.timing_mode|>rp); $(eff.dispel_mode|>rp) probabilities $(eff.probabilities[1]),$(eff.probabilities[2])
+""")
+end
+#««2 Item ability
 @with_kw mutable struct ITM_ability{R<:RootResource} <: RootedResource
 	root::R
  	attack_type::AttackType
@@ -1241,36 +1270,62 @@ end
 	is_bullet::UInt16
 	effects::Vector{ITM_effect{R}}
 end
+@inline function Base.getproperty(ab::ITM_ability, f::Symbol)
+	f == :damage && return Dice(ab.dice_thrown, ab.dice_sides, ab.damage_bonus)
+	getfield(ab, f)
+end
+@inline function Base.setproperty!(ab::ITM_ability, f::Symbol, x)
+	if f == :damage
+		@assert x isa Dice
+		ab.dice_thrown = x.thrown
+		ab.dice_sides = x.sides
+		ab.damage_bonus = x.bonus
+		return x
+	end
+	setfield!(ab, f, x)
+end
+function Base.show(io::IO, mime::MIME"text/plain", ab::ITM_ability)
+	h = @sprintf("%s %+d %s %s speed %d", rp(ab.attack_type), ab.thac0_bonus,
+		repr(ab.damage), rp(ab.damage_type), ab.speed_factor)
+	print(io, """
+\e[48;5;12m $(rpad(h, 60))\e[m
+Range $(ab.range), $(ab.target_count)*$(rp(ab.target_type))
+Alternative $(ab.alternative_dice_thrown)d$(ab.alternative_dice_sides)
+Effects $(ab.effect_index+1):$(ab.effect_index+ab.effect_count) ($(ab.effect_count) total)
+""")
+	for eff in ab.effects; show(io, mime, eff); end
+end
+#««2 Item structure
 mutable struct ITM_hdr <: RootResource
 	constant::Constant"ITM V1  "
 	unidentified_name::Strref
-	identified_name::Strref
+	name::Strref
 	replacement::Resource"ITM"
 	flags::ItemFlag
-	item_type::ItemCat
+	type::ItemCat
 	usability::UInt32 # UsabilityFlags
 	animation::ItemAnimation
-	minlevel::UInt16
-	minstrength::UInt16
-	minstrenghtbonus::UInt8
+	min_level::UInt16
+	min_strength::UInt16
+	min_strengthbonus::UInt8
 	kit1::UInt8
-	minintelligence::UInt8
+	min_intelligence::UInt8
 	kit2::UInt8
-	mindexterity::UInt8
+	min_dexterity::UInt8
 	kit3::UInt8
-	minwisdom::UInt8
+	min_wisdom::UInt8
 	kit4::UInt8
-	minconstitution::UInt8
+	min_constitution::UInt8
 	proficiency::WProf
-	mincharisma::UInt16
+	min_charisma::UInt16
 	price::UInt32
-	stackamount::UInt16
-	inventoryicon::Resource"BAM"
+	stack_amount::UInt16
+	inventory_icon::Resource"BAM"
 	lore::UInt16
-	groundicon::Resource"BAM"
+	ground_icon::Resource"BAM"
 	weight::Int32
 	unidentified_description::Strref
-	identified_description::Strref
+	description::Strref
 	description_icon::Resource"BAM"
 	enchantment::Int32
 # 	offset(abilities)::UInt32
@@ -1284,22 +1339,16 @@ mutable struct ITM_hdr <: RootResource
 	effect_count::UInt16
 	abilities::RootedResourceVector{ITM_ability{ITM_hdr},ITM_hdr}
 	effects::RootedResourceVector{ITM_effect{ITM_hdr},ITM_hdr}
-	self::Longref
-	@inline ITM_hdr(args...) = new(args...)
-	@inline ITM_hdr(::UndefInitializer) = new()
+	ref::Longref
 end
-
-# effects are written “by hand” at the end of the item file
-@inline Pack.fieldpack(::IO, ::Val{:effects}, ::Vector{ITM_effect}) = 0
-
-@inline searchkey(i::ITM_hdr) = i.identified_name
+@inline searchkey(i::ITM_hdr) = i.name
 # create a virtual “not_usable_by” item property which groups together
 # all the 5 usability fields in the item struct:
 @inline function Base.getproperty(i::ITM_hdr, name::Symbol)
-	name ∈ fieldnames(typeof(i)) && return getfield(i, name)
 	name == :not_usable_by && return UsabilityFlags(
 		UInt64(i.usability) | UInt64(i.kit1) << 32 | UInt64(i.kit2) << 40 |
 		UInt64(i.kit3) << 48 | UInt64(i.kit4) << 56)
+	getfield(i, name)
 end
 @inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
 	if name == :not_usable_by
@@ -1312,7 +1361,33 @@ end
 	end
 	rr_setproperty!(x, name, value)
 end
-# ««2 Item function
+function Base.show(io::IO, mime::MIME"text/plain", itm::ITM_hdr)
+	header=@sprintf("%26s/%-32s ⚖%-3d ❍%-5d ?%-3d ",
+		str(itm.unidentified_name), str(itm.name),
+		itm.weight, itm.price, itm.lore)
+	chars=@sprintf("Str:\e[35m%2d/%2d\e[m Dex:\e[35m%2d\e[m Con:\e[35m%2d\e[m Wis:\e[35m%2d\e[m Int:\e[35m%2d\e[m Cha:\e[35m%2d\e[m Level:\e[35m% 3d\e[m",
+		itm.min_strength, itm.min_strengthbonus, itm.min_dexterity,
+		itm.min_constitution, itm.min_wisdom, itm.min_intelligence,
+		itm.min_charisma, itm.min_level)
+	nub = itm.not_usable_by
+	if count_ones(nub.n) > count_zeros(nub.n)
+		use = "Usable by: \e[32m"*rp(~nub)*"\e[m"
+	else
+		use = "Not usable by: \e[31m"*rp(nub)*"\e[m"
+	end
+	print(io, """
+\e[7m$header\e[m
+Flags: \e[36m$(rp(itm.flags))\e[m
+Type: \e[36m$(rp(itm.type))\e[m Proficiency: \e[36m$(rp(itm.proficiency))\e[m Ench.\e[36m$(itm.enchantment)\e[m
+$use
+Requires: $chars
+Inventory: \e[34m$(itm.inventory_icon.name)\e[m stack=\e[34m$(itm.stack_amount)\e[m groundicon=\e[34m$(itm.ground_icon.name)\e[m Animation: \e[34m$(itm.animation.name)\e[m Image=\e[34m$(itm.description_icon.name)\e[m
+Casting effects: $(itm.effect_index)
+""")
+	for eff in itm.effects; show(io, mime, eff); end
+	for ab in itm.abilities; show(io, mime, ab); end
+end
+# ««2 I/O
 function read(io::ResIO"ITM")
 	itm = unpack_root(io, ITM_hdr)
 	unpack!(seek(io, itm.abilities_offset), itm.abilities, itm.abilities_count)
@@ -1339,64 +1414,6 @@ function Base.write(io::IO, itm::ITM_hdr)
 	for ab in itm.abilities;
 	@printf("\e[32mpacking ab effects at offset %d = 0x%x\e[m", position(io), position(io))
 	pack(io, ab.effects); end
-end
-function show_effect(io::IO, eff::ITM_effect)
-	print(io, """
-\e[48;5;13m  $(@sprintf("%63s  ", string(Int16(eff.opcode);base=16)*'='*Opcodes.str(eff.opcode, eff.parameters...)*" on "*rp(eff.target)))\e[m
-$(eff.dice_thrown)d$(eff.dice_sides), save $(eff.saving_throw_type)$(@sprintf("%+d", eff.saving_throw_bonus)) parameters $(eff.parameters[1]),$(eff.parameters[2])
-Duration $(eff.duration) $(eff.timing_mode|>rp); $(eff.dispel_mode|>rp) probabilities $(eff.probabilities[1]),$(eff.probabilities[2])
-""")
-end
-function show_ability(io::IO, itm::ITM_hdr, i::Integer)
-	ab = itm.abilities[i]
-	h = @sprintf("%s %+d %dd%d%+d %s speed %d",
-		rp(ab.attack_type), ab.thac0_bonus,
-		ab.dice_thrown, ab.dice_sides, ab.damage_bonus, rp(ab.damage_type), ab.speed_factor)
-	print(io, """
-\e[48;5;12m ($i/$(length(itm.abilities))) $(rpad(h, 60))\e[m
-Range $(ab.range), $(ab.target_count)*$(rp(ab.target_type))
-Alternative $(ab.alternative_dice_thrown)d$(ab.alternative_dice_sides)
-Effects $(ab.effect_index+1):$(ab.effect_index+ab.effect_count) ($(ab.effect_count) total)
-""")
-	for eff in ab.effects; show_effect(io, eff); end
-# 	print(io,"""
-# \e[34;7mAbility $i/$(itm.abilities_count)$(' '^40)\e[m
-# Attack_type:$(rp(ab.attack_type)) $(rp(ab.damage_type)) $(ab.dice_thrown)d$(ab.dice_sides)+$(ab.damage_bonus), thac0 $(ab.thac0_bonus), speed $(ab.speed_factor)
-# Alternative $(ab.alternative_dice_thrown)d$(ab.alternative_dice_sides)
-# Range $(ab.range), $(ab.target_count) target(s) of type $(rp(ab.target_type))
-# """)
-end
-function Base.show(io::IO, mime::MIME"text/plain", itm::ITM_hdr)
-	header=@sprintf("%26s/%-32s ⚖%-3d ❍%-5d ?%-3d ",
-		str(itm.unidentified_name), str(itm.identified_name),
-		itm.weight, itm.price, itm.lore)
-	chars=@sprintf("Str:\e[35m%2d/%2d\e[m Dex:\e[35m%2d\e[m Con:\e[35m%2d\e[m Wis:\e[35m%2d\e[m Int:\e[35m%2d\e[m Cha:\e[35m%2d\e[m Level:\e[35m% 3d\e[m",
-		itm.minstrength, itm.minstrengthbonus,
-		itm.mindexterity, itm.minconstitution, itm.minwisdom, itm.minintelligence,
-		itm.mincharisma, itm.minlevel)
-	nub = itm.not_usable_by
-	if count_ones(nub.n) > count_zeros(nub.n)
-		use = "Usable by: \e[32m"*rp(~nub)*"\e[m"
-	else
-		use = "Not usable by: \e[31m"*rp(nub)*"\e[m"
-	end
-	print(io, """
-\e[7m$header\e[m
-Flags: \e[36m$(rp(itm.flags))\e[m
-Type: \e[36m$(rp(itm.item_type))\e[m Proficiency: \e[36m$(rp(itm.proficiency))\e[m Ench.\e[36m$(itm.enchantment)\e[m
-$use
-Requires: $chars
-Inventory: \e[34m$(itm.inventoryicon.name)\e[m stack=\e[34m$(itm.stackamount)\e[m groundicon=\e[34m$(itm.groundicon.name)\e[m Animation: \e[34m$(itm.animation.name)\e[m Image=\e[34m$(itm.description_icon.name)\e[m
-Casting effects: $(itm.effect_index)
-""")
-	for eff in itm.effects; show_effect(io, eff); end
-	for i in eachindex(itm.abilities); show_ability(io, itm, i); end
-# 	print(io,"""
-# \e[34;7mAbility $i/$(itm.abilities_count)$(' '^40)\e[m
-# Attack_type:$(rp(ab.attack_type)) $(rp(ab.damage_type)) $(ab.dice_thrown)d$(ab.dice_sides)+$(ab.damage_bonus), thac0 $(ab.thac0_bonus), speed $(ab.speed_factor)
-# """)
-	# TODO: make a nice display method for opcodes, move this to Opcodes
-	# (and double that with a constructor)
 end
 # ««1 dlg
 struct DLG_state
@@ -1483,26 +1500,6 @@ function read(io::ResIO"DLG")
 end
 
 #««1 Game
-#««2 Bijection - used for mapping longrefs to shortrefs
-struct Bijection{S,T}
-	f::Dict{S,T}
-	g::Dict{T,S} # inverse of f
-end
-@inline Bijection{S,T}() where{S,T} = Bijection{S,T}(Dict{S,T}(), Dict{T,S}())
-@inline inv(b::Bijection{S,T}) where{S,T} = Bijection{T,S}(b.g, b.f)
-@inline Base.haskey(b::Bijection, x) = haskey(b.f, x)
-@inline Base.keys(b::Bijection) = keys(b.f)
-@inline Base.values(b::Bijection) = keys(b.g)
-function Base.get!(b::Bijection, x, y)
-	z = get!(b.f, x, y)
-	get!(b.g, z, x)
-	return z
-end
-function Base.push!(b::Bijection, (x,y)::Pair)
-	@assert !haskey(b.f, x)
-	@assert !haskey(b.g, y)
-	b.f[x] = y; b.f[y] = x
-end
 #««2 Game data structure
 """    Game
 
@@ -1513,16 +1510,12 @@ Main structure holding all top-level data for a game installation, including:
 
 Methods include:
 
- - `ResIO(game, resref)`: converts a `Resref` to a `ResIO`
-   (i.e. file descriptor) of the same type.
  - `read(game, resref)`: opens the corresponding resource and returns the
    appropriate Julia structure depending on the `Resref` type.
  - `filetype(game, resref)`: returns either 0 (resource not found),
    1 (resource found in bif), or 2 (resource found in override).
- - `names(game, ResIO"type")`: returns a vector of all names of
+ - `names(game, Resref"type")`: returns a vector of all names of
    existing resources of this type.
- - `findall(ResIO"type", game)`: returns an iterator over all existing
-   resource descriptors of this type.
 
 # Language data a list of pairs
  (regular expression, language file)
@@ -1554,9 +1547,9 @@ struct Game
 		fieldtype(Game, :modified_items)(),
 	)
 end
-function Base.show(io::IO, game::Game)
-	print(io, "<Game: ", length(game.key), " keys, ", length(game.override),
-		" overrides, ", count(!isempty, game.strings), " languages>")
+function Base.show(io::IO, g::Game)
+	print(io, "<Game: ", length(g.key), " keys, ", length(g.override),
+		" overrides, ", count(!isempty, g.strings), " languages>")
 end
 
 const LANGUAGE_FILES = (#««
@@ -1593,12 +1586,12 @@ Initializes a `Game` structure from the game directory
 """
 Game(directory::AbstractString) = init!(Game(), directory)
 
-function init!(game::Game, directory::AbstractString)
-	game.namespace[] = ""
-	game.directory[] = directory
-	init!(game.key, joinpath(directory, "chitin.key"))
-	println("read ", length(game.key), " key resources")
-	empty!(game.override)
+function init!(g::Game, directory::AbstractString)
+	g.namespace[] = ""
+	g.directory[] = directory
+	init!(g.key, joinpath(directory, "chitin.key"))
+	println("read ", length(g.key), " key resources")
+	empty!(g.override)
 	o_dir = joinpath(directory, "override")
 	if !isdir(o_dir)
 		println("created override directory: ", o_dir)
@@ -1606,41 +1599,41 @@ function init!(game::Game, directory::AbstractString)
 	else
 		for f in readdir(o_dir)
 			(n, e) = splitext(lowercase(basename(f))); t = Symbol(e[2:end])
-			push!(get!(game.override, t, Set{String}()), n)
+			push!(get!(g.override, t, Set{String}()), n)
 		end
-		println("read $(sum(length(v) for (_,v) in game.override; init=0)) override resources")
+		println("read $(sum(length(v) for (_,v) in g.override; init=0)) override resources")
 	end
-	set_language!(game, 1) # default language
-	game.namespace[] = "user"
-	return game
+	set_language!(g, 1) # default language
+	g.namespace[] = "user"
+	return g
 end
 
 " returns 2 if override, 1 if key/bif, 0 if not existing."
-function filetype(game::Game, f::Resref)
-	f|>string0|>lowercase ∈ get(game.override, resourcetype(f), ()) &&
+function filetype(g::Game, f::Resref)
+	f|>string0|>lowercase ∈ get(g.override, resourcetype(f), ()) &&
 		return 2
-	haskey(game.key.location, (f|>nameof|>StaticString{8}, resourcetype(f))) &&
+	haskey(g.key.location, (f|>nameof|>StaticString{8}, resourcetype(f))) &&
 		return 1
 	return 0
 end
-function Base.open(game::Game, res::Resref)
-	name, T, x = string0(res), resourcetype(res), filetype(game, res)
+function Base.open(g::Game, res::Resref)
+	name, T, x = string0(res), resourcetype(res), filetype(g, res)
 	if x == 2
 		# TODO: check case for case-sensitive install!
-		file = joinpath(game.directory[], "override", name*'.'*String(T))
+		file = joinpath(g.directory[], "override", name*'.'*String(T))
 		return ResIO{T}(name, open(file))
 	elseif x == 1
-		return open(game.key, res)
+		return open(g.key, res)
 	else
 		error("resource not found: $name.$T")
 	end
 end
 
 @inline read(k::Union{Game,KeyIndex}, resref::Resref) = open(read, k, resref)
-@inline Base.names(game::Game, ::Type{<:Resref{T}}) where{T} =
-	get(game.override,T, String[]) ∪ names(game.key, Resref{T})
-@inline Base.findall(R::Type{<:ResIO}, game::Game) =
-	(R(game, n) for n in names(game, R))
+
+@inline Base.names(g::Game, ::Type{<:Resref{T}}) where{T} =
+	get(g.override,T, String[]) ∪ names(g.key, Resref{T})
+@inline Base.findall(R::Type{<:ResIO}, g::Game) = (R(g, n) for n in names(g, R))
 
 # ««2 Namespace and language
 """    namespace(game, s)
@@ -1650,15 +1643,14 @@ The following default namespaces are used:
  - `"main"` for original game resources;
  - `"user"` is the default namespace for added resources.
 """
-@inline namespace(game::Game, s::AbstractString) =
-	(game.namespace[] = s; return s)
-@inline namespace(game::Game) = game.namespace[]
+@inline namespace(g::Game, s::AbstractString) = (g.namespace[] = s; s)
+@inline namespace(g::Game) = g.namespace[]
 
-function set_language!(game::Game, i::Integer)
-	game.language[] = i
-	isempty(game.strings[i]) || return
-	game.strings[i] =
-		read(joinpath(game.directory[], "lang", LANGUAGE_FILES[i][2]), TlkStrings)
+function set_language!(g::Game, i::Integer)
+	g.language[] = i
+	isempty(g.strings[i]) || return
+	g.strings[i] =
+		read(joinpath(g.directory[], "lang", LANGUAGE_FILES[i][2]), TlkStrings)
 end
 """    language(game, s)
 
@@ -1669,29 +1661,28 @@ to the one given by string `s`.
 Allowed values are:
 $(join([replace(replace(repr(x[1]), r"(^r\"\^|\"i$|\.\*)"=>""), "*" => "\\*") for x in LANGUAGE_FILES], ", ")).
 """
-function language(game::Game, s::AbstractString)
+function language(g::Game, s::AbstractString)
 	for (i, (r, f)) in pairs(LANGUAGE_FILES)
 		contains(s, r) || continue
-		set_language!(game, i)
+		set_language!(g, i)
 		return i
 	end
 	error("unknown language: "*s)
 end
-@inline language(game::Game) = game.language[]
+@inline language(g::Game) = g.language[]
 # ««2 Strings
-@inline strings(game::Game, i = language(game)) = game.strings[i]
-function Strref(game::Game, s::AbstractString)
-	i = get(strings(game), s, nothing)
+@inline strings(g::Game, i = language(g)) = g.strings[i]
+function Strref(g::Game, s::AbstractString)
+	i = get(strings(g), s, nothing)
 	isnothing(i) || return i
-	i = findfirst!(isequal((language(game), s),), game.new_strings)
-	return Strref(i-1 + length(strings(game)))
+	i = findfirst!(isequal((language(g), s),), g.new_strings)
+	return Strref(i-1 + length(strings(g)))
 end
-@inline Base.convert(T::Type{Strref}, s::AbstractString) = T(game, s)
 
-function str(game::Game, s::Strref)
+function str(g::Game, s::Strref)
 	i = s.index+1; i = max(i, one(i))
-	i ≤ length(strings(game)) && return strings(game).entries[i].string
-	return game.new_strings[i - length(strings(game))][2]
+	i ≤ length(strings(g)) && return strings(g).entries[i].string
+	return g.new_strings[i - length(strings(g))][2]
 end
 
 """    search(game, strings, ResIO"type", text)
@@ -1700,8 +1691,8 @@ Searches for the given text (string or regular expression)
 in the names of all resources of the given `type`.
 `strings` is the string database used for translation.
 """
-function search(game::Game, str::TlkStrings, R::Type{<:ResIO}, text)
-	for res in all(game, R)
+function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
+	for res in all(g, R)
 		s = str[searchkey(read(res))].string
 		contains(s, text) || continue
 		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', nameof(res), s)
@@ -1710,146 +1701,144 @@ end
 #««2 Longrefs —→ shortrefs
 # (we never need to convert shortref to longref).
 
-shortref(game::Game, namespace::AbstractString, name::AbstractString) =
-	namespace == "main" ? name : get!(game.resref, (namespace, name)) do
-		make_shortref(namespace, name, length(game.resref))
+shortref(g::Game, namespace::AbstractString, name::AbstractString) =
+	namespace == "main" ? name : get!(g.resref, (namespace, name)) do
+		make_shortref(namespace, name, length(g.resref))
 	end
 @inline make_shortref(ns, n, l) = StaticString{8}(@sprintf("x%07x", l))
 
-function longrefs(game::Game)
-	sort(pairs(game.resref); by=last)
-end
-
-#««2 Named Resource
-"""    NamedResource{T,R,K}
-
- - `T` is the current type of the resource (this changes when taking fields)
- - `R` is the type of the root resource (i.e. item etc.)
- - `K` is the key type (i.e. NTuple{2,String} in our case)
- - `root`: root resource (this is unchanged by taking fields)
- - `offset`: current pointer offset relative to stored root resource
- - `key`: global identifier for the resource.
-
-API:
-  - `getproperty`: also produces a `NamedResource` where useful (i.e.
-    for struct-type fields), otherwise the plain property value.
-  - `setproperty!`: resource.field = value
-	 * registers `resource` in the modified dict
-	  [i.e. we need the root resource + its key]
-	 * computes a pointer to the relevant field of the stored resource
-	  [i.e. we need current type and offset]
-	 * stores the value at the pointer location and returns it
- - likewise array-reading: `getindex`, `iterate` and -modifying operations:
-   `setindex!`, `push!`, `insert!`, `delete!`
-   XXX: deleteat!, pushfirst!, pop!, popfirst!
-
-XXX possibly cleaner alternative (i.e. no pointers!; use real struct fields,
-  allowing for repl completion):
-append a `root` field in all resources pointing to the root resource
-(including to self for the root resource),
-and append to that resource the `modified` bit and resource ID.
-However, this needs circular types, and everything needs to be mutable
-(and still overwriting all the `setproperty!` etc. methods
-to register the modified parent; also vector-modifying methods, etc.
-Read-only methods are not affected though).
-
-This would also (reasonably) need to make all resource data types inherit a common types, for which the setproperty! method would be rewritten.
-"""
-struct NamedResource{T,R,K}
-	data::T
-	root::R
-	key::K
-	offset::Int
-end
-MaybeNamed{T} = Union{T,NamedResource{T}}
-
-function Base.show(io::IO, mime::MIME"text/plain", r::NamedResource)
-	print(io, "With context ", _key(r), "\n")
-	show(io, mime, _data(r))
-end
-
-NamedResource(root::X, key::K) where{K,X} =
-	NamedResource{X,X,K}(root, root, key, 0)
-@inline _data(r::NamedResource) = getfield(r, :data)
-@inline _key(r::NamedResource) = getfield(r, :key)
-@inline _root(r::NamedResource) = getfield(r, :root)
-@inline _offset(r::NamedResource) = getfield(r, :offset)
-
-@inline isnamedresource(T::DataType) = isstructtype(T)
-@inline isnamedresource(T::Type{<:DottedEnums.EnumOrFlags}) = false
-
-function Base.getproperty(r::NamedResource{T,R,K},
-		f::Symbol) where{T,R,K}
-# 	f ∈ fieldnames(NamedResource) && return getfield(r, f)
-# 	!hasfield(T, f) && return getproperty(r.data, f)
- 	i = findfirst(isequal(f), fieldnames(T))
-# 	println("field index for $f is $i")
-	Tf, Of, Df = fieldtype(T, i), fieldoffset(T, i), getproperty(_data(r), f)
-# 	println("   field type, offset, data are $Tf, $Of, $Df")
-# 	println("   struct? $(isstructtype(Tf))")
-	isnamedresource(Tf) || return Df
-	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
-		_offset(r) + Of)
-end
-function Base.setproperty!(r::NamedResource{T}, f::Symbol, x) where{T}
- 	i = findfirst(isequal(f), fieldnames(T))
-	Tf, Of = fieldtype(T, i), fieldoffset(T, i)
-	p = Base.unsafe_convert(Ptr{Nothing}, register!(_key(r), _root(r)))
-	x1 = convert(Tf, x)
-	unsafe_store!(convert(Ptr{Tf}, p + _offset(r) + Of), x1)
-	return x1
-end
-# Vector data: getindex, setindex!, push!, insert!
-function Base.getindex(r::NamedResource{T,R,K},
-		i::Int) where{T<:Vector,R,K}
-	Tf = eltype(T); Of, Df = (i-1)*sizeof(Tf), _data(r)[i]
-	isnamedresource(Tf) || return Df
-	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
-		_offset(r) + Of)
-end
-@inline Base.iterate(r::NamedResource{<:Vector}, i=1) =
-	(i-1 < length(_data(r)) ? (@inbounds r[i], i+1) : nothing)
-@inline Base.length(r::NamedResource{<:Vector}) = length(_data(r))
-@inline Base.eltype(r::NamedResource{T,R,K}) where{T<:Vector,R,K}=
-	let Tf = eltype(T)
-	isnamedresource(Tf) ? NamedResource{Tf,R,K} : Tf
-end
-
-for f in (:setindex!, :push!, :insert!, :delete!)
-	@eval Base.$f(r::NamedResource{<:Vector}, x...) =
-		(register!(_key(r), _root(r)); $f(_data(r), x...))
-end
-"""    refdict(dict, key)
-
-Returns a reference to `dict[key]`."""
-function refdict(dict::Dict, key)
-	i = Base.ht_keyindex(dict, key)
-	@assert i > 0
-	return Base.RefArray(dict.vals, i)
-end
-"""    refdict!(dict, key, value)
-
-Returns a reference to `dict[key]`, initializing it to `value` if absent."""
-@inline refdict!(dict::Dict, key, value) =
-	# if slot exists, return slot index
-	# otherwise, create slot and return slot index
-	(get!(dict, key, value); refdict(dict, key))
-
+# #««2 Named Resource
+# """    NamedResource{T,R,K}
+# 
+#  - `T` is the current type of the resource (this changes when taking fields)
+#  - `R` is the type of the root resource (i.e. item etc.)
+#  - `K` is the key type (i.e. NTuple{2,String} in our case)
+#  - `root`: root resource (this is unchanged by taking fields)
+#  - `offset`: current pointer offset relative to stored root resource
+#  - `key`: global identifier for the resource.
+# 
+# API:
+#   - `getproperty`: also produces a `NamedResource` where useful (i.e.
+#     for struct-type fields), otherwise the plain property value.
+#   - `setproperty!`: resource.field = value
+# 	 * registers `resource` in the modified dict
+# 	  [i.e. we need the root resource + its key]
+# 	 * computes a pointer to the relevant field of the stored resource
+# 	  [i.e. we need current type and offset]
+# 	 * stores the value at the pointer location and returns it
+#  - likewise array-reading: `getindex`, `iterate` and -modifying operations:
+#    `setindex!`, `push!`, `insert!`, `delete!`
+#    XXX: deleteat!, pushfirst!, pop!, popfirst!
+# 
+# XXX possibly cleaner alternative (i.e. no pointers!; use real struct fields,
+#   allowing for repl completion):
+# append a `root` field in all resources pointing to the root resource
+# (including to self for the root resource),
+# and append to that resource the `modified` bit and resource ID.
+# However, this needs circular types, and everything needs to be mutable
+# (and still overwriting all the `setproperty!` etc. methods
+# to register the modified parent; also vector-modifying methods, etc.
+# Read-only methods are not affected though).
+# 
+# This would also (reasonably) need to make all resource data types inherit a common types, for which the setproperty! method would be rewritten.
+# """
+# struct NamedResource{T,R,K}
+# 	data::T
+# 	root::R
+# 	key::K
+# 	offset::Int
+# end
+# MaybeNamed{T} = Union{T,NamedResource{T}}
+# 
+# function Base.show(io::IO, mime::MIME"text/plain", r::NamedResource)
+# 	print(io, "With context ", _key(r), "\n")
+# 	show(io, mime, _data(r))
+# end
+# 
+# NamedResource(root::X, key::K) where{K,X} =
+# 	NamedResource{X,X,K}(root, root, key, 0)
+# @inline _data(r::NamedResource) = getfield(r, :data)
+# @inline _key(r::NamedResource) = getfield(r, :key)
+# @inline _root(r::NamedResource) = getfield(r, :root)
+# @inline _offset(r::NamedResource) = getfield(r, :offset)
+# 
+# @inline isnamedresource(T::DataType) = isstructtype(T)
+# @inline isnamedresource(T::Type{<:DottedEnums.EnumOrFlags}) = false
+# 
+# function Base.getproperty(r::NamedResource{T,R,K},
+# 		f::Symbol) where{T,R,K}
+# # 	f ∈ fieldnames(NamedResource) && return getfield(r, f)
+# # 	!hasfield(T, f) && return getproperty(r.data, f)
+#  	i = findfirst(isequal(f), fieldnames(T))
+# # 	println("field index for $f is $i")
+# 	Tf, Of, Df = fieldtype(T, i), fieldoffset(T, i), getproperty(_data(r), f)
+# # 	println("   field type, offset, data are $Tf, $Of, $Df")
+# # 	println("   struct? $(isstructtype(Tf))")
+# 	isnamedresource(Tf) || return Df
+# 	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
+# 		_offset(r) + Of)
+# end
+# function Base.setproperty!(r::NamedResource{T}, f::Symbol, x) where{T}
+#  	i = findfirst(isequal(f), fieldnames(T))
+# 	Tf, Of = fieldtype(T, i), fieldoffset(T, i)
+# 	p = Base.unsafe_convert(Ptr{Nothing}, register!(_key(r), _root(r)))
+# 	x1 = convert(Tf, x)
+# 	unsafe_store!(convert(Ptr{Tf}, p + _offset(r) + Of), x1)
+# 	return x1
+# end
+# # Vector data: getindex, setindex!, push!, insert!
+# function Base.getindex(r::NamedResource{T,R,K},
+# 		i::Int) where{T<:Vector,R,K}
+# 	Tf = eltype(T); Of, Df = (i-1)*sizeof(Tf), _data(r)[i]
+# 	isnamedresource(Tf) || return Df
+# 	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
+# 		_offset(r) + Of)
+# end
+# @inline Base.iterate(r::NamedResource{<:Vector}, i=1) =
+# 	(i-1 < length(_data(r)) ? (@inbounds r[i], i+1) : nothing)
+# @inline Base.length(r::NamedResource{<:Vector}) = length(_data(r))
+# @inline Base.eltype(r::NamedResource{T,R,K}) where{T<:Vector,R,K}=
+# 	let Tf = eltype(T)
+# 	isnamedresource(Tf) ? NamedResource{Tf,R,K} : Tf
+# end
+# 
+# for f in (:setindex!, :push!, :insert!, :delete!)
+# 	@eval Base.$f(r::NamedResource{<:Vector}, x...) =
+# 		(register!(_key(r), _root(r)); $f(_data(r), x...))
+# end
+# """    refdict(dict, key)
+# 
+# Returns a reference to `dict[key]`."""
+# function refdict(dict::Dict, key)
+# 	i = Base.ht_keyindex(dict, key)
+# 	@assert i > 0
+# 	return Base.RefArray(dict.vals, i)
+# end
+# """    refdict!(dict, key, value)
+# 
+# Returns a reference to `dict[key]`, initializing it to `value` if absent."""
+# @inline refdict!(dict::Dict, key, value) =
+# 	# if slot exists, return slot index
+# 	# otherwise, create slot and return slot index
+# 	(get!(dict, key, value); refdict(dict, key))
+# 
 #««2 Modified resources registry
 # By examing the field types of Game structure, determine the correct
 # registry field for each resource type: ITM_hdr => modified_items, etc.
 for (i,T) in pairs(fieldtypes(Game))
 	(T <: Dict && keytype(T) <: Longref) || continue
 	R = valtype(T); R <: RootResource || continue
-	@eval @inline register!(x::$R) = (getfield(game, $i)[x.self] = x)
+	@eval @inline register!(g::Game, x::$R) = (getfield(g, $i)[x.ref] = x)
 end
+@inline register!(::Game, x::RootResource) =
+	error("register! undefined for $(typeof(x))")
 
-#««2 Item accessor etc.
-@inline item(game, name::AbstractString) = read(game, Resref"itm"(name))
-@inline items(game) = (item(game, n) for n in names(game, Resref"itm"))
+#««2 Accessors: `item` etc.
+@inline item(g::Game, name::AbstractString) = read(g, Resref"itm"(name))
+@inline items(g::Game) = (item(g, n) for n in names(g, Resref"itm"))
 
 #««2 Saving game data
-function save(game)
+function save(g::Game)
 	# Modified items
 	println("\e[1mWriting modified items\e[m")
 	for (longref, itm) in pairs(game.modified_items)
@@ -1860,40 +1849,43 @@ function save(game)
 	end
 end
 
-# Item/etc. generator ««1
-# TODO: make this work even for non-mutable types:
-# (hard since we are overloading setproperty!)
-function clone(x::T; kwargs...) where{T}
-	vars = (get(kwargs, fn, getfield(x, fn)) for fn in fieldnames(T))
+#««1 Item/etc. factory
+args_to_kw(T::DataType, args...) = begin
+	println("args to kw($T)")
+	NamedTuple()
+end
+function clone(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
+	kw2 = args_to_kw(T, args...)
+	vars = (get(kw2, fn, get(kwargs, fn,
+		fn == :ref ? rand(x.ref) : getfield(x, fn)))
+		for fn in fieldnames(T))
 	y = T(vars...)
 	# TODO: add "args..." field and push stuff to kwargs depending
-	# on args and T (e.g. Item => identified_name)
-	for (k, v) in pairs(kwargs)
-		setproperty!(y, k, v)
-	end
-	y
+	# on args and T (e.g. Item => name)
+# 	for (k, v) in Iterators.flatten((pairs(kwargs), args_to_kw(T, args...)))
+# 		setproperty!(y, k, v)
+# 	end
+	return y
 end
-
-# »»1
-
-# shorthand: strings*dialog instantiates Strrefs
-# for T in (:ITM_hdr,)
-# 	@eval @inline Base.:*(str::TlkStrings, x::$T{Strref}) =
-# 		Functors.functor(x->str[x].string::String, $T, x)
-# end
-
-# Base.:*(str::TlkStrings, x::Dialogs.StateMachine{Int32,Any}) =
-# 	Functors.functor(x->str[x].string::String,
-# 		Dialogs.StateMachine{Int32,S,String,Any} where{S}, x)
+#««1 Global `game` object
 
 const game = Game()
-for f in (:language, :init!, :str, :strref, :shortref)
-	@eval function $f(args...; kwargs...)
-		!isempty(args) && first(args) isa Game &&
-			error("no such method: ", $(string(f)), typeof.(args[2:end]), )
-		$f(game, args...; kwargs...)
+
+for f in (:init!, :language, :namespace,
+		:str, :strref, :shortref, :register!, :clone,
+		:item, :items)
+	@eval begin
+	# prevent recursion
+	$f(::Game, ::Game, args...; kwargs...) =
+		error("no such method: ", $(string(f)), typeof.(args[2:end]), )
+	$f(args...; kwargs...) = $f(game, args...; kwargs...)
 	end
 end
+@inline Base.convert(T::Type{Strref}, s::AbstractString) = T(game, s)
+@inline Base.convert(T::Type{<:Longref}, s::AbstractString) = T(namespace(), s)
+@inline Base.convert(T::Type{<:Longref}, x::RootResource) = x.ref
+
+#»»1
 
 end # module
 IE=InfinityEngine; S=IE.Pack

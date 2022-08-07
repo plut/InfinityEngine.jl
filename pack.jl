@@ -81,7 +81,7 @@ Unpacks `n` objects and returns a vector.
 """
 @inline function unpack(io::IO, T::DataType)
 # 	if T <: Main.InfinityEngine.RootedResource
-# 		println("\e[34m $T: $(position(io))\e[m")
+# 		println("\e[34m $T: $(position(io)) $(typeof(io))\e[m")
 # 	end
 # 	@assert !(T<:Main.InfinityEngine.ITM_hdr && position(io) == 1036)
 	# default value for non-`@pack` types
@@ -105,7 +105,7 @@ begin
 # 	st <: Main.InfinityEngine.RootedResource &&
 # 	println("general fieldunpack: $st/$fn/$ft @$(position(io))")
 # 	if fn == Val(:root)
-# 		println("\e[31;1m unpack(root) in $st/$fn/$ft\e[m")
+# 		println("\e[31;7m unpack(root) in $st/$fn/$ft\n$(typeof(io))\e[m")
 # 	end
 	fieldunpack(io, fn, ft)
 end
@@ -134,15 +134,15 @@ Packs an object to a binary IO according to its packed layout.
 """
 function pack(io::IO, x::T) where{T}
 # 	println("packing type $T")
-	@assert length(string(T)) ≤ 120
+	@assert length(string(T)) ≤ 120 # prevents deep recursion
 # 	isstructtype(T) || (println("   value is $x::$T"); return write(io,x))
 	isstructtype(T) || return write(io, x)
 	s = 0
 	for i in 1:fieldcount(T)
 		fn, ft = fieldname(T,i), fieldtype(T,i)
-		if contains(string(T), "ITM") && contains(string(fn), "opcode")
-			println("$T \e[1mx$(string(position(io), base=16))\e[m: pack field $fn::$ft = $(getfield(x,i))")
-		end
+# 		if contains(string(T), "ITM") && contains(string(fn), "opcode")
+# 			println("$T \e[1mx$(string(position(io), base=16))\e[m: pack field $fn::$ft = $(getfield(x,i))")
+# 		end
 		s+= fieldpack(io, ft, Val(fn), getfield(x, i))
 	end
 	return s
@@ -322,8 +322,8 @@ macro pack(defn)
 		push!(vallayoutcode, layoutline)
 		push!(typelayoutcode, layoutline)
 	end
-	contains(string(structname), "ITM_hdr") &&
-		(println.(offsetcode); println.(writecode))
+# 	contains(string(structname), "ITM_hdr") &&
+# 		(println.(offsetcode); println.(writecode))
 	defn.args[3] = Expr(:block, structcode...)
 	expr = quote
 $defn
@@ -385,17 +385,3 @@ end
 export packed_layout, unpack, unpack!, pack, @Constant_str, Constant, packed_sizeof
 
 end
-
-# Pack.@pack mutable struct Foo{X}
-# 	"1234"
-# 	header::X
-# 	length(a)::Int8
-# 	offset(a)::Int8
-# 	a::Vector{Int8}
-# 	b::Int8
-# 	Foo{X}(h, a, b) where{X} = new{X}(h,a,b)
-# end
-# 
-# tmp=open("8") do io; unpack(io,Foo{Int8}); end
-
-

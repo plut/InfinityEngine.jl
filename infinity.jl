@@ -205,6 +205,7 @@ end
 
 include("pack.jl"); using .Pack
 include("dottedenums.jl"); using .DottedEnums
+include("opcodes.jl"); using .Opcodes: Opcode
 
 using Printf
 using StaticArrays
@@ -221,6 +222,10 @@ import Base.read, Base.write
 	String(isnothing(l) ? v : view(v, 1:l-1))
 end
 @inline string0(io::IO, s::Integer, l::Integer) = string0(read(seek(io, s), l))
+@inline string0(s::AbstractString) = let n = findfirst('\0', s)
+	isnothing(n) && (n = length(s)+1)
+	view(s, 1:n-1)
+end
 
 # ««2 Static length strings
 struct StaticString{N} <: AbstractString
@@ -281,10 +286,13 @@ struct Resref{T}
 	name::StaticString{8}
 	Resref{T}(s::AbstractString) where{T} = new{T}(lowercase(first(s,8)))
 end
+Base.nameof(r::Resref) = r.name
+string0(r::Resref) = r|>nameof|>string0
+resourcetype(::Resref{T}) where{T} = T
+
 @inline Pack.unpack(io::IO, T::Type{<:Resref}) =
 	T(lowercase(unpack(io, StaticString{8})))
 # @inline Pack.fieldunpack(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
-Base.nameof(r::Resref) = r.name
 
 macro Resref_str(s)
 	s = lowercase(s)
@@ -323,90 +331,12 @@ macro Resource_str(s)
 	return Resource{Symbol(lowercase(s))}
 end
 
-include("opcodes.jl")
-using .Opcodes: Opcode
-# ««2 ResIO type (marked IO object)
-"""    ResIO{Type}, ResIO"TYPE"
-
-A structure describing the physical location of a game resource
-(either from filesystem or from a BIF content),
-marked with the resource name + type.
-
- - Since the resource type determines the `read`/`write` methods
-   (and only takes a finite set of values) this is a type parameter.
- - The resource name (i.e. basename of the file without extension) is stored
-   as a field. The name is canonicalized as upper-case.
-
-Defined methods include:
- - `ResIO"EXT"`: macro defining static value for this file type.
- - `read(::ResIO{T})` (this opens the IO).
-
-Concrete subtypes (i.e. `ResIOBuf`, `ResIOFile`) must implement:
- - `open(resource)`: returns an IO (this will automatically enable
-   `open(f, resource)`; see `"base/io.jl"`).
- - `nameof(resource)`: returns the resource name as a String.
-
-Specializations (i.e. `ResIO"DLG"` etc.) must implement:
- - `read(::ResIO{T}, io::IO)`.
-"""
-struct ResIO{T,X<:IO}
-	name::String
-	io::X
-	@inline ResIO{T}(name, io::X) where{T,X<:IO} = new{T,X}(name, io)
-end
-
-@inline Base.read(r::ResIO, T) = read(r.io, T)
-@inline Base.seek(r::ResIO, n) = seek(r.io, n)
-@inline Base.close(r::ResIO) = close(r.io)
-@inline Base.position(r::ResIO) = position(r.io)
-@inline Base.nameof(r::ResIO) = r.name
-
-# abstract type ResIO{T} <: IO end
-macro ResIO_str(str)
-	if contains(str, '.')
-		(_, b) = splitext(str)
-		return :(ResIO{$(QuoteNode(Symbol(lowercase(b[2:end]))))}($str))
-	else
-		return :(ResIO{$(str|>lowercase|>Symbol|>QuoteNode)})
-	end
-end
-# macro Resource_str(s) ResIO{Symbol(lowercase(s))} end
-# @inline read(f::ResIO; kw...) = open(f) do io; read(io, f; kw...); end
-
-# mutable struct ResIOFile{T} <:ResIO{T}
-# 	filename::String
-# end
-# @inline ResIO{T}(f::AbstractString) where{T} = ResIOFile{T}(f)
-# @inline ResIO(f::AbstractString) = 
-# 	ResIO{Symbol(lowercase(splitext(basename(f))[2])[2:end])}(f)
-# @inline Base.open(r::ResIOFile) = open(r.filename)
-# @inline Base.nameof(r::ResIOFile) = lowercase(splitext(basename(r.filename))[1])
-
-# mutable struct ResIOBuf{T} <: ResIO{T}
-# 	name::String
-# 	buffer::IOBuffer
-# end
-# @inline Base.open(r::ResIOBuf) = r.buffer
-# @inline Base.nameof(r::ResIOBuf) = r.name
-
-Resref(r::ResIO{T}) where{T} = Resref{T}(nameof(r))
-
-# function write(filename::AbstractString, res::Resource)
-# 	open(filename, "w") do io; write(io, res); end
-# end
 #««2 Longref
 struct Longref
 	namespace::String
 	resource::String
 end
-@inline Pack.fieldunpack(::IO, T::Type{<:Longref}) = T("main", "")
-@inline Pack.fieldpack(::IO, ::Longref) = 0
-@inline Pack.packed_sizeof(::Type{<:Longref}) = 0
-
-#»»1
-include("dialogs.jl") # this needs Strref, so we put it here
-# Rooted resources ««1
-# Data types««2
+#««2 Rooted resources
 """    RootedResource
 
 A game resource holding a reference to the root resource
@@ -447,17 +377,7 @@ end
 @inline root(v::RootedResourceVector) = isdefined(v, :root) ? v.root : nothing
 @inline root!(v::RootedResourceVector, r) = (v.root = r)
 
-#««2 Packing
-@inline Pack.fieldpack(::IO, ::Type{<:RootedResource}, ::Val{:root},
-	::RootResource) = 0
-@inline Pack.fieldunpack(::IO, ::Type{<:RootedResource}, ::Val{:root},
-	T::Type{<:RootResource}) = T(undef)
-@inline Pack.packed_sizeof(::Type{<:RootedResource}, ::Val{:root},
-	::Type{<:RootResource}) = 0
-@inline Pack.fieldunpack(::IO, T::Type{<:RootedResourceVector}) = T([])
-# the root resource has a default `key` property
-
-#««2 getproperty/setproperty! etc.
+#««3 getproperty/setproperty! etc.
 @inline default_setproperty!(x, f::Symbol, v) =
 	# default code; duplicated from Base.jl
 	setfield!(x, f, convert(fieldtype(typeof(x), f), v))
@@ -480,7 +400,8 @@ Recursively sets the root object for `x` and all its sub-fields."""
 @inline setroot!(x, r) = x
 @inline function setroot!(x::RootedResource, r = x)
 	root!(x, r)
-	for i in 1:nfields(typeof(x))
+	for i in 1:nfields(x)
+		x isa ITM_hdr && println("$(typeof(x)).$(fieldname(typeof(x),i))) :: $(fieldtype(typeof(x),i))")
 		setroot!(getfield(x, i), r)
 	end
 	return x
@@ -494,6 +415,68 @@ end
 end
 setroot!(x::AbstractVector, r) = for y in x; setroot!(y, r); end
 
+# ««2 ResIO type (marked IO object)
+"""    ResIO{Type}, ResIO"TYPE"
+
+An `IO` object marked (statically) with the type of resource being read
+(either from filesystem or from a BIF content),
+as well as (dynamically) with global properties of the resource
+(i.e. resource name, root object).
+
+ - Since the resource type determines the `read`/`write` methods
+   (and only takes a finite set of values) this is a type parameter.
+ - The resource name (i.e. basename of the file without extension) is stored
+   as a field. The name is canonicalized as upper-case.
+
+Defined methods include:
+ - `ResIO"EXT"`: macro defining static value for this file type.
+"""
+mutable struct ResIO{T,R<:RootResource,X<:IO} <: IO
+	name::String
+	io::X
+	root::R
+	@inline ResIO{T}(name, io::X) where{T,X<:IO} =
+		new{T,ResourceType(ResIO{T}),X}(name, io)
+end
+
+@inline Base.read(x::ResIO, T::Type{UInt8}) = read(x.io, T)
+@inline Base.seek(x::ResIO, n) = (seek(x.io, n); x)
+@inline Base.position(x::ResIO) = position(x.io)
+@inline Base.eof(x::ResIO) = eof(x.io)
+@inline Base.close(x::ResIO) = close(x.io)
+
+@inline Base.nameof(x::ResIO) = x.name
+@inline root!(x::ResIO, r) = (x.root = r)
+
+"`ResourceType{ResIO{T}}` = the root type to attach to this `ResIO` fd"
+@inline ResourceType(T::Type{<:ResIO}) = Base.return_types(read,Tuple{T})|>first
+
+macro ResIO_str(str)
+	if contains(str, '.')
+		(_, b) = splitext(str)
+		return :(ResIO{$(QuoteNode(Symbol(lowercase(b[2:end]))))}($str))
+	else
+		return :(ResIO{$(str|>lowercase|>Symbol|>QuoteNode)})
+	end
+end
+#««3 Reading resources from ResIO
+@inline Pack.fieldpack(::IO, ::Type{<:RootedResource}, ::Val{:root},
+	::RootResource) = 0
+@inline Pack.fieldunpack(io::ResIO, ::Type{<:RootedResource}, ::Val{:root},
+	T::Type{<:RootResource}) = io.root
+@inline Pack.packed_sizeof(::Type{<:RootedResource}, ::Val{:root},
+	::Type{<:RootResource}) = 0
+@inline Pack.fieldunpack(::IO, T::Type{<:RootedResourceVector}) = T([])
+# the root resource has a default `key` property
+@inline Pack.fieldunpack(io::ResIO, ::Val{:self}, T::Type{<:Longref}) =
+	T("main", nameof(io))
+@inline unpack_root(io::ResIO, T::Type{<:RootResource}) =
+	(r = unpack(io, T); root!(io, r); r)
+@inline Pack.fieldpack(::IO, ::Longref) = 0
+@inline Pack.packed_sizeof(::Type{<:Longref}) = 0
+
+#»»1
+include("dialogs.jl") # this needs Strref, so we put it here
 # ««1 tlk
 # ««2 Type and constructors
 mutable struct TLK_str
@@ -634,7 +617,7 @@ const RESOURCE_TABLE = Dict{UInt16,String}(#««
 
 # ««2 File blocks
 struct KEY_hdr
-	constant::StaticString{8} # "KEY V1  "
+	constant::Constant"KEY V1  "
 	nbif::Int32
 	nres::Int32
 	bifoffset::UInt32
@@ -735,14 +718,15 @@ bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
 	IOBuffer(read(seek(io, resources[index+1].offset), resources[index+1].size))
 end
 
-function (::Type{<:ResIO{T}})(key::KeyIndex, name) where{T}
-	name = lowercase(name)
+
+function Base.open(key::KeyIndex, res::Resref{T}) where{T}
+	name = nameof(res)
 	loc = get(key.location, (StaticString{8}(name), T), nothing)
 	isnothing(loc) && return nothing
 	bif = joinpath(key.directory[], key.bif[1+sourcefile(loc)])
 	return ResIO{T}(name, bifcontent(bif, resourceindex(loc)))
 end
-Base.names(key::KeyIndex, ::Type{Resref{T}}) where{T} =
+Base.names(key::KeyIndex, ::Type{<:Resref{T}}) where{T} =
 	(r[1] for r in keys(key.location) if r[2] == T)
 Base.findall(T::Type{<:Resref}, key::KeyIndex) = T.(names(key, T))
 
@@ -1258,7 +1242,7 @@ end
 	effects::Vector{ITM_effect{R}}
 end
 mutable struct ITM_hdr <: RootResource
-	constant::StaticString{8} # "ITM V1  "
+	constant::Constant"ITM V1  "
 	unidentified_name::Strref
 	identified_name::Strref
 	replacement::Resource"ITM"
@@ -1300,24 +1284,13 @@ mutable struct ITM_hdr <: RootResource
 	effect_count::UInt16
 	abilities::RootedResourceVector{ITM_ability{ITM_hdr},ITM_hdr}
 	effects::RootedResourceVector{ITM_effect{ITM_hdr},ITM_hdr}
-	longref::Longref
+	self::Longref
 	@inline ITM_hdr(args...) = new(args...)
 	@inline ITM_hdr(::UndefInitializer) = new()
 end
-# ignore "self" and "modified" field on IO
-# @inline Pack.fieldunpack(::IO, ::Val{:self}, T::Type{<:Resource}) = T("", "")
-# @inline Pack.fieldpack(::IO, ::Val{:self}, ::Resource) = 0
-# @inline Pack.packed_sizeof(::Val{:self}, ::Type{<:Resource}) = 0
-# 
-# @inline Pack.fieldunpack(::IO, ::Val{:modified}, ::Type{Bool}) = false
-# @inline Pack.fieldpack(::IO, ::Val{:modified}, ::Bool) = 0
-# @inline Pack.packed_sizeof(::Val{:modified}, ::Type{Bool}) = 0
 
 # effects are written “by hand” at the end of the item file
 @inline Pack.fieldpack(::IO, ::Val{:effects}, ::Vector{ITM_effect}) = 0
-
-# @inline setself!(x::T, res::ResIO) where{T} =
-# 	x.self = fieldtype(T, :self)("", nameof(res))
 
 @inline searchkey(i::ITM_hdr) = i.identified_name
 # create a virtual “not_usable_by” item property which groups together
@@ -1329,7 +1302,6 @@ end
 		UInt64(i.kit3) << 48 | UInt64(i.kit4) << 56)
 end
 @inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
-# 	setfield!(x, :modified, true)
 	if name == :not_usable_by
 		x.usability = UInt64(value) % UInt32
 		x.kit1 = (UInt64(value) >> 32) % UInt8
@@ -1339,17 +1311,10 @@ end
 		return value
 	end
 	rr_setproperty!(x, name, value)
-# 	for (fn, ft) in zip(fieldnames(typeof(x)), fieldtypes(typeof(x)))
-# 		ft == Strref && value isa AbstractString && (value = Strref(game, value))
-# 		name == fn && return setfield!(x, name, ft(value))
-# 	end
-# 	error("unknown field name \"$name\"")
 end
 # ««2 Item function
-function read(io::IO, res::ResIO"ITM")
-	itm = unpack(io, ITM_hdr)
-	setfield!(itm, :longref, Longref("main", nameof(res)))
-# 	setself!(itm, res)
+function read(io::ResIO"ITM")
+	itm = unpack_root(io, ITM_hdr)
 	unpack!(seek(io, itm.abilities_offset), itm.abilities, itm.abilities_count)
 	unpack!(seek(io, itm.effect_offset), itm.effects, itm.effect_count)
 	for (i, ab) in pairs(itm.abilities)
@@ -1379,7 +1344,7 @@ function show_effect(io::IO, eff::ITM_effect)
 	print(io, """
 \e[48;5;13m  $(@sprintf("%63s  ", string(Int16(eff.opcode);base=16)*'='*Opcodes.str(eff.opcode, eff.parameters...)*" on "*rp(eff.target)))\e[m
 $(eff.dice_thrown)d$(eff.dice_sides), save $(eff.saving_throw_type)$(@sprintf("%+d", eff.saving_throw_bonus)) parameters $(eff.parameters[1]),$(eff.parameters[2])
-Duration $(eff.duration) timing_mode $(eff.timing_mode|>rp) dispel res. $(eff.dispel_mode|>rp) probabilities $(eff.probabilities[1]),$(eff.probabilities[2])
+Duration $(eff.duration) $(eff.timing_mode|>rp); $(eff.dispel_mode|>rp) probabilities $(eff.probabilities[1]),$(eff.probabilities[2])
 """)
 end
 function show_ability(io::IO, itm::ITM_hdr, i::Integer)
@@ -1476,8 +1441,8 @@ end
 	for s in unpack(seek(io, offset), DLG_string, count)]
 
 
-function read(io::IO, f::ResIO"DLG")
-	self = Resref(f)
+function read(io::ResIO"DLG")
+# 	self = Resref(f)
 	header = unpack(io, DLG_hdr)
 	states = unpack(seek(io,header.offset_states), DLG_state{Strref},
 		header.number_states)
@@ -1581,17 +1546,14 @@ struct Game
 	new_strings::UniqueVector{Tuple{Int8,String}}
 	# longrefs to shortrefs map:
 	resref::Dict{NTuple{2,String},StaticString{8}}
-	modified_items::Dict{NTuple{2,String},ITM_hdr}
+	modified_items::Dict{Longref,ITM_hdr}
 	@inline Game() = new(Ref(""), KeyIndex(), Dict{Symbol,Set{String}}(),
 		Ref(0), Ref(""), [ TlkStrings() for _ in LANGUAGE_FILES ],
 		fieldtype(Game, :new_strings)(),
-		fieldtype(Game,:resref)(),
-		fieldtype(Game,:modified_items)(),
+		fieldtype(Game, :resref)(),
+		fieldtype(Game, :modified_items)(),
 	)
 end
-
-	
-
 function Base.show(io::IO, game::Game)
 	print(io, "<Game: ", length(game.key), " keys, ", length(game.override),
 		" overrides, ", count(!isempty, game.strings), " languages>")
@@ -1654,32 +1616,28 @@ function init!(game::Game, directory::AbstractString)
 end
 
 " returns 2 if override, 1 if key/bif, 0 if not existing."
-function filetype(game::Game,::Type{ResIO{T}}, name::AbstractString) where{T}
-	haskey(game.override, T) && lowercase(String(name)) ∈ game.override[T] &&
+function filetype(game::Game, f::Resref)
+	f|>string0|>lowercase ∈ get(game.override, resourcetype(f), ()) &&
 		return 2
-	haskey(game.key.location, (StaticString{8}(name), T)) && return 1
+	haskey(game.key.location, (f|>nameof|>StaticString{8}, resourcetype(f))) &&
+		return 1
 	return 0
 end
-function ResIO{T}(game::Game, name::AbstractString) where{T}
-	t = filetype(game, ResIO{T}, name)
-	if t == 2
-		file = joinpath(game.directory, "override", String(name)*'.'*String(T))
-		return ResIOFile{T}(file)
-	elseif t == 1
-		return ResIO{T}(game.key, name)
+function Base.open(game::Game, res::Resref)
+	name, T, x = string0(res), resourcetype(res), filetype(game, res)
+	if x == 2
+		# TODO: check case for case-sensitive install!
+		file = joinpath(game.directory[], "override", name*'.'*String(T))
+		return ResIO{T}(name, open(file))
+	elseif x == 1
+		return open(game.key, res)
 	else
 		error("resource not found: $name.$T")
 	end
 end
-@inline ResIO(k::Union{Game,KeyIndex}, resref::Resref{T}) where{T} =
-	ResIO{T}(k, nameof(resref))
 
-@inline read(k::Union{Game,KeyIndex}, resref::Resref; kw...) =
-	read(ResIO(k, resref); kw...)
-@inline filetype(game::Game, resref::Resref{T}) where{T} =
-	filetype(game, ResIO{T}, resref)
-
-@inline Base.names(game::Game, ::Type{Resref{T}}) where{T} =
+@inline read(k::Union{Game,KeyIndex}, resref::Resref) = open(read, k, resref)
+@inline Base.names(game::Game, ::Type{<:Resref{T}}) where{T} =
 	get(game.override,T, String[]) ∪ names(game.key, Resref{T})
 @inline Base.findall(R::Type{<:ResIO}, game::Game) =
 	(R(game, n) for n in names(game, R))
@@ -1731,7 +1689,7 @@ end
 @inline Base.convert(T::Type{Strref}, s::AbstractString) = T(game, s)
 
 function str(game::Game, s::Strref)
-	i = s.index+1
+	i = s.index+1; i = max(i, one(i))
 	i ≤ length(strings(game)) && return strings(game).entries[i].string
 	return game.new_strings[i - length(strings(game))][2]
 end
@@ -1861,7 +1819,6 @@ for f in (:setindex!, :push!, :insert!, :delete!)
 	@eval Base.$f(r::NamedResource{<:Vector}, x...) =
 		(register!(_key(r), _root(r)); $f(_data(r), x...))
 end
-
 """    refdict(dict, key)
 
 Returns a reference to `dict[key]`."""
@@ -1878,14 +1835,18 @@ Returns a reference to `dict[key]`, initializing it to `value` if absent."""
 	# otherwise, create slot and return slot index
 	(get!(dict, key, value); refdict(dict, key))
 
-#««2 Item accessor
-@inline register!((game, ns, name)::Tuple{Game,AbstractString,AbstractString},
-		itm::ITM_hdr) = refdict!(game.modified_items, (ns, name), itm)
-
-@inline function item(game, name)
-	i = read(game, Resref"itm"(name))
-	return NamedResource(i, (game, "main", name))
+#««2 Modified resources registry
+# By examing the field types of Game structure, determine the correct
+# registry field for each resource type: ITM_hdr => modified_items, etc.
+for (i,T) in pairs(fieldtypes(Game))
+	(T <: Dict && keytype(T) <: Longref) || continue
+	R = valtype(T); R <: RootResource || continue
+	@eval @inline register!(x::$R) = (getfield(game, $i)[x.self] = x)
 end
+
+#««2 Item accessor etc.
+@inline item(game, name::AbstractString) = read(game, Resref"itm"(name))
+@inline items(game) = (item(game, n) for n in names(game, Resref"itm"))
 
 #««2 Saving game data
 function save(game)
@@ -1942,7 +1903,6 @@ IE=InfinityEngine; S=IE.Pack
 # itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h06.itm")
 # itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h08.itm")
 IE.init!(ENV["HOME"]*"/jeux/bg/game")
-r=IE.Resref"sw1h34.itm"
 # game = IE.Game("../bg/game")
 itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
 # itm1=IE.clone(itm, unidentified_name="Imoen")

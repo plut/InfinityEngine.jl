@@ -383,6 +383,7 @@ end
 	RootedResourceVector{T,R}()
 @inline root(v::RootedResourceVector) = isdefined(v, :root) ? v.root : nothing
 @inline root!(v::RootedResourceVector, r) = (v.root = r)
+@inline Pack.packed_sizeof(x::RootedResourceVector) = length(x)*packed_sizeof(eltype(x))
 
 #««3 getproperty/setproperty! etc.
 @inline default_setproperty!(x, f::Symbol, v) =
@@ -467,19 +468,17 @@ macro ResIO_str(str)
 	end
 end
 #««3 Reading resources from ResIO
-@inline Pack.fieldpack(::IO, ::Type{<:RootedResource}, ::Val{:root},
-	::RootResource) = 0
-@inline Pack.fieldunpack(io::ResIO, ::Type{<:RootedResource}, ::Val{:root},
-	T::Type{<:RootResource}) = io.root
-@inline Pack.packed_sizeof(::Type{<:RootedResource}, ::Val{:root},
-	::Type{<:RootResource}) = 0
-@inline Pack.fieldunpack(::IO, T::Type{<:RootedResourceVector}) = T([])
+@inline Pack.fieldpack(::IO, _, ::Val{:root}, ::RootResource) = 0
+@inline Pack.fieldunpack(io::ResIO, _, ::Val{:root}, T::Type{<:RootResource}) =
+	io.root
+@inline Pack.packed_sizeof(::Val{:root}, ::Type{<:RootResource}) = 0
+@inline Pack.fieldunpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
 # the root resource has a default `key` property
-@inline Pack.fieldunpack(io::ResIO, ::Val{:ref}, T::Type{<:Longref}) =
+@inline Pack.fieldunpack(io::ResIO, _, ::Val{:ref}, T::Type{<:Longref}) =
 	T("main", nameof(io))
 @inline unpack_root(io::ResIO, T::Type{<:RootResource}) =
 	(r = unpack(io, T); root!(io, r); r)
-@inline Pack.fieldpack(::IO, ::Longref) = 0
+@inline Pack.fieldpack(::IO, _, _, ::Longref) = 0
 @inline Pack.packed_sizeof(::Type{<:Longref}) = 0
 
 #»»1
@@ -1225,7 +1224,7 @@ end
 		eff.dice_sides = x.sides
 		return x
 	end
-	setfield!(eff, f, x)
+	default_setproperty!(eff, f, x)
 end
 function Base.show(io::IO, ::MIME"text/plain", eff::ITM_effect)
 	print(io, """
@@ -1282,7 +1281,7 @@ end
 		ab.damage_bonus = x.bonus
 		return x
 	end
-	setfield!(ab, f, x)
+	default_setproperty!(ab, f, x)
 end
 function Base.show(io::IO, mime::MIME"text/plain", ab::ITM_ability)
 	h = @sprintf("%s %+d %s %s speed %d", rp(ab.attack_type), ab.thac0_bonus,
@@ -1341,6 +1340,10 @@ mutable struct ITM_hdr <: RootResource
 	effects::RootedResourceVector{ITM_effect{ITM_hdr},ITM_hdr}
 	ref::Longref
 end
+# disable automatic packing of effects (for main item and abilities) —
+# we do it “by hand” by concatenating with item effects
+@inline Pack.fieldpack(::IO, _, ::Val{:effects},
+	::AbstractVector{<:ITM_effect}) = 0
 @inline searchkey(i::ITM_hdr) = i.name
 # create a virtual “not_usable_by” item property which groups together
 # all the 5 usability fields in the item struct:
@@ -1400,7 +1403,7 @@ end
 function Base.write(io::IO, itm::ITM_hdr)
 	itm.abilities_offset = 114
 	itm.abilities_count = length(itm.abilities)
-	itm.effect_offset = 114 + length(itm.abilities)*packed_sizeof(ITM_ability)
+	itm.effect_offset = 114 + packed_sizeof(itm.abilities)
 	itm.effect_index = 0 # FIXME
 	n = itm.effect_count = length(itm.effects)
 	for ab in itm.abilities
@@ -1409,11 +1412,13 @@ function Base.write(io::IO, itm::ITM_hdr)
 		n+= ab.effect_count
 	end
 	pack(io, itm)
-	@printf("\e[32mpacking main effects at %d = 0x%x\e[m", position(io), position(io))
+	@printf("\e[32m███ █ █ █ packing main effects at %d = 0x%x\e[m\n", position(io), position(io))
+	@assert position(io) == itm.effect_offset
 	pack(io, itm.effects)
-	for ab in itm.abilities;
-	@printf("\e[32mpacking ab effects at offset %d = 0x%x\e[m", position(io), position(io))
-	pack(io, ab.effects); end
+	for ab in itm.abilities
+		@printf("\e[32mpacking ab effects at offset %d = 0x%x\e[m\n", position(io), position(io))
+		pack(io, ab.effects)
+	end
 end
 # ««1 dlg
 struct DLG_state
@@ -1852,6 +1857,7 @@ end
 #««1 Item/etc. factory
 args_to_kw(T::DataType, args...) = begin
 	println("args to kw($T)")
+	# TODO
 	NamedTuple()
 end
 function clone(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
@@ -1890,15 +1896,12 @@ end
 end # module
 IE=InfinityEngine; S=IE.Pack
 
-# str = read("../bg/game/lang/en_US/dialog.tlk", IE.TLK_hdr)
-
-# itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h06.itm")
-# itm = read(IE.ResIO"../ciopfs/bg2/game/override/sw1h08.itm")
 IE.init!(ENV["HOME"]*"/jeux/bg/game")
-# game = IE.Game("../bg/game")
 itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
-# itm1=IE.clone(itm, unidentified_name="Imoen")
-# write("../bg/game/override/jp01.itm", itm1)
+itm1=IE.clone(itm, unidentified_name="Imoen")
+S.debug(itm1; maxdepth=4)
+
+write("jp02.itm", itm1)
  
 # itm=read(game, IE.Resref"blun01.itm")
 # write("/tmp/a.itm", itm)

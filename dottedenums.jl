@@ -248,9 +248,9 @@ function symbolicenum(m::Module, T::Union{Symbol, Expr}, args...; flags=false)
 		push!(block.args, quote
 		$(@__MODULE__).value(::Type{$tn}, ::Val{$(QuoteNode(k))}) = $v
 		isdefined(@__MODULE__, $(QuoteNode(k))) &&
-			!isa($(esc(k)), $(@__MODULE__).SymbolicNames) &&
+			!isa($(esc(k)), $SymbolicNames) &&
 			error("Cannot define SymbolicName ", $(string(k)))
-		$(esc(k)) = $(@__MODULE__).SymbolicNames(Set([$(QuoteNode(k))]))
+		$(esc(k)) = $SymbolicNames(Set([$(QuoteNode(k))]))
 		end)
 	end
 	push!(block.args, tn)

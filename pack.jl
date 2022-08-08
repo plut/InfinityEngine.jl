@@ -57,14 +57,18 @@ end
 
 Returns the size of the packed representation of type `T`.
 """
-@inline packed_sizeof(st::DataType, fn::Val, ft::DataType) =
+@inline packed_sizeof(st::DataType, fn::Val, ft::DataType) = #
+begin
+# 	length(stacktrace()) > 1000 && println("packed_sizeof($st/$fn/$ft)")
 	packed_sizeof(fn, ft)
-@inline packed_sizeof(fn::Val, ft::DataType) = packed_sizeof(ft)
-@inline function packed_sizeof(::Type{T}) where{T}
+end
+@inline packed_sizeof(fn::Val, ft::DataType) = packed_sizeof(ft) #
+using Base.StackTraces
+@inline function packed_sizeof(T::DataType)
 	isstructtype(T) || return sizeof(T)
 	r = 0
 	for (fn, ft) in fieldnt(T)
-		r+= packed_sizeof(T, Val(fn), ft)
+		r+= packed_sizeof(T, Val(fn), ft) #
 	end
 	return r
 end
@@ -100,17 +104,15 @@ end
 
 Hook allowing the user to override `unpack`'s behaviour for a specific field.
 """
-@inline fieldunpack(io::IO, st::DataType, fn::Val, ft::DataType) =
+@inline fieldunpack(io::IO, st, fn, ft::DataType) =
 begin
 # 	st <: Main.InfinityEngine.RootedResource &&
 # 	println("general fieldunpack: $st/$fn/$ft @$(position(io))")
 # 	if fn == Val(:root)
 # 		println("\e[31;7m unpack(root) in $st/$fn/$ft\n$(typeof(io))\e[m")
 # 	end
-	fieldunpack(io, fn, ft)
+	unpack(io, ft)
 end
-@inline fieldunpack(io::IO, fn::Val, ft::DataType) = fieldunpack(io, ft)
-@inline fieldunpack(io::IO, ft::DataType) = unpack(io, ft)
 
 unpack(io::IO, T::DataType, n::Integer) = [ unpack(io, T) for _ in 1:n ]
 unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
@@ -140,10 +142,11 @@ function pack(io::IO, x::T) where{T}
 	s = 0
 	for i in 1:fieldcount(T)
 		fn, ft = fieldname(T,i), fieldtype(T,i)
-# 		if contains(string(T), "ITM") && contains(string(fn), "opcode")
-# 			println("$T \e[1mx$(string(position(io), base=16))\e[m: pack field $fn::$ft = $(getfield(x,i))")
+# 		if contains(string(T), r"ITM|RootedResourceVector")
+# 			println("\e[1mx$(string(position(io), base=16))=$(position(io)) $T.$fn::$ft \e[m = $(getfield(x,i))")
+# 			dump(getfield(x,i);maxdepth=2)
 # 		end
-		s+= fieldpack(io, ft, Val(fn), getfield(x, i))
+		s+= fieldpack(io, T, Val(fn), getfield(x, i))
 	end
 	return s
 # 	sum(fieldpack(io, ft, Val(fn), getfield(x, fn))
@@ -154,12 +157,23 @@ end
 
 Hook allowing the user to override `unpack`'s behaviour for a specific field.
 """
-@inline fieldpack(io::IO, st::DataType, fn::Val, x) = fieldpack(io, fn, x)
-@inline fieldpack(io::IO, fn::Val, x) = fieldpack(io, x)
-@inline fieldpack(io::IO, x) = pack(io, x)
+@inline fieldpack(io::IO, st, fn, x) = fieldpack0(io, st, fn, x)
+@inline fieldpack0(io::IO, st, fn, x) =
+begin
+# 	if contains(string(st), "ITM") && contains(string(typeof(x)), "ITM")
+# 		println("\e[35;1m $st.$fn::$(typeof(x))\e[m")
+# 	end
+	pack(io, x)
+end
 
 @inline pack(io::IO, x::AbstractVector) =
-	sum(pack(io, y) for y in x; init = 0)
+begin
+	for y in x
+		pack(io, y)
+	end
+	0
+# 	sum(pack(io, y) for y in x; init = 0)
+end
 	
 # function pack(io::IO, x::Vector)
 # 	n = 0
@@ -184,7 +198,7 @@ struct Constant{V} end
 	return Constant{V}()
 end
 @inline pack(io::IO, ::Constant{V}) where{V} = write(io, V)
-@inline packed_sizeof(::Constant{V}) where{V} = sizeof(V)
+@inline packed_sizeof(::Type{<:Constant{V}}) where{V} = sizeof(V)
 
 macro Constant_str(s); :(Constant{SA[$(codeunits(s)...)]}); end
 
@@ -200,7 +214,7 @@ macro ignorefield(expr)
 	ftype = fieldtype(Core.eval(__module__, sname), fname.value)
 	quote
 	# FIXME: make default value a `new` call
-	$(@__MODULE__).$(:fieldpack)(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
+	$fieldpack(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
 		::$(esc(ftype))) = 0
 	$(@__MODULE__).$(:fieldunpack)(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
 		T::Type{<:$(esc(ftype))}) = eval(Expr(:new, $(esc(ftype))))
@@ -382,6 +396,37 @@ end
 @inline kwconstructor(::Type{T}) where{T<:Integer} = zero(T)
 
 #»»1
+# Pack debug
+struct PackDebug <: IO
+	maxdepth::Int
+	stack::Vector{NTuple{2,String}}
+	io::IOBuffer
+end
+PackDebug(maxdepth = 2) = PackDebug(maxdepth, [], IOBuffer())
+
+@inline rp(x) = repr(x;context=(:compact=>true))
+
+function fieldpack0(debug::PackDebug, stype, ::Val{fname}, x) where{fname}
+	push!(debug.stack, (stype|>rp, fname|>string))
+	if length(debug.stack) ≤ debug.maxdepth
+		@printf("x%04x=%4d \e[36m%16s\e[m  ",
+			position(debug.io), position(debug.io), x|>typeof|>rp)
+		for (i, (x,y)) in pairs(debug.stack)
+			isodd(i) && print("\e[34m")
+			isone(i) || print("/")
+			print(x, '.', y)
+			isodd(i) && print("\e[m")
+		end
+		println()
+	end
+	s = pack(debug, x)
+	pop!(debug.stack)
+	s
+end
+Base.write(debug::PackDebug, x::UInt8) = write(debug.io, x)
+Base.position(debug::PackDebug) = position(debug.io)
+debug(x; maxdepth=3) = pack(PackDebug(maxdepth), x)
+
 export packed_layout, unpack, unpack!, pack, @Constant_str, Constant, packed_sizeof
 
 end

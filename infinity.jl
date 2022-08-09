@@ -72,7 +72,8 @@ struct StaticString{N} <: AbstractString
 			zero(UInt8) : get(chars, i, zero(UInt8)) for i in 1:N))
 end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
-@inline Base.ncodeunits(s::StaticString) = sizeof(s)
+@inline Base.ncodeunits(s::StaticString) =
+	let l = findfirst(iszero, s.chars); isnothing(l) ? sizeof(s) : l-1; end
 @inline Base.codeunit(s::StaticString, i::Integer) = s.chars[i]
 @inline Base.codeunit(::StaticString) = UInt8
 @inline Base.lowercase(s::StaticString{N}) where{N} =
@@ -82,7 +83,7 @@ end
 @inline function Base.iterate(s::StaticString, i::Integer = 1)
 	i > length(s) && return nothing
 	c = s.chars[i]
-# 	iszero(c) && return nothing
+	iszero(c) && return nothing
 	(Char(c), i+1)
 end
 @inline function StaticString{N}(s::AbstractString) where{N}
@@ -94,7 +95,7 @@ end
 @inline Pack.unpack(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
 @inline Pack.pack(io::IO, s::StaticString) = write(io, s.chars)
 
-# ««2 Indices: Resref etc.
+#««2 Strref
 """    Strref
 
 Index (32-bit) referring to a translated string in dialog.tlk or dialogF.tlk.
@@ -106,6 +107,9 @@ end
 @inline Base.isvalid(s::Strref) = (s.index > 0)
 @inline Base.show(io::IO, s::Strref) = print(io, "Strref(", s.index, ")")
 
+#««2 Resource identifiers: Resref, Longref
+abstract type Resource{T} end
+resourcetype(::Resource{T}) where{T} = T
 """    Resref{Type}, Resref"Type"
 
 Index (64-bit, or 8 char string) referring to a resource.
@@ -118,13 +122,13 @@ This allows dispatch to be done correctly at compile-time.
 
 Shortcut for `Resref"type"("value")`.
 """
-struct Resref{T}
+struct Resref{T} <: Resource{T}
 	name::StaticString{8}
 	Resref{T}(s::AbstractString) where{T} = new{T}(lowercase(first(s,8)))
 end
+
 Base.nameof(r::Resref) = r.name
 string0(r::Resref) = r|>nameof|>string0
-resourcetype(::Resref{T}) where{T} = T
 
 @inline Pack.unpack(io::IO, T::Type{<:Resref}) =
 	unpack(io, StaticString{8})|>lowercase|>T
@@ -140,32 +144,32 @@ Base.show(io::IO, ::Type{Resref{T}}) where{T} = print(io, "Resref\"", T, "\"")
 Base.show(io::IO, r::Resref{T}) where{T} =
 	print(io, "Resref\"", nameof(r), '.', T, '"')
 
-"""    Resource{T}
+"""    Longref{T}
 
 A long resource descriptor: this contains a (static) type and a (dynamic)
 namespace and name uniquely identifying the resource.
 
 This is converted to a short `Resref` on compilation.
 
-`Resref` (i.e. short resource identifers) are converted to `Resource`
+`Resref` (i.e. short resource identifers) are converted to `Longref`
 using the namespace `""` (and keeping their short name).
 """
-struct Resource{T}
+struct Longref{T} <: Resource{T}
 	namespace::String
 	name::String
 end
-@inline Base.nameof(r::Resource) = r.name
-@inline (T::Type{<:Resource})(x::Resource) = T(x.namespace, x.name)
-Base.rand(r::Resource) =
+@inline Base.nameof(r::Longref) = r.name
+@inline (T::Type{<:Longref})(x::Longref) = T(x.namespace, x.name)
+Base.rand(r::Longref) =
 	typeof(r)(r.namespace, replace(r.name, r"_.*" => "")*'_'*randstring(4))
 
-@inline Pack.unpack(io::IO, T::Type{<:Resource}) =
+@inline Pack.unpack(io::IO, T::Type{<:Longref}) =
 	T("", unpack(io, StaticString{8})|>lowercase)
-@inline Pack.packed_sizeof(::Type{<:Resource}) = 8
-@inline Pack.pack(io::IO, r::Resource) = write(io, StaticString{8}(r.name))
+@inline Pack.packed_sizeof(::Type{<:Longref}) = 8
+@inline Pack.pack(io::IO, r::Longref) = pack(io, StaticString{8}(r.name))
 
-macro Resource_str(s)
-	return Resource{Symbol(lowercase(s))}
+macro Longref_str(s)
+	return Longref{Symbol(lowercase(s))}
 end
 
 #««2 Rooted resources
@@ -264,7 +268,7 @@ Defined methods include:
  - `ResIO"EXT"`: macro defining static value for this file type.
 """
 mutable struct ResIO{T,R<:RootResource,X<:IO} <: IO
-	name::String
+	longref::Longref{T}
 	io::X
 	root::R
 	@inline ResIO{T}(name, io::X) where{T,X<:IO} =
@@ -301,10 +305,10 @@ end
 	(r = unpack(io, T); root!(io, r); r)
 
 # The root resource contains a reference to its own name:
-@inline Pack.fieldunpack(io::ResIO, _, ::Val{:ref}, T::Type{<:Resource}) =
-	T("main", nameof(io))
-@inline Pack.fieldpack(::IO, _, ::Val{:ref}, ::Resource) = 0
-@inline Pack.packed_sizeof(_, ::Val{:ref}, ::Type{<:Resource}) = 0
+@inline Pack.fieldunpack(io::ResIO, _, ::Val{:ref}, T::Type{<:Longref}) =
+	io.longref
+@inline Pack.fieldpack(::IO, _, ::Val{:ref}, ::Longref) = 0
+@inline Pack.packed_sizeof(_, ::Val{:ref}, ::Type{<:Longref}) = 0
 
 @inline Pack.fieldunpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
 
@@ -552,7 +556,7 @@ function Base.open(key::KeyIndex, res::Resref{T}) where{T}
 	loc = get(dict, StaticString{8}(name), nothing)
 	isnothing(loc) && return nothing
 	bif = joinpath(key.directory[], key.bif[1+sourcefile(loc)])
-	return ResIO{T}(name, bifcontent(bif, resourceindex(loc)))
+	return ResIO{T}(Longref{T}("main", name), bifcontent(bif, resourceindex(loc)))
 end
 @inline Base.names(key::KeyIndex, ::Type{<:Resref{T}}) where{T} =
 	keys(key.location[T])
@@ -1089,7 +1093,7 @@ end
 	is_arrow::UInt16
 	is_bolt::UInt16
 	is_bullet::UInt16
-	effects::Vector{ITM_effect{R}}
+	effects::RootedResourceVector{ITM_effect{R},R}
 end
 @inline function Base.getproperty(ab::ITM_ability, f::Symbol)
 	f == :damage && return Dice(ab.dice_thrown, ab.dice_sides, ab.damage_bonus)
@@ -1121,7 +1125,7 @@ mutable struct ITM_hdr <: RootResource
 	constant::Constant"ITM V1  "
 	unidentified_name::Strref
 	name::Strref
-	replacement::Resource"ITM"
+	replacement::Longref"ITM"
 	flags::ItemFlag
 	type::ItemCat
 	usability::UInt32 # UsabilityFlags
@@ -1141,13 +1145,13 @@ mutable struct ITM_hdr <: RootResource
 	min_charisma::UInt16
 	price::UInt32
 	stack_amount::UInt16
-	inventory_icon::Resource"BAM"
+	inventory_icon::Longref"BAM"
 	lore::UInt16
-	ground_icon::Resource"BAM"
+	ground_icon::Longref"BAM"
 	weight::Int32
 	unidentified_description::Strref
 	description::Strref
-	description_icon::Resource"BAM"
+	description_icon::Longref"BAM"
 	enchantment::Int32
 # 	offset(abilities)::UInt32
 # 	length(abilities)::UInt16
@@ -1160,7 +1164,7 @@ mutable struct ITM_hdr <: RootResource
 	effect_count::UInt16
 	abilities::RootedResourceVector{ITM_ability{ITM_hdr},ITM_hdr}
 	effects::RootedResourceVector{ITM_effect{ITM_hdr},ITM_hdr}
-	ref::Resource"ITM"
+	ref::Longref"ITM"
 end
 # disable automatic packing of effects (for main item and abilities) —
 # we do it “by hand” by concatenating with item effects
@@ -1364,12 +1368,14 @@ struct Game
 	# so that all the strref numbers advance in sync:
 	new_strings::UniqueVector{Tuple{Int8,String}}
 	# longrefs to shortrefs map:
-	resref::Dict{NTuple{2,String},StaticString{8}}
-	modified_items::Dict{Resource"ITM",ITM_hdr}
+	shortref::Dict{NTuple{2,String},StaticString{8}}
+	longref::Dict{StaticString{8},NTuple{2,String}}
+	modified_items::Dict{Longref"ITM",ITM_hdr}
 	@inline Game() = new(Ref(""), KeyIndex(), Dict{Symbol,Set{String}}(),
 		Ref(0), Ref(""), [ TlkStrings() for _ in LANGUAGE_FILES ],
 		fieldtype(Game, :new_strings)(),
-		fieldtype(Game, :resref)(),
+		fieldtype(Game, :shortref)(),
+		fieldtype(Game, :longref)(),
 		fieldtype(Game, :modified_items)(),
 	)
 end
@@ -1410,7 +1416,7 @@ const LANGUAGE_FILES = (#««
 Initializes a `Game` structure from the game directory
 (i.e. the directory containing the `"chitin.key"` file).
 """
-Game(directory::AbstractString) = init!(Game(), directory)
+@inline Game(directory::AbstractString) = init!(Game(), directory)
 
 function init!(g::Game, directory::AbstractString)
 	g.namespace[] = ""
@@ -1430,7 +1436,9 @@ function init!(g::Game, directory::AbstractString)
 		println("read $(sum(length(v) for (_,v) in g.override; init=0)) override resources")
 	end
 	set_language!(g, 1) # default language
-	g.namespace[] = "user"
+	# namespaces are not operational yet; for now, everything happens in
+	# `main`:
+	g.namespace[] = "main"
 	return g
 end
 
@@ -1447,7 +1455,7 @@ function Base.open(g::Game, res::Resref)
 	if x == 2
 		# TODO: check case for case-sensitive install!
 		file = joinpath(g.directory[], "override", name*'.'*String(T))
-		return ResIO{T}(name, open(file))
+		return ResIO{T}(Longref{T}("main", name), open(file))
 	elseif x == 1
 		return open(g.key, res)
 	else
@@ -1526,13 +1534,33 @@ function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', nameof(res), s)
 	end
 end
-#««2 Resource —→ shortrefs
-# (we never need to convert shortref to longref).
+#««2 Longref ←—→ shortrefs
+# Maintaining the bijection:
+function ref_pair!(g::Game, short::StaticString{8},
+		long::NTuple{2,<:AbstractString})
+	y = get(g.shortref, long, nothing)
+	@assert isnothing(y) || y == short
+	x = get(g.longref, short, nothing)
+	@assert isnothing(x) || x == short
+	g.shortref[long] = short; g.longref[short] = long
+end
+# Shortref —→ longref when reading a file
+function longref(g::Game, short::StaticString{8})
+# 	any(short ∈ keys(values(game.key.location))) && return ("main", short)
+	# XXX TODO: look in stored bijection
+	return ("main", short)
+end
 
-shortref(g::Game, namespace::AbstractString, name::AbstractString) =
-	namespace == "main" ? name : get!(g.resref, (namespace, name)) do
-		make_shortref(namespace, name, length(g.resref))
+# Longref —→ shortref when writing a file
+function shortref(g::Game, long::NTuple{2,<:AbstractString})
+	long[1] == "main" && return StaticString{8}(long[2])
+	get!(g.shortref, long) do
+		short = make_shortref(long..., length(g.shortref))
+		@assert !haskey(g.longref, short)
+		g.longref[short] = long
+		short
 	end
+end
 @inline make_shortref(ns, n, l) = StaticString{8}(@sprintf("x%07x", l))
 
 # #««2 Named Resource
@@ -1654,7 +1682,7 @@ shortref(g::Game, namespace::AbstractString, name::AbstractString) =
 # By examing the field types of Game structure, determine the correct
 # registry field for each resource type: ITM_hdr => modified_items, etc.
 for (i,T) in pairs(fieldtypes(Game))
-	(T <: Dict && keytype(T) <: Resource) || continue
+	(T <: Dict && keytype(T) <: Longref) || continue
 	R = valtype(T); R <: RootResource || continue
 	@eval @inline register!(g::Game, x::$R) = (getfield(g, $i)[x.ref] = x)
 end
@@ -1671,7 +1699,7 @@ function save(g::Game)
 	# Modified items
 	println("\e[1mWriting modified items\e[m")
 	for (longref, itm) in pairs(game.modified_items)
-		s = shortref(game, longref...)
+		s = shortref(game, longref)
 		println("  Writing $longref => $s")
 		println(joinpath(game.directory, "override", s))
 		write(joinpath(game.directory, "override", s), itm)
@@ -1707,13 +1735,13 @@ for f in (:init!, :language, :namespace,
 	@eval begin
 	# prevent recursion
 	$f(::Game, ::Game, args...; kwargs...) =
-		error("no such method: ", $(string(f)), typeof.(args[2:end]), )
+		error("no such method: ", $(string(f)), typeof.(args), )
 	$f(args...; kwargs...) = $f(game, args...; kwargs...)
 	end
 end
 @inline Base.convert(T::Type{Strref}, s::AbstractString) = T(game, s)
-@inline Base.convert(T::Type{<:Resource}, s::AbstractString) = T(namespace(), s)
-@inline Base.convert(T::Type{<:Resource}, x::RootResource) = x.ref
+# @inline Base.convert(T::Type{<:Longref}, s::AbstractString) = T(namespace(), s)
+@inline Base.convert(T::Type{<:Longref}, x::RootResource) = x.ref
 
 #»»1
 

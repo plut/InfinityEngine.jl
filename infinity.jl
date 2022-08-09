@@ -109,7 +109,8 @@ end
 
 #««2 Resource identifiers: Resref, Longref
 abstract type Resource{T} end
-resourcetype(::Resource{T}) where{T} = T
+resourcetype(::Type{<:Resource{T}}) where{T} = T
+resourcetype(r::Resource) = resourcetype(typeof(r))
 """    Resref{Type}, Resref"Type"
 
 Index (64-bit, or 8 char string) referring to a resource.
@@ -141,8 +142,8 @@ macro Resref_str(s)
 	return Resref{Symbol(s[i+1:end])}(s[begin:i-1])
 end
 Base.show(io::IO, ::Type{Resref{T}}) where{T} = print(io, "Resref\"", T, "\"")
-Base.show(io::IO, r::Resref{T}) where{T} =
-	print(io, "Resref\"", nameof(r), '.', T, '"')
+Base.show(io::IO, r::Resref) =
+	print(io, "Resref\"", nameof(r), '.', resourcetype(r), '"')
 
 """    Longref{T}
 
@@ -160,8 +161,11 @@ struct Longref{T} <: Resource{T}
 end
 @inline Base.nameof(r::Longref) = r.name
 @inline (T::Type{<:Longref})(x::Longref) = T(x.namespace, x.name)
-Base.rand(r::Longref) =
-	typeof(r)(r.namespace, replace(r.name, r"_.*" => "")*'_'*randstring(4))
+# collision happens after Ω(36^2) copies of *the same resource*...
+Base.rand(r::Longref, ns = r.namespace) =
+	typeof(r)(ns, replace(r.name, r"_.*" => "")*'_'*lowercase(randstring(4)))
+Base.show(io::IO, r::Longref) =
+	print(io, "Longref\"", r.namespace, '/', r.name, '.', resourcetype(r), '"')
 
 @inline Pack.unpack(io::IO, T::Type{<:Longref}) =
 	T("", unpack(io, StaticString{8})|>lowercase)
@@ -214,11 +218,14 @@ end
 @inline Pack.packed_sizeof(x::RootedResourceVector) = length(x)*packed_sizeof(eltype(x))
 
 #««3 getproperty/setproperty! etc.
+@inline rr_skipproperties(::Any) = ()
 @inline default_setproperty!(x, f::Symbol, v) =
 	# default code; duplicated from Base.jl
 	setfield!(x, f, convert(fieldtype(typeof(x), f), v))
-@inline rr_setproperty!(x::RootedResource, f::Symbol, v) =
-	(register!(root(x)); default_setproperty!(x, f, v))
+@inline function rr_setproperty!(x::RootedResource, f::Symbol, v)
+	f ∈ rr_skipproperties(x) || register!(root(x))
+	default_setproperty!(x, f, v)
+end
 @inline Base.setproperty!(x::RootedResource, f::Symbol, v) =
 	rr_setproperty!(x, f, v)
 
@@ -625,139 +632,6 @@ function read(io::IO, f::ResIO"2DA"; debug=false, aligned=false)
 		mat = [ match(r"^\S+", line[i:end]).match for line in lines, i in positions]
 		MatrixWithHeaders([match(r"^\S+", line).match for line in lines], cols,mat)
 	end
-end
-# ««1 cre
-mutable struct CRE_colour
-	metal::UInt8
-	minor::UInt8
-	major::UInt8
-	skin::UInt8
-	leather::UInt8
-	armor::UInt8
-	hair::UInt8
-end
-mutable struct CRE_armor_class
-	natural::UInt16
-	effective::UInt16
-	crushing::UInt16 # 4 modifiers
-	missile::UInt16
-	piercing::UInt16
-	slashing::UInt16
-end
-mutable struct CRE_saves
-	death::UInt8
-	wands::UInt8
-	polymorph::UInt8
-	breath::UInt8
-	spells::UInt8
-end
-mutable struct CRE_resist
-	fire::UInt8
-	cold::UInt8
-	electricity::UInt8
-	acid::UInt8
-	magic::UInt8
-	magic_fire::UInt8
-	magic_cold::UInt8
-	slashing::UInt8
-	crushing::UInt8
-	piercing::UInt8
-	missile::UInt8
-end
-mutable struct CRE_abilities
-	strength::UInt8
-	strength_extra::UInt8
-	intelligence::UInt8
-	wisdom::UInt8
-	dexterity::UInt8
-	constitution::UInt8
-	charisma::UInt8
-end
-mutable struct CRE_scripts
-	override::Resref"bcs"
-	class::Resref"bcs"
-	race::Resref"bcs"
-	general::Resref"bcs"
-	default::Resref"bcs"
-end
-mutable struct CRE_hdr
-	constant::StaticString{8} # "CRE V1.0"
-	long_name::Strref
-	short_name::Strref # tooltip
-	flags::UInt32
-	xp_value::UInt32
-	xp_level::UInt32
-	gold::UInt32
-	status::UInt32 # state.ids
-	hp::UInt16
-	max_hp::UInt16
-	animation::UInt32 # animate.ids
-	colour::CRE_colour
-	eff_Version::UInt8
-	small_portrait::Resref"BMP"
-	large_portrait::Resref"BMP"
-	reputation::Int8
-	hide_in_shadows::UInt8
-	armor_class::CRE_armor_class
-	thac0::UInt8
-	number_attacks::UInt8
-	saves::CRE_saves
-	resist::CRE_resist
-	detect_illusion::UInt8
-	set_traps::UInt8
-	lore::UInt8
-	lockpicking::UInt8
-	move_silently::UInt8
-	find_traps::UInt8
-	pickpockets::UInt8
-	fatigue::UInt8
-	intoxication::UInt8
-	luck::Int8
-	proficiency::StaticString{15}
-	nightmare_mode::UInt8
-	translucency::UInt8
-	reputation_killed::Int8
-	reputation_join::Int8
-	reputation_leave::Int8
-	turn_undead::UInt8
-	tracking::Int8
-	tracking_target::StaticString{32}
-	sounds::SVector{100,Strref} # soundoff.ids, sndslot.ids
-	level_class::SVector{3,UInt8}
-	sex::UInt8
-	abilities::CRE_abilities
-	morale::UInt8
-	morale_break::UInt8
-	racial_enemy::UInt8 # race.ids
-	morale_recovery::UInt16
-	kits::UInt32
-	scripts::CRE_scripts
-	enemy_ally::UInt8 # ea.ids
-	general::UInt8 # general.ids
-	race::UInt8 # race.ids
-	class::UInt8 # class.ids
-	specific::UInt8 # specific.ids
-	gender::UInt8 # gender.ids
-	object::SVector{5,UInt8} # object.ids
-	alignment::UInt8 # alignmen.ids
-	global_actor::UInt16
-	local_actor::UInt16
-	death_variable::StaticString{32}
-	known_spells_offset::UInt32
-	known_spells_count::UInt32
-	spell_memorization_offset::UInt32
-	spell_memorization_count::UInt32
-	memorized_spells_offset::UInt32
-	memorized_spells_count::UInt32
-	item_slots_offset::UInt32
-	items_offset::UInt32
-	items_count::UInt32
-	effects_offset::UInt32
-	effects_count::UInt32
-	dialog::Resref"DLG"
-end
-function read(io::IO, f::ResIO"CRE")
-	unpack(io, CRE_hdr)
 end
 # ««1 itm
 # ««2 Enums etc.
@@ -1179,6 +1053,9 @@ end
 		UInt64(i.kit3) << 48 | UInt64(i.kit4) << 56)
 	getfield(i, name)
 end
+@inline rr_skipproperties(::ITM_hdr) = (:abilities_offset, :abilities_count,
+		:effect_offset, :effect_index, :effect_count)
+@inline rr_skipproperties(::ITM_ability) = (:effect_index, :effect_count)
 @inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
 	if name == :not_usable_by
 		x.usability = UInt64(value) % UInt32
@@ -1226,6 +1103,7 @@ function read(io::ResIO"ITM")
 	end
 	return itm
 end
+
 function Base.write(io::IO, itm::ITM_hdr)
 	itm.abilities_offset = 114
 	itm.abilities_count = length(itm.abilities)
@@ -1244,6 +1122,139 @@ function Base.write(io::IO, itm::ITM_hdr)
 # 		@printf("\e[32mpacking ab effects at offset %d = 0x%x\e[m\n", position(io), position(io))
 		pack(io, ab.effects)
 	end
+end
+# ««1 cre
+mutable struct CRE_colour
+	metal::UInt8
+	minor::UInt8
+	major::UInt8
+	skin::UInt8
+	leather::UInt8
+	armor::UInt8
+	hair::UInt8
+end
+mutable struct CRE_armor_class
+	natural::UInt16
+	effective::UInt16
+	crushing::UInt16 # 4 modifiers
+	missile::UInt16
+	piercing::UInt16
+	slashing::UInt16
+end
+mutable struct CRE_saves
+	death::UInt8
+	wands::UInt8
+	polymorph::UInt8
+	breath::UInt8
+	spells::UInt8
+end
+mutable struct CRE_resist
+	fire::UInt8
+	cold::UInt8
+	electricity::UInt8
+	acid::UInt8
+	magic::UInt8
+	magic_fire::UInt8
+	magic_cold::UInt8
+	slashing::UInt8
+	crushing::UInt8
+	piercing::UInt8
+	missile::UInt8
+end
+mutable struct CRE_abilities
+	strength::UInt8
+	strength_extra::UInt8
+	intelligence::UInt8
+	wisdom::UInt8
+	dexterity::UInt8
+	constitution::UInt8
+	charisma::UInt8
+end
+mutable struct CRE_scripts
+	override::Resref"bcs"
+	class::Resref"bcs"
+	race::Resref"bcs"
+	general::Resref"bcs"
+	default::Resref"bcs"
+end
+mutable struct CRE_hdr
+	constant::StaticString{8} # "CRE V1.0"
+	long_name::Strref
+	short_name::Strref # tooltip
+	flags::UInt32
+	xp_value::UInt32
+	xp_level::UInt32
+	gold::UInt32
+	status::UInt32 # state.ids
+	hp::UInt16
+	max_hp::UInt16
+	animation::UInt32 # animate.ids
+	colour::CRE_colour
+	eff_Version::UInt8
+	small_portrait::Resref"BMP"
+	large_portrait::Resref"BMP"
+	reputation::Int8
+	hide_in_shadows::UInt8
+	armor_class::CRE_armor_class
+	thac0::UInt8
+	number_attacks::UInt8
+	saves::CRE_saves
+	resist::CRE_resist
+	detect_illusion::UInt8
+	set_traps::UInt8
+	lore::UInt8
+	lockpicking::UInt8
+	move_silently::UInt8
+	find_traps::UInt8
+	pickpockets::UInt8
+	fatigue::UInt8
+	intoxication::UInt8
+	luck::Int8
+	proficiency::StaticString{15}
+	nightmare_mode::UInt8
+	translucency::UInt8
+	reputation_killed::Int8
+	reputation_join::Int8
+	reputation_leave::Int8
+	turn_undead::UInt8
+	tracking::Int8
+	tracking_target::StaticString{32}
+	sounds::SVector{100,Strref} # soundoff.ids, sndslot.ids
+	level_class::SVector{3,UInt8}
+	sex::UInt8
+	abilities::CRE_abilities
+	morale::UInt8
+	morale_break::UInt8
+	racial_enemy::UInt8 # race.ids
+	morale_recovery::UInt16
+	kits::UInt32
+	scripts::CRE_scripts
+	enemy_ally::UInt8 # ea.ids
+	general::UInt8 # general.ids
+	race::UInt8 # race.ids
+	class::UInt8 # class.ids
+	specific::UInt8 # specific.ids
+	gender::UInt8 # gender.ids
+	object::SVector{5,UInt8} # object.ids
+	alignment::UInt8 # alignmen.ids
+	global_actor::UInt16
+	local_actor::UInt16
+	death_variable::StaticString{32}
+	known_spells_offset::UInt32
+	known_spells_count::UInt32
+	spell_memorization_offset::UInt32
+	spell_memorization_count::UInt32
+	memorized_spells_offset::UInt32
+	memorized_spells_count::UInt32
+	item_slots_offset::UInt32
+	items_offset::UInt32
+	items_count::UInt32
+	effects_offset::UInt32
+	effects_count::UInt32
+	dialog::Resref"DLG"
+end
+function read(io::IO, f::ResIO"CRE")
+	unpack(io, CRE_hdr)
 end
 # ««1 dlg
 struct DLG_state
@@ -1367,7 +1378,7 @@ struct Game
 	# we collect all new strings (for any language) in the same structure,
 	# so that all the strref numbers advance in sync:
 	new_strings::UniqueVector{Tuple{Int8,String}}
-	# longrefs to shortrefs map:
+	# longrefs ↔ shortrefs bijection:
 	shortref::Dict{NTuple{2,String},StaticString{8}}
 	longref::Dict{StaticString{8},NTuple{2,String}}
 	modified_items::Dict{Longref"ITM",ITM_hdr}
@@ -1417,7 +1428,7 @@ Initializes a `Game` structure from the game directory
 (i.e. the directory containing the `"chitin.key"` file).
 """
 @inline Game(directory::AbstractString) = init!(Game(), directory)
-
+@inline longref_file(g::Game) = joinpath(game.directory[], "longrefs")
 function init!(g::Game, directory::AbstractString)
 	g.namespace[] = ""
 	g.directory[] = directory
@@ -1436,9 +1447,16 @@ function init!(g::Game, directory::AbstractString)
 		println("read $(sum(length(v) for (_,v) in g.override; init=0)) override resources")
 	end
 	set_language!(g, 1) # default language
+	isfile(longref_file(g)) && for line in eachline(longref_file(g))
+		# XXX use ; for comments? this is not an allowed file name
+		(short, long) = split(line, r"\s", limit=2)
+		long1 = rsplit(long, '/', limit=2); long=(long1[1], long1[2])
+		g.shortref[long] = short
+		g.longref[short] = long
+	end
 	# namespaces are not operational yet; for now, everything happens in
 	# `main`:
-	g.namespace[] = "main"
+	g.namespace[] = "user"
 	return g
 end
 
@@ -1455,7 +1473,7 @@ function Base.open(g::Game, res::Resref)
 	if x == 2
 		# TODO: check case for case-sensitive install!
 		file = joinpath(g.directory[], "override", name*'.'*String(T))
-		return ResIO{T}(Longref{T}("main", name), open(file))
+		return ResIO{T}(Longref{T}(longref(g, name)...), open(file))
 	elseif x == 1
 		return open(g.key, res)
 	else
@@ -1545,14 +1563,15 @@ function ref_pair!(g::Game, short::StaticString{8},
 	g.shortref[long] = short; g.longref[short] = long
 end
 # Shortref —→ longref when reading a file
-function longref(g::Game, short::StaticString{8})
-# 	any(short ∈ keys(values(game.key.location))) && return ("main", short)
-	# XXX TODO: look in stored bijection
-	return ("main", short)
+function longref(g::Game, short::AbstractString)
+	# all “new” shortrefs should be referenced in the longrefs file,
+	# so shortrefs absent from here belong to "main":
+	get(g.longref, short, ("main", String(short)))
 end
 
 # Longref —→ shortref when writing a file
 function shortref(g::Game, long::NTuple{2,<:AbstractString})
+	# if we are in "main" namespace then this is already a shortref:
 	long[1] == "main" && return StaticString{8}(long[2])
 	get!(g.shortref, long) do
 		short = make_shortref(long..., length(g.shortref))
@@ -1698,12 +1717,27 @@ end
 function save(g::Game)
 	# Modified items
 	println("\e[1mWriting modified items\e[m")
-	for (longref, itm) in pairs(game.modified_items)
-		s = shortref(game, longref)
-		println("  Writing $longref => $s")
-		println(joinpath(game.directory, "override", s))
-		write(joinpath(game.directory, "override", s), itm)
+	for itm in values(game.modified_items)
+		save(game, itm)
 	end
+	# write longref file
+	open(longref_file(g), "w") do io
+		for (k, v) in pairs(g.longref)
+			print(io, k, '\t', v[1], '/', v[2])
+		end
+	end
+# 	for (longref, itm) in pairs(game.modified_items)
+# 		s = shortref(game, longref)
+# 		println("  Writing $longref => $s")
+# 		println(joinpath(game.directory, "override", s))
+# 		write(joinpath(game.directory, "override", s), itm)
+# 	end
+end
+function save(g::Game, x::RootResource)
+	ref = x.ref
+	T, name = resourcetype(ref), shortref(g, (ref.namespace, ref.name))
+	println("\e[32m$ref => $name.$T\e[m")
+	write(joinpath(game.directory[], "override", name*'.'*string(T)), x)
 end
 
 #««1 Item/etc. factory
@@ -1712,13 +1746,20 @@ args_to_kw(T::DataType, args...) = begin
 	# TODO
 	NamedTuple()
 end
+"""    getkey(key, dict1, dict2, ..., default)
+
+Chained version of `get`."""
+@inline getkey(k, x1, default) = get(x1, k, default)
+@inline getkey(k, x1, y, z...) = get(x1, k, getkey(k, y, z...))
+
 function clone(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
-	kw2 = args_to_kw(T, args...)
-	vars = (get(kw2, fn, get(kwargs, fn,
-		fn == :ref ? rand(x.ref) : getfield(x, fn)))
-		for fn in fieldnames(T))
-	y = T(vars...)
 	# TODO: add "args..." field and push stuff to kwargs depending
+	kw2 = args_to_kw(T, args...)
+	vars = (getkey(fn, kwargs, kw2, getfield(x, fn)) for fn in fieldnames(T))
+# 		fn == :ref ? rand(x.ref, g.namespace[]) :
+	y = T(vars...)
+	# this triggers a register! call:
+	y.ref = getkey(:ref, kwargs, kw2, rand(x.ref, g.namespace[]))
 	# on args and T (e.g. Item => name)
 # 	for (k, v) in Iterators.flatten((pairs(kwargs), args_to_kw(T, args...)))
 # 		setproperty!(y, k, v)
@@ -1750,10 +1791,10 @@ IE=InfinityEngine; S=IE.Pack
 
 IE.init!(ENV["HOME"]*"/jeux/bg/game")
 itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
-itm1=IE.clone(itm, unidentified_name="Imoen")
+itm1=IE.clone(itm, name="Imoen")
 # S.debug(itm1; maxdepth=4)
 
-write("jp02.itm", itm1)
+# write("jp02.itm", itm1)
  
 # itm=read(game, IE.Resref"blun01.itm")
 # write("/tmp/a.itm", itm)

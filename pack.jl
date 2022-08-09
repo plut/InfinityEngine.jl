@@ -57,13 +57,11 @@ end
 
 Returns the size of the packed representation of type `T`.
 """
-@inline packed_sizeof(st::DataType, fn::Val, ft::DataType) = #
+@inline packed_sizeof(st, fn, ft::DataType) = #
 begin
 # 	length(stacktrace()) > 1000 && println("packed_sizeof($st/$fn/$ft)")
-	packed_sizeof(fn, ft)
+	packed_sizeof(ft)
 end
-@inline packed_sizeof(fn::Val, ft::DataType) = packed_sizeof(ft) #
-using Base.StackTraces
 @inline function packed_sizeof(T::DataType)
 	isstructtype(T) || return sizeof(T)
 	r = 0
@@ -399,18 +397,24 @@ end
 # Pack debug
 struct PackDebug <: IO
 	maxdepth::Int
+	current_depth::Base.RefValue{Int}
 	stack::Vector{NTuple{2,String}}
 	io::IOBuffer
 end
-PackDebug(maxdepth = 2) = PackDebug(maxdepth, [], IOBuffer())
+PackDebug(maxdepth = 2) = PackDebug(maxdepth, Ref(1), [], IOBuffer())
 
 @inline rp(x) = repr(x;context=(:compact=>true))
+@inline valname(::Val{N}) where{N} = N
 
-function fieldpack0(debug::PackDebug, stype, ::Val{fname}, x) where{fname}
-	push!(debug.stack, (stype|>rp, fname|>string))
+function fieldpack0(debug::PackDebug, stype, fname::Val, x)
+	push!(debug.stack, (stype|>rp, fname|>valname|>string))
+	flag = false
 	if length(debug.stack) ≤ debug.maxdepth
+		flag = (length(debug.stack) > debug.current_depth[])
+# 		flag && println("\e[32;1m begin $stype\e[m")
 		@printf("x%04x=%4d \e[36m%16s\e[m  ",
 			position(debug.io), position(debug.io), x|>typeof|>rp)
+		debug.current_depth[] = length(debug.stack)
 		for (i, (x,y)) in pairs(debug.stack)
 			isodd(i) && print("\e[34m")
 			isone(i) || print("/")
@@ -420,6 +424,7 @@ function fieldpack0(debug::PackDebug, stype, ::Val{fname}, x) where{fname}
 		println()
 	end
 	s = pack(debug, x)
+# 	flag && println("\e[31;1m end $stype\e[m")
 	pop!(debug.stack)
 	s
 end

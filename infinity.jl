@@ -156,8 +156,12 @@ This is converted to a short `Resref` on compilation.
 using the namespace `""` (and keeping their short name).
 """
 struct Longref{T} <: Resource{T}
+	# FIXME: use 'namespace/name' internally
+	# (without '/' means namespace is "main" ?)
 	namespace::String
 	name::String
+	@inline Longref{T}(ns::AbstractString, n::AbstractString) where{T} =
+		new{T}(ns, n)
 end
 @inline Base.nameof(r::Longref) = r.name
 @inline (T::Type{<:Longref})(x::Longref) = T(x.namespace, x.name)
@@ -498,7 +502,7 @@ struct KeyIndex
 end
 function Base.push!(key::KeyIndex, res::KEY_res)
 	d = get!(key.location, Symbol(res.type), Dict{StaticString{8},BifIndex}())
-	d[res.name] = res.location
+	d[lowercase(res.name)] = res.location
 # 	push!(key.resources, res)
 end
 @inline Base.length(key::KeyIndex) = length(key.location)
@@ -1553,16 +1557,36 @@ function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 	end
 end
 #««2 Longref ←—→ shortrefs
-# Maintaining the bijection:
-function ref_pair!(g::Game, short::StaticString{8},
-		long::NTuple{2,<:AbstractString})
-	y = get(g.shortref, long, nothing)
-	@assert isnothing(y) || y == short
-	x = get(g.longref, short, nothing)
-	@assert isnothing(x) || x == short
-	g.shortref[long] = short; g.longref[short] = long
+"""    Longref{T}(game, string)
+
+Converts a string (entered by the user) to a long reference:
+ - if the string is of the form `"namespace/resource"`, parse it;
+ - if an object with this reference exists in current namespace, return it;
+ - same with `"main"` namespace;
+ - otherwise, return `(current_namespace, string)` (this is a forward decl.).
+"""
+function (L::Type{<:Longref})(g::Game, str::AbstractString)
+	i = findlast('/', str)
+	T = resourcetype(L)
+	!isnothing(i) && return L(str[begin:i-1], str[i+1:end])
+	dict1 = modified_objs(g, L)
+	println("searching in modified_objs")
+	haskey(dict1, (g.namespace[], str)) && return L(g.namespace[], str)
+	println("searching in key")
+	dict2 = get(g.key.location, T, nothing)
+	!isnothing(dict2) && haskey(dict2, str) && return L("main", str)
+	println("defaulting to forward ref from $(g.namespace[])")
+	return L(g.namespace[], str)
 end
 # Shortref —→ longref when reading a file
+"""    longref(game, shortref) = (namespace, resource)
+
+Converts a short reference (i.e. an ≤8 byte string) to a long reference.
+ - All “new” shortrefs should be reference in the game's `"longrefs"` file,
+   so shortrefs absent from this file belong to "main":
+ - (the other possible distinction, game key, is less useful, because
+   some non-original game files might eventually be biffed).
+"""
 function longref(g::Game, short::AbstractString)
 	# all “new” shortrefs should be referenced in the longrefs file,
 	# so shortrefs absent from here belong to "main":
@@ -1570,16 +1594,26 @@ function longref(g::Game, short::AbstractString)
 end
 
 # Longref —→ shortref when writing a file
-function shortref(g::Game, long::NTuple{2,<:AbstractString})
-	# if we are in "main" namespace then this is already a shortref:
-	long[1] == "main" && return StaticString{8}(long[2])
+"""    shortref(game, namespace, resource)
+
+Convert a long reference (already stored in a game object) to a short reference:
+ - if the namespace is "main" then this is already a short reference;
+ - if the (namespace, resource) pair is already indexed, return this;
+ - otherwise, create a new index entry for this pair.
+"""
+function shortref(g::Game, ns::AbstractString, res::AbstractString)
+	ns == "main" && return StaticString{8}(res[2])
 	get!(g.shortref, long) do
-		short = make_shortref(long..., length(g.shortref))
+		short = make_shortref(ns, res, length(g.shortref))
 		@assert !haskey(g.longref, short)
 		g.longref[short] = long
 		short
 	end
 end
+# TODO: find a better way to generate a longref
+# TODO: check unicity (i.e. instead of using keys, use the whole dict)
+#   i.e. append randomness as needed if not unique
+# (and emit a warning):
 @inline make_shortref(ns, n, l) = StaticString{8}(@sprintf("x%07x", l))
 
 # #««2 Named Resource
@@ -1703,10 +1737,17 @@ end
 for (i,T) in pairs(fieldtypes(Game))
 	(T <: Dict && keytype(T) <: Longref) || continue
 	R = valtype(T); R <: RootResource || continue
-	@eval @inline register!(g::Game, x::$R) = (getfield(g, $i)[x.ref] = x)
+	@eval begin
+		@inline modified_objs(g::Game, ::Type{$(keytype(T))}) = getfield(g, $i)
+# 		@inline register!(g::Game, x::$R) = (getfield(g, $i)[x.ref] = x)
+	end
 end
-@inline register!(::Game, x::RootResource) =
-	error("register! undefined for $(typeof(x))")
+@inline modified_objs(g::Game, ::Type{<:Longref}) =
+	error("no modified objects dictionary found for type $(typeof(x))")
+@inline register!(g::Game, x::RootResource) =
+	(modified_objs(g, typeof(x.ref))[x.ref]=x)
+# @inline register!(::Game, x::RootResource) =
+# 	error("register! undefined for $(typeof(x))")
 
 #««2 Accessors: `item` etc.
 @inline item(g::Game, name::AbstractString) = read(g, Resref"itm"(name))
@@ -1716,6 +1757,7 @@ end
 #««2 Saving game data
 function save(g::Game)
 	# Modified items
+	# TODO: iterate over dict fields, etc.
 	println("\e[1mWriting modified items\e[m")
 	for itm in values(game.modified_items)
 		save(game, itm)
@@ -1726,12 +1768,6 @@ function save(g::Game)
 			print(io, k, '\t', v[1], '/', v[2])
 		end
 	end
-# 	for (longref, itm) in pairs(game.modified_items)
-# 		s = shortref(game, longref)
-# 		println("  Writing $longref => $s")
-# 		println(joinpath(game.directory, "override", s))
-# 		write(joinpath(game.directory, "override", s), itm)
-# 	end
 end
 function save(g::Game, x::RootResource)
 	ref = x.ref
@@ -1759,6 +1795,8 @@ function clone(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
 # 		fn == :ref ? rand(x.ref, g.namespace[]) :
 	y = T(vars...)
 	# this triggers a register! call:
+	# TODO: instead of a rand string, use the name (search key),
+	# and replace by randomness only as needed:
 	y.ref = getkey(:ref, kwargs, kw2, rand(x.ref, g.namespace[]))
 	# on args and T (e.g. Item => name)
 # 	for (k, v) in Iterators.flatten((pairs(kwargs), args_to_kw(T, args...)))

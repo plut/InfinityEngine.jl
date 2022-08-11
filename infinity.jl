@@ -626,7 +626,7 @@ end
 	Undispellable = 0x01000000
 	ToggleCriticalHitAversion
 end
-@SymbolicEnum ItemCat::UInt16 begin # ITEMCAT.IDS
+@SymbolicEnum ItemType::UInt16 begin # ITEMCAT.IDS
 	Misc = 0x0000
 	Amulet = 0x0001
 	Armor = 0x0002
@@ -664,7 +664,7 @@ end
   Gem = 0x0022
   Wand = 0x0023
   Container = 0x0024 # eye/broken armor
-  Books = 0x0025 # broken shield/bracelet
+  Book = 0x0025 # broken shield/bracelet
   Familiar = 0x0026 # broken sword/earrings
   Tattoo = 0x0027 # PST
   Lenses = 0x0028 # PST
@@ -786,7 +786,7 @@ struct ItemAnimation; name::StaticString{2}; end
 	Quarterstaff
 	Crossbow
 	LongBow
-	Shortbow
+	ShortBow
 	Dart
 	Sling
 	Blackjack
@@ -864,7 +864,7 @@ end
 	NotResistable
 end
 #««2 Item effect
-@with_kw mutable struct ITM_effect{R<:RootResource} <: RootedResource
+@with_kw mutable struct ItemEffect{R<:RootResource} <: RootedResource
 	root::R
 	opcode::Opcodes.Opcode
 	target::EffectTarget
@@ -881,11 +881,11 @@ end
 	saving_throw_bonus::Int32
 	stacking_id::UInt32
 end
-@inline function Base.getproperty(eff::ITM_effect, f::Symbol)
+@inline function Base.getproperty(eff::ItemEffect, f::Symbol)
 	f == :damage && return Dice(eff.dice_thrown, eff.dice_sides)
 	getfield(eff, f)
 end
-@inline function Base.setproperty!(eff::ITM_effect, f::Symbol, x)
+@inline function Base.setproperty!(eff::ItemEffect, f::Symbol, x)
 	if f == :damage
 		@assert x isa Dice
 		@assert iszero(x.bonus)
@@ -895,15 +895,16 @@ end
 	end
 	default_setproperty!(eff, f, x)
 end
-function Base.show(io::IO, ::MIME"text/plain", eff::ITM_effect)
+function Base.show(io::IO, ::MIME"text/plain", eff::ItemEffect)
+	@printf(io, "\e[48;5;13m%63s\e[m\n", string(Int16(eff.opcode);base=16)*'='
+		*Opcodes.str(eff.opcode, eff.parameters...)*'/'*rp(eff.target))
 	print(io, """
-\e[48;5;13m  $(@sprintf("%63s  ", string(Int16(eff.opcode);base=16)*'='*Opcodes.str(eff.opcode, eff.parameters...)*" on "*rp(eff.target)))\e[m
 $(eff.damage), save $(eff.saving_throw_type)$(@sprintf("%+d", eff.saving_throw_bonus)) parameters $(eff.parameters[1]),$(eff.parameters[2])
 Duration $(eff.duration) $(eff.timing_mode|>rp); $(eff.dispel_mode|>rp) probabilities $(eff.probabilities[1]),$(eff.probabilities[2])
 """)
 end
 #««2 Item ability
-@with_kw mutable struct ITM_ability{R<:RootResource} <: RootedResource
+@with_kw mutable struct ItemAbility{R<:RootResource} <: RootedResource
 	root::R
  	attack_type::AttackType
  	must_identify::UInt8
@@ -936,13 +937,13 @@ end
 	is_arrow::UInt16
 	is_bolt::UInt16
 	is_bullet::UInt16
-	effects::RootedResourceVector{ITM_effect{R},R}
+	effects::RootedResourceVector{ItemEffect{R},R}
 end
-@inline function Base.getproperty(ab::ITM_ability, f::Symbol)
+@inline function Base.getproperty(ab::ItemAbility, f::Symbol)
 	f == :damage && return Dice(ab.dice_thrown, ab.dice_sides, ab.damage_bonus)
 	getfield(ab, f)
 end
-@inline function Base.setproperty!(ab::ITM_ability, f::Symbol, x)
+@inline function Base.setproperty!(ab::ItemAbility, f::Symbol, x)
 	if f == :damage
 		@assert x isa Dice
 		ab.dice_thrown = x.thrown
@@ -952,7 +953,7 @@ end
 	end
 	default_setproperty!(ab, f, x)
 end
-function Base.show(io::IO, mime::MIME"text/plain", ab::ITM_ability)
+function Base.show(io::IO, mime::MIME"text/plain", ab::ItemAbility)
 	h = @sprintf("%s %+d %s %s speed %d", rp(ab.attack_type), ab.thac0_bonus,
 		repr(ab.damage), rp(ab.damage_type), ab.speed_factor)
 	print(io, """
@@ -964,13 +965,13 @@ Effects $(ab.effect_index+1):$(ab.effect_index+ab.effect_count) ($(ab.effect_cou
 	for eff in ab.effects; show(io, mime, eff); end
 end
 #««2 Item structure
-mutable struct ITM_hdr <: RootResource
+mutable struct Item <: RootResource
 	constant::Constant"ITM V1  "
 	unidentified_name::Strref
 	name::Strref
 	replacement::Resref"ITM"
 	flags::ItemFlag
-	type::ItemCat
+	type::ItemType
 	usability::UInt32 # UsabilityFlags
 	animation::ItemAnimation
 	min_level::UInt16
@@ -1005,27 +1006,27 @@ mutable struct ITM_hdr <: RootResource
 	effect_index::UInt16
 # 	length(effects)::UInt16
 	effect_count::UInt16
-	abilities::RootedResourceVector{ITM_ability{ITM_hdr},ITM_hdr}
-	effects::RootedResourceVector{ITM_effect{ITM_hdr},ITM_hdr}
+	abilities::RootedResourceVector{ItemAbility{Item},Item}
+	effects::RootedResourceVector{ItemEffect{Item},Item}
 	ref::Resref"ITM"
 end
 # disable automatic packing of effects (for main item and abilities) —
 # we do it “by hand” by concatenating with item effects
 @inline Pack.fieldpack(::IO, _, ::Val{:effects},
-	::AbstractVector{<:ITM_effect}) = 0
-@inline Base.nameof(i::ITM_hdr) = i.name
+	::AbstractVector{<:ItemEffect}) = 0
+@inline Base.nameof(i::Item) = i.name
 # create a virtual “not_usable_by” item property which groups together
 # all the 5 usability fields in the item struct:
-@inline function Base.getproperty(i::ITM_hdr, name::Symbol)
+@inline function Base.getproperty(i::Item, name::Symbol)
 	name == :not_usable_by && return UsabilityFlags(
 		UInt64(i.usability) | UInt64(i.kit1) << 32 | UInt64(i.kit2) << 40 |
 		UInt64(i.kit3) << 48 | UInt64(i.kit4) << 56)
 	getfield(i, name)
 end
-@inline rr_skipproperties(::ITM_hdr) = (:abilities_offset, :abilities_count,
+@inline rr_skipproperties(::Item) = (:abilities_offset, :abilities_count,
 		:effect_offset, :effect_index, :effect_count)
-@inline rr_skipproperties(::ITM_ability) = (:effect_index, :effect_count)
-@inline function Base.setproperty!(x::ITM_hdr, name::Symbol, value)
+@inline rr_skipproperties(::ItemAbility) = (:effect_index, :effect_count)
+@inline function Base.setproperty!(x::Item, name::Symbol, value)
 	if name == :not_usable_by
 		x.usability = UInt64(value) % UInt32
 		x.kit1 = (UInt64(value) >> 32) % UInt8
@@ -1036,10 +1037,10 @@ end
 	end
 	rr_setproperty!(x, name, value)
 end
-function Base.show(io::IO, mime::MIME"text/plain", itm::ITM_hdr)
-	header=@sprintf("%-50s    \n%26s/%-32s ⚖%-3d ❍%-5d ?%-3d ", itm.ref,
-		str(itm.unidentified_name), str(itm.name),
-		itm.weight, itm.price, itm.lore)
+function Base.show(io::IO, mime::MIME"text/plain", itm::Item)
+	header=@sprintf("%-50s ⚖%-3d ❍%-5d ?%-3d \n%13s:%26s/%-32s",
+		nameof(itm.ref), itm.weight, itm.price, itm.lore,
+		rp(itm.type), str(itm.unidentified_name), str(itm.name))
 	chars=@sprintf("Str:\e[35m%2d/%2d\e[m Dex:\e[35m%2d\e[m Con:\e[35m%2d\e[m Wis:\e[35m%2d\e[m Int:\e[35m%2d\e[m Cha:\e[35m%2d\e[m Level:\e[35m% 3d\e[m",
 		itm.min_strength, itm.min_strengthbonus, itm.min_dexterity,
 		itm.min_constitution, itm.min_wisdom, itm.min_intelligence,
@@ -1053,7 +1054,7 @@ function Base.show(io::IO, mime::MIME"text/plain", itm::ITM_hdr)
 	print(io, """
 \e[7m$header\e[m
 Flags: \e[36m$(rp(itm.flags))\e[m
-Type: \e[36m$(rp(itm.type))\e[m Proficiency: \e[36m$(rp(itm.proficiency))\e[m Ench.\e[36m$(itm.enchantment)\e[m
+Proficiency: \e[36m$(rp(itm.proficiency))\e[m Ench.\e[36m$(itm.enchantment)\e[m Repl.\e[36m$(itm.replacement)\e[m
 $use
 Requires: $chars
 Inventory: \e[34m$(itm.inventory_icon.name)\e[m stack=\e[34m$(itm.stack_amount)\e[m groundicon=\e[34m$(itm.ground_icon.name)\e[m Animation: \e[34m$(itm.animation.name)\e[m Image=\e[34m$(itm.description_icon.name)\e[m
@@ -1064,7 +1065,7 @@ Casting effects: $(itm.effect_index):$(itm.effect_index+itm.effect_count-1)
 end
 # ««2 I/O
 function read(io::ResIO"ITM")
-	itm = unpack_root(io, ITM_hdr)
+	itm = unpack_root(io, Item)
 	unpack!(seek(io, itm.abilities_offset), itm.abilities, itm.abilities_count)
 	unpack!(seek(io, itm.effect_offset), itm.effects, itm.effect_count)
 	for (i, ab) in pairs(itm.abilities)
@@ -1072,12 +1073,11 @@ function read(io::ResIO"ITM")
 	end
 	return itm
 end
-
-function Base.write(io::IO, itm::ITM_hdr)
+function Base.write(io::IO, itm::Item)
 	itm.abilities_offset = 114
 	itm.abilities_count = length(itm.abilities)
 	itm.effect_offset = 114 + packed_sizeof(itm.abilities)
-	itm.effect_index = 0 # FIXME
+	itm.effect_index = 0 # XXX
 	n = itm.effect_count = length(itm.effects)
 	for ab in itm.abilities
 		ab.effect_index = n
@@ -1091,6 +1091,21 @@ function Base.write(io::IO, itm::ITM_hdr)
 # 		@printf("\e[32mpacking ab effects at offset %d = 0x%x\e[m\n", position(io), position(io))
 		pack(io, ab.effects)
 	end
+end
+# convert user-passed arguments to item properties
+# e.g. Longsword("Foobar", +1) will make enchantment +1 and name Foobar:
+# XXX make this generic (i.e. name::String, enchantment::Integer etc.)
+function args_to_kw(::Item, args...)
+	name = nothing
+	enchantment = nothing
+	for a in args
+		a isa AbstractString && isnothing(name) && (name = a; continue)
+		a isa Integer && isnothing(enchantment) && (enchantment = a; continue)
+		error("bad arguments for Item: $(args...)")
+	end
+	!isnothing(name) ?
+		(!isnothing(enchantment) ? (;name, enchantment) : (;name)) :
+		(!isnothing(enchantment) ? (;enchantment) : NamedTuple())
 end
 # ««1 cre
 mutable struct CRE_colour
@@ -1334,7 +1349,7 @@ struct Game
 	# Current values (mutable data):
 	language::Base.RefValue{Int}
 	namespace::Base.RefValue{String}
-	# FIXME: each tlk file is quite heavy (5 Mbytes in a fresh BG1
+	# XXX: each tlk file is quite heavy (5 Mbytes in a fresh BG1
 	# install), we could use a rotation system to not keep more than 4 or 5
 	# in memory at the same time
 	# (this is already likely during resource building since most mods are
@@ -1347,7 +1362,7 @@ struct Game
 	# longrefs ↔ shortrefs bijection:
 	shortref::Dict{String,StaticString{8}}
 	longref::Dict{StaticString{8},String}
-	modified_items::Dict{Resref"ITM",ITM_hdr}
+	modified_items::Dict{Resref"ITM",Item}
 	@inline Game() = new(Ref(""), KeyIndex(), Dict{Symbol,Set{String}}(),
 		Ref(0), Ref(""), [ TlkStrings() for _ in LANGUAGE_FILES ],
 		fieldtype(Game, :new_strings)(),
@@ -1569,7 +1584,7 @@ Iterator producing, in order:  "foobar", "foobar00".."foobar99",
 """
 struct Shortrefs{L}
 	name::StaticString{L}
-	# TODO: allow other bases (e.g. base 16)
+	# XXX: allow other bases (e.g. base 16)
 end
 @inline textlength(::Shortrefs{L}) where{L} = L
 function Base.iterate(r::Shortrefs, i = 0)
@@ -1706,7 +1721,7 @@ end
 # 
 #««2 Modified resources registry
 # By examing the field types of Game structure, determine the correct
-# registry field for each resource type: ITM_hdr => modified_items, etc.
+# registry field for each resource type: Item => modified_items, etc.
 for (i,T) in pairs(fieldtypes(Game))
 	(T <: Dict && keytype(T) <: Resref) || continue
 	R = valtype(T); R <: RootResource || continue
@@ -1729,7 +1744,7 @@ end
 #««2 Saving game data
 function save(g::Game)
 	# Modified items
-	# TODO: iterate over dict fields, etc.
+	# XXX: iterate over dict fields, etc.
 	println("\e[1mWriting $(length(game.modified_items)) modified items\e[m")
 	for itm in values(game.modified_items)
 		save(game, itm)
@@ -1748,11 +1763,9 @@ function save(g::Game, x::RootResource)
 end
 
 #««1 Item/etc. factory
-args_to_kw(T::DataType, args...) = begin
-	println("args to kw($T)")
-	# TODO
-	NamedTuple()
-end
+args_to_kw(x, args...) =
+	error("no conversion from args to properties for type $(typeof(x))")
+	# return a NamedTuple
 """    getkey(key, dict1, dict2, ..., default)
 
 Chained version of `get`."""
@@ -1762,7 +1775,8 @@ Chained version of `get`."""
 @inline getkey(f::Function, k, x1, y...) = get(x1, k, getkey(f, k, y...))
 
 function Base.copy(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
-	kw2 = args_to_kw(T, args...)
+	kw2 = args_to_kw(x, args...)::NamedTuple
+	println("got kw2=$kw2")
 	vars = (getkey(fn, kwargs, kw2, getfield(x, fn)) for fn in fieldnames(T))
 	y = T(vars...)
 	# this triggers a register! call:
@@ -1780,6 +1794,60 @@ function Base.copy(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
 end
 @inline Base.copy(g::Game, r::Resref, args...; kwargs...) =
 	copy(g, read(g, r), args...; kwargs...)
+
+const _resource_template = Dict{DottedEnums.SymbolicNames,Resref}(
+	Amulet => Resref"amul02.itm",
+	Belt => Resref"belt01.itm",
+	Boots => Resref"boot06.itm",
+	Arrow => Resref"arow01.itm",
+	Bracers => Resref"brac05.itm",
+	Ring => Resref"ring01.itm",
+	Scroll => Resref"scrl02.itm",
+# 	Shield => Resref"shld01.itm",
+	Bullet => Resref"bull01.itm",
+# 	Bow => Resref"bow05.itm",
+	Dagger => Resref"dagg01.itm",
+	Mace => Resref"blun04.itm",
+	Sling => Resref"slng01.itm",
+# 	SmallSword => Resref"sw1h07.itm",
+# 	LargeSword => Resref"sw1h04.itm",
+	Hammer => Resref"hamm01.itm",
+	Morningstar => Resref"blun06.itm",
+	Flail => Resref"blun02.itm",
+	Dart => Resref"dart01.itm",
+	Axe => Resref"ax1h01.itm",
+	Quarterstaff => Resref"staf01.itm",
+	Crossbow => Resref"xbow04.itm",
+	Spear => Resref"sper01.itm",
+	Halberd => Resref"halb01.itm",
+	Bolt => Resref"bolt01.itm",
+# 	Cloak => Resref" # no trivial cloak
+	Gem => Resref"misc20.itm", # bloodstone
+	Buckler => Resref"shld08.itm",
+# 	Club => Resref"blun01.itm", # IWD
+# 	LargeShield => Resref"shld15.itm", # IWD
+# 	MediumShield => Resref"shld13.itm", # IWD
+# 	SmallShield => Resref"shld11.itm", # IWD
+# 	GreatSword => Resref"sw2h01.itm", # IWD
+	LeatherArmor => Resref"leat01.itm",
+	StuddedLeatherArmor => Resref"leat04.itm",
+	ChainMail => Resref"chan01.itm",
+	SplintMail => Resref"chan04.itm",
+	HalfPlate => Resref"plat01.itm",
+	FullPlate => Resref"plat04.itm",
+	HideArmor => Resref"leat10.itm",
+# 	Robe => Resref" # no trivial Robe
+	BastardSword => Resref"sw1h01.itm",
+	LongSword => Resref"sw1h04.itm",
+	ShortSword => Resref"sw1h07.itm",
+	TwoHandedSword => Resref"sw2h01.itm",
+	Katana => Resref"sw1h43.itm",
+	Scimitar => Resref"sw1h56.itm",
+	LongBow => Resref"bow03.itm",
+	ShortBow => Resref"bow05.itm",
+)
+(T::DottedEnums.SymbolicNames)(args...; kwargs...) =
+	copy(_resource_template[T], args...; kwargs...)
 #««1 Global `game` object
 
 const game = Game()

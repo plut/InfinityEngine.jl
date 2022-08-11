@@ -67,9 +67,10 @@ end
 struct StaticString{N} <: AbstractString
 	chars::SVector{N,UInt8}
 	# once we encounter a zero character, all that follows is zero:
-	@inline StaticString{N}(chars::AbstractVector{UInt8}) where{N} = new{N}(
-		SVector{N,UInt8}(any(iszero, view(chars, 1:min(i-1,length(chars)))) ?
-			zero(UInt8) : get(chars, i, zero(UInt8)) for i in 1:N))
+	@inline StaticString{N}(chars::AbstractVector{UInt8}) where{N} =
+		(@assert length(chars) ≤ N;
+	new{N}(SVector{N,UInt8}(any(iszero, view(chars, 1:min(i-1,length(chars)))) ?
+			zero(UInt8) : get(chars, i, zero(UInt8)) for i in 1:N)))
 end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) =
@@ -139,7 +140,6 @@ Base.show(io::IO, r::Resref) =
 @inline Pack.packed_sizeof(::Type{<:Resref}) = 8
 @inline Pack.pack(io::IO, r::Resref) =
 	pack(io, r.name|>shortref)
-# pack(io, StaticString{8}(r.name))
 
 macro Resref_str(s)
 	s = lowercase(s)
@@ -1504,10 +1504,11 @@ function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 	end
 end
 #««2 Resref ←—→ shortrefs
-# There are *three* such conversion methods:
+# There are *four* such conversion methods:
 # - Resref{T}(game, string): converts a user-entered string to a Resref;
 # - longref(game, string): converts (unpacks) a file-read string to a Resref;
-# - shortref(game, string): packs a Resref to a file-written string.
+# - shortref(game, object): creates (if needed) the shortref from obj's ref;
+# - shortref(game, string): packs a Resref to an (existing) shortref.
 """    Resref{T}(game, string)
 
 Converts a string (entered by the user) to a long reference:
@@ -1541,7 +1542,6 @@ function longref(g::Game, short::AbstractString)
 	# so shortrefs absent from here belong to "":
 	get(g.longref, short, String(short))
 end
-
 # Resref —→ shortref when writing a file
 """    shortref(game, resource)
 
@@ -1550,16 +1550,24 @@ Convert a long reference (already stored in a game object) to a short reference:
  - if the (namespace, resource) pair is already indexed, return this;
  - otherwise, create a new index entry for this pair.
 """
-function shortref(g::Game, long::AbstractString)
-	!contains(long, '/') && (@assert length(long)≤8; return StaticString{8}(long))
-	get!(g.shortref, long) do
-		short = make_shortref(long, length(g.shortref))
+function shortref(g::Game, x::RootResource)
+	str = obj.ref.name
+	!contains(str, '/') && return StaticString{8}(str)
+	# XXX do something with the object str
+	get!(g.shortref, str) do
+		short = make_shortref(str, length(g.shortref))
 		@assert !haskey(g.longref, short)
-		g.longref[short] = long
+		g.longref[short] = str
 		short
 	end
 end
-# @inline shortref(g::Game, l::Resref) = shortref(g, namespace(l), nameof(l))
+"""    shortref(game, name::AbstractString)
+
+Returns the short ref for the given obj ref. The short ref must exist."""
+function shortref(g::Game, str::AbstractString)
+	!contains(str, '/') && return StaticString{8}(str)
+	return g.shortref[str]
+end
 # TODO: find a better way to generate a longref
 # TODO: check unicity (i.e. instead of using keys, use the whole dict)
 #   i.e. append randomness as needed if not unique
@@ -1722,9 +1730,9 @@ function save(g::Game)
 end
 function save(g::Game, x::RootResource)
 	ref = x.ref
-	T, short = resourcetype(ref), shortref(g, ref.name)
-	println("  \e[32m$ref => $short.$T\e[m")
-	write(joinpath(game.directory[], "override", short*'.'*string(T)), x)
+	T, s = resourcetype(ref), shortref(g, x)
+	println("  \e[32m$ref => $s.$T\e[m")
+	write(joinpath(game.directory[], "override", s*'.'*string(T)), x)
 end
 
 #««1 Item/etc. factory

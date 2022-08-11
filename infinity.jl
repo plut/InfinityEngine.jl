@@ -130,8 +130,8 @@ end
 @inline Base.nameof(r::Resref) = split(r)|>last
 @inline namespace(r::Resref) = split(r)|>first
 # collision happens after Ω(36^2) copies of *the same resource*...
-Base.rand(r::Resref, ns = namespace(r)) =
-	typeof(r)(ns, replace(nameof(r), r"~.*" => "")*'~'*lowercase(randstring(4)))
+# Base.rand(r::Resref, ns = namespace(r)) =
+# 	typeof(r)(ns, replace(nameof(r), r"~.*" => "")*'~'*lowercase(randstring(4)))
 Base.show(io::IO, r::Resref) =
 	print(io, "Resref\"", r.name, '.', resourcetype(r), '"')
 
@@ -533,6 +533,8 @@ end
 	bif = joinpath(key.directory[], key.bif[1+sourcefile(loc)])
 	return bifcontent(bif, resourceindex(loc))
 end
+@inline Base.haskey(key::KeyIndex, name::AbstractString, type::Symbol) =
+	haskey(key.location, type) && haskey(key.location[type], name)
 @inline Base.names(key::KeyIndex, T::Type{<:Resref}) =
 	keys(key.location[resourcetype(T)])
 
@@ -1011,7 +1013,7 @@ end
 # we do it “by hand” by concatenating with item effects
 @inline Pack.fieldpack(::IO, _, ::Val{:effects},
 	::AbstractVector{<:ITM_effect}) = 0
-@inline searchkey(i::ITM_hdr) = i.name
+@inline Base.nameof(i::ITM_hdr) = i.name
 # create a virtual “not_usable_by” item property which groups together
 # all the 5 usability fields in the item struct:
 @inline function Base.getproperty(i::ITM_hdr, name::Symbol)
@@ -1035,7 +1037,7 @@ end
 	rr_setproperty!(x, name, value)
 end
 function Base.show(io::IO, mime::MIME"text/plain", itm::ITM_hdr)
-	header=@sprintf("%26s/%-32s ⚖%-3d ❍%-5d ?%-3d ",
+	header=@sprintf("%-50s    \n%26s/%-32s ⚖%-3d ❍%-5d ?%-3d ", itm.ref,
 		str(itm.unidentified_name), str(itm.name),
 		itm.weight, itm.price, itm.lore)
 	chars=@sprintf("Str:\e[35m%2d/%2d\e[m Dex:\e[35m%2d\e[m Con:\e[35m%2d\e[m Wis:\e[35m%2d\e[m Int:\e[35m%2d\e[m Cha:\e[35m%2d\e[m Level:\e[35m% 3d\e[m",
@@ -1055,7 +1057,7 @@ Type: \e[36m$(rp(itm.type))\e[m Proficiency: \e[36m$(rp(itm.proficiency))\e[m En
 $use
 Requires: $chars
 Inventory: \e[34m$(itm.inventory_icon.name)\e[m stack=\e[34m$(itm.stack_amount)\e[m groundicon=\e[34m$(itm.ground_icon.name)\e[m Animation: \e[34m$(itm.animation.name)\e[m Image=\e[34m$(itm.description_icon.name)\e[m
-Casting effects: $(itm.effect_index)
+Casting effects: $(itm.effect_index):$(itm.effect_index+itm.effect_count-1)
 """)
 	for eff in itm.effects; show(io, mime, eff); end
 	for ab in itm.abilities; show(io, mime, ab); end
@@ -1498,7 +1500,7 @@ in the names of all resources of the given `type`.
 """
 function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 	for res in all(g, R)
-		s = str[searchkey(read(res))].string
+		s = res|>read|>nameof
 		contains(s, text) || continue
 		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', nameof(res), s)
 	end
@@ -1551,16 +1553,34 @@ Convert a long reference (already stored in a game object) to a short reference:
  - otherwise, create a new index entry for this pair.
 """
 function shortref(g::Game, x::RootResource)
-	str = obj.ref.name
+	str = x.ref.name
 	!contains(str, '/') && return StaticString{8}(str)
-	# XXX do something with the object str
 	get!(g.shortref, str) do
-		short = make_shortref(str, length(g.shortref))
-		@assert !haskey(g.longref, short)
-		g.longref[short] = str
-		short
+		for s in Shortrefs{8}(first(replace(str, r".*/"=>""), 8))
+			!haskey(g.longref, s) && !haskey(g.key, s, resourcetype(x.ref)) &&
+				(g.longref[s] = str; return s)
+		end
 	end
 end
+"""    Shortrefs(s)
+
+Iterator producing, in order:  "foobar", "foobar00".."foobar99",
+"fooba000".."fooba999" etc.
+"""
+struct Shortrefs{L}
+	name::StaticString{L}
+	# TODO: allow other bases (e.g. base 16)
+end
+@inline textlength(::Shortrefs{L}) where{L} = L
+function Base.iterate(r::Shortrefs, i = 0)
+	iszero(i) && return (r.name, 10)
+	k = ndigits(i)-1; q = 10^k
+	(i÷q) > 1 && (i = q*= 10; k+= 1)
+	return (eltype(r)(first(r.name, textlength(r)-k)*
+		(digits(i, pad=k)[1:k]|>reverse|>join)), i+1)
+end
+Base.length(r::Shortrefs) = 10^textlength(r)+1
+Base.eltype(::Shortrefs{L}) where{L} = StaticString{L}
 """    shortref(game, name::AbstractString)
 
 Returns the short ref for the given obj ref. The short ref must exist."""
@@ -1568,11 +1588,6 @@ function shortref(g::Game, str::AbstractString)
 	!contains(str, '/') && return StaticString{8}(str)
 	return g.shortref[str]
 end
-# TODO: find a better way to generate a longref
-# TODO: check unicity (i.e. instead of using keys, use the whole dict)
-#   i.e. append randomness as needed if not unique
-# (and emit a warning):
-@inline make_shortref(_, n) = StaticString{8}(@sprintf("x%07x", n))
 
 # #««2 NamedResource
 # """    NamedResource{T,R,K}
@@ -1695,17 +1710,15 @@ end
 for (i,T) in pairs(fieldtypes(Game))
 	(T <: Dict && keytype(T) <: Resref) || continue
 	R = valtype(T); R <: RootResource || continue
-	@eval begin
-		@inline modified_objs(g::Game, ::Type{$(keytype(T))}) = getfield(g, $i)
-# 		@inline register!(g::Game, x::$R) = (getfield(g, $i)[x.ref] = x)
-	end
+	@eval @inline modified_objs(g::Game, ::Type{$(keytype(T))}) = getfield(g, $i)
 end
 @inline modified_objs(g::Game, ::Type{<:Resref}) =
 	error("no modified objects dictionary found for type $(typeof(x))")
 @inline register!(g::Game, x::RootResource) =
+begin
+	println("\e[34;1m register!($(x.ref))\e[m")
 	(modified_objs(g, typeof(x.ref))[x.ref]=x)
-# @inline register!(::Game, x::RootResource) =
-# 	error("register! undefined for $(typeof(x))")
+end
 
 #««2 Accessors: `item` etc.
 @inline read(g::Game,T::Type{<:Resref},name::AbstractString)= read(g,T(g,name))
@@ -1721,7 +1734,6 @@ function save(g::Game)
 	for itm in values(game.modified_items)
 		save(game, itm)
 	end
-	# write longref file
 	open(longref_file(g), "w") do io
 		for (k, v) in pairs(g.longref)
 			println(io, k, '\t', v)
@@ -1746,23 +1758,34 @@ end
 Chained version of `get`."""
 @inline getkey(k, x1, default) = get(x1, k, default)
 @inline getkey(k, x1, y, z...) = get(x1, k, getkey(k, y, z...))
+@inline getkey(f::Function, k, x1) = get(f, x1, k)
+@inline getkey(f::Function, k, x1, y...) = get(x1, k, getkey(f, k, y...))
 
-function clone(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
+function Base.copy(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
 	kw2 = args_to_kw(T, args...)
 	vars = (getkey(fn, kwargs, kw2, getfield(x, fn)) for fn in fieldnames(T))
 	y = T(vars...)
 	# this triggers a register! call:
-	# TODO: instead of a rand string, use the name (search key),
-	# and replace by randomness only as needed:
-	y.ref = getkey(:ref, kwargs, kw2, rand(x.ref, namespace(g)))
+	y.ref = getkey(:ref, kwargs, kw2) do
+		r = namespace(g)*'/'* replace(str(g, y.name), r"[^a-zA-Z0-9]" => "")
+		i = 1
+		while haskey(g.shortref, r) ||
+				haskey(modified_objs(g, typeof(x.ref)), oftype(x.ref, r))
+			r = replace(r, r"~\d*$" => "")*'~'*string(i)
+			i+= 1
+		end
+		r
+	end
 	return y
 end
+@inline Base.copy(g::Game, r::Resref, args...; kwargs...) =
+	copy(g, read(g, r), args...; kwargs...)
 #««1 Global `game` object
 
 const game = Game()
 
 for f in (:init!, :language, :namespace,
-		:str, :strref, :shortref, :longref, :register!, :clone, :save,
+		:str, :strref, :shortref, :longref, :register!, :save,
 		:item, :items)
 	@eval begin
 	# prevent recursion
@@ -1774,6 +1797,8 @@ end
 @inline Base.convert(T::Type{Strref}, s::AbstractString) = T(game, s)
 @inline Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game, s)
 @inline Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
+@inline Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =
+	copy(game, x, args...; kwargs...)
 
 #»»1
 
@@ -1781,6 +1806,7 @@ end # module
 IE=InfinityEngine; S=IE.Pack
 
 IE.init!(ENV["HOME"]*"/jeux/bg/game")
+itm = IE.item("sw1h34") # Albruin
 # itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
 # itm.min_strength = 4
 # itm1=IE.clone(itm, name="Imoen")

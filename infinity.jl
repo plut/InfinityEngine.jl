@@ -119,8 +119,10 @@ struct Resref{T}
 end
 resourcetype(::Type{<:Resref{T}}) where{T} = T
 resourcetype(r::Resref) = resourcetype(typeof(r))
+@inline resref_join(ns::AbstractString, n::AbstractString) =
+	isempty(ns) ? n : ns*'/'*n
 @inline (T::Type{<:Resref})(ns::AbstractString, n::AbstractString) =
-	isempty(ns) ? T(n) : T(ns*'/'*n)
+	T(resref_join(ns, n))
 @inline (T::Type{<:Resref})(x::Resref) = T(x.name)
 
 function Base.split(r::Resref)
@@ -169,10 +171,11 @@ abstract type RootedResource end
 The root of a resource tree, i.e. a resource which will be saved in a game file.
 This resource also holds an identifier designating it (and the game file).
 """
-abstract type RootResource <: RootedResource end
+abstract type RootResource{T} <: RootedResource end
 # Root resource is always its own root
 @inline root(x::RootResource) = x
 @inline root!(x::RootResource, _) = nothing
+@inline resourcetype(::RootResource{T}) where{T} = T
 @inline register!(::Nothing) = nothing # no root defined
 
 mutable struct RootedResourceVector{T<:RootedResource,
@@ -604,7 +607,7 @@ function read(io::IO, f::ResIO"2DA"; debug=false, aligned=false)
 end
 # ««1 itm
 # ««2 Enums etc.
-@SymbolicFlags ItemFlag::UInt32 begin # ITEMFLAG.IDS
+@SymbolicFlags ItemFlags::UInt32 begin # ITEMFLAG.IDS
 	Indestructible
 	TwoHanded
 	Droppable
@@ -965,12 +968,12 @@ Effects $(ab.effect_index+1):$(ab.effect_index+ab.effect_count) ($(ab.effect_cou
 	for eff in ab.effects; show(io, mime, eff); end
 end
 #««2 Item structure
-mutable struct Item <: RootResource
+mutable struct Item <: RootResource{:itm}
 	constant::Constant"ITM V1  "
 	unidentified_name::Strref
 	name::Strref
 	replacement::Resref"ITM"
-	flags::ItemFlag
+	flags::ItemFlags
 	type::ItemType
 	usability::UInt32 # UsabilityFlags
 	animation::ItemAnimation
@@ -1241,27 +1244,72 @@ function read(io::IO, f::ResIO"CRE")
 	unpack(io, CRE_hdr)
 end
 # ««1 dlg
+# ««2 DLG structures
 struct DLG_state
 	text::Strref
 	first_transition::Int32
 	number_transitions::Int32
 	trigger::Int32
 end
+@SymbolicFlags TransitionFlags::UInt32 begin
+	HasText
+	HasTrigger
+	HasAction
+	Terminates
+	HasJournal
+	Interrupt
+	Unsolved
+	JournalEntry
+	Solved
+end
 struct DLG_transition
-	flags::UInt32
+	flags::TransitionFlags
 	text::Strref
 	journal::Strref
 	trigger::Int32
 	action::Int32
-	next_actor::Resref"DLG"
-	next_state::Int32
+	actor::Resref"DLG"
+	state::Int32
 end
 # this is the same type for state trigger, transition trigger, actions:
 struct DLG_string
 	offset::Int32 # of trigger string
 	length::Int32 # idem
 end
-struct DLG_hdr
+# ««2 State, transition
+@with_kw mutable struct Transition #{X}
+	# target::
+	flags::TransitionFlags
+	text::Strref
+	journal::Strref
+	trigger::String
+	action::String
+	actor::Resref"dlg"
+	state::UInt
+end
+function Base.show(io::IO, mime::MIME"text/plain", t::Transition)
+	print(io, """\e[48;5;3m⇒$(t.actor.name):$(t.state); $(t.flags|>rp)\e[m
+\e[31m$(t.trigger)\e[m
+\e[34m$(t.text|>str)\e[m
+\e[35m$(t.journal|>str)\e[m
+\e[33m$(t.action)\e[m
+""")
+end
+@with_kw mutable struct State
+	text::Strref
+	transitions::Vector{Transition}
+	trigger::String
+	priority::Float32
+end
+function Base.show(io::IO, mime::MIME"text/plain", s::State)
+	print(io, """$(s.text|>str)
+\e[35mpriority=$(s.priority == -eps(Float32) ? "-ε" : s.priority)\e[m
+\e[31m$(s.trigger)\e[m
+""")
+	for t in s.transitions; show(io, mime, t); end
+end
+# ««2 Actor
+mutable struct Actor <: RootResource{:dlg}
 	constant::StaticString{8} # "DLG V1.0"
 	number_states::Int32
 	offset_states::Int32
@@ -1274,41 +1322,66 @@ struct DLG_hdr
 	offset_actions::Int32
 	number_actions::Int32
 	flags::UInt32
-# 	st_triggers::Vector{DLG_string}
-# 	tr_triggers::Vector{DLG_string}
-# 	actions::Vector{DLG_string}
+	st_triggers::Vector{DLG_string}
+	tr_triggers::Vector{DLG_string}
+	actions::Vector{DLG_string}
+	# states are keyed by hashes == UInt
+	states::Dict{UInt,State}
+	ref::Resref"dlg"
+end
+	# @inline ResourceType(::Type{<:ResIO{:dlg}}) = Actor
+function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
+	for (k, v) in sort(pairs(a.states); by=first)
+		println(io, "\e[7m state $(string(k)): $(length(v.transitions)) transitions\e[m")
+		show(io, mime, v)
+	end
 end
 
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in unpack(seek(io, offset), DLG_string, count)]
 
-function read(io::ResIO"DLG")
-# 	self = Resref(f)
-	header = unpack(io, DLG_hdr)
-	states = unpack(seek(io,header.offset_states), DLG_state{Strref},
-		header.number_states)
-	transitions = unpack(seek(io, header.offset_transitions),
-		DLG_transition{Strref}, header.number_transitions)
-	st_triggers = dialog_strings(io, header.offset_state_triggers,
-			header.number_state_triggers)
-	tr_triggers = dialog_strings(io, header.offset_transition_triggers,
-			header.number_transition_triggers)
-	actions = dialog_strings(io, header.offset_actions, header.number_actions)
+function read(io::ResIO"DLG")::Actor
+	actor = unpack_root(io, Actor)
+	st_triggers = dialog_strings(io, actor.offset_state_triggers,
+			actor.number_state_triggers)
+	tr_triggers = dialog_strings(io, actor.offset_transition_triggers,
+			actor.number_transition_triggers)
+	actions = dialog_strings(io, actor.offset_actions, actor.number_actions)
 
-	dialog = Dialogs.top
-	Dialogs.namespace("")
-	getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
-	for (i, s) in pairs(states)
-		state = Dialogs.add_state!(dialog, (self|>nameof, i-1);
-			text = s.text, trigger = getval(st_triggers, s.trigger))
-		for j in s.first_transition+1:s.first_transition+s.number_transitions
-			t = transitions[j]
-			Dialogs.add_transition!(dialog, state, (nameof(t.next_actor), t.next_state);
-				t.text, t.journal, trigger = getval(tr_triggers, t.trigger),
-				action = getval(actions, t.action), flags = UInt32(t.flags))
+	states1 = unpack(seek(io,actor.offset_states), DLG_state, actor.number_states)
+	transitions1 = unpack(seek(io, actor.offset_transitions),
+		DLG_transition, actor.number_transitions)
+	@inline getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
+
+	for (i, s) in pairs(states1)
+		state = State(; s.text, transitions=[], priority = -eps(Float32),
+			trigger = getval(st_triggers, s.trigger))
+		for j in s.first_transition+1:s.first_transition + s.number_transitions
+			t = transitions1[j]
+			push!(state.transitions, Transition(;t.flags, t.text, t.journal,
+				t.actor, t.state, trigger = getval(tr_triggers, t.trigger),
+				action = getval(actions, t.action)))
 		end
+		# TODO: use hashes instead
+		actor.states[i-1] = state
 	end
-	return dialog
+	return actor
+end
+# 	dialog = Dialogs.top««
+# 	Dialogs.namespace("")
+# # 	getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
+# 	for (i, s) in pairs(states)
+# 		state = Dialogs.add_state!(dialog, (self|>nameof, i-1);
+# 			text = s.text, trigger = getval(st_triggers, s.trigger))
+# 		for j in s.first_transition+1:s.first_transition+s.number_transitions
+# 			t = transitions[j]
+# 			Dialogs.add_transition!(dialog, state, (nameof(t.actor), t.state);
+# 				t.text, t.journal, trigger = getval(tr_triggers, t.trigger),
+# 				action = getval(actions, t.action), flags = UInt32(t.flags))
+# 		end
+# 	end
+# 	return actor
+# 	return dialog
 	#= patterns observed in Bioware dialogues:
 	* normal reply: (text) action=-1 journal=strref(0) trigger=-1
 	* (action|terminates) target=("",0) text=strref(0) journal=strref(0)
@@ -1320,8 +1393,10 @@ function read(io::ResIO"DLG")
 	IOW: strrefs are 0 when undefined (=> graceful fail);
 		other indices are -1
 	* 
-	=#
-end
+	=##»»
+#««2 Dialog-building functions
+
+
 
 #««1 Game
 #««2 Game data structure
@@ -1529,14 +1604,16 @@ end
 """    Resref{T}(game, string)
 
 Converts a string (entered by the user) to a long reference:
+ - if the string is of the form `"/resource"` then use root namespace;
  - if the string is of the form `"namespace/resource"`, parse it;
  - if an object with this reference exists in current namespace, return it;
- - same with `""` namespace;
+ - same with root namespace;
  - otherwise, return `(current_namespace, string)` (this is a forward decl.).
 """
 function (R::Type{<:Resref})(g::Game, str::AbstractString)
+	startswith(str, '/') && return R(str[2:end])
 	contains(str, '/') && return R(str)
-	ns_str = namespace(g)*'/'*str
+	ns_str = resref_join(namespace(g), str)
 	r = get(g.longref, ns_str, nothing)
 	!isnothing(r) && return R(ns_str)
 	if length(str) ≤ 8
@@ -1567,12 +1644,12 @@ Convert a long reference (already stored in a game object) to a short reference:
  - if the (namespace, resource) pair is already indexed, return this;
  - otherwise, create a new index entry for this pair.
 """
-function shortref(g::Game, x::RootResource)
-	str = x.ref.name
+function shortref(g::Game, r::Resref)
+	str = r.name
 	!contains(str, '/') && return StaticString{8}(str)
 	get!(g.shortref, str) do
 		for s in Shortrefs{8}(first(replace(str, r".*/"=>""), 8))
-			!haskey(g.longref, s) && !haskey(g.key, s, resourcetype(x.ref)) &&
+			!haskey(g.longref, s) && !haskey(g.key, s, resourcetype(r)) &&
 				(g.longref[s] = str; return s)
 		end
 	end
@@ -1757,9 +1834,10 @@ function save(g::Game)
 end
 function save(g::Game, x::RootResource)
 	ref = x.ref
-	T, s = resourcetype(ref), shortref(g, x)
+	T, s = resourcetype(ref), shortref(g, ref)
 	println("  \e[32m$ref => $s.$T\e[m")
 	write(joinpath(game.directory[], "override", s*'.'*string(T)), x)
+	push!(get!(g.override, T, Set{String}()), s)
 end
 
 #««1 Item/etc. factory
@@ -1846,6 +1924,11 @@ const _resource_template = Dict{DottedEnums.SymbolicNames,Resref}(
 	LongBow => Resref"bow03.itm",
 	ShortBow => Resref"bow05.itm",
 )
+const Longbow = LongBow
+const Shortbow = ShortBow
+const Longsword = LongSword
+const PlateMail = HalfPlate
+
 (T::DottedEnums.SymbolicNames)(args...; kwargs...) =
 	copy(_resource_template[T], args...; kwargs...)
 #««1 Global `game` object
@@ -1871,53 +1954,3 @@ end
 #»»1
 
 end # module
-IE=InfinityEngine; S=IE.Pack
-
-IE.init!(ENV["HOME"]*"/jeux/bg/game")
-itm = IE.item("sw1h34") # Albruin
-# itm=read(IE.game, IE.Resref"sw1h34.itm") # Albruin
-# itm.min_strength = 4
-# itm1=IE.clone(itm, name="Imoen")
-# IE.save()
-# S.debug(itm1; maxdepth=4)
-
-# write("jp02.itm", itm1)
- 
-# itm=read(game, IE.Resref"blun01.itm")
-# write("/tmp/a.itm", itm)
-
-# using Printf
-# function xxd(x::Vector{UInt8}; offset=0)#««
-# 	for i in 1:offset
-# 		print("..")
-# 		iseven(i) && print(" ")
-# 	end
-# 	for i in 0:length(x)-1
-# 		@printf("%02x", x[i+1])
-# 		isodd(i+offset) && print(" ")
-# 		iszero((i+offset+1)%16) && print("\n")
-# 	end
-# end#»»
-
-# str=read(IE.ResIO"../bg/game/lang/fr_FR/dialog.tlk")
-# # # IE.search(game, str, IE.ResIO"ITM", "Varscona")
-# # key = IE.KeyIndex("../bg/game/chitin.key")
-# # # dlg = read(game, IE.Resref"melica.dlg")
-# dlg = read(game, IE.Resref"zorl.dlg")
-# # # dia = read(IE.ResIO"dlg"(key, "abazigal"))
-# # 
-# D=IE.Dialogs
-# D.namespace("test")
-# D.actor("zorl")
-# 
-# D.trigger("// new dialogue")
-# D.say(1 => "hello <CHARNAME>")
-# 	D.reply(" hello Zorl" => 1)
-# 	D.reply(" go on...")
-# D.say(2 => "Yes I go on.")
-# 
-# D.state(1)
-# 	D.reply("I attack!" => exit)
-# # 
-# # nothing
-# # dlg;

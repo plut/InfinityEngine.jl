@@ -50,6 +50,8 @@ using Random
 import Base.read, Base.write
 
 # ««1 Basic types
+struct EmptyInit end
+@inline Base.convert(T::DataType, ::EmptyInit) = T()
 # Compact representation, useful for Flags and Enums
 @inline rp(x) = repr(x;context=(:compact=>true))
 # ««2 Extract zero-terminated string from IO
@@ -1277,15 +1279,15 @@ struct DLG_string
 	length::Int32 # idem
 end
 # ««2 State, transition
+const INVALID_TRANSITION_TARGET = ~zero(UInt)
 @with_kw mutable struct Transition #{X}
-	# target::
 	flags::TransitionFlags
-	text::Strref
-	journal::Strref
-	trigger::String
-	action::String
+	text::Strref = Strref(0) # graceful failing
+	journal::Strref = Strref(0)
+	trigger::String = ""
+	action::String = ""
 	actor::Resref"dlg"
-	state::UInt
+	state::UInt = INVALID_TRANSITION_TARGET
 end
 function Base.show(io::IO, mime::MIME"text/plain", t::Transition)
 	print(io, """\e[48;5;3m⇒$(t.actor.name):$(t.state); $(t.flags|>rp)\e[m
@@ -1297,9 +1299,9 @@ function Base.show(io::IO, mime::MIME"text/plain", t::Transition)
 end
 @with_kw mutable struct State
 	text::Strref
-	transitions::Vector{Transition}
+	transitions::Vector{Transition} = EmptyInit()
 	trigger::String
-	priority::Float32
+	priority::Float32 = -eps(Float32)
 end
 function Base.show(io::IO, mime::MIME"text/plain", s::State)
 	print(io, """$(s.text|>str)
@@ -1309,27 +1311,36 @@ function Base.show(io::IO, mime::MIME"text/plain", s::State)
 	for t in s.transitions; show(io, mime, t); end
 end
 # ««2 Actor
-mutable struct Actor <: RootResource{:dlg}
-	constant::StaticString{8} # "DLG V1.0"
-	number_states::Int32
-	offset_states::Int32
-	number_transitions::Int32
-	offset_transitions::Int32
-	offset_state_triggers::Int32
-	number_state_triggers::Int32
-	offset_transition_triggers::Int32
-	number_transition_triggers::Int32
-	offset_actions::Int32
-	number_actions::Int32
-	flags::UInt32
-	st_triggers::Vector{DLG_string}
-	tr_triggers::Vector{DLG_string}
-	actions::Vector{DLG_string}
+@with_kw mutable struct Actor <: RootResource{:dlg}
+	constant::Constant"DLG V1.0" = EmptyInit() # "DLG V1.0"
+	number_states::Int32 = 0
+	offset_states::Int32 = 52
+	number_transitions::Int32 = 0
+	offset_transitions::Int32 = 0
+	offset_state_triggers::Int32 = 0
+	number_state_triggers::Int32 = 0
+	offset_transition_triggers::Int32 = 0
+	number_transition_triggers::Int32 = 0
+	offset_actions::Int32 = 0
+	number_actions::Int32 = 0
+	flags::UInt32 = 0
+	st_triggers::Vector{DLG_string} = EmptyInit()
+	tr_triggers::Vector{DLG_string} = EmptyInit()
+	actions::Vector{DLG_string} = EmptyInit()
 	# states are keyed by hashes == UInt
-	states::Dict{UInt,State}
-	ref::Resref"dlg"
+	states::Dict{UInt,State} = EmptyInit()
+	ref::Resref"dlg" # must be initialized
 end
-	# @inline ResourceType(::Type{<:ResIO{:dlg}}) = Actor
+@with_kw mutable struct DialogContext
+	current_state::UInt = INVALID_TRANSITION_TARGET
+	# XXX Actor is mutable: do we need a Ref here? (needs Actor() constructor)
+	current_actor::Base.RefValue{Actor} = EmptyInit()
+	pending_transition::Bool = false
+	current_transition::Base.RefArray{Transition,Vector{Transition},Nothing} =
+		Ref(Transition[], 0)
+end
+
+statekey(i::Integer) = i-1
 function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
 	for (k, v) in sort(pairs(a.states); by=first)
 		println(io, "\e[7m state $(string(k)): $(length(v.transitions)) transitions\e[m")
@@ -1354,8 +1365,7 @@ function read(io::ResIO"DLG")::Actor
 	@inline getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
 
 	for (i, s) in pairs(states1)
-		state = State(; s.text, transitions=[], priority = -eps(Float32),
-			trigger = getval(st_triggers, s.trigger))
+		state = State(; s.text, trigger = getval(st_triggers, s.trigger))
 		for j in s.first_transition+1:s.first_transition + s.number_transitions
 			t = transitions1[j]
 			push!(state.transitions, Transition(;t.flags, t.text, t.journal,
@@ -1363,25 +1373,10 @@ function read(io::ResIO"DLG")::Actor
 				action = getval(actions, t.action)))
 		end
 		# TODO: use hashes instead
-		actor.states[i-1] = state
+		actor.states[statekey(i)] = state
 	end
 	return actor
 end
-# 	dialog = Dialogs.top««
-# 	Dialogs.namespace("")
-# # 	getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
-# 	for (i, s) in pairs(states)
-# 		state = Dialogs.add_state!(dialog, (self|>nameof, i-1);
-# 			text = s.text, trigger = getval(st_triggers, s.trigger))
-# 		for j in s.first_transition+1:s.first_transition+s.number_transitions
-# 			t = transitions[j]
-# 			Dialogs.add_transition!(dialog, state, (nameof(t.actor), t.state);
-# 				t.text, t.journal, trigger = getval(tr_triggers, t.trigger),
-# 				action = getval(actions, t.action), flags = UInt32(t.flags))
-# 		end
-# 	end
-# 	return actor
-# 	return dialog
 	#= patterns observed in Bioware dialogues:
 	* normal reply: (text) action=-1 journal=strref(0) trigger=-1
 	* (action|terminates) target=("",0) text=strref(0) journal=strref(0)
@@ -1393,10 +1388,47 @@ end
 	IOW: strrefs are 0 when undefined (=> graceful fail);
 		other indices are -1
 	* 
-	=##»»
+	=#
 #««2 Dialog-building functions
-
-
+function set_actor!(ctx::DialogContext, actor::Actor)
+	ctx.current_actor[] = actor
+	ctx.current_state = INVALID_RANSITION_TARGET
+end
+function set_state!(ctx::DialogContext, state)
+	ctx.current_state = state
+end
+function add_state!(ctx::DialogContext, label, text::Strref; kwargs...)
+	# XXX: pending_transition, current_state
+	key = statekey(label)
+	println("\e[1mINSERT STATE $key\e[m")
+	if ctx.pending_transition
+		println("  \e[32m Resolve pending transition to $key\e[m")
+		ctx.current_transition[].state = key
+		ctx.current_transition[].actor = a.ref
+		ctx.pending_transition = false
+	end
+	s = State(; text, kwargs...)
+	ctx.current_actor[].states[key] = s
+	ctx.current_state = key
+	return s
+end
+function add_transition!(ctx::DialogContext, source, target;
+		position = 1 + length(source.transitions), kwargs...)
+	key = statekey(target)
+	@assert !(ctx.pending_transition) "unsolved pending transition"
+	# XXX build flags from kwargs
+	# XXX: label = exit => flags |= Terminates
+	t = Transition(;actor = ctx.current_actor[].ref, state = key, args...)
+	insert!(source.transitions, position, t)
+	ctx.current_transition = Ref(source.transitions, position)
+	return t
+end
+function add_transition!(a::Actor, ctx::DialogContext, source, ::Nothing;
+	kwargs...)
+	println("  \e[31madd pending transition\e[m")
+	add_transition!(a, ctx, source, INVALID_TRANSITION_TARGET; kwargs...)
+	ctx.pending_transition = true
+end
 
 #««1 Game
 #««2 Game data structure
@@ -1409,48 +1441,40 @@ Main structure holding all top-level data for a game installation, including:
 
 Methods include:
 
- - `read(game, resref)`: opens the corresponding resource and returns the
-   appropriate Julia structure depending on the resource type.
+ - `game[resref]`: returns the data structure described by this resource.
+ - `get(game, resref) do ... end`
  - `names(game, Resref"type")`: returns a vector of all names of
    existing resources of this type.
-
-# Language data a list of pairs
- (regular expression, language file)
 """
-struct Game
-	directory::Base.RefValue{String}
-	key::KeyIndex
-	override::Dict{Symbol, Set{String}}
+@with_kw struct Game
+	directory::Base.RefValue{String} = Ref("")
+	key::KeyIndex = KeyIndex()
+	override::Dict{Symbol, Set{String}} = EmptyInit()
 	# Current values (mutable data):
-	language::Base.RefValue{Int}
-	namespace::Base.RefValue{String}
+	language::Base.RefValue{Int} = Ref(0)
+	namespace::Base.RefValue{String} = Ref("")
 	# XXX: each tlk file is quite heavy (5 Mbytes in a fresh BG1
 	# install), we could use a rotation system to not keep more than 4 or 5
 	# in memory at the same time
 	# (this is already likely during resource building since most mods are
 	# written in 3 languages, but should be ensured during final
 	# compilation)
-	strings::Vector{TlkStrings}
+	strings::Vector{TlkStrings} = [ TlkStrings() for _ in LANGUAGE_FILES ]
 	# we collect all new strings (for any language) in the same structure,
 	# so that all the strref numbers advance in sync:
-	new_strings::UniqueVector{Tuple{Int8,String}}
+	new_strings::UniqueVector{Tuple{Int8,String}} = EmptyInit()
 	# longrefs ↔ shortrefs bijection:
-	shortref::Dict{String,StaticString{8}}
-	longref::Dict{StaticString{8},String}
-	modified_items::Dict{Resref"ITM",Item}
-	@inline Game() = new(Ref(""), KeyIndex(), Dict{Symbol,Set{String}}(),
-		Ref(0), Ref(""), [ TlkStrings() for _ in LANGUAGE_FILES ],
-		fieldtype(Game, :new_strings)(),
-		fieldtype(Game, :shortref)(),
-		fieldtype(Game, :longref)(),
-		fieldtype(Game, :modified_items)(),
-	)
+	shortref::Dict{String,StaticString{8}} = EmptyInit()
+	longref::Dict{StaticString{8},String} = EmptyInit()
+
+	modified_items::Dict{Resref"ITM",Item} = EmptyInit()
+	modified_actors::Dict{Resref"dlg",Actor} = EmptyInit()
+	dialog_context::DialogContext = EmptyInit()
 end
 function Base.show(io::IO, g::Game)
 	print(io, "<Game: ", length(g.key), " keys, ", length(g.override),
 		" overrides, ", count(!isempty, g.strings), " languages>")
 end
-
 const LANGUAGE_FILES = (#««
 	# We need to put the xxF before xx, because the regexp search goes
 	# linearly through this list:
@@ -1512,116 +1536,14 @@ function init!(g::Game, directory::AbstractString)
 	g.namespace[] = "user"
 	return g
 end
-
-function Base.open(g::Game, res::Resref; override = true)
-	name, T = shortref(g, res.name), resourcetype(res)
-	if override && name|>lowercase ∈ get(g.override, T, ())
-		file = joinpath(g.directory[], "override", name*'.'*String(T))
-		return ResIO{T}(res, open(file))
-	end
-	buf = get(g.key, name, T)
-	!isnothing(buf) && return ResIO{T}(res, buf)
-	error("resource not found: $name.$T")
-end
-
-@inline read(k::Game, res::Resref) = open(read, k, res)
-
-@inline Base.names(g::Game, ::Type{<:Resref{T}}) where{T} =
-	Iterators.flatten((get(g.override,T, Set{String}()),
-		names(g.key, Resref{T})))
-@inline Base.names(g::Game, T::Type{<:Resref}, pat::Union{String,Regex}) =
-	(x for x in names(g,T) if contains(x, pat))
-
-# ««2 Namespace and language
-"""    namespace(game, s)
-
-Sets the current namespace for game resources being defined to `s`.
-The following default namespaces are used:
- - `""` for original game resources;
- - `"user"` is the default namespace for added resources.
-"""
-@inline namespace(g::Game, s::AbstractString) = (g.namespace[] = s; s)
-@inline namespace(g::Game) = g.namespace[]
-
-function set_language!(g::Game, i::Integer)
-	g.language[] = i
-	isempty(g.strings[i]) || return
-	g.strings[i] =
-		read(joinpath(g.directory[], "lang", LANGUAGE_FILES[i][2]), TlkStrings)
-end
-"""    language(game, s)
-
-Sets the current language of the game (i.e. the language in which
-strings entered as parameters for functions will be interpreted)
-to the one given by string `s`.
-
-Allowed values are:
-$(join([replace(replace(repr(x[1]), r"(^r\"\^|\"i$|\.\*)"=>""), "*" => "\\*") for x in LANGUAGE_FILES], ", ")).
-"""
-function language(g::Game, s::AbstractString)
-	for (i, (r, f)) in pairs(LANGUAGE_FILES)
-		contains(s, r) || continue
-		set_language!(g, i)
-		return i
-	end
-	error("unknown language: "*s)
-end
-@inline language(g::Game) = g.language[]
-# ««2 Strings
-@inline strings(g::Game, i = language(g)) = g.strings[i]
-function Strref(g::Game, s::AbstractString)
-	i = get(strings(g), s, nothing)
-	isnothing(i) || return i
-	i = findfirst!(isequal((language(g), s),), g.new_strings)
-	return Strref(i-1 + length(strings(g)))
-end
-
-function str(g::Game, s::Strref)
-	i = s.index+1; i = max(i, one(i))
-	i ≤ length(strings(g)) && return strings(g).entries[i].string
-	return g.new_strings[i - length(strings(g))][2]
-end
-
-"""    search(game, strings, ResIO"type", text)
-
-Searches for the given text (string or regular expression)
-in the names of all resources of the given `type`.
-`strings` is the string database used for translation.
-"""
-function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
-	for res in all(g, R)
-		s = res|>read|>nameof
-		contains(s, text) || continue
-		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', nameof(res), s)
-	end
-end
 #««2 Resref ←—→ shortrefs
-# There are *four* such conversion methods:
-# - Resref{T}(game, string): converts a user-entered string to a Resref;
+# This layer does all of the work of abstracting Resref (i.e. long
+# resource identifiers, possibly including namespace information) to
+# short references used as keys by the game.
+# There are *three* such conversion methods:
 # - longref(game, string): converts (unpacks) a file-read string to a Resref;
 # - shortref(game, object): creates (if needed) the shortref from obj's ref;
 # - shortref(game, string): packs a Resref to an (existing) shortref.
-"""    Resref{T}(game, string)
-
-Converts a string (entered by the user) to a long reference:
- - if the string is of the form `"/resource"` then use root namespace;
- - if the string is of the form `"namespace/resource"`, parse it;
- - if an object with this reference exists in current namespace, return it;
- - same with root namespace;
- - otherwise, return `(current_namespace, string)` (this is a forward decl.).
-"""
-function (R::Type{<:Resref})(g::Game, str::AbstractString)
-	startswith(str, '/') && return R(str[2:end])
-	contains(str, '/') && return R(str)
-	ns_str = resref_join(namespace(g), str)
-	r = get(g.longref, ns_str, nothing)
-	!isnothing(r) && return R(ns_str)
-	if length(str) ≤ 8
-		dict2 = get(g.key.location, resourcetype(R), nothing)
-		!isnothing(dict2) && haskey(dict2, str) && return R(str)
-	end
-	return R(ns_str)
-end
 # Shortref —→ longref when reading a file
 """    longref(game, shortref)
 
@@ -1646,7 +1568,7 @@ Convert a long reference (already stored in a game object) to a short reference:
 """
 function shortref(g::Game, r::Resref)
 	str = r.name
-	!contains(str, '/') && return StaticString{8}(str)
+	!contains(str, '/') && return StaticString{8}(str|>lowercase)
 	get!(g.shortref, str) do
 		for s in Shortrefs{8}(first(replace(str, r".*/"=>""), 8))
 			!haskey(g.longref, s) && !haskey(g.key, s, resourcetype(r)) &&
@@ -1681,6 +1603,84 @@ function shortref(g::Game, str::AbstractString)
 	return g.shortref[str]
 end
 
+#««2 Pseudo-dictionary interface
+# Functions using short refs are not allowed beyond this point;
+# all interface is done via `Resref` (using the conversion functions above)
+
+# default case for modified_objs
+@inline modified_objs(g::Game, T::Type{<:Resref}) = Nothing
+# 	error("no modified objects dictionary found for type $(resourcetype(T))")
+
+# By examing the field types of Game structure, determine the correct
+# registry field for each resource type: Item => modified_items, etc.
+for (i,T) in pairs(fieldtypes(Game))
+	(T <: Dict && keytype(T) <: Resref) || continue
+	R = valtype(T); R <: RootResource || continue
+	@eval @inline modified_objs(g::Game, ::Type{$(keytype(T))}) = getfield(g, $i)
+end
+
+@inline register!(g::Game, x::RootResource) =
+begin
+	println("\e[34;1m register!($(x.ref))\e[m")
+	(modified_objs(g, typeof(x.ref))[x.ref]=x)
+end
+
+Base.haskey(g::Game, res::Resref) = haskey(g, nameof(res), resourcetype(res))
+function Base.haskey(g::Game, ref::AbstractString, type::Symbol)
+	s = shortref(g, ref)
+	haskey(game.key, s, type) ||
+	(haskey(game.override, type) && haskey(game.override[type], s)) ||
+	false
+end
+
+function Base.open(g::Game, res::Resref, def::Base.Callable; override = true)
+	name, T = shortref(g, res.name), resourcetype(res)
+	if override && name|>lowercase ∈ get(g.override, T, ())
+		file = joinpath(g.directory[], "override", name*'.'*String(T))
+		return ResIO{T}(res, open(file))
+	end
+	buf = get(g.key, name, T)
+	isnothing(buf) && return def()
+	ResIO{T}(res, buf)
+end
+Base.get(f::Base.Callable, g::Game, ref::Resref) =
+	getresource(f, g, modified_objs(g, typeof(ref)), ref)
+getresource(f::Base.Callable, g::Game, ::Nothing, ref::Resref) =
+	open(read, g, ref, f)
+getresource(f::Base.Callable, g::Game, dict::AbstractDict, ref::Resref) =
+	get(dict, ref) do; open(read, g, ref, f); end
+Base.get!(f::Base.Callable, g::Game, ref::Resref) = get(register! ∘ f, g, ref)
+Base.get!(g::Game, ref::Resref, x) = get(()->x, g, ref)
+
+@inline Base.getindex(g::Game, ref::Resref) =
+	get(g, ref) do; throw(KeyError(ref)); end
+
+@inline Base.names(g::Game, ::Type{<:Resref{T}}) where{T} =
+	(longref(g, s) for s in Iterators.flatten(
+		(get(g.override,T, Set{String}()), names(g.key, Resref{T}))))
+
+@inline Base.names(g::Game, T::Type{<:Resref}, pat::Union{String,Regex}) =
+	(x for x in names(g,T) if contains(x, pat))
+
+#««2 IO and resource access
+"""    Resref{T}(game, string)
+
+Converts a string (entered by the user) to a long reference:
+ - if the string is of the form `"/resource"` then use root namespace;
+ - if the string is of the form `"namespace/resource"`, parse it;
+ - if an object with this reference exists in current namespace, return it;
+ - same with root namespace;
+ - otherwise, return `(current_namespace, string)` (this is a forward decl.).
+"""
+function (R::Type{<:Resref})(g::Game, str::AbstractString)
+	startswith(str, '/') && return R(str[2:end])
+	contains(str, '/') && return R(str)
+	ns_str = resref_join(namespace(g), str)
+	r = get(g.longref, ns_str, nothing)
+	!isnothing(r) && return R(ns_str)
+	length(str) ≤ 8 && haskey(g, str, resourcetype(R)) && return R(str)
+	return R(ns_str)
+end
 # #««2 NamedResource
 # """    NamedResource{T,R,K}
 # 
@@ -1796,27 +1796,84 @@ end
 # 	# otherwise, create slot and return slot index
 # 	(get!(dict, key, value); refdict(dict, key))
 # 
-#««2 Modified resources registry
-# By examing the field types of Game structure, determine the correct
-# registry field for each resource type: Item => modified_items, etc.
-for (i,T) in pairs(fieldtypes(Game))
-	(T <: Dict && keytype(T) <: Resref) || continue
-	R = valtype(T); R <: RootResource || continue
-	@eval @inline modified_objs(g::Game, ::Type{$(keytype(T))}) = getfield(g, $i)
+# ««2 Namespace and language
+"""    namespace(game, s)
+
+Sets the current namespace for game resources being defined to `s`.
+The following default namespaces are used:
+ - `""` for original game resources;
+ - `"user"` is the default namespace for added resources.
+"""
+@inline namespace(g::Game, s::AbstractString) = (g.namespace[] = s; s)
+@inline namespace(g::Game) = g.namespace[]
+
+function set_language!(g::Game, i::Integer)
+	g.language[] = i
+	isempty(g.strings[i]) || return
+	g.strings[i] =
+		read(joinpath(g.directory[], "lang", LANGUAGE_FILES[i][2]), TlkStrings)
 end
-@inline modified_objs(g::Game, ::Type{<:Resref}) =
-	error("no modified objects dictionary found for type $(typeof(x))")
-@inline register!(g::Game, x::RootResource) =
-begin
-	println("\e[34;1m register!($(x.ref))\e[m")
-	(modified_objs(g, typeof(x.ref))[x.ref]=x)
+"""    language(game, s)
+
+Sets the current language of the game (i.e. the language in which
+strings entered as parameters for functions will be interpreted)
+to the one given by string `s`.
+
+Allowed values are:
+$(join([replace(replace(repr(x[1]), r"(^r\"\^|\"i$|\.\*)"=>""), "*" => "\\*") for x in LANGUAGE_FILES], ", ")).
+"""
+function language(g::Game, s::AbstractString)
+	for (i, (r, f)) in pairs(LANGUAGE_FILES)
+		contains(s, r) || continue
+		set_language!(g, i)
+		return i
+	end
+	error("unknown language: "*s)
+end
+@inline language(g::Game) = g.language[]
+# ««2 Strings
+@inline strings(g::Game, i = language(g)) = g.strings[i]
+function Strref(g::Game, s::AbstractString)
+	i = get(strings(g), s, nothing)
+	isnothing(i) || return i
+	i = findfirst!(isequal((language(g), s),), g.new_strings)
+	return Strref(i-1 + length(strings(g)))
 end
 
+function str(g::Game, s::Strref)
+	i = s.index+1; i = max(i, one(i))
+	i ≤ length(strings(g)) && return strings(g).entries[i].string
+	return g.new_strings[i - length(strings(g))][2]
+end
+
+"""    search(game, strings, ResIO"type", text)
+
+Searches for the given text (string or regular expression)
+in the names of all resources of the given `type`.
+`strings` is the string database used for translation.
+"""
+function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
+	for res in all(g, R)
+		s = res|>read|>nameof
+		contains(s, text) || continue
+		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', nameof(res), s)
+	end
+end
 #««2 Accessors: `item` etc.
-@inline read(g::Game,T::Type{<:Resref},name::AbstractString)= read(g,T(g,name))
-@inline item(g::Game, name::AbstractString) = read(g, Resref"itm", name)
+@inline item(g::Game, name::AbstractString) = g[Resref"itm"(name)]
 @inline items(g::Game, r::Union{String,Regex}...) =
 	(item(g, n) for n in names(g, Resref"itm", r...))
+
+#««2 Dialog-building functions
+get_actor(g::Game, s::AbstractString) = get_actor(g, Resref"dlg"(s))
+get_actor(g::Game, ref::Resref"dlg") = get!(g, ref, Actor(;ref))
+
+actor(g::Game, s::AbstractString) =
+	(g.dialog_context.current_actor[] = get_actor(g, s))
+say(g::Game, ltext::Pair{<:Any,<:AbstractString}; kw...) =
+	say(g, ltext[1], ltext[2]; kw...)
+say(g::Game, label, text::AbstractString; kw...) =
+	add_state!(g.dialog_context, label, Strref(g, text); kw...)
 
 #««2 Saving game data
 function save(g::Game)

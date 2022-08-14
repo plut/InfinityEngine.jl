@@ -50,8 +50,12 @@ using Random
 import Base.read, Base.write
 
 # ««1 Basic types
-struct EmptyInit end
-@inline Base.convert(T::DataType, ::EmptyInit) = T()
+struct Auto{A<:Tuple, B}
+	args::A
+	kwargs::B
+	Auto(args...; kwargs...) = new{typeof(args),typeof(kwargs)}(args, kwargs)
+end
+@inline Base.convert(T::DataType, auto::Auto) = T(auto.args...; auto.kwargs...)
 # Compact representation, useful for Flags and Enums
 @inline rp(x) = repr(x;context=(:compact=>true))
 # ««2 Extract zero-terminated string from IO
@@ -1279,18 +1283,29 @@ struct DLG_string
 	length::Int32 # idem
 end
 # ««2 State, transition
-const INVALID_TRANSITION_TARGET = ~zero(UInt)
+struct StateKey
+	# XXX: replace by hashed values
+	n::UInt
+	@inline StateKey(i::Integer) = new(i)
+	@inline StateKey(::typeof(exit)) = new(zero(UInt))
+	@inline StateKey(::typeof(!isvalid)) = new(~zero(UInt))
+end
+@inline Base.isvalid(s::StateKey) = (s ≠ StateKey(!isvalid))
+@inline Base.isless(a::StateKey, b::StateKey) = isless(a.n, b.n)
+
 @with_kw mutable struct Transition #{X}
+	# XXX both Transition and State can be made immutable (since stored in
+	# vectors)
 	flags::TransitionFlags
 	text::Strref = Strref(0) # graceful failing
 	journal::Strref = Strref(0)
 	trigger::String = ""
 	action::String = ""
 	actor::Resref"dlg"
-	state::UInt = INVALID_TRANSITION_TARGET
+	state::StateKey = StateKey(!isvalid)
 end
 function Base.show(io::IO, mime::MIME"text/plain", t::Transition)
-	print(io, """\e[48;5;3m⇒$(t.actor.name):$(t.state); $(t.flags|>rp)\e[m
+	print(io, """\e[48;5;3m⇒$(t.actor.name):$(t.state.n); $(t.flags|>rp)\e[m
 \e[31m$(t.trigger)\e[m
 \e[34m$(t.text|>str)\e[m
 \e[35m$(t.journal|>str)\e[m
@@ -1299,8 +1314,8 @@ function Base.show(io::IO, mime::MIME"text/plain", t::Transition)
 end
 @with_kw mutable struct State
 	text::Strref
-	transitions::Vector{Transition} = EmptyInit()
-	trigger::String
+	transitions::Vector{Transition} = Auto()
+	trigger::String = ""
 	priority::Float32 = -eps(Float32)
 end
 function Base.show(io::IO, mime::MIME"text/plain", s::State)
@@ -1312,7 +1327,7 @@ function Base.show(io::IO, mime::MIME"text/plain", s::State)
 end
 # ««2 Actor
 @with_kw mutable struct Actor <: RootResource{:dlg}
-	constant::Constant"DLG V1.0" = EmptyInit() # "DLG V1.0"
+	constant::Constant"DLG V1.0" = Auto() # "DLG V1.0"
 	number_states::Int32 = 0
 	offset_states::Int32 = 52
 	number_transitions::Int32 = 0
@@ -1324,26 +1339,44 @@ end
 	offset_actions::Int32 = 0
 	number_actions::Int32 = 0
 	flags::UInt32 = 0
-	st_triggers::Vector{DLG_string} = EmptyInit()
-	tr_triggers::Vector{DLG_string} = EmptyInit()
-	actions::Vector{DLG_string} = EmptyInit()
+	st_triggers::Vector{DLG_string} = Auto()
+	tr_triggers::Vector{DLG_string} = Auto()
+	actions::Vector{DLG_string} = Auto()
 	# states are keyed by hashes == UInt
-	states::Dict{UInt,State} = EmptyInit()
+	states::Dict{StateKey,State} = Auto()
 	ref::Resref"dlg" # must be initialized
 end
 @with_kw mutable struct DialogContext
-	current_state::UInt = INVALID_TRANSITION_TARGET
-	# XXX Actor is mutable: do we need a Ref here? (needs Actor() constructor)
-	current_actor::Base.RefValue{Actor} = EmptyInit()
+	current_actor::Actor = Actor(;ref = Resref".dlg")
+	current_state_key::StateKey = StateKey(!isvalid)
+	current_transition_idx::Int = 0 # index into current_state.transitions
 	pending_transition::Bool = false
-	current_transition::Base.RefArray{Transition,Vector{Transition},Nothing} =
-		Ref(Transition[], 0)
+	trigger::Union{Nothing,String} = nothing
 end
+@inline current_actor(c::DialogContext) = c.current_actor
+@inline current_state(c::DialogContext) =
+	(@assert isvalid(c.current_state_key);
+	current_actor(c).states[c.current_state_key])
+@inline if_current_state(f::Function, c::DialogContext) =
+	isvalid(c.current_state_key) && f(current_state(c))
+@inline current_transition(c::DialogContext) =
+	current_state(c).transitions[c.current_transition_idx]
+trigger!(c::DialogContext, s::AbstractString) =
+	(@assert isnothing(c.trigger); c.trigger = s)
+trigger!(c::DialogContext, ::Nothing) = nothing
+"gets a trigger value, from either supplied x, or current trigger"
+@inline function get_trigger(c::DialogContext, x)
+	trigger!(c, x) # first update current trigger (no-op if x == `nothing`)
+	y = c.trigger  # then get trigger value
+	c.trigger = nothing # purge the buffer
+	return y
+end
+State(c::DialogContext; trigger = nothing, kwargs...) =
+	State(; trigger = get_trigger(c, trigger), kwargs...)
 
-statekey(i::Integer) = i-1
 function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
-	for (k, v) in sort(pairs(a.states); by=first)
-		println(io, "\e[7m state $(string(k)): $(length(v.transitions)) transitions\e[m")
+	for (k, v) in sort(pairs(a.states))
+		println(io, "\e[7m state $(string(k.n)): $(length(v.transitions)) transitions\e[m")
 		show(io, mime, v)
 	end
 end
@@ -1369,11 +1402,11 @@ function read(io::ResIO"DLG")::Actor
 		for j in s.first_transition+1:s.first_transition + s.number_transitions
 			t = transitions1[j]
 			push!(state.transitions, Transition(;t.flags, t.text, t.journal,
-				t.actor, t.state, trigger = getval(tr_triggers, t.trigger),
-				action = getval(actions, t.action)))
+				t.actor, trigger = getval(tr_triggers, t.trigger),
+				state = StateKey(t.state), action = getval(actions, t.action)))
 		end
 		# TODO: use hashes instead
-		actor.states[statekey(i)] = state
+		actor.states[StateKey(i)] = state
 	end
 	return actor
 end
@@ -1390,44 +1423,71 @@ end
 	* 
 	=#
 #««2 Dialog-building functions
-function set_actor!(ctx::DialogContext, actor::Actor)
-	ctx.current_actor[] = actor
-	ctx.current_state = INVALID_RANSITION_TARGET
+function set_actor!(c::DialogContext, actor::Actor)
+	c.current_state_key = StateKey(!isvalid)
+	c.current_actor = actor # returns actor
 end
-function set_state!(ctx::DialogContext, state)
-	ctx.current_state = state
+function set_state!(c::DialogContext, label)
+	key = StateKey(label)
+	@assert haskey(current_actor(c).states, key)
+	c.current_state_key = key
 end
-function add_state!(ctx::DialogContext, label, text::Strref; kwargs...)
-	# XXX: pending_transition, current_state
-	key = statekey(label)
+function add_state!(c::DialogContext, label, text::Strref; kwargs...)
+	# XXX implicit transition from previous state
+	key = StateKey(label)
+	@assert !haskey(current_actor(c).states, key) "state $label already exists"
 	println("\e[1mINSERT STATE $key\e[m")
-	if ctx.pending_transition
+	if_current_state(c) do s # insert implicit transition
+		isempty(s.transitions) && add_transition!(c, label)
+	end
+	if c.pending_transition
 		println("  \e[32m Resolve pending transition to $key\e[m")
-		ctx.current_transition[].state = key
-		ctx.current_transition[].actor = a.ref
-		ctx.pending_transition = false
+		current_transition(c).state = key
+		current_transition(c).actor = a.ref
+		c.pending_transition = false
 	end
 	s = State(; text, kwargs...)
-	ctx.current_actor[].states[key] = s
-	ctx.current_state = key
+	c.current_state_key = key
+	current_actor(c).states[key] = s
 	return s
 end
-function add_transition!(ctx::DialogContext, source, target;
-		position = 1 + length(source.transitions), kwargs...)
-	key = statekey(target)
-	@assert !(ctx.pending_transition) "unsolved pending transition"
+"""Forms for `add_transition`:
+
+    add_transition!(ctx, actor, state; text, journal)
+    add_transition!(ctx, (actor, state); text, journal)
+    add_transition!(ctx, state; text, journal)
+    add_transition!(ctx, exit; text, journal)
+"""
+function add_transition!(c::DialogContext, actor::Resref"dlg", state;
+		position = nothing, terminates, text = nothing, journal = nothing)
+	key = StateKey(state)
+	@assert !(c.pending_transition) "unsolved pending transition"
 	# XXX build flags from kwargs
 	# XXX: label = exit => flags |= Terminates
-	t = Transition(;actor = ctx.current_actor[].ref, state = key, args...)
-	insert!(source.transitions, position, t)
-	ctx.current_transition = Ref(source.transitions, position)
+	flags = TransitionFlags(0)
+	terminates && (flags |= Terminates)
+	!isnothing(text) && (flags |= HasText)
+	!isnothing(journal) && (flags |= HasJournal)
+	t = Transition(;actor = c.current_actor.ref, state = key,
+		text, journal, flags)
+	position = something(position, 1 + length(current_state(c).transitions))
+	insert!(current_state(c).transitions, position, t)
+	c.current_transition_idx = position
 	return t
 end
-function add_transition!(a::Actor, ctx::DialogContext, source, ::Nothing;
-	kwargs...)
+
+@inline add_transition!(c::DialogContext,
+		(actor, state)::Tuple{<:Resref"dlg",<:Any}; kwargs...) =
+	add_transition!(c, actor, state; terminates=false, kwargs...)
+@inline add_transition!(c::DialogContext, state; kwargs...) =
+	add_transition!(c, (current_actor(c).ref, state); kwargs...)
+@inline add_transition!(c::DialogContext, ::typeof(exit); kwargs...) =
+	add_transition!(c, Resref".dlg", 0; terminates=true, kwargs...)
+
+function add_transition!(c::DialogContext, ::Nothing; kwargs...)
 	println("  \e[31madd pending transition\e[m")
-	add_transition!(a, ctx, source, INVALID_TRANSITION_TARGET; kwargs...)
-	ctx.pending_transition = true
+	add_transition!(c, StateKey(!isvalid); kwargs...)
+	c.pending_transition = true
 end
 
 #««1 Game
@@ -1449,7 +1509,7 @@ Methods include:
 @with_kw struct Game
 	directory::Base.RefValue{String} = Ref("")
 	key::KeyIndex = KeyIndex()
-	override::Dict{Symbol, Set{String}} = EmptyInit()
+	override::Dict{Symbol, Set{String}} = Auto()
 	# Current values (mutable data):
 	language::Base.RefValue{Int} = Ref(0)
 	namespace::Base.RefValue{String} = Ref("")
@@ -1462,14 +1522,14 @@ Methods include:
 	strings::Vector{TlkStrings} = [ TlkStrings() for _ in LANGUAGE_FILES ]
 	# we collect all new strings (for any language) in the same structure,
 	# so that all the strref numbers advance in sync:
-	new_strings::UniqueVector{Tuple{Int8,String}} = EmptyInit()
+	new_strings::UniqueVector{Tuple{Int8,String}} = Auto()
 	# longrefs ↔ shortrefs bijection:
-	shortref::Dict{String,StaticString{8}} = EmptyInit()
-	longref::Dict{StaticString{8},String} = EmptyInit()
+	shortref::Dict{String,StaticString{8}} = Auto()
+	longref::Dict{StaticString{8},String} = Auto()
 
-	modified_items::Dict{Resref"ITM",Item} = EmptyInit()
-	modified_actors::Dict{Resref"dlg",Actor} = EmptyInit()
-	dialog_context::DialogContext = EmptyInit()
+	modified_items::Dict{Resref"ITM",Item} = Auto()
+	modified_actors::Dict{Resref"dlg",Actor} = Auto()
+	dialog_context::DialogContext = Auto()
 end
 function Base.show(io::IO, g::Game)
 	print(io, "<Game: ", length(g.key), " keys, ", length(g.override),
@@ -1570,31 +1630,31 @@ function shortref(g::Game, r::Resref)
 	str = r.name
 	!contains(str, '/') && return StaticString{8}(str|>lowercase)
 	get!(g.shortref, str) do
-		for s in Shortrefs{8}(first(replace(str, r".*/"=>""), 8))
+		for s in ShortrefIterator{8}(first(replace(str, r".*/"=>""), 8))
 			!haskey(g.longref, s) && !haskey(g.key, s, resourcetype(r)) &&
 				(g.longref[s] = str; return s)
 		end
 	end
 end
-"""    Shortrefs(s)
+"""    ShortrefIterator(s)
 
 Iterator producing, in order:  "foobar", "foobar00".."foobar99",
 "fooba000".."fooba999" etc.
 """
-struct Shortrefs{L}
+struct ShortrefIterator{L}
 	name::StaticString{L}
 	# XXX: allow other bases (e.g. base 16)
 end
-@inline textlength(::Shortrefs{L}) where{L} = L
-function Base.iterate(r::Shortrefs, i = 0)
+@inline textlength(::ShortrefIterator{L}) where{L} = L
+function Base.iterate(r::ShortrefIterator, i = 0)
 	iszero(i) && return (r.name, 10)
 	k = ndigits(i)-1; q = 10^k
 	(i÷q) > 1 && (i = q*= 10; k+= 1)
 	return (eltype(r)(first(r.name, textlength(r)-k)*
 		(digits(i, pad=k)[1:k]|>reverse|>join)), i+1)
 end
-Base.length(r::Shortrefs) = 10^textlength(r)+1
-Base.eltype(::Shortrefs{L}) where{L} = StaticString{L}
+Base.length(r::ShortrefIterator) = 10^textlength(r)+1
+Base.eltype(::ShortrefIterator{L}) where{L} = StaticString{L}
 """    shortref(game, name::AbstractString)
 
 Returns the short ref for the given obj ref. The short ref must exist."""
@@ -1604,8 +1664,8 @@ function shortref(g::Game, str::AbstractString)
 end
 
 #««2 Pseudo-dictionary interface
-# Functions using short refs are not allowed beyond this point;
-# all interface is done via `Resref` (using the conversion functions above)
+# All the functions used here encapsulate access to the `Game` structure
+# as a pseudo-dictionary indexed by `Resref` keys.
 
 # default case for modified_objs
 @inline modified_objs(g::Game, T::Type{<:Resref}) = Nothing
@@ -1662,7 +1722,6 @@ Base.get!(g::Game, ref::Resref, x) = get(()->x, g, ref)
 @inline Base.names(g::Game, T::Type{<:Resref}, pat::Union{String,Regex}) =
 	(x for x in names(g,T) if contains(x, pat))
 
-#««2 IO and resource access
 """    Resref{T}(game, string)
 
 Converts a string (entered by the user) to a long reference:
@@ -1868,12 +1927,14 @@ end
 get_actor(g::Game, s::AbstractString) = get_actor(g, Resref"dlg"(s))
 get_actor(g::Game, ref::Resref"dlg") = get!(g, ref, Actor(;ref))
 
-actor(g::Game, s::AbstractString) =
-	(g.dialog_context.current_actor[] = get_actor(g, s))
+actor(g::Game, s::AbstractString) = set_actor!(g.dialog_context, get_actor(g,s))
 say(g::Game, ltext::Pair{<:Any,<:AbstractString}; kw...) =
 	say(g, ltext[1], ltext[2]; kw...)
 say(g::Game, label, text::AbstractString; kw...) =
 	add_state!(g.dialog_context, label, Strref(g, text); kw...)
+state(g::Game, label) = set_state!(g.dialog_context, label)
+reply(g::Game, (text, label)::Pair{<:AbstractString}; kw...) =
+	add_transition!(g.dialog_context, label; text, kw...)
 
 #««2 Saving game data
 function save(g::Game)
@@ -1992,17 +2053,35 @@ const PlateMail = HalfPlate
 
 const game = Game()
 
-for f in (:init!, :language, :namespace,
-		:str, :strref, :shortref, :longref, :register!, :save,
-		:item, :items)
-	@eval begin
-	# prevent recursion
-	$f(::Game, ::Game, args...; kwargs...) =
-		error("no such method: ", $(string(f)), typeof.(args), )
-	$f(args...; kwargs...) = $f(game, args...; kwargs...)
-	end
+# For all methods of those functions starting with a `::Game` argument:
+# define a corresponding method where the global `game` is used.
+for f in (init!, str, shortref, longref, register!, save,
+	language, namespace,
+	item, items, actor, say, reply
+	), m in methods(f)
+		p = m.sig.parameters
+		(length(p) ≥ 2 && p[2] == Game) || continue
+		argt = p[3:end]
+		argn = ccall(:jl_uncompress_argnames, Vector{Symbol}, (Any,), m.slot_syms)
+		z = zip(argn[3:end], argt)
+		fn = nameof(f)
+		lhs = (:($n::$t) for (n,t) in z)
+		rhs = (n for (n,t) in z)
+		expr = :($fn($(lhs...)) = $f(game, $(rhs...)))
+		eval(expr)
 end
+# for f in (:init!, :language, :namespace,
+# 		:str, :strref, :shortref, :longref, :register!, :save,
+# 		:item, :items, :actor, :say, :reply)
+# 	@eval begin
+# 	# prevent recursion
+# 	$f(::Game, ::Game, args...; kwargs...) =
+# 		error("no such method: ", $(string(f)), typeof.(args), )
+# 	$f(args...; kwargs...) = $f(game, args...; kwargs...)
+# 	end
+# end
 @inline Base.convert(T::Type{Strref}, s::AbstractString) = T(game, s)
+@inline Base.convert(T::Type{Strref}, ::Nothing) = T(0) # <NO TEXT>
 @inline Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game, s)
 @inline Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
 @inline Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =

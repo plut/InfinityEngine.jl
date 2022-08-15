@@ -207,9 +207,9 @@ function Base.show(io::IO, x::T) where{T<:SymbolicFlags}
 end
 
 #««2 Constructor macro
-function symbolicenum(m::Module, T::Union{Symbol, Expr}, args...; flags=false)
-	typename, basetype = T, flags ? UInt32 : Int32
-	supert = flags ? :SymbolicFlags : :SymbolicEnum
+function symbolicenum(m::Module, T::Union{Symbol, Expr}, args...; isflags=false)
+	typename, basetype = T, isflags ? UInt32 : Int32
+	supert = isflags ? :SymbolicFlags : :SymbolicEnum
 	if Meta.isexpr(T, :(::)) && T.args[1] isa Symbol
 		typename, basetype = T.args[1], Core.eval(m, T.args[2])
 	elseif !(T isa Symbol)
@@ -218,8 +218,9 @@ function symbolicenum(m::Module, T::Union{Symbol, Expr}, args...; flags=false)
 	tn = esc(typename)
 	namemap = Dict{basetype, Symbol}()
 	valuemap = Dict{Symbol, basetype}()
+	allbits = zero(basetype)
 	namedef = Expr[]
-	i = flags ? one(basetype) : zero(basetype)
+	i = isflags ? one(basetype) : zero(basetype)
 	isone(length(args)) && Meta.isexpr(args[1], :block) && (args = args[1].args)
 	for s in args
 		s isa LineNumberNode && continue
@@ -229,11 +230,11 @@ function symbolicenum(m::Module, T::Union{Symbol, Expr}, args...; flags=false)
 		else
 			throw(ArgumentError("invalid argument for $supert $typename: $s"))
 		end
-		flags && !iszero(i) && !ispow2(i) &&
+		isflags && !iszero(i) && !ispow2(i) &&
 			throw(ArgumentError("for $supert, only powers of two (and zero) are allowed"))
 		namemap[i] = s
 		valuemap[s] = i
-		i = flags ? (iszero(i) ? one(i) : i<<1) : i + oneunit(i)
+		i = isflags ? (iszero(i) ? one(i) : i<<1) : i + oneunit(i)
 		@assert Base.isidentifier(s)
 		# We don't check for keyword or value unicity
 	end
@@ -245,31 +246,45 @@ function symbolicenum(m::Module, T::Union{Symbol, Expr}, args...; flags=false)
 		DottedEnums.namemap(::Type{$tn}) = $(esc(namemap))
 	end
 	for (k,v) in pairs(valuemap)
+		allbits |= v
 		push!(block.args, quote
 		$(@__MODULE__).value(::Type{$tn}, ::Val{$(QuoteNode(k))}) = $v
-		isdefined(@__MODULE__, $(QuoteNode(k))) &&
-			!isa($(esc(k)), $SymbolicNames) &&
+		if isdefined(@__MODULE__, $(QuoteNode(k)))
+			isa($(esc(k)), $SymbolicNames) ||
 			error("Cannot define SymbolicName ", $(string(k)))
-		$(esc(k)) = $SymbolicNames(Set([$(QuoteNode(k))]))
+		else
+# 			const $(esc(k)) = $SymbolicNames(Set([$(QuoteNode(k))]))
+			const $(esc(k)) = $SymbolicNames{($(QuoteNode(k)),)}()
+		end
+		@inline Base.convert(::Type{$tn}, ::$SymbolicNames{($(QuoteNode(k)),)}) =
+			$tn($v)
 		end)
 	end
 	push!(block.args, tn)
+	isflags && push!(block.args, quote
+		@inline Base.convert(::Type{$tn}, ::$SymbolicNot{()}) = $tn($allbits)
+	end)
 	block
 end
 macro SymbolicEnum(T::Union{Symbol,Expr},args...)
-	symbolicenum(__module__, T, args...; flags=false)
+	symbolicenum(__module__, T, args...; isflags=false)
 end
 macro SymbolicFlags(T::Union{Symbol,Expr},args...)
-	symbolicenum(__module__, T, args...; flags=true)
+	symbolicenum(__module__, T, args...; isflags=true)
 end
 #««1 Symbolic names
-# should this be made static?
-struct SymbolicNames; members::Set{Symbol}; end
-struct SymbolicNot; members::Set{Symbol}; end
+struct SymbolicNames{X} end
+struct SymbolicNot{X} end
+@inline SymbolicNames(x::Symbol...) = SymbolicNames{x}()
+@inline SymbolicNot(x::Symbol...) = SymbolicNot{x}()
+@inline members(::SymbolicNames{X}) where{X} = X
+@inline members(::SymbolicNot{X}) where{X} = X
+# struct SymbolicNames; members::Set{Symbol}; end
+# struct SymbolicNot; members::Set{Symbol}; end
 NamesOrNot = Union{SymbolicNames,SymbolicNot}
-@inline SymbolicNames(s::Symbol...) = SymbolicNames(Set(s))
+# @inline SymbolicNames(s::Symbol...) = SymbolicNames(Set(s))
 @inline Base.show(io::IO, f::SymbolicNames) =
-	isempty(f.members) ? print(io, false) : join(io, f.members, '|')
+	isempty(members(f)) ? print(io, false) : join(io, members(f), '|')
 # """    @SymbolicNames name1 name2 ...
 #     @SymbolicNames begin name1 name2 ... end
 # 
@@ -315,57 +330,64 @@ NamesOrNot = Union{SymbolicNames,SymbolicNot}
 # 	code = [ :($(esc(x)) = $(SymbolicNames)($(QuoteNode(x)))) for x in names]
 # 	quote $(code...) end
 # end
-
 function Base.show(io::IO, f::SymbolicNot)
 	print(io, '~')
-	length(f.members) == 0 && print(io, false)
-	length(f.members) > 1  &&  print(io, '(')
-	join(io, f.members, '|')
-	length(f.members) > 1 && print(io, ')')
+	length(members(f)) == 0 && print(io, false)
+	length(members(f)) > 1  &&  print(io, '(')
+	join(io, members(f), '|')
+	length(members(f)) > 1 && print(io, ')')
 end
 
-@inline Base.:~(f::SymbolicNames) = SymbolicNot(f.members)
-@inline Base.:~(f::SymbolicNot) = SymbolicNames(f.members)
+@inline Base.:~(f::SymbolicNames) = SymbolicNot(members(f)...)
+@inline Base.:~(f::SymbolicNot) = SymbolicNames(members(f)...)
 
+@inline usort(x) = x|>collect|>sort|>unique
 @inline Base.:|(f1::SymbolicNames, f2::SymbolicNames) =
-	SymbolicNames(f1.members ∪ f2.members)
+	SymbolicNames(usort(members(f1) ∪ members(f2))...)
 @inline Base.:|(f1::SymbolicNot, f2::SymbolicNot) =
-	SymbolicNot(f1.members ∩ f2.members)
+	SymbolicNot(usort(members(f1) ∩ members(f2))...)
 @inline Base.:|(f1::SymbolicNames, f2::SymbolicNot) =
-	SymbolicNot(setdiff(f2.members, f1.members))
+	SymbolicNot(usort(setdiff(members(f2), members(f1)))...)
 @inline Base.:|(f1::SymbolicNot, f2::SymbolicNames) = f2 | f1
 
 @inline Base.:&(f1::SymbolicNames, f2::SymbolicNames) =
-	SymbolicNames(f1.members ∩ f2.members)
+	SymbolicNames(usort(members(f1) ∩ members(f2))...)
 @inline Base.:&(f1::SymbolicNot, f2::SymbolicNot) =
-	SymbolicNot(f1.members ∪ f2.members)
+	SymbolicNot(usort(members(f1) ∪ members(f2))...)
 @inline Base.:&(f1::SymbolicNames, f2::SymbolicNot) =
-	SymbolicNames(setdiff(f1.members, f2.members))
+	SymbolicNames(usort(setdiff(members(f1), members(f2)))...)
 @inline Base.:&(f1::SymbolicNot, f2::SymbolicNames) = f2 & f1
 
 @inline Base.:⊻(f1::SymbolicNames, f2::SymbolicNames) =
-	SymbolicNames(symdiff(f1.members, f2.members))
+	SymbolicNames(usort(symdiff(members(f1), members(f2)))...)
 @inline Base.:⊻(f1::SymbolicNot, f2::SymbolicNot) =
-	SymbolicNames(symdiff(f1.members, f2.members))
+	SymbolicNames(usort(symdiff(members(f1), members(f2)))...)
 @inline Base.:⊻(f1::SymbolicNames, f2::SymbolicNot) =
-	SymbolicNot(symdiff(f1.members, f2.members))
+	SymbolicNot(usort(symdiff(members(f1), members(f2)))...)
 @inline Base.:⊻(f1::SymbolicNot, f2::SymbolicNames) = f2 ⊻ f1
 
 @inline Base.convert(T::Type{<:SymbolicFlags}, f::SymbolicNames) =
-	T(|(0, (value(T, Val(s)) for s ∈ f.members)...))
+	T(|(0, (convert(T, SymbolicNames(s)).n for s ∈ members(f))...))
 @inline Base.convert(T::Type{<:SymbolicFlags}, f::SymbolicNot) =
-	~T(|(0, (value(T, Val(s)) for s ∈ f.members)...))
-@inline Base.convert(T::Type{<:SymbolicEnum}, f::SymbolicNames) =
-	T(value(T, Val(only(f.members))))
+	T(SymbolicNot()) & ~T(SymbolicNames(members(f)...))
+# @inline Base.convert(T::Type{<:SymbolicFlags}, f::SymbolicNames) =
+# 	T(|(0, (value(T, Val(s)) for s ∈ members(f))...))
+# @inline Base.convert(T::Type{<:SymbolicFlags}, f::SymbolicNot) =
+# 	~T(|(0, (value(T, Val(s)) for s ∈ members(f))...))
+# @inline Base.convert(T::Type{<:SymbolicEnum}, f::SymbolicNames) =
+# 	T(value(T, Val(only(members(f)))))
 @inline (T::Type{<:EnumOrFlags})(f::NamesOrNot) = convert(T,f)
 
-Base.:|(f1::SymbolicFlags, f2::SymbolicNames) = f1 | typeof(f1)(f2)
-Base.:&(f1::SymbolicFlags, f2::SymbolicNames) = f1 & typeof(f1)(f2)
-Base.:⊻(f1::SymbolicFlags, f2::SymbolicNames) = f1 ⊻ typeof(f1)(f2)
+@inline Base.:|(f1::SymbolicFlags, f2::NamesOrNot) = f1 | typeof(f1)(f2)
+@inline Base.:&(f1::SymbolicFlags, f2::NamesOrNot) = f1 & typeof(f1)(f2)
+@inline Base.:⊻(f1::SymbolicFlags, f2::NamesOrNot) = f1 ⊻ typeof(f1)(f2)
 
-Base.:|(f1::SymbolicNames, f2::SymbolicFlags) = f2 | f1
-Base.:&(f1::SymbolicNames, f2::SymbolicFlags) = f2 & f1
-Base.:⊻(f1::SymbolicNames, f2::SymbolicFlags) = f2 ⊻ f1
+@inline Base.:|(f1::NamesOrNot, f2::SymbolicFlags) = f2 | f1
+@inline Base.:&(f1::NamesOrNot, f2::SymbolicFlags) = f2 & f1
+@inline Base.:⊻(f1::NamesOrNot, f2::SymbolicFlags) = f2 ⊻ f1
+
+@inline Base.:∈(f1::SymbolicNames, f2::SymbolicFlags) = oftype(f2, f1) ∈ f2
+@inline Base.contains(f1::SymbolicFlags, f2::SymbolicNames) = f2 ∈ f1
 
 @inline Base.:(==)(e::T, f::NamesOrNot) where{T<:EnumOrFlags} = convert(T,f)==e
 

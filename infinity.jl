@@ -301,7 +301,6 @@ end
 @inline Pack.fieldunpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
 
 #»»1
-include("dialogs.jl") # this needs Strref, so we put it here
 # ««1 tlk
 # ««2 Type and constructors
 mutable struct TLK_str
@@ -1306,10 +1305,10 @@ end
 end
 function Base.show(io::IO, mime::MIME"text/plain", t::Transition)
 	print(io, """\e[48;5;3m⇒$(t.actor.name):$(t.state.n); $(t.flags|>rp)\e[m
-\e[31m$(t.trigger)\e[m
+\e[31;1mtrigger:\e[m\e[31m$(t.trigger)\e[m
 \e[34m$(t.text|>str)\e[m
 \e[35m$(t.journal|>str)\e[m
-\e[33m$(t.action)\e[m
+\e[33;1maction:\e[m\e[33m$(t.action)\e[m
 """)
 end
 @with_kw mutable struct State
@@ -1317,10 +1316,11 @@ end
 	transitions::Vector{Transition} = Auto()
 	trigger::String = ""
 	priority::Float32 = -eps(Float32)
+	age::UInt
 end
 function Base.show(io::IO, mime::MIME"text/plain", s::State)
 	print(io, """$(s.text|>str)
-\e[35mpriority=$(s.priority == -eps(Float32) ? "-ε" : s.priority)\e[m
+\e[35mpriority=$(s.priority==-eps(Float32) ? "-ε" : s.priority) age=$(s.age)\e[m
 \e[31m$(s.trigger)\e[m
 """)
 	for t in s.transitions; show(io, mime, t); end
@@ -1346,6 +1346,8 @@ end
 	states::Dict{StateKey,State} = Auto()
 	ref::Resref"dlg" # must be initialized
 end
+@inline firstlabel(a::Actor) =
+	first(Iterators.filter(i->!haskey(a.states, StateKey(i)), 0:length(a.states)))
 @with_kw mutable struct DialogContext
 	current_actor::Actor = Actor(;ref = Resref".dlg")
 	current_state_key::StateKey = StateKey(!isvalid)
@@ -1381,9 +1383,9 @@ function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
 	end
 end
 
+#««2 I/O
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in unpack(seek(io, offset), DLG_string, count)]
-
 function read(io::ResIO"DLG")::Actor
 	actor = unpack_root(io, Actor)
 	st_triggers = dialog_strings(io, actor.offset_state_triggers,
@@ -1392,21 +1394,24 @@ function read(io::ResIO"DLG")::Actor
 			actor.number_transition_triggers)
 	actions = dialog_strings(io, actor.offset_actions, actor.number_actions)
 
-	states1 = unpack(seek(io,actor.offset_states), DLG_state, actor.number_states)
-	transitions1 = unpack(seek(io, actor.offset_transitions),
+	vs = unpack(seek(io,actor.offset_states), DLG_state, actor.number_states)
+	vt = unpack(seek(io, actor.offset_transitions),
 		DLG_transition, actor.number_transitions)
 	@inline getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : "bad ref $i"
+	global S = vs
+	global T = vt
 
-	for (i, s) in pairs(states1)
-		state = State(; s.text, trigger = getval(st_triggers, s.trigger))
+	for (i, s) in pairs(vs)
+		state = State(; s.text, trigger = getval(st_triggers, s.trigger),
+			age = i-1)
 		for j in s.first_transition+1:s.first_transition + s.number_transitions
-			t = transitions1[j]
+			t = vt[j]
 			push!(state.transitions, Transition(;t.flags, t.text, t.journal,
 				t.actor, trigger = getval(tr_triggers, t.trigger),
 				state = StateKey(t.state), action = getval(actions, t.action)))
 		end
 		# TODO: use hashes instead
-		actor.states[StateKey(i)] = state
+		actor.states[StateKey(i-1)] = state
 	end
 	return actor
 end
@@ -1422,6 +1427,49 @@ end
 		other indices are -1
 	* 
 	=#
+function Base.write(io::IO, a::Actor)
+	a.offset_states = 52
+	a.number_states = length(a.states)
+	vs = sizehint!(DLG_state[], a.number_states)
+	vt = sizehint!(DLG_transition[],
+		sum(length(s.transitions) for s ∈ values(a.states)))
+	vst = UniqueVector{String}()
+	vtt = UniqueVector{String}()
+	va = UniqueVector{String}()
+	ti = 0 # transition index
+	nst = 0 # number state triggers
+	ntt = 0
+	na = 0
+	findidx(x, v) = isempty(x) ? 0 : findfirst!(isequal(x), v)
+	for s ∈ sort(a.states|>values|>collect; by=s->(s.priority, s.age))
+		nt = length(s.transitions)
+		st = findidx(s.trigger, vst)
+		push!(vs, DLG_state(s.text, ti, nt, st - 1))
+		ti += nt
+		nst+= !iszero(st)
+		for t in s.transitions
+			tt = findidx(t.trigger, vtt)
+			ta = findidx(t.action, va)
+			push!(vt, DLG_transition(t.flags, t.text, t.journal,
+				tt, ta, t.actor, t.state))
+			ntt+= !iszero(tt)
+			na += !iszero(ta)
+		end
+	end
+	return vs
+	a.offset_transitions = a.offset_states + 16 * a.number_states
+	a.number_transitions = sum(length(s.transitions) for s ∈ values(a.states))
+	a.offset_state_triggers = a.offset_transitions + 32 * a.number_transitions
+	a.number_state_triggers = count(!isempty(s.trigger) for s ∈ values(a.states))
+	a.offset_transition_triggers =
+		a.offset_state_triggers + 8 * a.number_state_triggers
+	a.number_transition_triggers =
+		count(!isempty(t.trigger) for s ∈ values(a.states) for t ∈ s.transitions)
+	a.offset_actions =
+		a.offset_transition_triggers + 8 * a.number_transition_triggers
+	a.number_actions =
+		count(!isempty(t.action) for s ∈ values(a.states) for t ∈ s.transitions)
+end
 #««2 Dialog-building functions
 function set_actor!(c::DialogContext, actor::Actor)
 	c.current_state_key = StateKey(!isvalid)
@@ -1446,9 +1494,10 @@ function add_state!(c::DialogContext, label, text::Strref; kwargs...)
 		current_transition(c).actor = a.ref
 		c.pending_transition = false
 	end
-	s = State(; text, kwargs...)
+	dict = current_actor(c).states
+	s = State(; age=length(dict), text, kwargs...)
 	c.current_state_key = key
-	current_actor(c).states[key] = s
+	dict[key] = s
 	return s
 end
 """Forms for `add_transition`:
@@ -1457,9 +1506,13 @@ end
     add_transition!(ctx, (actor, state); text, journal)
     add_transition!(ctx, state; text, journal)
     add_transition!(ctx, exit; text, journal)
+
+The first form is the main one: all others eventually call it.
+This is where structure properties are maintained.
 """
 function add_transition!(c::DialogContext, actor::Resref"dlg", state;
-		position = nothing, terminates, text = nothing, journal = nothing)
+		position = nothing, terminates, text = nothing, journal = nothing,
+		trigger = nothing, action = nothing)
 	key = StateKey(state)
 	@assert !(c.pending_transition) "unsolved pending transition"
 	# XXX build flags from kwargs
@@ -1468,6 +1521,9 @@ function add_transition!(c::DialogContext, actor::Resref"dlg", state;
 	terminates && (flags |= Terminates)
 	!isnothing(text) && (flags |= HasText)
 	!isnothing(journal) && (flags |= HasJournal)
+	trigger = get_trigger(c, trigger)
+	!isnothing(trigger) && (flags |= HasTrigger)
+	!isnothing(action) && (flags |= HasAction)
 	t = Transition(;actor = c.current_actor.ref, state = key,
 		text, journal, flags)
 	position = something(position, 1 + length(current_state(c).transitions))
@@ -1475,7 +1531,6 @@ function add_transition!(c::DialogContext, actor::Resref"dlg", state;
 	c.current_transition_idx = position
 	return t
 end
-
 @inline add_transition!(c::DialogContext,
 		(actor, state)::Tuple{<:Resref"dlg",<:Any}; kwargs...) =
 	add_transition!(c, actor, state; terminates=false, kwargs...)
@@ -1662,10 +1717,13 @@ function shortref(g::Game, str::AbstractString)
 	!contains(str, '/') && return StaticString{8}(str)
 	return g.shortref[str]
 end
-
 #««2 Pseudo-dictionary interface
 # All the functions used here encapsulate access to the `Game` structure
 # as a pseudo-dictionary indexed by `Resref` keys.
+# Resources can be stored in three places:
+#  - modified resource registry,
+#  - override directory,
+#  - key/bif archives.
 
 # default case for modified_objs
 @inline modified_objs(g::Game, T::Type{<:Resref}) = Nothing
@@ -1685,13 +1743,15 @@ begin
 	(modified_objs(g, typeof(x.ref))[x.ref]=x)
 end
 
-Base.haskey(g::Game, res::Resref) = haskey(g, nameof(res), resourcetype(res))
-function Base.haskey(g::Game, ref::AbstractString, type::Symbol)
-	s = shortref(g, ref)
+Base.haskey(g::Game, ref::Resref) = haskey(g, nameof(ref), resourcetype(ref))
+function Base.haskey(g::Game, str::AbstractString, type::Symbol)
+	s = shortref(g, str)
+	haskey2(modified_objs(g, Resref{type}), str) ||
 	haskey(game.key, s, type) ||
-	(haskey(game.override, type) && haskey(game.override[type], s)) ||
-	false
+	(haskey(game.override, type) && haskey(game.override[type], s))
 end
+@inline haskey2(::Nothing, _) = false
+@inline haskey2(d::Dict, k) = haskey(d, k)
 
 function Base.open(g::Game, res::Resref, def::Base.Callable; override = true)
 	name, T = shortref(g, res.name), resourcetype(res)
@@ -1919,7 +1979,7 @@ function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 	end
 end
 #««2 Accessors: `item` etc.
-@inline item(g::Game, name::AbstractString) = g[Resref"itm"(name)]
+@inline item(g::Game, name::AbstractString) = g[Resref"itm"(g, name)]
 @inline items(g::Game, r::Union{String,Regex}...) =
 	(item(g, n) for n in names(g, Resref"itm", r...))
 
@@ -1927,12 +1987,40 @@ end
 get_actor(g::Game, s::AbstractString) = get_actor(g, Resref"dlg"(s))
 get_actor(g::Game, ref::Resref"dlg") = get!(g, ref, Actor(;ref))
 
+"""
+    actor("name")
+
+Loads the named actor from game files, or creates an empty actor if
+none exists with this name.
+"""
 actor(g::Game, s::AbstractString) = set_actor!(g.dialog_context, get_actor(g,s))
-say(g::Game, ltext::Pair{<:Any,<:AbstractString}; kw...) =
-	say(g, ltext[1], ltext[2]; kw...)
-say(g::Game, label, text::AbstractString; kw...) =
+
+"""
+    say({text | label => text}*; priority, trigger)
+
+Introduces states of dialog for the current actor.
+A single `say` call is equivalent to several successive `say` calls
+for the same current actor.
+Implicit transitions will be inserted between those states.
+"""
+say(g::Game, text::AbstractString; kw...) =
+	say2(g, firstlabel(g.dialog_context|>current_actor), text; kw...)
+say(g::Game, pair::Pair{<:Any,<:AbstractString}; kw...) =
+	say2(g, pair[1], pair[2]; kw...)
+say(g::Game, args...; kw...) = for a in args; say(g, a; kw...); end
+
+say2(g::Game, label, text::AbstractString; kw...) =
 	add_state!(g.dialog_context, label, Strref(g, text); kw...)
 state(g::Game, label) = set_state!(g.dialog_context, label)
+"""
+    reply(text => label)
+
+Introduces a state transition (player reply) pointing to the given label.
+The label may be one of:
+ - ("actor", state)
+ - state  (uses current actor)
+ - `exit` (creates a final transition)
+"""
 reply(g::Game, (text, label)::Pair{<:AbstractString}; kw...) =
 	add_transition!(g.dialog_context, label; text, kw...)
 
@@ -2056,30 +2144,16 @@ const game = Game()
 # For all methods of those functions starting with a `::Game` argument:
 # define a corresponding method where the global `game` is used.
 for f in (init!, str, shortref, longref, register!, save,
-	language, namespace,
-	item, items, actor, say, reply
-	), m in methods(f)
-		p = m.sig.parameters
-		(length(p) ≥ 2 && p[2] == Game) || continue
-		argt = p[3:end]
-		argn = ccall(:jl_uncompress_argnames, Vector{Symbol}, (Any,), m.slot_syms)
-		z = zip(argn[3:end], argt)
-		fn = nameof(f)
-		lhs = (:($n::$t) for (n,t) in z)
-		rhs = (n for (n,t) in z)
-		expr = :($fn($(lhs...)) = $f(game, $(rhs...)))
-		eval(expr)
+		language, namespace,
+		item, items, actor, say, reply), m in methods(f)
+	argt = m.sig.parameters
+	(length(argt) ≥ 2 && argt[2] == Game) || continue
+	argn = ccall(:jl_uncompress_argnames, Vector{Symbol}, (Any,), m.slot_syms)
+	z = zip(argn[3:end], argt[3:end])
+	lhs = (:($n::$t) for (n,t) in z)
+	rhs = (n for (n,t) in z)
+	eval(:($(nameof(f))($(lhs...)) = $f(game, $(rhs...))))
 end
-# for f in (:init!, :language, :namespace,
-# 		:str, :strref, :shortref, :longref, :register!, :save,
-# 		:item, :items, :actor, :say, :reply)
-# 	@eval begin
-# 	# prevent recursion
-# 	$f(::Game, ::Game, args...; kwargs...) =
-# 		error("no such method: ", $(string(f)), typeof.(args), )
-# 	$f(args...; kwargs...) = $f(game, args...; kwargs...)
-# 	end
-# end
 @inline Base.convert(T::Type{Strref}, s::AbstractString) = T(game, s)
 @inline Base.convert(T::Type{Strref}, ::Nothing) = T(0) # <NO TEXT>
 @inline Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game, s)
@@ -2087,6 +2161,18 @@ end
 @inline Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =
 	copy(game, x, args...; kwargs...)
 
+# debug
+function modified_objs()
+	println(length(game.modified_items), " modified items:")
+	for (k,v) in pairs(game.modified_items)
+		println("  $k\t$(v.ref)")
+	end
+end
+function blob(x)
+	f = TransitionFlags(0)
+	iszero(x) || (f|= HasTrigger)
+	f
+end
 #»»1
 
 end # module

@@ -1228,7 +1228,7 @@ mutable struct CRE_hdr
 	morale_recovery::UInt16
 	kits::UInt32
 	scripts::CRE_scripts
-	enemy_ally::UInt8 # ea.ids
+	allegiance::UInt8 # ea.ids
 	general::UInt8 # general.ids
 	race::UInt8 # race.ids
 	class::UInt8 # class.ids
@@ -1328,7 +1328,8 @@ end
 	transitions::Vector{Transition} = Auto()
 	trigger::String = ""
 	priority::Float32 = zero(Float32)
-	age::UInt
+	age::UInt # secondary sorting key
+	position::UInt = 0 # index in outputted file
 end
 function Base.show(io::IO, mime::MIME"text/plain", s::State)
 	!isempty(s.trigger) && print(io, "\e[31m", s.trigger, "\e[m")
@@ -1336,6 +1337,8 @@ function Base.show(io::IO, mime::MIME"text/plain", s::State)
 	println(io, s.text|>str|>f75)
 	for t in s.transitions; show(io, mime, t); end
 end
+@inline sortkey(s::State) = (s.priority, s.age)
+@inline Pack.fieldpack(::IO, ::Type{<:State}, ::Val{:position}, _) = 0
 # ««2 Actor
 @with_kw mutable struct Actor <: RootResource{:dlg}
 	constant::Constant"DLG V1.0" = Auto() # "DLG V1.0"
@@ -1353,13 +1356,16 @@ end
 	# states are keyed by hashes == UInt
 	states::Dict{StateKey,State} = Auto()
 	ref::Resref"dlg" # must be initialized
+	# sorted list of states when writing the file
+	sorted_keys::Vector{StateKey} = Auto()
 end
 @inline rr_skipproperties(::Actor) = (:number_states, :offset_states,
 	:number_transitions, :offset_transitions,
 	:offset_state_triggers, :number_state_triggers,
 	:offset_transition_triggers, :number_transition_triggers,
-	:number_actions, :offset_actions)
+	:number_actions, :offset_actions, :sorted_keys)
 @inline Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:states}, _) = 0
+@inline Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:sorted_keys}, _) = 0
 @inline firstlabel(a::Actor) =
 	first(Iterators.filter(i->!haskey(a.states, StateKey(i)), 0:length(a.states)))
 
@@ -1386,8 +1392,6 @@ function read(io::ResIO"DLG")::Actor
 	vt = unpack(seek(io, actor.offset_transitions),
 		DLG_transition, actor.number_transitions)
 	@inline getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : ""
-	global S = vs
-	global T = vt
 
 	for (i, s) in pairs(vs)
 		state = State(; s.text, trigger = getval(st_triggers, s.trigger),
@@ -1426,7 +1430,28 @@ end
 @inline pack_string(io::IO, pos::Ref{<:Integer},
 	v::AbstractVector{<:AbstractString}) =
 	for s ∈ v; pack_string(io, pos, s); end
+"""
+    reindex!(actor)
+
+Sorts all states by increasing (priority, age), and reindexes them
+in this order (starting at 0) for determining written transition keys.
+Returns the sorted list of states.
+"""
+function reindex!(a::Actor)
+	# We need:
+	#  - sorted list of states (or state keys)
+	#  - map (symbolic key) => (index in this list)
+	#    (or an
+	# XXX todo: add a `issorted` flag?
+	a.sorted_keys = keys(a.states)|>collect
+	sort!(a.sorted_keys; by = k->sortkey(a.states[k]))
+	for (i, k) in pairs(a.sorted_keys)
+		a.states[k].position = i-1
+	end
+end
 function Base.write(io::IO, a::Actor)
+	# XXX we must assume that all actors are reindexed prior to writing
+	reindex!(a)
 	vs = sizehint!(DLG_state[], a.number_states)
 	vt = sizehint!(DLG_transition[],
 		sum(length(s.transitions) for s ∈ values(a.states)))
@@ -1434,7 +1459,7 @@ function Base.write(io::IO, a::Actor)
 	vtt = UniqueVector{String}()
 	va = UniqueVector{String}()
 	ti = 0 # transition index
-	for s ∈ sort(a.states|>values|>collect; by=s->(s.priority, s.age))
+	for k ∈ a.sorted_keys; s = a.states[k]
 		nt = length(s.transitions)
 		st = isempty(s.trigger) ? 0 : findfirst!(isequal(s.trigger), vst)
 		push!(vs, DLG_state(s.text, ti, nt, st - 1))
@@ -1444,8 +1469,8 @@ function Base.write(io::IO, a::Actor)
 				findfirst!(isequal(t.trigger), vtt) : 1
 			ta = contains(t.flags, HasAction) ?
 				findfirst!(isequal(t.action), va) : 1
-			push!(vt, DLG_transition(t.flags, t.text, t.journal,
-				tt-1, ta-1, t.actor, t.state.n))
+			push!(vt, DLG_transition(t.flags, t.text, t.journal, tt-1, ta-1, t.actor,
+				contains(t.flags, Terminates) ? 0 : stateindex(t.actor, t.state)))
 		end
 	end
 	a.offset_states = 52
@@ -1512,7 +1537,8 @@ function set_state!(c::DialogContext, label)
 	@assert haskey(current_actor(c).states, key)
 	c.current_state_key = key
 end
-function add_state!(c::DialogContext, label, text::Strref; kwargs...)
+function add_state!(c::DialogContext, label, text::Strref;
+		trigger=nothing, kwargs...)
 	# XXX implicit transition from previous state
 	key = StateKey(label)
 	@assert !haskey(current_actor(c).states, key) "state $label already exists"
@@ -1528,7 +1554,8 @@ function add_state!(c::DialogContext, label, text::Strref; kwargs...)
 	end
 	dict = current_actor(c).states
 	register!(current_actor(c))
-	s = State(; age=length(dict), text, kwargs...)
+	s = State(; age=length(dict), text, trigger = get_trigger(c, trigger),
+		kwargs...)
 	c.current_state_key = key
 	dict[key] = s
 	return s
@@ -1548,9 +1575,11 @@ function add_transition!(c::DialogContext, actor::Resref"dlg", state;
 		trigger = nothing, action = nothing)
 	key = StateKey(state)
 	@assert !(c.pending_transition) "unsolved pending transition"
+	println("  \e[32mADD TRANSITION => $key\e[m")
 	# XXX some flags are still missing
 	flags = TransitionFlags(0)
 	trigger = get_trigger(c, trigger)
+	println("    got trigger = $(trigger|>rp)")
 	terminates && (flags |= Terminates)
 	isnothing(text) ? (text = Strref(-1)) : (flags |= HasText)
 	isnothing(journal) ? (journal = Strref(0)) : (flags |= HasJournal)
@@ -1695,14 +1724,6 @@ function init!(g::Game, directory::AbstractString)
 	return g
 end
 #««2 Resref ←—→ shortrefs
-# This layer does all of the work of abstracting Resref (i.e. long
-# resource identifiers, possibly including namespace information) to
-# short references used as keys by the game.
-# There are *three* such conversion methods:
-# - longref(game, string): converts (unpacks) a file-read string to a Resref;
-# - shortref(game, object): creates (if needed) the shortref from obj's ref;
-# - shortref(game, string): packs a Resref to an (existing) shortref.
-# Shortref —→ longref when reading a file
 """    longref(game, shortref)
 
 Converts a short reference (i.e. an ≤8 byte string) to a long reference.
@@ -1716,16 +1737,14 @@ function longref(g::Game, short::AbstractString)
 	# so shortrefs absent from here belong to "":
 	get(g.longref, short, String(short))
 end
-# Resref —→ shortref when writing a file
-"""    shortref(game, resource)
+"""    shortref(game, resref)
 
 Convert a long reference (already stored in a game object) to a short reference:
  - if the namespace is "" then this is already a short reference;
  - if the (namespace, resource) pair is already indexed, return this;
  - otherwise, create a new index entry for this pair.
 """
-function shortref(g::Game, r::Resref)
-	str = r.name
+function shortref(g::Game, str::AbstractString)
 	!contains(str, '/') && return StaticString{8}(str|>lowercase)
 	get!(g.shortref, str) do
 		for s in ShortrefIterator{8}(first(replace(str, r".*/"=>""), 8))
@@ -1734,6 +1753,8 @@ function shortref(g::Game, r::Resref)
 		end
 	end
 end
+@inline shortref(g::Game, ref::Resref) = shortref(ref.name)
+
 """    ShortrefIterator(s)
 
 Iterator producing, in order:  "foobar", "foobar00".."foobar99",
@@ -1753,13 +1774,7 @@ function Base.iterate(r::ShortrefIterator, i = 0)
 end
 Base.length(r::ShortrefIterator) = 10^textlength(r)+1
 Base.eltype(::ShortrefIterator{L}) where{L} = StaticString{L}
-"""    shortref(game, name::AbstractString)
 
-Returns the short ref for the given obj ref. The short ref must exist."""
-function shortref(g::Game, str::AbstractString)
-	!contains(str, '/') && return StaticString{8}(str)
-	return g.shortref[str]
-end
 #««2 Pseudo-dictionary interface
 # All the functions used here encapsulate access to the `Game` structure
 # as a pseudo-dictionary indexed by `Resref` keys.
@@ -1770,8 +1785,6 @@ end
 
 # default case for modified_objs
 @inline modified_objs(g::Game, T::Type{<:Resref}) = Nothing
-# 	error("no modified objects dictionary found for type $(resourcetype(T))")
-
 # By examing the field types of Game structure, determine the correct
 # registry field for each resource type: Item => modified_items, etc.
 for (i,T) in pairs(fieldtypes(Game))
@@ -1796,27 +1809,46 @@ end
 @inline haskey2(::Nothing, _) = false
 @inline haskey2(d::Dict, k) = haskey(d, k)
 
-function Base.open(g::Game, res::Resref, def::Base.Callable; override = true)
-	name, T = shortref(g, res.name), resourcetype(res)
+function get3(g::Game, res::Resref, def::Base.Callable; override = true)
+	name, T = shortref(g, res), resourcetype(res)
 	if override && name|>lowercase ∈ get(g.override, T, ())
 		file = joinpath(g.directory[], "override", name*'.'*String(T))
-		return ResIO{T}(res, open(file))
+		return read(ResIO{T}(res, open(file)))
 	end
 	buf = get(g.key, name, T)
 	isnothing(buf) && return def()
-	ResIO{T}(res, buf)
+	read(ResIO{T}(res, buf))
 end
 Base.get(f::Base.Callable, g::Game, ref::Resref) =
-	getresource(f, g, modified_objs(g, typeof(ref)), ref)
-getresource(f::Base.Callable, g::Game, ::Nothing, ref::Resref) =
+	get2(f, g, modified_objs(g, typeof(ref)), ref)
+@inline Base.get(g::Game, ref::Resref, x) = get(()->x, g, ref)
+
+get2(f::Base.Callable, g::Game, ::Nothing, ref::Resref) =
 	open(read, g, ref, f)
-getresource(f::Base.Callable, g::Game, dict::AbstractDict, ref::Resref) =
-	get(dict, ref) do; open(read, g, ref, f); end
+get2(f::Base.Callable, g::Game, dict::AbstractDict, ref::Resref) =
+	get(dict, ref) do; get3(g, ref, f); end
 Base.get!(f::Base.Callable, g::Game, ref::Resref) = get(register! ∘ f, g, ref)
 Base.get!(g::Game, ref::Resref, x) = get(()->x, g, ref)
 
 @inline Base.getindex(g::Game, ref::Resref) =
 	get(g, ref) do; throw(KeyError(ref)); end
+
+# Special case: get only if modified
+# modified -> return modified object; existing -> return reference;
+# non-existing -> return `nothing`.
+# FIXME: see if this could be made un-global by adding a Game field in
+# Actor structure?
+# Special case: the behavior depends on the `modified` status of the
+# object
+#  - modified: state is indexed
+#  - unmodified: use original state key
+#  - not-existing: return 0
+function stateindex(g::Game, r::Resref"dlg", key::StateKey)
+	a = get(modified_objs(g, Resref"dlg"), r, nothing)
+	!isnothing(a) && return a.states[key].position
+	@assert haskey(g, r)
+	return fieldtype(State, :position)(key.n)
+end
 
 @inline Base.names(g::Game, ::Type{<:Resref{T}}) where{T} =
 	(longref(g, s) for s in Iterators.flatten(
@@ -2205,7 +2237,8 @@ const game = Game()
 # define a corresponding method where the global `game` is used.
 for f in (init!, str, shortref, longref, register!, save,
 		language, namespace,
-		item, items, actor, say, reply, action, trigger), m in methods(f)
+		item, items, actor, say, reply, action, trigger, journal, stateindex),
+		m in methods(f)
 	argt = m.sig.parameters
 	(length(argt) ≥ 2 && argt[2] == Game) || continue
 	argn = ccall(:jl_uncompress_argnames, Vector{Symbol}, (Any,), m.slot_syms)
@@ -2223,15 +2256,13 @@ end
 
 # debug
 function modified_objs()
-	println(length(game.modified_items), " modified items:")
-	for (k,v) in pairs(game.modified_items)
-		println("  $k\t$(v.ref)")
+	for (i,T) in pairs(fieldtypes(Game))
+		(T <: Dict && keytype(T) <: Resref) || continue
+		println("\e[33m$(length(getfield(game, i))) $(fieldname(Game, i)):\e[m")
+		for (k,v) in pairs(getfield(game, i))
+			println("  $(k.name)\t$(v.ref.name)")
+		end
 	end
-end
-function blob(x)
-	f = TransitionFlags(0)
-	iszero(x) || (f|= HasTrigger)
-	f
 end
 function extract(r::Resref, fn::AbstractString = nameof(r)*'.'*string(resourcetype(r)))
 	buf = get(game.key, nameof(r), resourcetype(r))

@@ -50,6 +50,7 @@ using Random
 import Base.read, Base.write
 
 # ««1 Basic types
+# ««2 Misc.
 struct Auto{A<:Tuple, B}
 	args::A
 	kwargs::B
@@ -59,6 +60,10 @@ end
 # Compact representation, useful for Flags and Enums
 @inline rp(x) = repr(x;context=(:compact=>true))
 @inline f75(s::AbstractString) = length(s) ≤ 72 ? s : first(s,72)*'…'
+function if_haskey(f::Base.Callable, dict::Dict, key)
+	index = Base.ht_keyindex(dict, key)
+	index > 0 && f(@inbounds dict.vals[index])
+end
 # ««2 Extract zero-terminated string from IO
 @inline function string0(v::AbstractVector{UInt8})
 	l = findfirst(iszero, v)
@@ -1329,7 +1334,9 @@ function Base.show(io::IO, mime::MIME"text/julia", t::Transition;
 	target = contains(t.flags, Terminates) ? exit :
 		t.actor.name == name ? Int(t.state.n) : (t.actor.name, Int(t.state.n))
 	text = contains(t.flags, HasText) ? str(t.text) : nothing
-	println(io, "\t", prefix, "reply(", repr(text=>target), ")")
+	ttarget = text => target
+	(ttarget == (nothing => exit)) && (ttarget = exit)
+	println(io, "\t", prefix, "reply(", ttarget, ")")
 	contains(t.flags, HasJournal) &&
 		println(io, "\t", prefix, "journal(", repr(str(t.journal)), ")")
 	contains(t.flags, HasAction) &&
@@ -1537,7 +1544,6 @@ end
 	current_actor::Actor = Actor(;ref = Resref".dlg")
 	current_state_key::StateKey = StateKey(!isvalid)
 	current_transition_idx::Int = 0 # index into current_state.transitions
-	pending_transition::Bool = false
 	trigger::Union{Nothing,String} = nothing
 end
 @inline current_actor(c::DialogContext) =
@@ -1546,9 +1552,15 @@ end
 	(@assert isvalid(c.current_state_key);
 	current_actor(c).states[c.current_state_key])
 @inline if_current_state(f::Function, c::DialogContext) =
-	isvalid(c.current_state_key) && f(current_state(c))
+	if_haskey(f, c.current_actor.states, c.current_state_key)
+
 @inline current_transition(c::DialogContext) =
 	current_state(c).transitions[c.current_transition_idx]
+@inline has_pending_transition(c::DialogContext) = if_current_state(c) do s;
+	!isempty(s.transitions) &&
+		!isvalid(s.transitions[c.current_transition_idx].state)
+end
+
 trigger!(c::DialogContext, s::AbstractString) =
 	(@assert isnothing(c.trigger); c.trigger = s)
 trigger!(c::DialogContext, ::Nothing) = nothing
@@ -1575,13 +1587,13 @@ function add_state!(c::DialogContext, label, text::Strref;
 	@assert !haskey(current_actor(c).states, key) "state $label already exists"
 	println("\e[1mINSERT STATE $key\e[m")
 	if_current_state(c) do s # insert implicit transition
-		isempty(s.transitions) && add_transition!(c, label)
+		isempty(s.transitions) &&
+			add_transition!(c, Strref(0), current_actor(c).ref, label)
 	end
-	if c.pending_transition
+	if has_pending_transition(c)
 		println("  \e[32m Resolve pending transition to $key\e[m")
 		current_transition(c).state = key
-		current_transition(c).actor = a.ref
-		c.pending_transition = false
+		current_transition(c).actor = current_actor(c).ref
 	end
 	dict = current_actor(c).states
 	register!(current_actor(c))
@@ -1604,9 +1616,11 @@ This is where structure properties are maintained.
 function add_transition!(c::DialogContext, text::Strref, actor, label;
 		position = nothing, terminates = false, journal = nothing,
 		trigger = nothing, action = nothing)
+	@assert !has_pending_transition(c) "unsolved pending transition"
+	label == !isvalid && println("  \e[31madd pending transition\e[m")
 	key = StateKey(label)
-	@assert !(c.pending_transition) "unsolved pending transition"
-	println("  \e[32mADD TRANSITION => \"$actor\", $key\e[m")
+	println("  \e[34m", terminates ? "FINAL TRANSITION" :
+		"TRANSITION TO $actor/$key", "\e[m")
 	# XXX some flags are still missing
 	flags = TransitionFlags(0)
 	trigger = get_trigger(c, trigger)
@@ -1623,11 +1637,6 @@ function add_transition!(c::DialogContext, text::Strref, actor, label;
 	return t
 end
 
-function add_transition!(c::DialogContext, text; kwargs...)
-	println("  \e[31madd pending transition\e[m")
-	add_transition!(c, text, "", !isvalid; kwargs...)
-	c.pending_transition = true
-end
 function add_action!(t::Transition, s::AbstractString; override=false)
 	@assert(override || !contains(t.flags, HasAction))
 	t.flags |= HasAction
@@ -1817,7 +1826,7 @@ end
 
 @inline register!(g::Game, x::RootResource) =
 begin
-	println("\e[34;1m register!($(x.ref))\e[m")
+# 	println("\e[34;1m register!($(x.ref))\e[m")
 	(modified_objs(g, typeof(x.ref))[x.ref]=x)
 end
 
@@ -2095,18 +2104,29 @@ none exists with this name.
 actor(g::Game, s::AbstractString) = set_actor!(g.dialog_context, get_actor(g,s))
 
 """
-    say({text | label => text}*; priority, trigger)
+    say({text | (label => text)}*; priority, trigger)
 
 Introduces states of dialog for the current actor.
+If the label is omitted, a default (numeric, increasing) label
+will be inserted
+(although inserting an explicit label makes the state easier to reach).
+
 A single `say` call is equivalent to several successive `say` calls
 for the same current actor.
-Implicit transitions will be inserted between those states.
+
+## Special cases
+
+ - implicit, text-less transitions: `say(text1) say(text2)`;
+ - multi-say: `say(text1, text2, ...)` (same actor) — actually equivalent to
+   the previous form;
+ - chain with actor change: `actor(name1) say(text1) actor(name2) say(text2)...`;
 """
 say(g::Game, text::AbstractString; kw...) =
 	say2(g, firstlabel(g.dialog_context|>current_actor), text; kw...)
 say(g::Game, pair::Pair{<:Any,<:AbstractString}; kw...) =
 	say2(g, pair[1], pair[2]; kw...)
-say(g::Game, args...; kw...) = for a in args; say(g, a; kw...); end
+SayText = Union{AbstractString,Pair{<:Any,<:AbstractString}}
+say3(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
 
 say2(g::Game, label, text::AbstractString; kw...) =
 	add_state!(g.dialog_context, label, Strref(g, text); kw...)
@@ -2119,19 +2139,24 @@ The label may be one of:
  - ("actor", state)
  - state  (uses current actor)
  - `exit` (creates a final transition)
+
+## Special forms:
+
+ - `reply(exit)` creates a text-less, final transition;
+ - `reply(text)` creates a pending transition: this will be connected to the
+   next state inserted (via `say`).
 """
-reply(g::Game, (text, target)::Pair; kw...) =
-	reply(g, text, target; kw...)
+reply(g::Game, (text, target)::Pair; kw...) = reply(g, text, target; kw...)
+reply(g::Game, ::typeof(exit); kw...) = reply(g, nothing, exit; kw...)
+# pending transition:
+reply(g::Game, text::AbstractString; kw...) = reply(g, text, "", !isvalid;kw...)
 
 reply(g::Game, text, target::Union{Tuple,Pair}; kw...) =
 	reply(g, text, target...; kw...)
 reply(g::Game, text, target; kw...) =
 	reply(g, text, current_actor(g.dialog_context).ref.name, target; kw...)
 reply(g::Game, text, ::typeof(exit); kw...) =
-begin
-	println("exit transition with text $text; $(str(current_state(g.dialog_context).text))")
 	reply(g, text, "", 0; terminates = true, kw...)
-end
 
 reply(g::Game, text, actor, state; kw...) =
 	add_transition!(g.dialog_context, Strref(g,text), actor, state; kw...)

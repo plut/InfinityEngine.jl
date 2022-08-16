@@ -1300,15 +1300,14 @@ end
 @inline Base.isless(a::StateKey, b::StateKey) = isless(a.n, b.n)
 
 @with_kw mutable struct Transition #{X}
-	# XXX both Transition and State can be made immutable (since stored in
-	# vectors)
+	# XXX both Transition and State can be made immutable (stored in vectors)
 	flags::TransitionFlags
 	text::Strref
 	journal::Strref
 	trigger::String
 	action::String
 	actor::Resref"dlg"
-	state::StateKey # = StateKey(!isvalid)
+	state::StateKey
 end
 function Base.show(io::IO, mime::MIME"text/plain", t::Transition)
 	print(io, "\e[48;5;3m   ")
@@ -1430,8 +1429,10 @@ function read(io::ResIO"DLG")::Actor
 		for j in s.first_transition+1:s.first_transition + s.number_transitions
 			t = vt[j]
 			push!(state.transitions, Transition(;t.flags, t.text, t.journal,
-				t.actor, trigger = getval(tr_triggers, t.trigger),
-				state = StateKey(t.state), action = getval(actions, t.action)))
+				t.actor,
+				trigger= contains(t.flags, HasTrigger) ? tr_triggers[t.trigger+1] : "",
+				action= contains(t.flags, HasAction) ? actions[t.action+1] : "",
+				state = StateKey(t.state)))
 		end
 		# TODO: use hashes instead
 		actor.states[StateKey(i-1)] = state
@@ -1539,7 +1540,8 @@ end
 	pending_transition::Bool = false
 	trigger::Union{Nothing,String} = nothing
 end
-@inline current_actor(c::DialogContext) = c.current_actor
+@inline current_actor(c::DialogContext) =
+	(@assert !isempty(c.current_actor.ref.name); c.current_actor)
 @inline current_state(c::DialogContext) =
 	(@assert isvalid(c.current_state_key);
 	current_actor(c).states[c.current_state_key])
@@ -1557,8 +1559,6 @@ trigger!(c::DialogContext, ::Nothing) = nothing
 	c.trigger = nothing # purge the buffer
 	return y
 end
-State(c::DialogContext; trigger = nothing, kwargs...) =
-	State(; trigger = get_trigger(c, trigger), kwargs...)
 function set_actor!(c::DialogContext, actor::Actor)
 	c.current_state_key = StateKey(!isvalid)
 	c.current_actor = actor # returns actor
@@ -1585,8 +1585,8 @@ function add_state!(c::DialogContext, label, text::Strref;
 	end
 	dict = current_actor(c).states
 	register!(current_actor(c))
-	s = State(; age=length(dict), text, trigger = get_trigger(c, trigger),
-		kwargs...)
+	trigger = something(get_trigger(c, trigger), "")
+	s = State(; age=length(dict), text, trigger, kwargs...)
 	c.current_state_key = key
 	dict[key] = s
 	return s
@@ -1601,40 +1601,31 @@ end
 The first form is the main one: all others eventually call it.
 This is where structure properties are maintained.
 """
-function add_transition!(c::DialogContext, actor::Resref"dlg", state;
-		position = nothing, terminates, text = nothing, journal = nothing,
+function add_transition!(c::DialogContext, text::Strref, actor, label;
+		position = nothing, terminates = false, journal = nothing,
 		trigger = nothing, action = nothing)
-	key = StateKey(state)
+	key = StateKey(label)
 	@assert !(c.pending_transition) "unsolved pending transition"
-	println("  \e[32mADD TRANSITION => $key\e[m")
+	println("  \e[32mADD TRANSITION => \"$actor\", $key\e[m")
 	# XXX some flags are still missing
 	flags = TransitionFlags(0)
 	trigger = get_trigger(c, trigger)
-	println("    got trigger = $(trigger|>rp)")
 	terminates && (flags |= Terminates)
-	isnothing(text) ? (text = Strref(-1)) : (flags |= HasText)
+	isvalid(text) && (flags |= HasText)
 	isnothing(journal) ? (journal = Strref(0)) : (flags |= HasJournal)
 	isnothing(trigger) ? (trigger = "") : (flags |= HasTrigger)
 	isnothing(action) ? (action = "") : (flags |= HasAction)
-	t = Transition(;actor = c.current_actor.ref, state = key,
-		text, journal, trigger, action, flags)
+	t = Transition(;actor, state = key, text, journal, trigger, action, flags)
 	position = something(position, 1 + length(current_state(c).transitions))
 	register!(current_actor(c))
 	c.current_transition_idx = position
 	insert!(current_state(c).transitions, position, t)
 	return t
 end
-@inline add_transition!(c::DialogContext,
-		(actor, state)::Tuple{<:Resref"dlg",<:Any}; kwargs...) =
-	add_transition!(c, actor, state; terminates=false, kwargs...)
-@inline add_transition!(c::DialogContext, state; kwargs...) =
-	add_transition!(c, (current_actor(c).ref, state); kwargs...)
-@inline add_transition!(c::DialogContext, ::typeof(exit); kwargs...) =
-	add_transition!(c, Resref".dlg", 0; terminates=true, kwargs...)
 
-function add_transition!(c::DialogContext, ::Nothing; kwargs...)
+function add_transition!(c::DialogContext, text; kwargs...)
 	println("  \e[31madd pending transition\e[m")
-	add_transition!(c, StateKey(!isvalid); kwargs...)
+	add_transition!(c, text, "", !isvalid; kwargs...)
 	c.pending_transition = true
 end
 function add_action!(t::Transition, s::AbstractString; override=false)
@@ -1898,6 +1889,7 @@ Converts a string (entered by the user) to a long reference:
  - otherwise, return `(current_namespace, string)` (this is a forward decl.).
 """
 function (R::Type{<:Resref})(g::Game, str::AbstractString)
+	isempty(str) && return R(str)
 	startswith(str, '/') && return R(str[2:end])
 	contains(str, '/') && return R(str)
 	ns_str = resref_join(namespace(g), str)
@@ -2064,6 +2056,7 @@ function Strref(g::Game, s::AbstractString)
 	i = findfirst!(isequal((language(g), s),), g.new_strings)
 	return Strref(i-1 + length(strings(g)))
 end
+@inline Strref(::Game, ::Nothing) = Strref(0) # graceful fail
 
 function str(g::Game, s::Strref)
 	i = s.index+1; i = max(i, one(i))
@@ -2127,8 +2120,21 @@ The label may be one of:
  - state  (uses current actor)
  - `exit` (creates a final transition)
 """
-reply(g::Game, (text, label)::Pair{<:AbstractString}; kw...) =
-	add_transition!(g.dialog_context, label; text, kw...)
+reply(g::Game, (text, target)::Pair; kw...) =
+	reply(g, text, target; kw...)
+
+reply(g::Game, text, target::Union{Tuple,Pair}; kw...) =
+	reply(g, text, target...; kw...)
+reply(g::Game, text, target; kw...) =
+	reply(g, text, current_actor(g.dialog_context).ref.name, target; kw...)
+reply(g::Game, text, ::typeof(exit); kw...) =
+begin
+	println("exit transition with text $text; $(str(current_state(g.dialog_context).text))")
+	reply(g, text, "", 0; terminates = true, kw...)
+end
+
+reply(g::Game, text, actor, state; kw...) =
+	add_transition!(g.dialog_context, Strref(g,text), actor, state; kw...)
 """
     trigger(string)
 
@@ -2278,8 +2284,7 @@ for f in (init!, str, shortref, longref, register!, save,
 	rhs = (n for (n,t) in z)
 	eval(:($(nameof(f))($(lhs...)) = $f(game, $(rhs...))))
 end
-@inline Base.convert(T::Type{Strref}, s::AbstractString) = T(game, s)
-@inline Base.convert(T::Type{Strref}, ::Nothing) = T(0) # <NO TEXT>
+@inline Base.convert(T::Type{Strref},s::Union{Nothing,AbstractString})=T(game,s)
 @inline Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game, s)
 @inline Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
 @inline Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =

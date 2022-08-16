@@ -58,7 +58,7 @@ end
 @inline Base.convert(T::DataType, auto::Auto) = T(auto.args...; auto.kwargs...)
 # Compact representation, useful for Flags and Enums
 @inline rp(x) = repr(x;context=(:compact=>true))
-@inline f75(s::AbstractString) = length(s) ≤ 75 ? s : first(s,75)*'…'
+@inline f75(s::AbstractString) = length(s) ≤ 72 ? s : first(s,72)*'…'
 # ««2 Extract zero-terminated string from IO
 @inline function string0(v::AbstractVector{UInt8})
 	l = findfirst(iszero, v)
@@ -1303,12 +1303,12 @@ end
 	# XXX both Transition and State can be made immutable (since stored in
 	# vectors)
 	flags::TransitionFlags
-	text::Strref = Strref(0) # graceful failing
-	journal::Strref = Strref(0)
-	trigger::String = ""
-	action::String = ""
+	text::Strref
+	journal::Strref
+	trigger::String
+	action::String
 	actor::Resref"dlg"
-	state::StateKey = StateKey(!isvalid)
+	state::StateKey # = StateKey(!isvalid)
 end
 function Base.show(io::IO, mime::MIME"text/plain", t::Transition)
 	print(io, "\e[48;5;3m   ")
@@ -1316,12 +1316,26 @@ function Base.show(io::IO, mime::MIME"text/plain", t::Transition)
 		print(io, '⇒', t.actor.name, ':', t.state.n, ';')
 	println(io, ' ', t.flags|>rp, "\e[m")
 	contains(t.flags, HasTrigger) &&
-		print(io, "\e[31;1mT: \e[m\e[31m", t.trigger, "\e[m")
-	println(io, "\e[34m", t.text|>str|>f75, "\e[m")
+		println(io, "  \e[31;1mT: \e[m\e[31m", chomp(t.trigger), "\e[m")
+	println(io, "  \e[34m", t.text|>str|>f75, "\e[m")
 	contains(t.flags, HasJournal) &&
-		println(io, "\e[36m", t.journal|>str|>f75, "\e[m")
+		println(io, "  \e[36m", t.journal|>str|>f75, "\e[m")
 	contains(t.flags, HasAction) &&
-		print(io, "\e[33;1mA: \e[m\e[33m", t.action, "\e[m")
+		println(io, "  \e[33;1mA: \e[m\e[33m", chomp(t.action), "\e[m")
+end
+function Base.show(io::IO, mime::MIME"text/julia", t::Transition;
+		name, prefix="")
+	contains(t.flags, HasTrigger) &&
+		println(io, "\t", prefix, "trigger(", repr(t.trigger), ")")
+	target = contains(t.flags, Terminates) ? exit :
+		t.actor.name == name ? Int(t.state.n) : (t.actor.name, Int(t.state.n))
+	text = contains(t.flags, HasText) ? str(t.text) : nothing
+	println(io, "\t", prefix, "reply(", repr(text=>target), ")")
+	contains(t.flags, HasJournal) &&
+		println(io, "\t", prefix, "journal(", repr(str(t.journal)), ")")
+	contains(t.flags, HasAction) &&
+		println(io, "\t", prefix, "journal(", repr(t.action), ")")
+	println(io)
 end
 @with_kw mutable struct State
 	text::Strref
@@ -1332,10 +1346,21 @@ end
 	position::UInt = 0 # index in outputted file
 end
 function Base.show(io::IO, mime::MIME"text/plain", s::State)
-	!isempty(s.trigger) && print(io, "\e[31m", s.trigger, "\e[m")
+	!isempty(s.trigger) && println(io, "\e[31m", chomp(s.trigger), "\e[m")
 	println(io, "\e[35m", s.priority, " age=", s.age, "\e[m")
 	println(io, s.text|>str|>f75)
 	for t in s.transitions; show(io, mime, t); end
+end
+function Base.show(io::IO, mime::MIME"text/julia", s::State;
+		name, key, prefix = "")
+	!isempty(s.trigger) &&
+		println(io, prefix, "trigger(", repr(s.trigger), ")")
+	println(io, prefix, "say(", repr(key => str(s.text)),
+		iszero(s.priority) ? "" : "; priority = $(s.priority)", ") # age = ", s.age)
+	println(io, "# ", length(s.transitions), " transitions: ")
+	for t in s.transitions
+		show(io, mime, t; prefix, name)
+	end
 end
 @inline sortkey(s::State) = (s.priority, s.age)
 @inline Pack.fieldpack(::IO, ::Type{<:State}, ::Val{:position}, _) = 0
@@ -1373,6 +1398,12 @@ function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
 	for (k, v) in sort(pairs(a.states))
 		println(io, "\e[7m state $(string(k.n)): $(length(v.transitions)) transitions\e[m")
 		show(io, mime, v)
+	end
+end
+function Base.show(io::IO, mime::MIME"text/julia", a::Actor; prefix="")
+	println(io, "# actor with $(length(a.states)) states:")
+	for k in sort(collect(keys(a.states)); by=k->sortkey(a.states[k]))
+		show(io, mime, a.states[k]; key = Int(k.n), prefix, a.ref.name)
 	end
 end
 
@@ -1586,7 +1617,7 @@ function add_transition!(c::DialogContext, actor::Resref"dlg", state;
 	isnothing(trigger) ? (trigger = "") : (flags |= HasTrigger)
 	isnothing(action) ? (action = "") : (flags |= HasAction)
 	t = Transition(;actor = c.current_actor.ref, state = key,
-		text, journal, flags)
+		text, journal, trigger, action, flags)
 	position = something(position, 1 + length(current_state(c).transitions))
 	register!(current_actor(c))
 	c.current_transition_idx = position

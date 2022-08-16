@@ -1,3 +1,9 @@
+"""    InfinityEngine
+
+An interface for Infinity Engine games' databases.
+
+Currently available: item editor and (basic) dialog editor.
+"""
 module InfinityEngine
 module DiceThrows
 """    Dice
@@ -47,7 +53,6 @@ using StaticArrays
 using Parameters
 using UniqueVectors
 using Random
-import Base.read, Base.write
 
 # ««1 Basic types
 # ««2 Misc.
@@ -339,7 +344,7 @@ end
 @inline Base.length(v::TlkStrings) = length(v.entries)
 
 #««2 I/O from tlk file
-function read(io::IO, ::Type{<:TlkStrings})
+function Base.read(io::IO, ::Type{<:TlkStrings})
 	f = unpack(io, TlkStrings)
 	unpack!(io, f.entries, f.nstr)
 	sizehint!(empty!(f.index), f.nstr)
@@ -349,7 +354,7 @@ function read(io::IO, ::Type{<:TlkStrings})
 	end
 	return f
 end
-function write(io::IO, f::TlkStrings)
+function Base.write(io::IO, f::TlkStrings)
 	f.offset = 18 + 26*length(f.entries)
 	f.nstr = length(f.entries)
 	offset = 0
@@ -560,7 +565,7 @@ end
 
 # ««1 ids
 # useful ones: PROJECTL SONGLIST ITEMCAT NPC ANISND ?
-function read(io::IO, f::ResIO"IDS"; debug=false)
+function Base.read(io::IO, f::ResIO"IDS"; debug=false)
 	io = decrypt(io)
 	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
 	line = readline(io)
@@ -600,7 +605,7 @@ function Base.getindex(m::MatrixWithHeaders,
 	@assert !isnothing(i2) "Row header not found: '$s2'"
 	return m.matrix[i1,i2]
 end
-function read(io::IO, f::ResIO"2DA"; debug=false, aligned=false)
+function Base.read(io::IO, f::ResIO"2DA"; debug=false, aligned=false)
 	io = decrypt(io)
 	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
 	line = readline(io)
@@ -1084,7 +1089,7 @@ Casting effects: $(itm.effect_index):$(itm.effect_index+itm.effect_count-1)
 	for ab in itm.abilities; show(io, mime, ab); end
 end
 # ««2 I/O
-function read(io::ResIO"ITM")
+function Base.read(io::ResIO"ITM")
 	itm = unpack_root(io, Item)
 	unpack!(seek(io, itm.abilities_offset), itm.abilities, itm.abilities_count)
 	unpack!(seek(io, itm.effect_offset), itm.effects, itm.effect_count)
@@ -1257,7 +1262,7 @@ mutable struct CRE_hdr
 	effects_count::UInt32
 	dialog::Resref"DLG"
 end
-function read(io::IO, f::ResIO"CRE")
+function Base.read(io::IO, f::ResIO"CRE")
 	unpack(io, CRE_hdr)
 end
 # ««1 dlg
@@ -1298,7 +1303,7 @@ struct StateKey
 	# XXX: replace by hashed values
 	n::UInt
 	@inline StateKey(i::Integer) = new(i)
-	@inline StateKey(::typeof(exit)) = new(zero(UInt))
+# 	@inline StateKey(::typeof(exit)) = new(zero(UInt))
 	@inline StateKey(::typeof(!isvalid)) = new(~zero(UInt))
 end
 @inline Base.isvalid(s::StateKey) = (s ≠ StateKey(!isvalid))
@@ -1407,7 +1412,7 @@ function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
 	end
 end
 function Base.show(io::IO, mime::MIME"text/julia", a::Actor; prefix="")
-	println(io, "# actor with $(length(a.states)) states:")
+	println(io, "# actor '$(a.ref.name)' with $(length(a.states)) states:")
 	for k in sort(collect(keys(a.states)); by=k->sortkey(a.states[k]))
 		show(io, mime, a.states[k]; key = Int(k.n), prefix, a.ref.name)
 	end
@@ -1416,8 +1421,7 @@ end
 #««2 I/O
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in unpack(seek(io, offset), DLG_string, count)]
-
-function read(io::ResIO"DLG")::Actor
+function Base.read(io::ResIO"DLG")::Actor
 	actor = unpack_root(io, Actor)
 	st_triggers = dialog_strings(io, actor.offset_state_triggers,
 			actor.number_state_triggers)
@@ -1446,7 +1450,7 @@ function read(io::ResIO"DLG")::Actor
 	end
 	return actor
 end
-	#= patterns observed in Bioware dialogues:
+	#= patterns observed in Bioware dialogs:
 	* normal reply: (text) action=-1 journal=strref(0) trigger=-1
 	* (action|terminates) target=("",0) text=strref(0) journal=strref(0)
 	* exit transition: (action|terminates), target=("",0),
@@ -1467,8 +1471,7 @@ function pack_string(io::IO, pos::Ref{<:Integer}, s::AbstractString)
 	seek(io, p)
 end
 @inline pack_string(io::IO, pos::Ref{<:Integer},
-	v::AbstractVector{<:AbstractString}) =
-	for s ∈ v; pack_string(io, pos, s); end
+	v::AbstractVector{<:AbstractString}) = for s ∈ v; pack_string(io, pos, s); end
 """
     reindex!(actor)
 
@@ -1539,6 +1542,11 @@ function Base.write(io::IO, a::Actor)
 	pack_string(io, ref, va)
 	@assert position(io) == a.offset_actions + 8 * a.number_actions
 end
+function decompile(a::Actor, filename = a.ref.name*".jl"; prefix="")
+	open(filename, "w") do io
+		show(io, MIME"text/julia"(), a; prefix)
+	end
+end
 #««2 Dialog-building functions
 @with_kw mutable struct DialogContext
 	current_actor::Actor = Actor(;ref = Resref".dlg")
@@ -1575,20 +1583,17 @@ function set_actor!(c::DialogContext, actor::Actor)
 	c.current_state_key = StateKey(!isvalid)
 	c.current_actor = actor # returns actor
 end
-function set_state!(c::DialogContext, label)
-	key = StateKey(label)
+function set_state!(c::DialogContext, key)
 	@assert haskey(current_actor(c).states, key)
 	c.current_state_key = key
 end
-function add_state!(c::DialogContext, label, text::Strref;
+function add_state!(c::DialogContext, key, text::Strref;
 		trigger=nothing, kwargs...)
-	# XXX implicit transition from previous state
-	key = StateKey(label)
 	@assert !haskey(current_actor(c).states, key) "state $label already exists"
 	println("\e[1mINSERT STATE $key\e[m")
 	if_current_state(c) do s # insert implicit transition
 		isempty(s.transitions) &&
-			add_transition!(c, Strref(0), current_actor(c).ref, label)
+			add_transition!(c, Strref(0), current_actor(c).ref, key)
 	end
 	if has_pending_transition(c)
 		println("  \e[32m Resolve pending transition to $key\e[m")
@@ -1603,22 +1608,12 @@ function add_state!(c::DialogContext, label, text::Strref;
 	dict[key] = s
 	return s
 end
-"""Forms for `add_transition`:
 
-    add_transition!(ctx, actor, state; text, journal)
-    add_transition!(ctx, (actor, state); text, journal)
-    add_transition!(ctx, state; text, journal)
-    add_transition!(ctx, exit; text, journal)
-
-The first form is the main one: all others eventually call it.
-This is where structure properties are maintained.
-"""
-function add_transition!(c::DialogContext, text::Strref, actor, label;
+function add_transition!(c::DialogContext, text::Strref, actor, key::StateKey;
 		position = nothing, terminates = false, journal = nothing,
 		trigger = nothing, action = nothing)
 	@assert !has_pending_transition(c) "unsolved pending transition"
-	label == !isvalid && println("  \e[31madd pending transition\e[m")
-	key = StateKey(label)
+	!isvalid(key) && println("  \e[31madd pending transition\e[m")
 	println("  \e[34m", terminates ? "FINAL TRANSITION" :
 		"TRANSITION TO $actor/$key", "\e[m")
 	# XXX some flags are still missing
@@ -1653,14 +1648,16 @@ end
 """    Game
 
 Main structure holding all top-level data for a game installation, including:
- - key/bif archived files,
- - table of override files,
- - tlk strings (TODO).
+ - resource repository (three kinds: key/bif, override, memory database of
+   modified resources);
+ - tlk strings,
+ - conversion of resource references to 8-byte short references;
+ - dialog-building context.
 
 Methods include:
 
  - `game[resref]`: returns the data structure described by this resource.
- - `get(game, resref) do ... end`
+ - `get` methods, e.g. `get(game, resref) do ... end`
  - `names(game, Resref"type")`: returns a vector of all names of
    existing resources of this type.
 """
@@ -2103,6 +2100,11 @@ none exists with this name.
 """
 actor(g::Game, s::AbstractString) = set_actor!(g.dialog_context, get_actor(g,s))
 
+StateKey(::Game, s::Integer) = StateKey(s)
+StateKey(g::Game, s::AbstractString) =
+	(q = contains(s, '/') ? s : namespace(g)*'/'*s; StateKey(hash(q)))
+StateKey(::Game, ::typeof(exit)) = StateKey(zero(UInt))
+StateKey(::Game, ::typeof(!isvalid)) = StateKey(!isvalid)
 """
     say({text | (label => text)}*; priority, trigger)
 
@@ -2126,25 +2128,39 @@ say(g::Game, text::AbstractString; kw...) =
 say(g::Game, pair::Pair{<:Any,<:AbstractString}; kw...) =
 	say2(g, pair[1], pair[2]; kw...)
 SayText = Union{AbstractString,Pair{<:Any,<:AbstractString}}
-say3(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
+say(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
 
 say2(g::Game, label, text::AbstractString; kw...) =
-	add_state!(g.dialog_context, label, Strref(g, text); kw...)
-state(g::Game, label) = set_state!(g.dialog_context, label)
+	add_state!(g.dialog_context, StateKey(g, label), Strref(g, text); kw...)
+state(g::Game, label) = set_state!(g.dialog_context, StateKey(g, label))
 """
     reply(text => label)
 
 Introduces a state transition (player reply) pointing to the given label.
 The label may be one of:
- - ("actor", state)
- - state  (uses current actor)
- - `exit` (creates a final transition)
+ - ("actor", state) (equivalently "actor" => state);
+ - state  (uses current actor);
+ - `exit` (creates a final transition).
+
+State may be either numeric (referring to the base game's states) or string.
+In the latter case, it will be prefixed by the current namespace,
+using the same rules as resource references
+(i.e. `"namespace/state"`, unless the name already contains a slash,
+in which case the corresponding namespace will be used).
+This prevents states from different namespaces from interfering.
+
 
 ## Special forms:
 
  - `reply(exit)` creates a text-less, final transition;
  - `reply(text)` creates a pending transition: this will be connected to the
    next state inserted (via `say`).
+
+## Examples:
+    # chain to other actor:
+    reply("Say Hi to Hull" => "hull" => 0)
+    # connect pending transition:
+    say("How do you do?") reply("Fine!") say("Let'sa go!") reply(exit)
 """
 reply(g::Game, (text, target)::Pair; kw...) = reply(g, text, target; kw...)
 reply(g::Game, ::typeof(exit); kw...) = reply(g, nothing, exit; kw...)
@@ -2158,8 +2174,8 @@ reply(g::Game, text, target; kw...) =
 reply(g::Game, text, ::typeof(exit); kw...) =
 	reply(g, text, "", 0; terminates = true, kw...)
 
-reply(g::Game, text, actor, state; kw...) =
-	add_transition!(g.dialog_context, Strref(g,text), actor, state; kw...)
+reply(g::Game, text, actor, label; kw...) = add_transition!(g.dialog_context,
+	Strref(g,text), actor, StateKey(g, label); kw...)
 """
     trigger(string)
 
@@ -2307,13 +2323,19 @@ for f in (init!, str, shortref, longref, register!, save,
 	z = zip(argn[3:end], argt[3:end])
 	lhs = (:($n::$t) for (n,t) in z)
 	rhs = (n for (n,t) in z)
-	eval(:($(nameof(f))($(lhs...)) = $f(game, $(rhs...))))
+# 	if m.isva
+# 		eval(:($(nameof(f))($(lhs...)) = $f(game, $(rhs...)...)))
+# 	else
+		eval(:($(nameof(f))($(lhs...)) = $f(game, $(rhs...))))
+# 	end
 end
 @inline Base.convert(T::Type{Strref},s::Union{Nothing,AbstractString})=T(game,s)
 @inline Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game, s)
 @inline Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
 @inline Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =
 	copy(game, x, args...; kwargs...)
+# the above code does not work with variadic (XXX)
+say(args::SayText...; kw...) = say(game, args...; kw...)
 
 # debug
 function modified_objs()

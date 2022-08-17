@@ -94,8 +94,6 @@ end
 	let l = findfirst(iszero, s.chars); isnothing(l) ? sizeof(s) : l-1; end
 @inline Base.codeunit(s::StaticString, i::Integer) = s.chars[i]
 @inline Base.codeunit(::StaticString) = UInt8
-@inline Base.lowercase(s::StaticString{N}) where{N} =
-	StaticString{N}(SVector{N,UInt8}(c|>Char|>lowercase|>UInt8 for c in s.chars))
 # We handle only ASCII strings...
 @inline Base.isvalid(::StaticString, ::Integer) = true
 @inline function Base.iterate(s::StaticString, i::Integer = 1)
@@ -1661,7 +1659,7 @@ Methods include:
  - `names(game, Resref"type")`: returns a vector of all names of
    existing resources of this type.
 """
-@with_kw struct Game
+@with_kw_noshow struct Game
 	directory::Base.RefValue{String} = Ref("")
 	key::KeyIndex = KeyIndex()
 	override::Dict{Symbol, Set{String}} = Auto()
@@ -2315,7 +2313,7 @@ const game = Game()
 # define a corresponding method where the global `game` is used.
 for f in (init!, str, shortref, longref, register!, save,
 		language, namespace,
-		item, items, actor, say, reply, action, trigger, journal, stateindex),
+		item, items, actor, reply, action, trigger, journal, stateindex),
 		m in methods(f)
 	argt = m.sig.parameters
 	(length(argt) ≥ 2 && argt[2] == Game) || continue
@@ -2335,7 +2333,9 @@ end
 @inline Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =
 	copy(game, x, args...; kwargs...)
 # the above code does not work with variadic (XXX)
-say(args::SayText...; kw...) = say(game, args...; kw...)
+say(args...; kw...) = say(game, args...; kw...)
+say(::Game, ::Game, args...; kw...) = 
+	error("no `say` method for $(typeof.(args))")
 
 # debug
 function modified_objs()

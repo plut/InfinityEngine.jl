@@ -27,33 +27,54 @@ use cases.
 
 ## Design goals
 The design goals include:
- - speed: WeiDU is a scripting language, which may also call local shell
-   scripts etc. Also, since each mod is a standalone program, huge files
-   (namely `dialog.tlk`) are rewritten many times (even for tiny
-   changes), leading to quadratic complexity. InfinityExplorer is written
-   in Java and hence quite slow. On the other hand, mods written as Julia
-   scripts using these tools could run as standalone Julia programs and
-   thus be quite fast.
- - portability: Julia is portable as long as some basic precautions are
-   taken. (In particular, since these tools are developed on Unix, at
-   least some care will be taken w.r.t filenames case-sensitivity.
-   Ideally this should be able to run without any ugly solution such as
-   `ciopfs` or a separate NTFS partition).
- - user-friendliness (CLI style): prevent the user from needing to learn
-   several esoteric languages and instead use a general-purpose language.
-   Also, having mods as Julia programs should ideally ease their
-   development, testing, and validation before release.
-   (on the other hand, I had *several* WeiDU mods crash on install
-   because of a missing tilde in some released translation files:
-   **this should not happen**. And I'm not even counting the number of
-   UTF8-related errors!).
- - robustness: see above.
 
+### Robustness
 
+This module tries to have an in-depth­view of game structures,
+which means that checks will be quite easy to implement
+(e.g. missing resources, missing translated strings etc.).
+And using a “real” programming language means that at least
+syntax is easy to validate.
+
+(on the other hand, I had several WeiDU mods crash on install
+because of a missing tilde in some released translation files:
+**this should not happen**. And I'm not even counting the number of
+UTF8-related errors!).
+
+### User-friendliness (CLI style)
+
+Prevent the user from needing to learn several esoteric languages (`tp2`,
+`d`) and instead use a general-purpose language.
+
+Also, because this tries to expose game structures more throughly than
+WeiDU, it should require less frequent use of IESDP's documentation.
+
+Finally, having mods as Julia programs should ideally ease their
+development, testing, and validation before release.
+
+### Portability
+
+Julia itself is portable, and code can be kept portable as long as some basic precautions are taken (e.g. `joinpath` instead of using slashes, etc.).
+
+In particular, since this tool is developed on Unix, at
+least some care will be taken w.r.t filenames case-sensitivity.
+Ideally this should be able to run without any ugly solution such as
+`ciopfs` or a separate NTFS partition, which should help with speed.
+
+### Speed
+
+Julia is a quite fast language (it is more-or-less a C code generator
+after all) whereas WeiDU is a scripting language,
+which may also call local shell scripts etc.
+
+Also, since each WeiDU mod is a standalone program, huge files
+(namely `dialog.tlk`) are rewritten many times (even for tiny
+changes), leading to quadratic complexity. InfinityExplorer is written
+in Java and hence quite slow.
 
 ## Dialogs
 
-This module also contains Julia syntax for defining dialogs.
+This module defines Julia syntax for IE dialogs.
 
 The goal here is to have something simpler to use than Weidu's `.d`
 syntax, by *not* writing a parser and using Julia's instead.

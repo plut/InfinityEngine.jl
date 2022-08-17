@@ -1,0 +1,4 @@
+name = "InfinityEngine"
+uuid = "db4098a7-f8f2-406b-8234-eadcec31f805"
+authors = ["Jerome Plut <jerome@fugue.cf>"]
+version = "0.1.0"

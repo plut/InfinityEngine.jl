@@ -22,7 +22,8 @@ advantages:
 
 
 Current status: **very limited use cases**. This can currently load,
-display and (sometimes) edit items and dialogs.
+display and (sometimes) edit items and dialogs. It is not yet possible to
+define a mod.
 
 **This is currently limited to BGEE, BG2EE and EET games.**
 Adding support for other IE games is a (long-term) goal
@@ -124,3 +125,15 @@ say(0 => "I'm surprised that stuffy ol' Gorion let you away...")
 
 Current status: **proof-of-concept**. What code exists is only to try and
 reach a usable *syntax* for defining dialogs.
+
+## But WeiDU already exists!
+
+And it has certainly been used to write lots of wonderful work. But these
+games have already been out for 20 years and will (hopefully) be out for
+at least as long, so it's never too late to try and build something even
+better than WeiDU.
+
+Also, a (long-term) goal is to automate at least a part of translation
+from WeiDU to this tool (it is very likely possible to do this at least
+for `.d` files), making it easy to port a mod from one language to
+another.

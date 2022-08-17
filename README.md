@@ -1,29 +1,32 @@
 # Infinity Engine editor
 
 Access InfinityEngine data from within a “real” programming language.
-Expected advantages w.r.t WeiDU:
+This will eventually be able to do what WeiDU does, with the following
+advantages:
 
  - no need to learn several esoteric languages: `.tp2` and `.d` can both
    be replaced by standard Julia syntax;
  - WeiDU more or less always assumes that it is run interactively, which
    is quite inconvenient for large installations;
- - we could have an easier syntax for defining e.g. items:
-    Item("Sword of Infinity", etc.)
+ - easier syntax for defining game objects, e.g. we can currently say
+    Longsword("Sword of Infinity", +5, ...)
  - resolution of namespace conflicts via modules + automatic generation of
    resource names;
- - speed (besides this being faster than OCaml, all changes could be
-   computed in one single execution of the program, e.g. no need to do
-   many rewrites of `dialog.tlk` with total quadratic complexity...);
- - allows validation of mod content (e.g. translations in .po format?);
+ - speed (all changes could be computed in one single execution of the program:
+   no need to do many rewrites of `dialog.tlk` with total
+   quadratic complexity...);
+ - allows validation of mod content (future: translations in `.po` format?);
  - allows easier inclusion of mod metadata;
- - built-in portability (no need to call shell scripts or .bat files,
+ - built-in portability (no need to call shell scripts or `.bat` files,
    Julia contains all the needed functions).
 
 
-Current status: **very limited use cases**. This can currently load and
-display strings, items and dialogues (but not yet modify them).
-However, this indeed seems very much faster than NearInfinity for those
-use cases.
+Current status: **very limited use cases**. This can currently load,
+display and (sometimes) edit items and dialogs.
+
+**This is currently limited to BGEE, BG2EE and EET games.**
+Adding support for other IE games is a (long-term) goal
+(only once this is able to run full BGEE mods!).
 
 ## Design goals
 The design goals include:
@@ -46,20 +49,31 @@ UTF8-related errors!).
 Prevent the user from needing to learn several esoteric languages (`tp2`,
 `d`) and instead use a general-purpose language.
 
-Also, because this tries to expose game structures more throughly than
-WeiDU, it should require less frequent use of IESDP's documentation.
+The module tries hard to abstract some of the game's ugliest points away
+from the user: namely, it offers namespaces for game objects, to prevent
+mod interference without requiring the use of two-byte prefixes;
+and object properties are referenced by name (e.g. `item.type`)
+instead of by numeric offset (e.g. `0x1c`). This should help in
+writing efficient (and roust) code without requiring frequent use
+of [IESDP documentation](https://gibberlings3.github.io/iesdp).
 
 Finally, having mods as Julia programs should ideally ease their
 development, testing, and validation before release.
 
 ### Portability
 
-Julia itself is portable, and code can be kept portable as long as some basic precautions are taken (e.g. `joinpath` instead of using slashes, etc.).
+Julia itself is portable (at least on all platforms able to run IE
+games), and code can be kept portable as long as some basic precautions
+are taken (e.g. `joinpath` instead of using slashes, etc.).
 
 In particular, since this tool is developed on Unix, at
 least some care will be taken w.r.t filenames case-sensitivity.
 Ideally this should be able to run without any ugly solution such as
 `ciopfs` or a separate NTFS partition, which should help with speed.
+
+Also, where some mods require the use of shell scripts or batch files,
+Julia contains all the basic shell functions (`mv`, `mkdir` etc),
+allowing to write such scripts in a portable way.
 
 ### Speed
 
@@ -71,6 +85,9 @@ Also, since each WeiDU mod is a standalone program, huge files
 (namely `dialog.tlk`) are rewritten many times (even for tiny
 changes), leading to quadratic complexity. InfinityExplorer is written
 in Java and hence quite slow.
+
+(No benchmarks have been done yet, although this seems indeed quite
+faster than InfinityExplorer).
 
 ## Dialogs
 
@@ -90,6 +107,20 @@ WeiDU”:
    by solving all the `resref` machinery without user intervention
    (a bit like what WeiDU does with `srref`, but in a more user-friendly
    way).
+
+Here is a short example of this syntax, namely Imoen's dialog from BG1
+prologue:
+```text/julia
+# actor 'imoen' with 10 states:
+trigger("  NumberOfTimesTalkedTo(0)\r\n")
+say(0 => "I'm surprised that stuffy ol' Gorion let you away...")
+# 5 transitions: 
+  reply("I'm afraid I cannot chat today, little one....")
+  journal("My old friend Imoen pestered me today...")
+ 
+  trigger("  ReactionLT(LastTalkedToBy,NEUTRAL_LOWER)\r\n")
+  reply("I am sorry, child, but I am not to tell anyone what I am doing...")
+```
 
 Current status: **proof-of-concept**. What code exists is only to try and
 reach a usable *syntax* for defining dialogs.

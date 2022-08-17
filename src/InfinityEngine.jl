@@ -44,6 +44,7 @@ export Dice, d2, d3, d4, d5, d6, d8, d10, d12, d20
 end
 
 using .DiceThrows
+include("mdict.jl"); using .MultiDicts
 include("pack.jl"); using .Pack
 include("dottedenums.jl"); using .DottedEnums
 include("opcodes.jl"); using .Opcodes: Opcode
@@ -289,7 +290,8 @@ end
 @inline root!(x::ResIO, r) = (x.root = r)
 
 "`ResourceType{ResIO{T}}` = the root type to attach to this `ResIO` fd"
-@inline ResourceType(T::Type{<:ResIO}) = Base.return_types(read,Tuple{T})|>first
+@inline ResourceType(T::Type{<:ResIO})= Base.return_types(read,Tuple{T})|>only
+# valtype(fieldtype(Game, :changes), T) # not all resources are registered
 
 macro ResIO_str(str)
 	if contains(str, '.')
@@ -1680,8 +1682,10 @@ Methods include:
 	shortref::Dict{String,StaticString{8}} = Auto()
 	longref::Dict{StaticString{8},String} = Auto()
 
-	modified_items::Dict{Resref"ITM",Item} = Auto()
-	modified_actors::Dict{Resref"dlg",Actor} = Auto()
+	changes::@MultiDict{
+		Resref"ITM" => Item,
+		Resref"DLG" => Actor
+	} = Auto()
 	dialog_context::DialogContext = Auto()
 end
 function Base.show(io::IO, g::Game)
@@ -1809,26 +1813,19 @@ Base.eltype(::ShortrefIterator{L}) where{L} = StaticString{L}
 #  - override directory,
 #  - key/bif archives.
 
-# default case for modified_objs
-@inline modified_objs(g::Game, T::Type{<:Resref}) = Nothing
-# By examing the field types of Game structure, determine the correct
-# registry field for each resource type: Item => modified_items, etc.
-for (i,T) in pairs(fieldtypes(Game))
-	(T <: Dict && keytype(T) <: Resref) || continue
-	R = valtype(T); R <: RootResource || continue
-	@eval @inline modified_objs(g::Game, ::Type{$(keytype(T))}) = getfield(g, $i)
-end
+@inline changes(g, x::DataType) = g.changes[x]
+@inline changes(g, x) = changes(g, typeof(x))
 
 @inline register!(g::Game, x::RootResource) =
 begin
-# 	println("\e[34;1m register!($(x.ref))\e[m")
-	(modified_objs(g, typeof(x.ref))[x.ref]=x)
+	println("\e[34;1m register!($(x.ref))\e[m")
+	changes(g, x.ref)[x.ref] = x
 end
 
 Base.haskey(g::Game, ref::Resref) = haskey(g, nameof(ref), resourcetype(ref))
 function Base.haskey(g::Game, str::AbstractString, type::Symbol)
 	s = shortref(g, str)
-	haskey2(modified_objs(g, Resref{type}), str) ||
+	haskey2(changes(g, Resref{type}), str) ||
 	haskey(game.key, s, type) ||
 	(haskey(game.override, type) && haskey(game.override[type], s))
 end
@@ -1846,7 +1843,7 @@ function get3(g::Game, res::Resref, def::Base.Callable; override = true)
 	read(ResIO{T}(res, buf))
 end
 Base.get(f::Base.Callable, g::Game, ref::Resref) =
-	get2(f, g, modified_objs(g, typeof(ref)), ref)
+	get2(f, g, changes(g,ref), ref)
 @inline Base.get(g::Game, ref::Resref, x) = get(()->x, g, ref)
 
 get2(f::Base.Callable, g::Game, ::Nothing, ref::Resref) =
@@ -1870,7 +1867,7 @@ Base.get!(g::Game, ref::Resref, x) = get(()->x, g, ref)
 #  - unmodified: use original state key
 #  - not-existing: return 0
 function stateindex(g::Game, r::Resref"dlg", key::StateKey)
-	a = get(modified_objs(g, Resref"dlg"), r, nothing)
+	a = get(changes(g, r), r, nothing)
 	!isnothing(a) && return a.states[key].position
 	@assert haskey(g, r)
 	return fieldtype(State, :position)(key.n)
@@ -2196,8 +2193,8 @@ Attaches a journal entry to the latest transition."""
 function save(g::Game)
 	# Modified items
 	# XXX: iterate over dict fields, etc.
-	println("\e[1mWriting $(length(game.modified_items)) modified items\e[m")
-	for itm in values(game.modified_items)
+	println("\e[1mWriting $(length(changes(g, Resref"itm"))) modified items\e[m")
+	for itm in values(changes(g, Resref"itm"))
 		save(game, itm)
 	end
 	open(longref_file(g), "w") do io
@@ -2236,7 +2233,7 @@ function Base.copy(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
 		r = namespace(g)*'/'* replace(str(g, y.name), r"[^a-zA-Z0-9]" => "")
 		i = 1
 		while haskey(g.shortref, r) ||
-				haskey(modified_objs(g, typeof(x.ref)), oftype(x.ref, r))
+				haskey(changes(g, x.ref), oftype(x.ref, r))
 			r = replace(r, r"~\d*$" => "")*'~'*string(i)
 			i+= 1
 		end
@@ -2338,11 +2335,10 @@ say(::Game, ::Game, args...; kw...) =
 	error("no `say` method for $(typeof.(args))")
 
 # debug
-function modified_objs()
-	for (i,T) in pairs(fieldtypes(Game))
-		(T <: Dict && keytype(T) <: Resref) || continue
-		println("\e[33m$(length(getfield(game, i))) $(fieldname(Game, i)):\e[m")
-		for (k,v) in pairs(getfield(game, i))
+function changes()
+	for d in game.changes
+		println("\e[33mmodified $(valtype(d)|>nameof): $(length(d))\e[m")
+		for (k,v) in pairs(d)
 			println("  $(k.name)\t$(v.ref.name)")
 		end
 	end

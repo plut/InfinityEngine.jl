@@ -2015,7 +2015,7 @@ end
 # 	(get!(dict, key, value); refdict(dict, key))
 # 
 # ««2 Namespace and language
-"""    namespace(game, s)
+"""    namespace([game], s)
 
 Sets the current namespace for game resources being defined to `s`.
 The following default namespaces are used:
@@ -2031,14 +2031,17 @@ function set_language!(g::Game, i::Integer)
 	g.strings[i] =
 		read(joinpath(g.directory[], "lang", LANGUAGE_FILES[i][2]), TlkStrings)
 end
-"""    language(game, s)
+"""    language([game], s)
 
 Sets the current language of the game (i.e. the language in which
 strings entered as parameters for functions will be interpreted)
 to the one given by string `s`.
 
 Allowed values are:
-$(join([replace(replace(repr(x[1]), r"(^r\"\^|\"i$|\.\*)"=>""), "*" => "\\*") for x in LANGUAGE_FILES], ", ")).
+$(join(["`\""*replace(replace(repr(x[1]), r"(^r\"\^|\"i$|\.\*)"=>""), "*" => "\\*")*"\"`" for x in LANGUAGE_FILES], ", ")).
+
+(Some languages exist in both a male and female version; for simplicity,
+these are (at least for now) considered as two independent languages).
 """
 function language(g::Game, s::AbstractString)
 	for (i, (r, f)) in pairs(LANGUAGE_FILES)
@@ -2079,7 +2082,14 @@ function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
 	end
 end
 #««2 Accessors: `item` etc.
+"""    item([game], ref)
+
+Returns the item with given reference."""
 @inline item(g::Game, name::AbstractString) = g[Resref"itm"(g, name)]
+"""    items([game], [regex])
+
+Returns an iterator over all items. If a `regex` is provided then
+only those items with matching reference are included."""
 @inline items(g::Game, r::Union{String,Regex}...) =
 	(item(g, n) for n in names(g, Resref"itm", r...))
 
@@ -2088,7 +2098,7 @@ get_actor(g::Game, s::AbstractString) = get_actor(g, Resref"dlg"(s))
 get_actor(g::Game, ref::Resref"dlg") = get!(g, ref, Actor(;ref))
 
 """
-    actor("name")
+    actor([game], "name")
 
 Loads the named actor from game files, or creates an empty actor if
 none exists with this name.
@@ -2127,6 +2137,10 @@ say(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
 
 say2(g::Game, label, text::AbstractString; kw...) =
 	add_state!(g.dialog_context, StateKey(g, label), Strref(g, text); kw...)
+"""    state([game,] label)
+
+Sets current state to `label`. The state must exist.
+"""
 state(g::Game, label) = set_state!(g.dialog_context, StateKey(g, label))
 """
     reply(text => label)
@@ -2190,6 +2204,9 @@ Attaches a journal entry to the latest transition."""
 	add_journal!(current_transition(g.dialog_context), s; kw...)
 
 #««2 Saving game data
+"""    save([game])
+
+Saves all changed game data to the disk installation."""
 function save(g::Game)
 	# Modified items
 	# XXX: iterate over dict fields, etc.
@@ -2349,4 +2366,7 @@ function extract(r::Resref, fn::AbstractString = nameof(r)*'.'*string(resourcety
 end
 #»»1
 
+export save, namespace, language
+export item, items
+export actor, say, reply, journal, action, trigger, state
 end # module

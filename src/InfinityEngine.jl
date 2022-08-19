@@ -318,15 +318,14 @@ mutable struct TLK_str
 	length::Int32
 	string::String
 end
-mutable struct TlkStrings
-	constant::Constant"TLK V1  "
-	lang::UInt16
-	nstr::Int32
-	offset::Int32
-	entries::Vector{TLK_str}
-	index::Dict{String,Int32}
+@with_kw mutable struct TlkStrings
+	constant::Constant"TLK V1  " = Auto()
+	lang::UInt16 = 0
+	nstr::Int32 = 0
+	offset::Int32 = 0
+	entries::Vector{TLK_str} = Auto()
+	index::Dict{String,Int32} = Auto()
 end
-@inline TlkStrings() = TlkStrings((), 0, 0, 0, TLK_str[], Dict{String,Int32}())
 @inline Base.show(io::IO, tlk::TlkStrings) =
 	print(io, "<TlkStrings with ", length(tlk.entries), " entries>")
 @inline Base.isempty(v::TlkStrings) = isempty(v.entries)
@@ -477,13 +476,10 @@ Methods include:
  - `keys(key, type)`: returns an iterator over all names of resources
    of this type present in the game.
 """
-struct KeyIndex
-	directory::Base.RefValue{String}
-	bif::Vector{String}
-	location::Dict{Symbol,Dict{StaticString{8},BifIndex}}
-# 	location::Dict{Tuple{StaticString{8},Symbol},BifIndex}
-	@inline KeyIndex() =
-		new(Ref(""), [], Dict{Symbol,Dict{Tuple{StaticString{8},BifIndex}}}())
+@with_kw struct KeyIndex
+	directory::Base.RefValue{String} = Ref("")
+	bif::Vector{String} = Auto()
+	location::Dict{Symbol,Dict{StaticString{8},BifIndex}} = Auto()
 end
 function Base.push!(key::KeyIndex, ref::KEY_res)
 	d = get!(key.location, Symbol(ref.type), Dict{StaticString{8},BifIndex}())

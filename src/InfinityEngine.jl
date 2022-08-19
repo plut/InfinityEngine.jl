@@ -506,11 +506,6 @@ function Base.push!(key::KeyIndex, ref::KEY_res)
 	d[lowercase(ref.name)] = ref.location
 end
 @inline Base.length(key::KeyIndex) = key.location|>values.|>length|>sum
-function Pack.unpack(io::IO, ::Type{KEY_res})
-	return KEY_res(unpack(io, StaticString{8}),
-		unpack(io, Restype),
-		unpack(io, BifIndex))
-end
 
 init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
 	key.directory[] = dirname(filename)
@@ -1662,6 +1657,15 @@ struct GameChanges
 	dlg::Dict{Resref"dlg",Actor}
 	@inline GameChanges() = new((Auto() for _ in 1:fieldcount(GameChanges))...,)
 end
+@inline alldicts(c::GameChanges) = (getfield(c,i) for i in 1:nfields(c))
+@inline Base.empty!(c::GameChanges) = c|>alldicts.|>empty!
+@inline Base.length(c::GameChanges) = c|>alldicts.|>length|>sum
+Base.show(io::IO, ::MIME"text/plain", c::GameChanges) = for dict in alldicts(c)
+	println("\e[33mmodified $(valtype(dict)|>nameof): $(length(dict))\e[m")
+	for (k,v) in pairs(dict)
+		println("  $(k.name)\t$(v.ref.name)")
+	end
+end
 """    Game
 
 Main structure holding all top-level data for a game installation, including:
@@ -1702,10 +1706,11 @@ This structure works as a pseudo-dictionary, i.e. indexed by resource types:
 	changes::GameChanges = Auto()
 	dialog_context::DialogContext = Auto()
 end
-function Base.show(io::IO, g::Game)
-	print(io, "<Game: ", length(g.key), " keys, ", length(g.override),
-		" overrides, ", count(!isempty, g.strings), " languages>")
-end
+Base.show(io::IO, g::Game) = print(io, "<Game: ",
+	length(g.key), " keys, ", length(g.override), " overrides, ",
+	length(changes(g)), " changes, ", count(!isempty, g.strings), " languages, ",
+	length(g.strings[g.language[]]), " strings, ",
+	length(g.new_strings), " new strings>")
 const LANGUAGE_FILES = (#««
 	# We need to put the xxF before xx, because the regexp search goes
 	# linearly through this list:
@@ -1831,6 +1836,7 @@ for T in fieldnames(GameChanges)
 	@eval changes(g::Game, ::Type{<:Resref{$(QuoteNode(T))}}) = g.changes.$T
 end
 @inline changes(g::Game, r::Resref) = changes(g, typeof(r))
+@inline changes(g::Game) = g.changes
 
 @inline register!(g::Game, x::RootResource) =
 begin
@@ -2336,7 +2342,7 @@ const game = Game()
 # For all methods of those functions starting with a `::Game` argument:
 # define a corresponding method where the global `game` is used.
 for f in (init!, str, shortref, longref, register!, save,
-		language, namespace,
+		language, namespace, changes,
 		item, items, actor, reply, action, trigger, journal, stateindex),
 		m in methods(f)
 	argt = m.sig.parameters
@@ -2362,14 +2368,6 @@ say(::Game, ::Game, args...; kw...) =
 	error("no `say` method for $(typeof.(args))")
 
 # debug
-function changes()
-	for i in 1:nfields(game.changes); d = getfield(game.changes, i)
-		println("\e[33mmodified $(valtype(d)|>nameof): $(length(d))\e[m")
-		for (k,v) in pairs(d)
-			println("  $(k.name)\t$(v.ref.name)")
-		end
-	end
-end
 function extract(f::AbstractString, g::AbstractString = f)
 	name, type = rsplit(f, '.'; limit=2)
 	isdir(g) && (g = joinpath(g, f))

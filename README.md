@@ -87,8 +87,9 @@ Also, since each WeiDU mod is a standalone program, huge files
 changes), leading to quadratic complexity. InfinityExplorer is written
 in Java and hence quite slow.
 
-(No benchmarks have been done yet, although this seems indeed quite
-faster than InfinityExplorer).
+Currently, this module can load all the un-modded game data
+in almost-negligible time (about 8 milliseconds on a typical laptop,
+assuming Julia is already running).
 
 ## Dialogs
 

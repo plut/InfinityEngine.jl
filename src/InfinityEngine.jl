@@ -506,8 +506,11 @@ function Base.push!(key::KeyIndex, ref::KEY_res)
 	d[lowercase(ref.name)] = ref.location
 end
 @inline Base.length(key::KeyIndex) = key.location|>values.|>length|>sum
+@inline Pack.unpack(io::IO, ::Type{KEY_res}) = # this helps with speed...
+	KEY_res(unpack(io,StaticString{8}), unpack(io,Restype), unpack(io,BifIndex))
 
 init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
+	io = IOBuffer(read(io, String)) # helps (a lot) with speed
 	key.directory[] = dirname(filename)
 	header = unpack(io, KEY_hdr)
 	bifentries = unpack(seek(io, header.bifoffset), KEY_bif, header.nbif)
@@ -517,6 +520,7 @@ init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
 		push!(key, res)
 	end
 	return key
+	close(io)
 end
 
 KeyIndex(filename::AbstractString) = init!(KeyIndex(), filename)

@@ -92,13 +92,21 @@ end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) =
 	let l = findfirst(iszero, s.chars); isnothing(l) ? sizeof(s) : l-1; end
+@inline function Base.:(==)(x::StaticString{N}, y::StaticString{N}) where{N}
+	for i in 1:N
+		@inbounds x.chars[i] == y.chars[i] || return false
+		@inbounds iszero(x.chars[i]) && break
+	end
+	return true
+end
+
 @inline Base.codeunit(s::StaticString, i::Integer) = s.chars[i]
 @inline Base.codeunit(::StaticString) = UInt8
 # We handle only ASCII strings...
 @inline Base.isvalid(::StaticString, ::Integer) = true
 @inline function Base.iterate(s::StaticString, i::Integer = 1)
 	i > length(s) && return nothing
-	c = s.chars[i]
+	c = @inbounds s.chars[i]
 	iszero(c) && return nothing
 	(Char(c), i+1)
 end
@@ -115,8 +123,19 @@ end
 @inline charlc(x::UInt8) = (0x41 ≤ x ≤ 0x5a) ? x+0x20 : x
 @inline Base.uppercase(s::StaticString) = typeof(s)(charuc.(s.chars))
 @inline Base.lowercase(s::StaticString) = typeof(s)(charlc.(s.chars))
-@inline Base.hash(s::StaticString{8}) =
-	reinterpret(Int64,[s.chars...])|>only|>hash
+@inline function Base.hash(s::StaticString{8})
+	n1 = @inbounds Int64(s.chars[1])
+	n2 = @inbounds Int64(s.chars[2])
+	n3 = @inbounds Int64(s.chars[3])
+	n4 = @inbounds Int64(s.chars[4])
+	n5 = @inbounds Int64(s.chars[5])
+	n6 = @inbounds Int64(s.chars[6])
+	n7 = @inbounds Int64(s.chars[7])
+	n8 = @inbounds Int64(s.chars[8])
+	hash(n1 | (n2<<8) | (n3 << 16) | (n4 << 24) | (n5 << 32) |
+		(n6 << 40) | (n7 << 48) | (n8 << 56))
+end
+# 	reinterpret(Int64,[s])|>only|>hash
 
 #««2 Strref
 """    Strref
@@ -159,7 +178,7 @@ macro Resref_str(s)
 	s = lowercase(s)
 	i = findlast('.', s)
 	isnothing(i) ? Resref{Symbol(s)} :
-		Resref{Symbol(view(s, i+1:length(s)))}(view(s, 1:i-1))
+		view(s,1:i-1) |> Resref{view(s,i+1:length(s))|>Symbol}
 end
 
 #««2 Rooted resources
@@ -375,7 +394,7 @@ end
 function Base.getindex(f::TlkStrings, s::Strref)
 	i = s.index
 	i ∈ eachindex(f.entries) || (i = 0)
-	f.entries[i+1]
+	@inbounds f.entries[i+1]
 end
 Base.findall(r::Union{Regex,AbstractString}, tlk::TlkStrings) =
 	[ Strref(i-1) for (i,s) in pairs(tlk.entries) if contains(s.string, r) ]
@@ -398,11 +417,12 @@ struct BifIndex; data::UInt32; end
 struct Restype; data::UInt16; end
 # ««2 ResIO type table
 
-# Static correspondence between UInt16 and strings (actually symbols).
-struct RESOURCE_KEY; a::UInt16; end
-# const RESOURCE_KEY=UInt16
-@inline Base.hash(x::RESOURCE_KEY) = UInt(x.a == 4 ? 3 : (x.a % 62))
-const RESOURCE_TABLE = Dict(RESOURCE_KEY(a) => b for (a,b) in (#««
+# Static correspondence between UInt16 and symbols
+# This dictionary is quite crucial for (loading) performance;
+# we use a custom hash function to improve speed:
+@inline Base.hash(x::Restype) = UInt(x.data == 4 ? 3 : (x.data % 62))
+# (and yes, we checked that this indeed faster than Base.ImmutableDict).
+const RESOURCE_TABLE = Dict(Restype(a) => b for (a,b) in (#««
 	0x0001 => :bmp,
 	0x0002 => :mve,
 	0x0004 => :wav,
@@ -444,8 +464,7 @@ const RESOURCE_TABLE = Dict(RESOURCE_KEY(a) => b for (a,b) in (#««
 	0x0802 => :ini,
 	0x0803 => :src,
 ))#»»
-@inline Symbol(x::Restype) = RESOURCE_TABLE[RESOURCE_KEY(x.data)]
-# @inline String(x::Restype) = x|>Symbol|>String
+@inline Symbol(x::Restype) = RESOURCE_TABLE[x]
 
 # ««2 File blocks
 struct KEY_hdr
@@ -479,20 +498,27 @@ Methods include:
 @with_kw struct KeyIndex
 	directory::Base.RefValue{String} = Ref("")
 	bif::Vector{String} = Auto()
-	location::Dict{Symbol,Dict{StaticString{8},BifIndex}} = Auto()
+	location::Dict{Symbol,Dict{StaticString{8},BifIndex}} =
+		Auto(s => Dict{StaticString{8},BifIndex}() for s in values(RESOURCE_TABLE))
 end
 function Base.push!(key::KeyIndex, ref::KEY_res)
-	d = get!(key.location, Symbol(ref.type), Dict{StaticString{8},BifIndex}())
+	d = get!(key.location, Symbol(ref.type)) do; valtype(key.location)() end
 	d[lowercase(ref.name)] = ref.location
 end
 @inline Base.length(key::KeyIndex) = key.location|>values.|>length|>sum
+function Pack.unpack(io::IO, ::Type{KEY_res})
+	return KEY_res(unpack(io, StaticString{8}),
+		unpack(io, Restype),
+		unpack(io, BifIndex))
+end
 
 init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
 	key.directory[] = dirname(filename)
 	header = unpack(io, KEY_hdr)
 	bifentries = unpack(seek(io, header.bifoffset), KEY_bif, header.nbif)
 	push!(key.bif, (string0(io, x.offset, x.namelength) for x in bifentries)...)
-	for res in unpack(seek(io, header.resoffset), KEY_res, header.nres)
+	v = unpack(seek(io, header.resoffset), KEY_res, header.nres)
+	for res in v
 		push!(key, res)
 	end
 	return key
@@ -503,9 +529,9 @@ const XOR_KEY = "88a88fba8ad3b9f5edb1cfeaaae4b5fbeb82f990cac9b5e7dc8eb7aceef7e0c
 
 function decrypt(io::IO)
 	peek(io) != 0xff && return io
-	buf = Vector{UInt8}(read(seek(io,1), String))
+	buf = read(seek(io,1), String)|>codeunits # used to be Vector{UInt8}
 	for i in eachindex(buf)
-		buf[i] ⊻= XOR_KEY[mod1(i-1, length(XOR_KEY))]
+		buf[i] ⊻= @inbounds XOR_KEY[mod1(i-1, length(XOR_KEY))]
 	end
 	return IOBuffer(buf)
 end
@@ -537,7 +563,7 @@ bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
 	header = unpack(io, BIF_hdr)
 	seek(io, header.offset)
 	resources = unpack(io, BIF_resource, header.nres)
-	IOBuffer(read(seek(io, resources[index+1].offset), resources[index+1].size))
+	r = resources[index+1]; IOBuffer(read(seek(io, r.offset), r.size))
 end
 @inline function Base.open(key::KeyIndex, name::AbstractString, type::Symbol)
 	dict = get(key.location, type, nothing); isnothing(dict) && return nothing
@@ -559,7 +585,7 @@ function Base.read(io::IO, f::ResIO"IDS"; debug=false)
 	(!contains(line, " ") || startswith(line, "IDS")) && (line = readline(io))
 	!isnothing(match(r"^[0-9]*$", line)) && (line = readline(io))
 	list = Pair{Int,String}[]
-	while true
+	while !eof(io)
 		line = replace(line, r"\s*$" => "")
 		if !isempty(line)
 			s = split(line, r"\s+"; limit=2)
@@ -1099,7 +1125,6 @@ function Base.write(io::IO, itm::Item)
 	@assert position(io) == itm.effect_offset
 	pack(io, itm.effects)
 	for ab in itm.abilities
-# 		@printf("\e[32mpacking ab effects at offset %d = 0x%x\e[m\n", position(io), position(io))
 		pack(io, ab.effects)
 	end
 end
@@ -1389,7 +1414,7 @@ end
 @inline Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:states}, _) = 0
 @inline Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:sorted_keys}, _) = 0
 @inline firstlabel(a::Actor) =
-	first(Iterators.filter(i->!haskey(a.states, StateKey(i)), 0:length(a.states)))
+	Iterators.filter(i->!haskey(a.states, StateKey(i)), 0:length(a.states))|>first
 
 function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
 	for (k, v) in sort(pairs(a.states))
@@ -1418,7 +1443,7 @@ function Base.read(io::ResIO"DLG")::Actor
 	vs = unpack(seek(io,actor.offset_states), DLG_state, actor.number_states)
 	vt = unpack(seek(io, actor.offset_transitions),
 		DLG_transition, actor.number_transitions)
-	@inline getval(list, i) = i+1 ∈ eachindex(list) ? list[i+1] : ""
+	@inline getval(list, i) = i+1 ∈ eachindex(list) ? (@inbounds list[i+1]) : ""
 
 	for (i, s) in pairs(vs)
 		state = State(; s.text, trigger = getval(st_triggers, s.trigger),
@@ -1729,7 +1754,7 @@ function init!(g::Game, directory::AbstractString)
 	else
 		for f in readdir(o_dir)
 			(n, e) = f|>basename|>lowercase|>splitext; t = Symbol(e[2:end])
-			push!(get!(g.override, t, Set{String}()), n)
+			push!(get!(()->Set{String}(), g.override, t), n)
 		end
 		println("read $(sum(length(v) for (_,v) in g.override; init=0)) override resources")
 	end
@@ -1755,7 +1780,7 @@ Converts a short reference (i.e. an ≤8 byte string) to a long reference.
 function longref(g::Game, short::AbstractString)
 	# all “new” shortrefs should be referenced in the longrefs file,
 	# so shortrefs absent from here belong to "":
-	get(g.longref, short, String(short))
+	get(g.longref, short) do; String(short) end
 end
 """    shortref(game, resref)
 
@@ -1883,7 +1908,7 @@ Converts a string (entered by the user) to a long reference:
  - otherwise, return `(current_namespace, string)` (this is a forward decl.).
 """
 (R::Type{<:Resref})(g::Game, str::AbstractString) =
-	R(makeref(g, str, resourcetype(R)))
+	makeref(g, str, resourcetype(R))|>R
 # #««2 NamedResource
 # """    NamedResource{T,R,K}
 # 
@@ -2043,7 +2068,7 @@ function Strref(g::Game, s::AbstractString)
 	i = get(strings(g), s, nothing)
 	isnothing(i) || return i
 	i = findfirst!(isequal((language(g), s),), g.new_strings)
-	return Strref(i-1 + length(strings(g)))
+	return Strref(i-1 + g|>strings|>length)
 end
 @inline Strref(::Game, ::Nothing) = Strref(0) # graceful fail
 
@@ -2080,7 +2105,7 @@ only those items with matching reference are included."""
 
 #««2 Dialog-building functions
 get_actor(g::Game, s::AbstractString) = get_actor(g, Resref"dlg"(s))
-get_actor(g::Game, ref::Resref"dlg") = get!(g, ref, Actor(;ref))
+get_actor(g::Game, ref::Resref"dlg") = get!(g, ref) do; Actor(;ref); end
 
 """
     actor([game], "name")
@@ -2092,7 +2117,7 @@ actor(g::Game, s::AbstractString) = set_actor!(g.dialog_context, get_actor(g,s))
 
 StateKey(::Game, s::Integer) = StateKey(s)
 StateKey(g::Game, s::AbstractString) =
-	(q = contains(s, '/') ? s : namespace(g)*'/'*s; StateKey(hash(q)))
+	(q = contains(s, '/') ? s : namespace(g)*'/'*s; q|>hash|>StateKey)
 StateKey(::Game, ::typeof(exit)) = StateKey(zero(UInt))
 StateKey(::Game, ::typeof(!isvalid)) = StateKey(!isvalid)
 """
@@ -2114,7 +2139,7 @@ for the same current actor.
  - chain with actor change: `actor(name1) say(text1) actor(name2) say(text2)...`;
 """
 say(g::Game, text::AbstractString; kw...) =
-	say2(g, firstlabel(g.dialog_context|>current_actor), text; kw...)
+	say2(g, g.dialog_context|>current_actor|>firstlabel, text; kw...)
 say(g::Game, pair::Pair{<:Any,<:AbstractString}; kw...) =
 	say2(g, pair[1], pair[2]; kw...)
 SayText = Union{AbstractString,Pair{<:Any,<:AbstractString}}
@@ -2209,7 +2234,7 @@ function save(g::Game, x::RootResource)
 	ref = x.ref; T, s = resourcetype(ref), shortref(g, ref)
 	println("  \e[32m$ref => $s.$T\e[m")
 	write(joinpath(game.directory[], "override", uppercase(s)*'.'*string(T)), x)
-	push!(get!(g.override, T, Set{String}()), s)
+	push!(get!(()->Set{String}(), g.override, T), s)
 end
 
 #««1 Item/etc. factory
@@ -2220,9 +2245,9 @@ args_to_kw(x, args...) =
 
 Chained version of `get`."""
 @inline getkey(k, x1, default) = get(x1, k, default)
-@inline getkey(k, x1, y, z...) = get(x1, k, getkey(k, y, z...))
+@inline getkey(k, x1, y, z...) = get(x1, k) do; getkey(k, y, z...) end
 @inline getkey(f::Function, k, x1) = get(f, x1, k)
-@inline getkey(f::Function, k, x1, y...) = get(x1, k, getkey(f, k, y...))
+@inline getkey(f::Function, k, x1, y...) = get(x1, k) do; getkey(f, k, y...) end
 
 function Base.copy(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
 	kw2 = args_to_kw(x, args...)::NamedTuple
@@ -2323,7 +2348,7 @@ for f in (init!, str, shortref, longref, register!, save,
 # 	if m.isva
 # 		eval(:($(nameof(f))($(lhs...)) = $f(game, $(rhs...)...)))
 # 	else
-		eval(:($(nameof(f))($(lhs...)) = $f(game, $(rhs...))))
+		@eval $(nameof(f))($(lhs...)) = $f(game, $(rhs...))
 # 	end
 end
 @inline Base.convert(T::Type{Strref},s::Union{Nothing,AbstractString})=T(game,s)

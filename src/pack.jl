@@ -86,12 +86,10 @@ Unpacks `n` objects and returns a vector.
 @generated function unpack(io::IO, ::Type{T}) where{T}
 	isstructtype(T) || return :(read(io, T))
 	fv = [ Symbol("f$i") for i in 1:fieldcount(T) ]
-	code = [ :($v = unpack(io, $T, $(Val(n)), $t))
-# 		println("unpacked ", $(string(n)), ": ", $v);
+	code = [ :(unpack(io, $T, $(Val(n)), $t))
 		for (v, n, t) in zip(fv, fieldnames(T), fieldtypes(T)) ]
 # 	push!(code, :(println("fields are: ", ($(fv...),))))
-	push!(code, T <: Tuple ? :($T(($(fv...),))) : :($T($(fv...))))
-	Expr(:block, code...)
+	T <: Tuple ? :($T(($(code...),))) : :($T($(code...)))
 end
 # @inline function unpack(io::IO, T::DataType)
 # # 	if T <: Main.InfinityEngine.RootedResource
@@ -126,7 +124,8 @@ begin
 # 	x
 end
 
-unpack(io::IO, T::DataType, n::Integer) = [ unpack(io, T) for _ in 1:n ]
+@inline unpack(io::IO, T::DataType, n::Integer) =
+	(v = Vector{T}(undef, n); for i in 1:n; v[i] = unpack(io, T); end; v)
 unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
 @inline unpack(io::IO, T::Type{<:Dict}) = T()
 @inline unpack(io::IO, ::Type{String}) = ""
@@ -135,9 +134,11 @@ unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
 """    unpack!(io, array, n)
 
 Unpacks `n` objects to the given vector, resizing it in the process."""
-unpack!(io::IO, array::AbstractVector{T}, n::Integer) where{T} =
-	# no need to give the type since it is the eltype of the array
-	resize!(array, n) .= (unpack(io ,T) for _ in 1:n)
+@inline function unpack!(io::IO, array::AbstractVector{T}, n::Integer) where{T}
+	resize!(array, n)
+	for i in 1:n; array[i] = unpack(io, T); end
+	array
+end
 
 #««1 Pack
 """    pack(io, x)

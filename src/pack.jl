@@ -94,22 +94,24 @@ Unpacks `n` objects and returns a vector.
 # 		println("\e[31;1m$T\e[m: field $ft at positoin \e[32m$(position(io))\e[m")
 # 		push!(fieldvars, unpack(io, ft))
 # 	end
-	fieldvars = (fieldunpack(io, T, Val(fn), ft) for (fn, ft) in fieldnt(T))
+	fieldvars = (unpack(io, T, Val(fn), ft) for (fn, ft) in fieldnt(T))
 # 	fieldvars = [ unpack(io, ft) for ft in fieldtypes(T) ]
 	return T <: Tuple ? T((fieldvars...,),) : T(fieldvars...)
 end
-"""    fieldunpack(io, structtype, Val(fieldname), fieldtype)
+"""    unpack(io, structtype, Val(fieldname), fieldtype)
 
 Hook allowing the user to override `unpack`'s behaviour for a specific field.
 """
-@inline fieldunpack(io::IO, st, fn, ft::DataType) =
+@inline unpack(io::IO, st, fn, ft) =
 begin
 # 	st <: Main.InfinityEngine.RootedResource &&
-# 	println("general fieldunpack: $st/$fn/$ft @$(position(io))")
+# 	println("general unpack: $st/$fn/$ft @$(position(io))")
 # 	if fn == Val(:root)
 # 		println("\e[31;7m unpack(root) in $st/$fn/$ft\n$(typeof(io))\e[m")
 # 	end
-	unpack(io, ft)
+	x = unpack(io, ft)
+# 	println("  now @$(position(io))")
+# 	x
 end
 
 unpack(io::IO, T::DataType, n::Integer) = [ unpack(io, T) for _ in 1:n ]
@@ -214,7 +216,7 @@ macro ignorefield(expr)
 	# FIXME: make default value a `new` call
 	$fieldpack(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
 		::$(esc(ftype))) = 0
-	$(@__MODULE__).$(:fieldunpack)(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
+	$(@__MODULE__).$(:unpack)(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
 		T::Type{<:$(esc(ftype))}) = eval(Expr(:new, $(esc(ftype))))
 	$(@__MODULE__).$(:packed_sizeof)(::Type{<:$(esc(sname))}, ::Val{$fname},
 		::Type{<:$(esc(ftype))}) = 0

@@ -53,10 +53,10 @@ Prevent the user from needing to learn several esoteric languages (`tp2`,
 The module tries hard to abstract some of the game's ugliest points away
 from the user: namely, it offers namespaces for game objects, to prevent
 mod interference without requiring the use of two-byte prefixes;
-and object properties are referenced by name (e.g. `item.type`)
-instead of by numeric offset (e.g. `0x1c`). This should help in
-writing efficient (and roust) code without requiring frequent use
-of [IESDP documentation](https://gibberlings3.github.io/iesdp).
+and object properties are referred by name using standard Julia structs
+(e.g. `item.type`).
+This should help in writing efficient (and robust) code without requiring
+frequent use of [IESDP documentation](https://gibberlings3.github.io/iesdp).
 
 Finally, having mods as Julia programs should ideally ease their
 development, testing, and validation before release.
@@ -88,7 +88,7 @@ changes), leading to quadratic complexity. InfinityExplorer is written
 in Java and hence quite slow.
 
 Currently, this module can load all the un-modded game data
-in almost-negligible time (about 8 milliseconds on a typical laptop,
+in almost-negligible time (less than 4 milliseconds on a typical laptop,
 assuming Julia is already running).
 
 ## Dialogs

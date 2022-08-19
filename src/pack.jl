@@ -10,7 +10,9 @@ using StaticArrays
 using Printf
 using Base.Meta: isexpr
 
-@inline fieldnt(T::DataType) = zip(fieldnames(T), fieldtypes(T))
+# for efficiency we make this generated:
+@generated fieldnt(::Type{T}) where{T} = Expr(:tuple,
+	(:(($(QuoteNode(n)), $t)) for (n, t) in zip(fieldnames(T), fieldtypes(T)))...)
 
 #««1 Layout/packed_sizeof
 struct Layout
@@ -77,28 +79,38 @@ end
 Unpacks an object from a binary IO according to its packed layout.
 
 ---
-    unpack(io, T, n)
+    unpack(io, T, n::Integer)
 
 Unpacks `n` objects and returns a vector.
 """
-@inline function unpack(io::IO, T::DataType)
-# 	if T <: Main.InfinityEngine.RootedResource
-# 		println("\e[34m $T: $(position(io)) $(typeof(io))\e[m")
-# 	end
-# 	@assert !(T<:Main.InfinityEngine.ITM_hdr && position(io) == 1036)
-	# default value for non-`@pack` types
-# 	println("   unpacking \e[31m$T\e[m at position \e[34m$(position(io))\e[m")
-	isstructtype(T) || return read(io, T)
-# 	fieldvars = []
-# 	for (ft, fn) in zip(fieldtypes(T), fieldnames(T))
-# 		println("\e[31;1m$T\e[m: field $ft at positoin \e[32m$(position(io))\e[m")
-# 		push!(fieldvars, unpack(io, ft))
-# 	end
-	fieldvars = (unpack(io, T, Val(fn), ft) for (fn, ft) in fieldnt(T))
-# 	fieldvars = [ unpack(io, ft) for ft in fieldtypes(T) ]
-	return T <: Tuple ? T((fieldvars...,),) : T(fieldvars...)
+@generated function unpack(io::IO, ::Type{T}) where{T}
+	isstructtype(T) || return :(read(io, T))
+	fv = [ Symbol("f$i") for i in 1:fieldcount(T) ]
+	code = [ :($v = unpack(io, $T, $(Val(n)), $t))
+# 		println("unpacked ", $(string(n)), ": ", $v);
+		for (v, n, t) in zip(fv, fieldnames(T), fieldtypes(T)) ]
+# 	push!(code, :(println("fields are: ", ($(fv...),))))
+	push!(code, T <: Tuple ? :($T(($(fv...),))) : :($T($(fv...))))
+	Expr(:block, code...)
 end
-"""    unpack(io, structtype, Val(fieldname), fieldtype)
+# @inline function unpack(io::IO, T::DataType)
+# # 	if T <: Main.InfinityEngine.RootedResource
+# # 		println("\e[34m $T: $(position(io)) $(typeof(io))\e[m")
+# # 	end
+# # 	@assert !(T<:Main.InfinityEngine.ITM_hdr && position(io) == 1036)
+# 	# default value for non-`@pack` types
+# # 	println("   unpacking \e[31m$T\e[m at position \e[34m$(position(io))\e[m")
+# 	isstructtype(T) || return read(io, T)
+# # 	fieldvars = []
+# # 	for (ft, fn) in zip(fieldtypes(T), fieldnames(T))
+# # 		println("\e[31;1m$T\e[m: field $ft at positoin \e[32m$(position(io))\e[m")
+# # 		push!(fieldvars, unpack(io, ft))
+# # 	end
+# 	fieldvars = (unpack(io, T, Val(fn), ft) for (fn, ft) in fieldnt(T))
+# # 	fieldvars = [ unpack(io, ft) for ft in fieldtypes(T) ]
+# 	return T <: Tuple ? T((fieldvars...,),) : T(fieldvars...)
+# end
+"""    unpack(io, structtype, ::Val{fieldname}, fieldtype)
 
 Hook allowing the user to override `unpack`'s behaviour for a specific field.
 """
@@ -109,7 +121,7 @@ begin
 # 	if fn == Val(:root)
 # 		println("\e[31;7m unpack(root) in $st/$fn/$ft\n$(typeof(io))\e[m")
 # 	end
-	x = unpack(io, ft)
+	unpack(io, ft)
 # 	println("  now @$(position(io))")
 # 	x
 end
@@ -120,14 +132,12 @@ unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
 @inline unpack(io::IO, ::Type{String}) = ""
 @inline unpack(filename::AbstractString, T::DataType, n::Integer...) =
 	open(filename) do io; unpack(io, T, n...); end
-function unpack!(io::IO, array::AbstractVector{T}, n::Integer) where{T}
+"""    unpack!(io, array, n)
+
+Unpacks `n` objects to the given vector, resizing it in the process."""
+unpack!(io::IO, array::AbstractVector{T}, n::Integer) where{T} =
 	# no need to give the type since it is the eltype of the array
-	resize!(array, n)
-	for i in 1:n
-		array[i] = unpack(io, T)
-	end
-	return n*sizeof(T)
-end
+	resize!(array, n) .= (unpack(io ,T) for _ in 1:n)
 
 #««1 Pack
 """    pack(io, x)

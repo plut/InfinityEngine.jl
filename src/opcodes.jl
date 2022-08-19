@@ -486,4 +486,5 @@ argstr(::Val{0x0065}, _, opcode) = (repr(Opcode(opcode);context=(:compact=>true)
 #»»1
 
 #»»1
+export Opcode
 end

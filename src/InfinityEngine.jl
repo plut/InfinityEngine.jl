@@ -34,19 +34,20 @@ end
 @inline doubleaverage(d::Dice) = d.thrown * (d.sides+one(d.sides)) + d.bonus<<1
 @inline average(d::Dice) = doubleaverage(d)//2
 
-@inline Base.rand(d::Dice) =
-	sum(rand(Base.OneTo(d.sides)) for _ in Base.OneTo(d.thrown)) + d.bonus
+using Random
+@inline Base.rand(rng::AbstractRNG, d::Random.SamplerTrivial{<:Dice}) =
+	sum(rand(rng, Base.OneTo(d[].sides)) for _ in Base.OneTo(d[].thrown)) + d[].bonus
 
 for i in (2,3,4,5,6,8,10,12,20)
-	@eval $(Symbol("d"*string(i))) = Dice{Int}(1,$i,0)
+	s = Symbol("d$i"); @eval ($s = Dice{Int}(1,$i,0); export $s)
 end
-export Dice, d2, d3, d4, d5, d6, d8, d10, d12, d20
+export Dice
 end
 
 using .DiceThrows
 include("pack.jl"); using .Pack
 include("dottedenums.jl"); using .DottedEnums
-include("opcodes.jl"); using .Opcodes: Opcode
+include("opcodes.jl"); using .Opcodes
 
 using Printf
 using StaticArrays
@@ -85,9 +86,8 @@ struct StaticString{N} <: AbstractString
 	chars::SVector{N,UInt8}
 	# once we encounter a zero character, all that follows is zero:
 	@inline StaticString{N}(chars::AbstractVector{UInt8}) where{N} =
-		(@assert length(chars) ≤ N;
-	new{N}(SVector{N,UInt8}(any(iszero, view(chars, 1:min(i-1,length(chars)))) ?
-			zero(UInt8) : get(chars, i, zero(UInt8)) for i in 1:N)))
+		(@assert length(chars) ≤ N; c = Ref(0x1); new{N}(SVector{N}(
+		iszero(c[]) ? c[] : (c[] = get(chars, i, 0x0)) for i in 1:N)))
 end
 @inline Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) =
@@ -115,8 +115,8 @@ end
 @inline charlc(x::UInt8) = (0x41 ≤ x ≤ 0x5a) ? x+0x20 : x
 @inline Base.uppercase(s::StaticString) = typeof(s)(charuc.(s.chars))
 @inline Base.lowercase(s::StaticString) = typeof(s)(charlc.(s.chars))
-
-
+@inline Base.hash(s::StaticString{8}) =
+	reinterpret(Int64,[s.chars...])|>only|>hash
 
 #««2 Strref
 """    Strref
@@ -266,8 +266,8 @@ mutable struct ResIO{T,R<:RootResource,X<:IO} <: IO
 	ref::Resref{T}
 	io::X
 	root::R
-	@inline ResIO{T}(name, io::X) where{T,X<:IO} =
-		new{T,ResourceType(ResIO{T}),X}(name, io)
+	@inline ResIO{T}(ref, io::X) where{T,X<:IO} =
+		new{T,ResourceType(ResIO{T}),X}(ref, io)
 end
 
 @inline Base.read(x::ResIO, T::Type{UInt8}) = read(x.io, T)
@@ -400,50 +400,53 @@ struct Restype; data::UInt16; end
 # ««2 ResIO type table
 
 # Static correspondence between UInt16 and strings (actually symbols).
-const RESOURCE_TABLE = Base.ImmutableDict(#««
-	0x0001 => "bmp",
-	0x0002 => "mve",
-	0x0004 => "wav",
-	0x0006 => "plt",
-	0x03E8 => "bam",
-	0x03E9 => "wed",
-	0x03EA => "chu",
-	0x03EB => "tis",
-	0x03EC => "mos",
-	0x03ED => "itm",
-	0x03EE => "spl",
-	0x03EF => "bcs",
-	0x03F0 => "ids",
-	0x03F1 => "cre",
-	0x03F2 => "are",
-	0x03F3 => "dlg",
-	0x03F4 => "2da",
-	0x03F5 => "gam",
-	0x03F6 => "sto",
-	0x03F7 => "wmp",
-	0x03F8 => "chr",
-	0x03F9 => "bs",
-	0x03FA => "chr2",
-	0x03FB => "vvc",
-	0x03FC => "vfc",
-	0x03FD => "pro",
-	0x03FE => "bio",
-	0x03FF => "wbm",
-	0x0400 => "fnt",
-	0x0402 => "gui",
-	0x0403 => "sql",
-	0x0404 => "pvrz",
-	0x0405 => "glsl",
-	0x0408 => "menu",
-	0x0409 => "lua",
-	0x040A => "ttf",
-	0x040B => "png",
-	0x044C => "bah",
-	0x0802 => "ini",
-	0x0803 => "src",
-)#»»
-@inline String(x::Restype) = get(RESOURCE_TABLE, x.data, x.data|>repr)
-@inline Base.Symbol(x::Restype) = Symbol(String(x))
+struct RESOURCE_KEY; a::UInt16; end
+# const RESOURCE_KEY=UInt16
+@inline Base.hash(x::RESOURCE_KEY) = UInt(x.a == 4 ? 3 : (x.a % 62))
+const RESOURCE_TABLE = Dict(RESOURCE_KEY(a) => b for (a,b) in (#««
+	0x0001 => :bmp,
+	0x0002 => :mve,
+	0x0004 => :wav,
+	0x0006 => :plt,
+	0x03E8 => :bam,
+	0x03E9 => :wed,
+	0x03EA => :chu,
+	0x03EB => :tis,
+	0x03EC => :mos,
+	0x03ED => :itm,
+	0x03EE => :spl,
+	0x03EF => :bcs,
+	0x03F0 => :ids,
+	0x03F1 => :cre,
+	0x03F2 => :are,
+	0x03F3 => :dlg,
+	0x03F4 => Symbol("2da"),
+	0x03F5 => :gam,
+	0x03F6 => :sto,
+	0x03F7 => :wmp,
+	0x03F8 => :chr,
+	0x03F9 => :bs,
+	0x03FA => :chr2,
+	0x03FB => :vvc,
+	0x03FC => :vfc,
+	0x03FD => :pro,
+	0x03FE => :bio,
+	0x03FF => :wbm,
+	0x0400 => :fnt,
+	0x0402 => :gui,
+	0x0403 => :sql,
+	0x0404 => :pvrz,
+	0x0405 => :glsl,
+	0x0408 => :menu,
+	0x0409 => :lua,
+	0x040A => :ttf,
+	0x040B => :png,
+	0x044C => :bah,
+	0x0802 => :ini,
+	0x0803 => :src,
+))#»»
+@inline Symbol(x::Restype) = RESOURCE_TABLE[RESOURCE_KEY(x.data)]
+# @inline String(x::Restype) = x|>Symbol|>String
 
 # ««2 File blocks
 struct KEY_hdr
@@ -1854,7 +1857,6 @@ function stateindex(g::Game, r::Resref"dlg", key::StateKey)
 	return fieldtype(State, :position)(key.n)
 end
 
-@inline name(r::Resref) = r.name
 function Base.keys(g::Game, T::Symbol)
 	k = Set{String}()
 	for s in keys(changes(g, Resref{T})); push!(k, s.name); end
@@ -2358,4 +2360,5 @@ end
 export save, namespace, language
 export item, items
 export actor, say, reply, journal, action, trigger, state
+@eval export $(names(DiceThrows)...) # re-export d6 etc.
 end # module

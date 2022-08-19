@@ -9,15 +9,20 @@ databases.
 
 ## Running the module
 
-All information is held in the global `game` object.
-This object can be implicitly passed to many of the module's methods:
+The `Game` data structure holds all of the relevant game information.
+Most of the API of this module takes a `::Game` value as their first
+argument.
+For convenience, this global argument can always be omitted;
+the module's global `game` structure will be used in this case.
 ```julia
 using InfinityEngine
-InfinityEngine.init!() # equivalently: init!(InfinityEngine.game)
+InfinityEngine.init!("/home/CHARNAME/baldursgate")
+# equivalently: init!(InfinityEngine.game, "/home/CHARNAME/baldursgate")
 InfinityEngine.game
 ```
 ```@docs
 InfinityEngine.Game
+InfinityEngine.init!
 save
 ```
 
@@ -63,6 +68,7 @@ using the `language` function:
 language
 ```
 These strings are converted to `Strref` (numeric string references)
-on the fly.
+on the fly when assigned to relevant parts of game structures
+(for example as object properties or dialog texts).
 
 **TODO**: use `gettext` to independently provide translations.

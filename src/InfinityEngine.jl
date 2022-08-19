@@ -1738,7 +1738,9 @@ Main structure holding all top-level data for a game installation, including:
  - conversion of resource references to 8-byte short references;
  - dialog-building context.
 
-This structure works as a pseudo-dictionary, i.e. indexed by resource types:
+This structure works as a pseudo-dictionary:
+indexing it with keys of a given `Resref` type
+returns data structures of the corresponding resource type.
 
  - `game[resref]`: returns the data structure described by this resource.
  - `get` and `get!` methods, e.g. `get(game, resref) do ... end`
@@ -1809,6 +1811,10 @@ Initializes a `Game` structure from the game directory
 @inline Game(directory::AbstractString) = init!(Game(), directory)
 @inline Base.joinpath(g::Game, s...) = joinpath(g.directory[], s...)
 @inline longref_file(g::Game) = joinpath(g, "longrefs")
+"""    init!([game], directory)
+Initializes the game structure.
+The directory should contain the `"chitin.key"` file.
+"""
 function init!(g::Game, directory::AbstractString)
 	g.namespace[] = ""
 	g.directory[] = directory
@@ -2205,7 +2211,7 @@ for the same current actor.
 ## Special cases
 
  - implicit, text-less transitions: `say(text1) say(text2)`;
- - multi-say: `say(text1, text2, ...)` (same actor) — actually equivalent to
+ - multi-say: `say(text1, text2, ...)` — actually equivalent to
    the previous form;
  - chain with actor change: `actor(name1) say(text1) actor(name2) say(text2)...`;
 """
@@ -2250,15 +2256,13 @@ interject2(g::Game, actor, text; kw...) =
 
 Introduces a state transition (player reply) pointing to the given label.
 The label may be one of:
- - ("actor", state) (equivalently "actor" => state);
- - state  (uses current actor);
+ - `("actor", state)` (equivalently `"actor" => state`);
+ - `state`  (uses current target actor);
  - `exit` (creates a final transition).
 
 State may be either numeric (referring to the base game's states) or string.
-In the latter case, it will be prefixed by the current namespace,
-using the same rules as resource references
-(i.e. `"namespace/state"`, unless the name already contains a slash,
-in which case the corresponding namespace will be used).
+In the latter case, if it does not contain a slash,
+it will be prefixed by the current namespace : `"namespace/state"`.
 This prevents states from different namespaces from interfering.
 
 

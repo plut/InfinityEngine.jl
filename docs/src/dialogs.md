@@ -50,9 +50,41 @@ say
 reply
 ```
 
-### Implicit transitions
+### State labels
+
+Numeric state keys correspond in principle to original game dialog.
+New labels should use strings.
+
+Label strings are namespaced to avoid collisions.
+
+Internally, a numeric label is produced by hashing the strings
+(to 64-bit integers). This allows adding approximately
+2³² states (4 billion) to any actor before risking a key
+collision, and approximately 2⁵⁰ states before hitting any target
+lower than 16000 (where original game labels presumably reside).
+
+### Final transitions
+
+### Chaining and implicit transitions
 
 ### Pending transitions
+
+The implicit transitions created by chaining are all text-less
+transitions. If PC comments are needed, this can be done via pending
+transitions.
+
+A pending transition is a transition with no target state indicated.
+The transition will be connected to the next state to be added.
+Inserting such transitions in the middle of a `say` chain has the effect
+of inserting PC text while maintaining the structure of the chain:
+for example,
+`say(A); reply(a); say(B)` is equivalent to
+`say(A); reply(a => labelB); say(labelB => B)`,
+without the need to give an explicit label to the target state.
+
+The current pending transition must be connected (by calling `say`
+or `interject`, both of which always resolve existing pending transitions)
+before any other transition is created (by calling `reply`).
 
 ## Extending existing dialogs
 
@@ -96,7 +128,7 @@ interject(X); interject(Y)`, the result will be something like
 
 If the source state `A` has a pending transition when `interject` is
 called, then instead of creating a new text-less transition `A→X`,
-this pending transition is used instead.
+this pending transition is used (and connected) instead.
 This allows replacing the default text-less transition `A→X` by a
 transition with text `A——x—→X` in the following way:
 `state(A); reply(x); interject(X)`.
@@ -104,7 +136,6 @@ transition with text `A——x—→X` in the following way:
 ## Deleting existing dialogs
 
 Not currently possible (and not a very high priority).
-
 
 
 ## Attaching data to dialogs

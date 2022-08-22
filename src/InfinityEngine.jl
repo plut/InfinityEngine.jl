@@ -24,7 +24,7 @@ function Base.show(io::IO, d::Dice)
 	d.bonus < 0 && print(io, d.bonus)
 end
 @inline Base.:*(a::Integer, d::Dice{I}) where{I} =
-	(@assert isone(d.thrown) && iszero(d.bonus); Dice{I}(I(a), d.sides, zero(I)))
+	(@assert isone(d.thrown) && iszero(d.bonus); Dice{I}(I(a), d.sides, I|>zero))
 @inline Base.:+(d::Dice{I}, b::Integer) where{I} =
 	Dice{I}(d.thrown, d.sides, d.bonus + I(b))
 @inline Base.:-(d::Dice{I}, b::Integer) where{I} =
@@ -116,7 +116,8 @@ end
 end
 @inline StaticString{N}(s::StaticString{N}) where{N} = s
 
-@inline Pack.unpack(io::IO, T::Type{StaticString{N}}) where{N} = T(read(io, N))
+@inline Pack.unpack(io::IO, T::Type{StaticString{N}}) where{N} =
+	T(SVector{N,UInt8}(read(io, UInt8) for _ in SOneTo(N)))
 @inline Pack.pack(io::IO, s::StaticString) = write(io, s.chars)
 
 @inline charuc(x::UInt8) = (0x61 ≤ x ≤ 0x7a) ? x-0x20 : x
@@ -124,6 +125,7 @@ end
 @inline Base.uppercase(s::StaticString) = typeof(s)(charuc.(s.chars))
 @inline Base.lowercase(s::StaticString) = typeof(s)(charlc.(s.chars))
 @inline function Base.hash(s::StaticString{8})
+	# this operation is time-critical; we completely unroll the loop
 	n1 = @inbounds Int64(s.chars[1])
 	n2 = @inbounds Int64(s.chars[2])
 	n3 = @inbounds Int64(s.chars[3])
@@ -135,17 +137,19 @@ end
 	hash(n1 | (n2<<8) | (n3 << 16) | (n4 << 24) | (n5 << 32) |
 		(n6 << 40) | (n7 << 48) | (n8 << 56))
 end
-# 	reinterpret(Int64,[s])|>only|>hash
 
 #««2 Strref
 """    Strref
 
-Index (32-bit) referring to a translated string in dialog.tlk or dialogF.tlk.
+Index (32-bit) referring to a translated string in a `"dialog.tlk"` file.
 """
 struct Strref
 	index::Int32
 end
 @inline Strref(x::Strref) = x
+# Index 0 corresponds to '<NO TEXT>', which is technically a valid string,
+# but should not actually appear in-game: we use this value as a marker
+# for invalid strings.
 @inline Base.isvalid(s::Strref) = (s.index > 0)
 @inline Base.show(io::IO, s::Strref) = print(io, "Strref(", s.index, ")")
 
@@ -163,8 +167,6 @@ resourcetype(r::Resref) = resourcetype(typeof(r))
 @inline resref_join(ns::AbstractString, n::AbstractString) =
 	isempty(ns) ? n : ns*'/'*n
 @inline Base.isempty(r::Resref) = isempty(r.name)
-# @inline (T::Type{<:Resref})(ns::AbstractString, n::AbstractString) =
-# 	T(resref_join(ns, n))
 @inline (T::Type{<:Resref})(x::Resref) = T(x.name)
 
 Base.show(io::IO, r::Resref) =
@@ -1314,7 +1316,6 @@ struct StateKey
 	# XXX: replace by hashed values
 	n::UInt
 	@inline StateKey(i::Integer) = new(i)
-# 	@inline StateKey(::typeof(exit)) = new(zero(UInt))
 	@inline StateKey(::typeof(!isvalid)) = new(~zero(UInt))
 end
 @inline Base.isvalid(s::StateKey) = (s ≠ StateKey(!isvalid))
@@ -1524,8 +1525,7 @@ function Base.write(io::IO, a::Actor)
 			ta = contains(t.flags, HasAction) ?
 				findfirst!(isequal(t.action), va) : 1
 			push!(vt, DLG_transition(t.flags, t.text, t.journal, tt-1, ta-1,
-				t.target[1],
-				contains(t.flags, Terminates) ? 0 : stateindex(t.target...)))
+				t.target[1],contains(t.flags,Terminates) ? 0 : stateindex(t.target...)))
 		end
 	end
 	a.offset_states = 52
@@ -1750,7 +1750,8 @@ returns data structures of the corresponding resource type.
 @with_kw_noshow struct Game
 	directory::Base.RefValue{String} = Ref("")
 	key::KeyIndex = KeyIndex()
-	override::Dict{Symbol, Set{String}} = Auto()
+	override::Dict{Symbol, Set{String}} =
+		Auto(s => Set{String}() for s in fieldnames(GameChanges))
 	# Current values (mutable data):
 	language::Base.RefValue{Int} = Ref(0)
 	namespace::Base.RefValue{String} = Ref("")
@@ -1772,7 +1773,7 @@ returns data structures of the corresponding resource type.
 	dialog_context::DialogContext = Auto()
 end
 Base.show(io::IO, g::Game) = print(io, "<Game: ",
-	length(g.key), " keys, ", length(g.override), " overrides, ",
+	length(g.key), " keys, ", g.override|>values.|>length|>sum, " overrides, ",
 	length(changes(g)), " changes, ", count(!isempty, g.strings), " languages, ",
 	length(g.strings[g.language[]]), " strings, ",
 	length(g.new_strings), " new strings>")
@@ -1820,7 +1821,6 @@ function init!(g::Game, directory::AbstractString)
 	g.directory[] = directory
 	init!(g.key, joinpath(g, "chitin.key"))
 	println("read ", length(g.key), " key resources")
-	empty!(g.override)
 	o_dir = joinpath(g, "override")
 	if !isdir(o_dir)
 		println("created override directory: ", o_dir)
@@ -1828,12 +1828,12 @@ function init!(g::Game, directory::AbstractString)
 	else
 		for f in readdir(o_dir)
 			(n, e) = f|>basename|>lowercase|>splitext; t = Symbol(e[2:end])
-			push!(get!(()->Set{String}(), g.override, t), n)
+			if_haskey(g.override, t) do s; push!(s, n); end
 		end
-		println("read $(sum(length(v) for (_,v) in g.override; init=0)) override resources")
+		println("read $(g.override|>values.|>length|>sum) override resources")
 	end
 	set_language!(g, 1) # default language
-	isfile(longref_file(g)) && for line in eachline(longref_file(g))
+	g|>longref_file|>isfile && for line in g|>longref_file|>eachline
 		# XXX use ; for comments? this is not an allowed file name
 		(short, long) = split(line, r"\s", limit=2)
 		g.shortref[long] = short
@@ -1985,121 +1985,6 @@ Converts a string (entered by the user) to a long reference:
 """
 (R::Type{<:Resref})(g::Game, str::AbstractString) =
 	makeref(g, str, resourcetype(R))|>R
-# #««2 NamedResource
-# """    NamedResource{T,R,K}
-# 
-#  - `T` is the current type of the resource (this changes when taking fields)
-#  - `R` is the type of the root resource (i.e. item etc.)
-#  - `K` is the key type (i.e. NTuple{2,String} in our case)
-#  - `root`: root resource (this is unchanged by taking fields)
-#  - `offset`: current pointer offset relative to stored root resource
-#  - `key`: global identifier for the resource.
-# 
-# API:
-#   - `getproperty`: also produces a `NamedResource` where useful (i.e.
-#     for struct-type fields), otherwise the plain property value.
-#   - `setproperty!`: resource.field = value
-# 	 * registers `resource` in the modified dict
-# 	  [i.e. we need the root resource + its key]
-# 	 * computes a pointer to the relevant field of the stored resource
-# 	  [i.e. we need current type and offset]
-# 	 * stores the value at the pointer location and returns it
-#  - likewise array-reading: `getindex`, `iterate` and -modifying operations:
-#    `setindex!`, `push!`, `insert!`, `delete!`
-#    XXX: deleteat!, pushfirst!, pop!, popfirst!
-# 
-# XXX possibly cleaner alternative (i.e. no pointers!; use real struct fields,
-#   allowing for repl completion):
-# append a `root` field in all resources pointing to the root resource
-# (including to self for the root resource),
-# and append to that resource the `modified` bit and resource ID.
-# However, this needs circular types, and everything needs to be mutable
-# (and still overwriting all the `setproperty!` etc. methods
-# to register the modified parent; also vector-modifying methods, etc.
-# Read-only methods are not affected though).
-# 
-# This would also (reasonably) need to make all resource data types inherit a common types, for which the setproperty! method would be rewritten.
-# """
-# struct NamedResource{T,R,K}
-# 	data::T
-# 	root::R
-# 	key::K
-# 	offset::Int
-# end
-# MaybeNamed{T} = Union{T,NamedResource{T}}
-# 
-# function Base.show(io::IO, mime::MIME"text/plain", r::NamedResource)
-# 	print(io, "With context ", _key(r), "\n")
-# 	show(io, mime, _data(r))
-# end
-# 
-# NamedResource(root::X, key::K) where{K,X} =
-# 	NamedResource{X,X,K}(root, root, key, 0)
-# @inline _data(r::NamedResource) = getfield(r, :data)
-# @inline _key(r::NamedResource) = getfield(r, :key)
-# @inline _root(r::NamedResource) = getfield(r, :root)
-# @inline _offset(r::NamedResource) = getfield(r, :offset)
-# 
-# @inline isnamedresource(T::DataType) = isstructtype(T)
-# @inline isnamedresource(T::Type{<:DottedEnums.EnumOrFlags}) = false
-# 
-# function Base.getproperty(r::NamedResource{T,R,K},
-# 		f::Symbol) where{T,R,K}
-# # 	f ∈ fieldnames(NamedResource) && return getfield(r, f)
-# # 	!hasfield(T, f) && return getproperty(r.data, f)
-#  	i = findfirst(isequal(f), fieldnames(T))
-# # 	println("field index for $f is $i")
-# 	Tf, Of, Df = fieldtype(T, i), fieldoffset(T, i), getproperty(_data(r), f)
-# # 	println("   field type, offset, data are $Tf, $Of, $Df")
-# # 	println("   struct? $(isstructtype(Tf))")
-# 	isnamedresource(Tf) || return Df
-# 	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
-# 		_offset(r) + Of)
-# end
-# function Base.setproperty!(r::NamedResource{T}, f::Symbol, x) where{T}
-#  	i = findfirst(isequal(f), fieldnames(T))
-# 	Tf, Of = fieldtype(T, i), fieldoffset(T, i)
-# 	p = Base.unsafe_convert(Ptr{Nothing}, register!(_key(r), _root(r)))
-# 	x1 = convert(Tf, x)
-# 	unsafe_store!(convert(Ptr{Tf}, p + _offset(r) + Of), x1)
-# 	return x1
-# end
-# # Vector data: getindex, setindex!, push!, insert!
-# function Base.getindex(r::NamedResource{T,R,K},
-# 		i::Int) where{T<:Vector,R,K}
-# 	Tf = eltype(T); Of, Df = (i-1)*sizeof(Tf), _data(r)[i]
-# 	isnamedresource(Tf) || return Df
-# 	return NamedResource{Tf, R, K}(Df, _root(r), _key(r),
-# 		_offset(r) + Of)
-# end
-# @inline Base.iterate(r::NamedResource{<:Vector}, i=1) =
-# 	(i-1 < length(_data(r)) ? (@inbounds r[i], i+1) : nothing)
-# @inline Base.length(r::NamedResource{<:Vector}) = length(_data(r))
-# @inline Base.eltype(r::NamedResource{T,R,K}) where{T<:Vector,R,K}=
-# 	let Tf = eltype(T)
-# 	isnamedresource(Tf) ? NamedResource{Tf,R,K} : Tf
-# end
-# 
-# for f in (:setindex!, :push!, :insert!, :delete!)
-# 	@eval Base.$f(r::NamedResource{<:Vector}, x...) =
-# 		(register!(_key(r), _root(r)); $f(_data(r), x...))
-# end
-# """    refdict(dict, key)
-# 
-# Returns a reference to `dict[key]`."""
-# function refdict(dict::Dict, key)
-# 	i = Base.ht_keyindex(dict, key)
-# 	@assert i > 0
-# 	return Base.RefArray(dict.vals, i)
-# end
-# """    refdict!(dict, key, value)
-# 
-# Returns a reference to `dict[key]`, initializing it to `value` if absent."""
-# @inline refdict!(dict::Dict, key, value) =
-# 	# if slot exists, return slot index
-# 	# otherwise, create slot and return slot index
-# 	(get!(dict, key, value); refdict(dict, key))
-# 
 # ««2 Namespace and language
 """    namespace([game], s)
 
@@ -2225,12 +2110,12 @@ say(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
 say2(g::Game, label, text::AbstractString; kw...) =
 	add_state!(g.dialog_context, g.dialog_context|>target_actor,
 		StateKey(g, label), Strref(g, text); kw...)
-"""    state([game], [actor], label)
+"""    from([game], [actor], label)
 
 Sets current state to `actor`, `label`. The state must exist.
 """
-state(g::Game, label) = set_source!(g.dialog_context, StateKey(g, label))
-state(g::Game, actor::AbstractString, label) =
+from(g::Game, label) = set_source!(g.dialog_context, StateKey(g, label))
+from(g::Game, actor::AbstractString, label) =
 	set_source!(g.dialog_context, get_actor(g, actor), StateKey(g, label))
 """
     interject({text | (label => text)}*; priority, trigger)
@@ -2332,6 +2217,7 @@ function save(g::Game, x::RootResource)
 	println("  \e[32m$ref => $s.$T\e[m")
 	write(joinpath(game.directory[], "override", uppercase(s)*'.'*string(T)), x)
 	push!(get!(()->Set{String}(), g.override, T), s)
+	delete!(changes(g, T), ref)
 end
 
 #««1 Item/etc. factory
@@ -2427,7 +2313,6 @@ const PlateMail = HalfPlate
 (T::DottedEnums.SymbolicNames)(args...; kwargs...) =
 	copy(_resource_template[T], args...; kwargs...)
 #««1 Global `game` object
-
 const game = Game()
 
 # For all methods of those functions starting with a `::Game` argument:
@@ -2435,7 +2320,7 @@ const game = Game()
 for f in (init!, str, shortref, longref, register!, save,
 		language, namespace, changes,
 		item, items,
-		actor, reply, action, trigger, journal, state, stateindex),
+		actor, reply, action, trigger, journal, from, stateindex),
 		m in methods(f)
 	argt = m.sig.parameters
 	(length(argt) ≥ 2 && argt[2] == Game) || continue

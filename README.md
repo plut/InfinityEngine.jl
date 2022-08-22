@@ -88,8 +88,8 @@ changes), leading to quadratic complexity. InfinityExplorer is written
 in Java and hence quite slow.
 
 Currently, this module can load all the un-modded game data
-in almost-negligible time (less than 4 milliseconds on a typical laptop,
-assuming Julia is already running).
+in almost-negligible time (about 2 milliseconds on a typical laptop
+for a BG1EE installation, assuming Julia is already running).
 
 ## Dialogs
 

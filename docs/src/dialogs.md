@@ -88,19 +88,19 @@ before any other transition is created (by calling `reply`).
 
 ## Extending existing dialogs
 
-The `state` function allows changing the value of the “last added state”
+The `from` function allows changing the value of the “last added state”
 variable to any actor and any state.
 Note that this is not always the same actor as the speaking actor
 selected by `actor`:
-namely, `state` selects a *source* actor (i.e. already existing states),
+namely, `from` selects a *source* actor (i.e. already existing states),
 whereas `actor` selects a *target* actor, for which states will be
 inserted.
 
-With a combination of `state`, `actor` and `reply` it is possible
+With a combination of `from`, `actor` and `reply` it is possible
 to extend existing states for an actor (by adding new transitions)
 and to add new states.
 ```julia
-state("imoen", 0)
+from("imoen", 0)
 reply("Oh, hi Imoen!" => "new state")
 say("new state" => "Hi you! Now we go on to our normal conversation.")
 ```
@@ -120,7 +120,7 @@ interject
 ```
 
 `interject` moves the “source state” pointer to the newly created state
-`X`, so that it is possible to chain calls. For example, after `state(A);
+`X`, so that it is possible to chain calls. For example, after `from(A);
 interject(X); interject(Y)`, the result will be something like
 `A——→X——→Y——tᵢ——→Bᵢ`.
 
@@ -131,7 +131,7 @@ called, then instead of creating a new text-less transition `A→X`,
 this pending transition is used (and connected) instead.
 This allows replacing the default text-less transition `A→X` by a
 transition with text `A——x—→X` in the following way:
-`state(A); reply(x); interject(X)`.
+`from(A); reply(x); interject(X)`.
 
 ## Deleting existing dialogs
 

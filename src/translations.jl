@@ -1,12 +1,17 @@
 #««1 Handling translations
+#««2 Marked strings
 
+struct MarkedString{S<:AbstractString}; str::S; end
+@inline Base.show(io::IO, s::MarkedString) = print(io, '_', repr(s.str))
 """    _"text"
 A marker for text that needs to be translated.
 This does nothing by itself (it is equivalent to `"text"`),
 but is parsed to a `.po` file."""
-macro __str(s); s; end
+macro __str(s); :(MarkedString($s)) end
 
 #««2 Reading marked strings and producing `.pot` file
+#XXX find if there would be a better way of structuring comments
+#adapted to the syntax of say/reply etc.
 struct TranslationEntry
 	file::Symbol
 	line::Int
@@ -16,7 +21,10 @@ end
 """    translations(file)
 
 Returns the list of all strings to translate in this file and all
-included files, as a `Vector{TranslationEntry}`."""
+included files, as a `Vector{TranslationEntry}`.
+Comments may be used to document strings: all comment lines (up to 5 lines)
+immediately preceding the string will be used.
+"""
 function translations(file, list = TranslationEntry[],
 		seen_files = Symbol[])
 	sym = Symbol(file); sym ∈ seen_files && return
@@ -25,17 +33,14 @@ function translations(file, list = TranslationEntry[],
 	walk_tree(expr) do node
 		if Meta.isexpr(node, :macrocall) && node.args[1]==Symbol("@__str")
 			line, str = node.args[2].line-1, node.args[3]
-			comment = ""; c = ""
+			comment = ""
 			# Look for translator comments in the 5 preceding lines at most.
 			for l in lines[line-1:-1:max(line-5,1)]
-				startswith(l, r"^\s*#") || break
-				c = replace(l, r"^\s*#\s*" => " ") *c
-				if startswith(c, r"\s*TRANS:")
-					comment = replace(c, r"^\s*TRANS:\s*" => "")
-					break
-				end
+				m = match(r"^\s*#\s*(\S.*)$", l)
+				isnothing(m) && break
+				comment = "\n#. " * m.captures[1] * comment
 			end
-			push!(list, TranslationEntry(sym, line, str, comment))
+			push!(list, TranslationEntry(sym, line, str, chomp(comment)))
 		elseif Meta.isexpr(node, :call) && node.args[1]==:include
 			translations(dirname(file)*node.args[2], list,
 				seen_files ∪ [sym])
@@ -63,9 +68,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8"
 """)
 	for t in translations(input)
-		println(output)
-		isempty(t.comment) || println(output, "#. ", t.comment)
 		print(output, """
+$(t.comment)
 #: $(t.file):$(t.line)
 msgid $(repr(t.msgid))
 msgstr ""

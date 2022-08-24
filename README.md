@@ -18,7 +18,8 @@ advantages:
  - allows validation of mod content (future: translations in `.po` format?);
  - allows easier inclusion of mod metadata;
  - built-in portability (no need to call shell scripts or `.bat` files,
-   Julia contains all the needed functions).
+   Julia contains all the needed functions);
+ - automatic mod conflict detection.
 
 
 Current status: **very limited use cases**. This can currently load,
@@ -31,6 +32,19 @@ Adding support for other IE games is a (long-term) goal
 
 ## Design goals
 The design goals include:
+
+### Mod stack management
+
+This project will be able to manage a whole set of mods,
+including which files are replaced by which mods.
+This will enable automatic detection of conflicts
+(optimistically, it should even be possible to fine-grain
+conflict detection, for example when two mods overwrite
+the same object property, table entry, or dialog state).
+
+On the other hand, WeiDU mods are stand-alone,
+and therefore conflict detection (if any)
+must be performed by the mods themselves.
 
 ### Robustness
 
@@ -49,14 +63,21 @@ UTF8-related errors!).
 
 Prevent the user from needing to learn several esoteric languages (`tp2`,
 `d`) and instead use a general-purpose language.
-
 The module tries hard to abstract some of the game's ugliest points away
-from the user: namely, it offers namespaces for game objects, to prevent
-mod interference without requiring the use of two-byte prefixes;
-and object properties are referred by name using standard Julia structs
-(e.g. `item.type`).
+from the user.
+
+Objects and their properties are represented by plain Julia structs:
+```julia
+i = item("sw1h01") # Bastard sword
+i.min_strength = 14
+i.abilities[1].damage = 2d4
+```
 This should help in writing efficient (and robust) code without requiring
 frequent use of [IESDP documentation](https://gibberlings3.github.io/iesdp).
+
+Moreover, references to game objects (such as `"sw1h01"` above)
+are namespaced. This should prevent mod interference without requiring
+two-byte author prefixes.
 
 Finally, having mods as Julia programs should ideally ease their
 development, testing, and validation before release.
@@ -98,7 +119,7 @@ This module defines Julia syntax for IE dialogs.
 The goal here is to have something simpler to use than Weidu's `.d`
 syntax, by *not* writing a parser and using Julia's instead.
 
-The feature wishlist could be summed up as “be more user-friendly than
+The feature list could be summed up as “be more user-friendly than
 WeiDU”:
  - define dialogue in a single file (instead of `.d`/`.tra`) by having
    inline strings and using proper translation formats (`.po`),
@@ -107,7 +128,7 @@ WeiDU”:
    `CHAIN`).
  - prevent namespace conflicts without requiring the use of prefixes,
    by solving all the `resref` machinery without user intervention
-   (a bit like what WeiDU does with `srref`, but in a more user-friendly
+   (a bit like what WeiDU does with `strref`, but in a more user-friendly
    way).
 
 Here is a short example of this syntax, namely Imoen's dialog from BG1
@@ -124,8 +145,14 @@ say(0 => "I'm surprised that stuffy ol' Gorion let you away...")
   reply("I am sorry, child, but I am not to tell anyone what I am doing...")
 ```
 
-Current status: **proof-of-concept**. What code exists is only to try and
-reach a usable *syntax* for defining dialogs.
+Current status: **very early stage**.
+The syntax is roughly stabilized (although some details might still
+vary) and most simple features are implemented (extending dialogs,
+inserting transitions)
+but not yet complete (e.g. quest management or handling of Strrefs
+in actions).
+
+Work on the translation system (`.po` files) is ongoing.
 
 ## But WeiDU already exists!
 
@@ -136,5 +163,5 @@ better than WeiDU.
 
 Also, a (long-term) goal is to automate at least a part of translation
 from WeiDU to this tool (it is very likely possible to do this at least
-for `.d` files), making it easy to port a mod from one language to
-another.
+for `.d`/`.tra` files), making it easier to port a mod from one language
+to another.

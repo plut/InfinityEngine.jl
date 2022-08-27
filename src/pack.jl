@@ -88,10 +88,7 @@ Unpacks `n` objects and returns a vector.
 	fv = [ Symbol("f$i") for i in 1:fieldcount(T) ]
 	code = [ :(unpack(io, $T, $(Val(n)), $t))
 		for (v, n, t) in zip(fv, fieldnames(T), fieldtypes(T)) ]
-	T <: Tuple && (code = Expr(:tuple, code...))
-	Expr(:new, T, code...)
-# 	push!(code, :(println("fields are: ", ($(fv...),))))
-# 	T <: Tuple ? :($T(($(code...),))) : :($T($(code...)))
+	T <: Tuple ? Expr(:call, T, :(($(code...),))) : Expr(:new, T, code...)
 end
 # @inline function unpack(io::IO, T::DataType)
 # # 	if T <: Main.InfinityEngine.RootedResource

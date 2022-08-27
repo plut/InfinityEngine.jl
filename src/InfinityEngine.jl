@@ -399,8 +399,10 @@ function Base.getindex(f::TlkStrings, s::Strref)
 	i ∈ eachindex(f.entries) || (i = 0)
 	@inbounds f.entries[i+1]
 end
-Base.findall(r::Union{Regex,AbstractString}, tlk::TlkStrings) =
-	[ Strref(i-1) for (i,s) in pairs(tlk.entries) if contains(s.string, r) ]
+Base.findall(f::Function, tlk::TlkStrings) =
+	[ Strref(i-1) for (i,s) in pairs(tlk.entries) if f(s.string) ]
+Base.findall(r, tlk::TlkStrings) = findall(s->contains(s, r), tlk)
+Base.only(tlk::TlkStrings, s::AbstractString) = findall(isequal(s), tlk)|>only
 
 # ««1 key/bif
 # ««2 Integer types
@@ -1954,7 +1956,7 @@ function stateindex(g::Game, r::Resref"dlg", key::StateKey)
 	return fieldtype(State, :position)(key.n)
 end
 
-function Base.keys(g::Game, T::Symbol)
+function Base.keys(g::Game, ::Type{<:Resref{T}}) where{T}
 	k = Set{String}()
 	for s in keys(changes(g, Resref{T})); push!(k, s.name); end
 	for s in get(g.override, T, ()); push!(k, longref(g, s)); end
@@ -2025,9 +2027,18 @@ end
 @inline language(g::Game) = g.language[]
 # ««2 Strings
 @inline strings(g::Game, i = language(g)) = g.strings[i]
+find_strref(g::Game, s::AbstractString) = only(strings(g), s)
 function Strref(g::Game, s::AbstractString)
-	i = get(strings(g), s, nothing)
-	isnothing(i) || return i
+	# newly input strings *never* match original game strings: this
+	# prevents accidental string fusion whenever the names coincide only in
+	# one language
+	# (e.g. "Slow" in EN could have differing translations in FR depending
+	# on context: "Lent", "Ralentir", "Lenteur"; some languages might have
+	# a case system, etc.)
+	# To use an original game string, just use its Strref explicitly.
+	# For really unique strings (e.g. "Imoen") it is possible to get
+	# the Strref by using `find_strref` (for this to be legal
+	# there must exist a single instance of this string in the `.tlk` file).
 	i = findfirst!(isequal((g|>language, s),), g.new_strings)
 	return Strref(i-1 + length(g|>strings))
 end
@@ -2061,8 +2072,7 @@ Returns the item with given reference."""
 
 Returns an iterator over all items. If a `regex` is provided then
 only those items with matching reference are included."""
-@inline items(g::Game, r::Union{String,Regex}...) =
-	(item(g, n) for n in keys(g, :itm, r...))
+@inline items(g::Game, r...) = (item(g, n) for n in keys(g, Resref"itm", r...))
 
 #««2 Dialog-building functions
 get_actor(g::Game, s::AbstractString) = get_actor(g, Resref"dlg"(s))
@@ -2320,29 +2330,22 @@ const game = Game()
 for f in (init!, str, shortref, longref, register!, save,
 		language, namespace, changes,
 		item, items,
-		actor, reply, action, trigger, journal, from, stateindex),
+		actor, say, reply, action, trigger, journal, from, stateindex),
 		m in methods(f)
 	argt = m.sig.parameters
 	(length(argt) ≥ 2 && argt[2] == Game) || continue
 	argn = ccall(:jl_uncompress_argnames, Vector{Symbol}, (Any,), m.slot_syms)
 	z = zip(argn[3:end], argt[3:end])
 	lhs = (:($n::$t) for (n,t) in z)
-	rhs = (n for (n,t) in z)
-# 	if m.isva
-# 		eval(:($(nameof(f))($(lhs...)) = $f(game, $(rhs...)...)))
-# 	else
-		@eval $(nameof(f))($(lhs...)) = $f(game, $(rhs...))
-# 	end
+	rhs = Any[n for (n,t) in z]
+	m.isva && (rhs[end] = Expr(:(...), rhs[end]))
+	@eval $(nameof(f))($(lhs...)) = $f(game, $(rhs...))
 end
 @inline Base.convert(T::Type{Strref},s::Union{Nothing,AbstractString})=T(game,s)
 @inline Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game, s)
 @inline Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
 @inline Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =
 	copy(game, x, args...; kwargs...)
-# the above code does not work with variadic (XXX)
-say(args...; kw...) = say(game, args...; kw...)
-say(::Game, ::Game, args...; kw...) = 
-	error("no `say` method for $(typeof.(args))")
 
 # debug
 function extract(f::AbstractString, g::AbstractString = f)

@@ -1,6 +1,5 @@
-#««1 Handling translations
-#««2 Marked strings
-
+module Translations
+#««2 Marked strings type
 struct MarkedString{S<:AbstractString}; str::S; end
 @inline Base.show(io::IO, s::MarkedString) = print(io, '_', repr(s.str))
 """    _"text"
@@ -8,7 +7,14 @@ A marker for text that needs to be translated.
 This does nothing by itself (it is equivalent to `"text"`),
 but is parsed to a `.po` file."""
 macro __str(s); :(MarkedString($s)) end
-
+remove_comments(s) = replace(s, r"^\?.*\?(?!\?)" => "")
+# in structures: saved as Strref
+# input by user: can be commented
+#  => in new_strings also: can be commented
+# comparison between new_strings: with comments
+#    new and game strings: always different
+# (to use an original game string, just use Strref(...) directly)
+# saving to tlk file removes comments
 #««2 Reading marked strings and producing `.pot` file
 #XXX find if there would be a better way of structuring comments
 #adapted to the syntax of say/reply etc.
@@ -107,6 +113,5 @@ function read_po(io)
 	end
 	return dict
 end
-
-write_pot("a.jl", "a.pot")
-read_po("fr.po")
+#»»1
+end # module Translations

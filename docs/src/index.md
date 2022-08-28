@@ -23,7 +23,7 @@ InfinityEngine.game
 ```@docs
 InfinityEngine.Game
 InfinityEngine.init!
-save
+commit
 ```
 
 ## Accessing the database

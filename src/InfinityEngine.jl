@@ -48,15 +48,21 @@ using .DiceThrows
 include("pack.jl"); using .Pack
 include("dottedenums.jl"); using .DottedEnums
 include("opcodes.jl"); using .Opcodes
+include("markedstrings.jl"); using .MarkedStrings
 
 using Printf
 using StaticArrays
 using Parameters
 using UniqueVectors
 using Random
+using TOML
 
 # ««1 Basic types
 # ««2 Misc.
+struct EmptyDict; end
+@inline Base.get(::EmptyDict, _, x) = x
+@inline Base.iterate(::EmptyDict) = nothing
+@inline Base.copy!(d::AbstractDict, ::EmptyDict) = empty!(d)
 struct Auto{A<:Tuple, B}
 	args::A
 	kwargs::B
@@ -160,7 +166,8 @@ A (long) resource descriptor: this contains a (static) type and a (dynamic)
 namespace and name uniquely identifying the resource.
 """
 struct Resref{T}
-	name::String # of the form 'namespace/resource'
+	name::StaticString{8}
+# 	name::String # of the form 'namespace/resource'
 end
 resourcetype(::Type{<:Resref{T}}) where{T} = T
 resourcetype(r::Resref) = resourcetype(typeof(r))
@@ -173,9 +180,9 @@ Base.show(io::IO, r::Resref) =
 	print(io, "Resref\"", r.name, '.', resourcetype(r), '"')
 
 @inline Pack.unpack(io::IO, T::Type{<:Resref}) =
-	unpack(io, StaticString{8})|>lowercase|>longref|>T
+	unpack(io, StaticString{8})|>lowercase|>T
 @inline Pack.packed_sizeof(::Type{<:Resref}) = 8
-@inline Pack.pack(io::IO, r::Resref) = pack(io, r.name|>shortref|>uppercase)
+@inline Pack.pack(io::IO, r::Resref) = pack(io, r.name|>uppercase)
 
 macro Resref_str(s)
 	s = lowercase(s)
@@ -302,7 +309,6 @@ end
 
 "`ResourceType{ResIO{T}}` = the root type to attach to this `ResIO` fd"
 @inline ResourceType(T::Type{<:ResIO})= Base.return_types(read,Tuple{T})|>only
-# valtype(fieldtype(Game, :changes), T) # not all resources are registered
 
 macro ResIO_str(str)
 	if contains(str, '.')
@@ -346,7 +352,7 @@ end
 	nstr::Int32 = 0
 	offset::Int32 = 0
 	entries::Vector{TLK_str} = Auto()
-	index::Dict{String,Int32} = Auto()
+	firstindex::Dict{String,Int32} = Auto() # lowest Strref for this string
 end
 @inline Base.show(io::IO, tlk::TlkStrings) =
 	print(io, "<TlkStrings with ", length(tlk.entries), " entries>")
@@ -357,47 +363,47 @@ end
 function Base.read(io::IO, ::Type{<:TlkStrings})
 	f = unpack(io, TlkStrings)
 	unpack!(io, f.entries, f.nstr)
-	sizehint!(empty!(f.index), f.nstr)
+	sizehint!(empty!(f.firstindex), f.nstr)
 	for (i,s) in pairs(f.entries)
 		s.string = string0(io, f.offset + s.offset, s.length)
-		f.index[s.string] = i
+		get!(f.firstindex, s.string, i) # set it only if it is not already set
 	end
 	return f
 end
-function Base.write(io::IO, f::TlkStrings)
-	f.offset = 18 + 26*length(f.entries)
-	f.nstr = length(f.entries)
+function Base.write(io::IO, tlk::TlkStrings)
+	tlk.offset = 18 + 26*length(tlk.entries)
+	tlk.nstr = length(tlk.entries)
 	offset = 0
-	for s in f.entries
+	for s in tlk.entries
 		s.length = length(codeunits(s.string)) # zero byte not included
 		s.offset = offset
 		offset+= s.length
 	end
-	pack(io, f) # this also writes the TLK_str entries (without the strings)
-	@assert position(io) == f.offset
-	for s in f.entries
-		@assert position(io) == f.offset + s.offset
+	pack(io, tlk) # this also writes the TLK_str entries (without the strings)
+	@assert position(io) == tlk.offset
+	for s in tlk.entries
+		@assert position(io) == tlk.offset + s.offset
 		write(io, codeunits(s.string)) # zero byte not included
 	end
 end
 #««2 Dictionary interface
 function Base.push!(tlk::TlkStrings, s::AbstractString)
-	i = get(tlk.index, s, nothing)
+	i = get(tlk.firstindex, s, nothing)
 	if isnothing(i)
 		push!(tlk.entries, s)
-		i = tlk.index[s] = length(tlk.entries)
+		i = tlk.firstindex[s] = length(tlk.entries)
 	end
 	return Strref(i-1)
 end
-function Base.get(f::TlkStrings, s::AbstractString, n)
-	i = get(f.index, s, nothing)
+function Base.get(tlk::TlkStrings, s::AbstractString, n)
+	i = get(tlk.firsindex, s, nothing)
 	isnothing(i) && return n
 	return Strref(i-1)
 end
-function Base.getindex(f::TlkStrings, s::Strref)
+function Base.getindex(tlk::TlkStrings, s::Strref)
 	i = s.index
-	i ∈ eachindex(f.entries) || (i = 0)
-	@inbounds f.entries[i+1]
+	i ∈ eachindex(tlk.entries) || (i = 0)
+	@inbounds tlk.entries[i+1]
 end
 Base.findall(f::Function, tlk::TlkStrings) =
 	[ Strref(i-1) for (i,s) in pairs(tlk.entries) if f(s.string) ]
@@ -577,7 +583,8 @@ end
 	return bifcontent(bif, resourceindex(loc))
 end
 @inline Base.haskey(key::KeyIndex, name::AbstractString, type::Symbol) =
-	haskey(key.location, type) && haskey(key.location[type], name)
+	haskey(key.location, type) &&
+		haskey(key.location[type], name|>StaticString{8})
 @inline Base.keys(key::KeyIndex, type::Symbol) = keys(key.location[type])
 
 # ««1 ids
@@ -1715,70 +1722,8 @@ function add_journal!(t::Transition, s::AbstractString; override=false)
 	t.journal = s
 end
 
-#««1 Game
-#««2 Game data structure
-struct GameChanges
-	itm::Dict{Resref"itm",Item}
-	dlg::Dict{Resref"dlg",Actor}
-	@inline GameChanges() = new((Auto() for _ in 1:fieldcount(GameChanges))...,)
-end
-@inline alldicts(c::GameChanges) = (getfield(c,i) for i in 1:nfields(c))
-@inline Base.empty!(c::GameChanges) = c|>alldicts.|>empty!
-@inline Base.length(c::GameChanges) = c|>alldicts.|>length|>sum
-Base.show(io::IO, ::MIME"text/plain", c::GameChanges) = for dict in alldicts(c)
-	println("\e[33mmodified $(valtype(dict)|>nameof): $(length(dict))\e[m")
-	for (k,v) in pairs(dict)
-		println("  $(k.name)\t$(v.ref.name)")
-	end
-end
-"""    Game
-
-Main structure holding all top-level data for a game installation, including:
- - resource repository (three kinds: key/bif, override, memory database of
-   modified resources);
- - tlk strings,
- - conversion of resource references to 8-byte short references;
- - dialog-building context.
-
-This structure works as a pseudo-dictionary:
-indexing it with keys of a given `Resref` type
-returns data structures of the corresponding resource type.
-
- - `game[resref]`: returns the data structure described by this resource.
- - `get` and `get!` methods, e.g. `get(game, resref) do ... end`
- - `keys(game, type)`: returns a vector of all names of
-   existing resources of this type.
-"""
-@with_kw_noshow struct Game
-	directory::Base.RefValue{String} = Ref("")
-	key::KeyIndex = KeyIndex()
-	override::Dict{Symbol, Set{String}} =
-		Auto(s => Set{String}() for s in fieldnames(GameChanges))
-	# Current values (mutable data):
-	language::Base.RefValue{Int} = Ref(0)
-	namespace::Base.RefValue{String} = Ref("")
-	# XXX: each tlk file is quite heavy (5 Mbytes in a fresh BG1
-	# install), we could use a rotation system to not keep more than 4 or 5
-	# in memory at the same time
-	# (this is already likely during resource building since most mods are
-	# written in 3 languages, but should be ensured during final
-	# compilation)
-	strings::Vector{TlkStrings} = [ TlkStrings() for _ in LANGUAGE_FILES ]
-	# we collect all new strings (for any language) in the same structure,
-	# so that all the strref numbers advance in sync:
-	new_strings::UniqueVector{Tuple{Int8,String}} = Auto()
-	# longrefs ↔ shortrefs bijection:
-	shortref::Dict{String,StaticString{8}} = Auto()
-	longref::Dict{StaticString{8},String} = Auto()
-
-	changes::GameChanges = Auto()
-	dialog_context::DialogContext = Auto()
-end
-Base.show(io::IO, g::Game) = print(io, "<Game: ",
-	length(g.key), " keys, ", g.override|>values.|>length|>sum, " overrides, ",
-	length(changes(g)), " changes, ", count(!isempty, g.strings), " languages, ",
-	length(g.strings[g.language[]]), " strings, ",
-	length(g.new_strings), " new strings>")
+#««1 GameStrings: strings pseudo-dictionary
+#««2 Data structure
 const LANGUAGE_FILES = (#««
 	# We need to put the xxF before xx, because the regexp search goes
 	# linearly through this list:
@@ -1806,75 +1751,142 @@ const LANGUAGE_FILES = (#««
 	r"^uk.*"i => joinpath("uk_UA", "dialog.tlk"),
 	r"^zh.*"i => joinpath("zh_CN", "dialog.tlk"),
 )#»»
-"""    Game(directory)
+@with_kw_noshow struct GameStrings
+	language::Base.RefValue{Int} = Ref(0)
+	# XXX: each tlk file is quite heavy (5 Mbytes in a fresh BG1
+	# install), we could use a rotation system to not keep more than 4 or 5
+	# in memory at the same time
+	# (this is already likely during resource building since most mods are
+	# written in 3 languages, but should be ensured during final
+	# compilation)
+	tlk::Vector{TlkStrings} = [ TlkStrings() for _ in LANGUAGE_FILES ]
+# 	base_string_count::Base.RefValue{Int} = Ref(0)
+	# we collect all new strings (for any language) in the same structure,
+	# so that all the strref numbers advance in sync; Int8 indexes the
+	# language:
+	new_strings::UniqueVector{Tuple{Int8,String}} = Auto()
+# 	context::SparseVector{String,UInt32} = Auto()
+end
+@inline Base.show(io::IO, g::GameStrings) = print(io, "GameStrings<",
+	count(!isempty, g.tlk), " languages, ",
+	length(g.tlk[g.language[]]), " strings, ",
+	length(g.new_strings), " new strings>")
+function set_language!(g::GameStrings, directory, i)
+	g.language[] = i
+	# Load the strings for this language if not already done:
+	!isempty(g.tlk[i]) && return
+	g.tlk[i] = read(joinpath(directory, "lang", LANGUAGE_FILES[i][2]), TlkStrings)
+end
+function init!(g::GameStrings, directory::AbstractString, dict)
+	set_language!(g, directory, 1)
+	# XXX: read strings comments from `dict`
+# 	g.base_string_count[] = get(dict, "base_count", length(g.tlk[1]))
+end
+# ««2 Pseudo-dictionary interface
+# gamestrings[strref]: returns the string according to current language
+# (or its only language for new strings)
+@inline tlk_string_count(g::GameStrings) = length(g.tlk[1])
+function Base.getindex(g::GameStrings, s::Strref)
+	i = s.index; i = max(i, zero(i)); i+= oneunit(i) # ensure ≥ 1
+	n = tlk_string_count(g)
+	i ≤ n ? g.tlk[g.language[]].entries[i].string : g.new_strings[i - n][2]
+end
+# find_strref(g::Game, s::AbstractString) = only(strings(g), s)
+"""    Strref(gamestrings, s)
 
-Initializes a `Game` structure from the game directory
-(i.e. the directory containing the `"chitin.key"` file).
+Creates a `Strref` for a new string (if needed) and return it.
+
+Accidental string merging might occur with saved `.tlk` strings: for example,
+"Slow" could be either an adjective, a verb, or the name of a spell,
+which could be translated in French as either "Lent", "Ralentir" or "Lenteur".
+For this reason, unicity is only checked against new strings
+(which still can still be marked with context data.
+
+This has a small side-effect however, in that saving a big list of strings
+in one time or in two sub-lists might not produce the exact same set of saved strings.
 """
-@inline Game(directory::AbstractString) = init!(Game(), directory)
-@inline Base.joinpath(g::Game, s...) = joinpath(g.directory[], s...)
-@inline longref_file(g::Game) = joinpath(g, "longrefs")
-"""    init!([game], directory)
-Initializes the game structure.
-The directory should contain the `"chitin.key"` file.
-"""
-function init!(g::Game, directory::AbstractString)
-	g.namespace[] = ""
-	g.directory[] = directory
-	init!(g.key, joinpath(g, "chitin.key"))
+function Strref(g::GameStrings, s::AbstractString)
+	# and the FIXME is: save context for those strings beyond base_count...
+	# 
+	# To use an original game string, just use its Strref explicitly.
+	# For really unique strings (e.g. "Imoen") it is possible to get
+	# the Strref by using `find_strref` (for this to be legal
+	# there must exist a single instance of this string in the `.tlk` file).
+	i = findfirst!(isequal((g.language[], s),), g.new_strings)
+	return Strref(i-1 + length(g.tlk[1]))
+end
+Strref(::GameStrings, ::Nothing) = Strref(0) # graceful fail
+
+# """    search(game, strings, ResIO"type", text)
+# 
+# Searches for the given text (string or regular expression)
+# in the names of all resources of the given `type`.
+# `strings` is the string database used for translation.
+# """
+# function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
+# 	for res in all(g, R)
+# 		s = res|>read
+# 		contains(s, text) || continue
+# 		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', res.name, s)
+# 	end
+# end
+@inline function commit(g::GameStrings, directory)
+	# Save game strings for all translations
+	for (i, (id, s)) in pairs(g.new_strings)
+	end
+end
+@inline config(g::GameStrings) = Dict()
+
+#««1 GameResources: resources pseudo-dictionary
+#««2 Auxiliary structure: GameChanges
+struct GameChanges
+	itm::Dict{Resref"itm",Item}
+	dlg::Dict{Resref"dlg",Actor}
+	@inline GameChanges() = new((Auto() for _ in 1:fieldcount(GameChanges))...,)
+end
+@inline alldicts(c::GameChanges) = (getfield(c,i) for i in 1:nfields(c))
+@inline Base.empty!(c::GameChanges) = c|>alldicts.|>empty!
+@inline Base.length(c::GameChanges) = c|>alldicts.|>length|>sum
+Base.show(io::IO, ::MIME"text/plain", c::GameChanges) = for dict in alldicts(c)
+	println("\e[33mmodified $(valtype(dict)|>nameof): $(length(dict))\e[m")
+	for (k,v) in pairs(dict)
+		println("  $(k.name)\t$(v.ref.name)")
+	end
+end
+#««2 Data type
+@with_kw_noshow struct GameResources
+	# Resources data:
+	key::KeyIndex = KeyIndex()
+	override::Dict{Symbol, Set{StaticString{8}}} =
+		Auto(s => Set{StaticString{8}}() for s in fieldnames(GameChanges))
+	namespace::Base.RefValue{String} = Ref("")
+	shortref::Dict{String,StaticString{8}} = Auto()
+	changes::GameChanges = Auto()
+end
+@inline Base.show(io::IO, g::GameResources) = print(io, "GameResources<",
+	length(g.key), " keys, ", g.override|>values.|>length|>sum, " overrides, ",
+	length(changes(g)), " changes>")
+function init!(g::GameResources, directory, dict)
+	g.namespace[] = "" # XXX is this useful?
+	init!(g.key, joinpath(directory, "chitin.key"))
 	println("read ", length(g.key), " key resources")
-	o_dir = joinpath(g, "override")
+	o_dir = joinpath(directory, "override")
 	if !isdir(o_dir)
 		println("created override directory: ", o_dir)
 		mkdir(o_dir)
 	else
 		for f in readdir(o_dir)
 			(n, e) = f|>basename|>lowercase|>splitext; t = Symbol(e[2:end])
+			length(n) > 8 && continue
 			if_haskey(g.override, t) do s; push!(s, n); end
 		end
 		println("read $(g.override|>values.|>length|>sum) override resources")
 	end
-	set_language!(g, 1) # default language
-	g|>longref_file|>isfile && for line in g|>longref_file|>eachline
-		# XXX use ; for comments? this is not an allowed file name
-		(short, long) = split(line, r"\s", limit=2)
-		g.shortref[long] = short
-		g.longref[short] = long
-	end
+
+	copy!(g.shortref, dict)
 	g.namespace[] = "user"
-	return g
 end
-#««2 Resref ←—→ shortrefs
-"""    longref(game, shortref)
-
-Converts a short reference (i.e. an ≤8 byte string) to a long reference.
- - All “new” shortrefs should be reference in the game's `"longrefs"` file,
-   so shortrefs absent from this file belong to "":
- - (the other possible distinction, game key, is less useful, because
-   some non-original game files might eventually be biffed).
-"""
-function longref(g::Game, short::AbstractString)
-	# all “new” shortrefs should be referenced in the longrefs file,
-	# so shortrefs absent from here belong to "":
-	get(g.longref, short) do; String(short) end
-end
-"""    shortref(game, resref)
-
-Convert a long reference (already stored in a game object) to a short reference:
- - if the namespace is "" then this is already a short reference;
- - if the (namespace, resource) pair is already indexed, return this;
- - otherwise, create a new index entry for this pair.
-"""
-function shortref(g::Game, str::AbstractString)
-	!contains(str, '/') && return StaticString{8}(str|>lowercase)
-	get!(g.shortref, str) do
-		for s in ShortrefIterator{8}(first(replace(str, r".*/"=>""), 8))
-			!haskey(g.longref, s) && !haskey(g.key, s, resourcetype(r)) &&
-				(g.longref[s] = str; return s)
-		end
-	end
-end
-
+#««2 String → Resref
 """    ShortrefIterator(s)
 
 Iterator producing, in order:  "foobar", "foobar00".."foobar99",
@@ -1895,99 +1907,176 @@ end
 Base.length(r::ShortrefIterator) = 10^textlength(r)+1
 Base.eltype(::ShortrefIterator{L}) where{L} = StaticString{L}
 
-#««2 Pseudo-dictionary interface
-# All the functions used here encapsulate access to the `Game` structure
-# as a pseudo-dictionary indexed by `Resref` keys.
-# Resources can be stored in three places:
-#  - modified resource registry,
-#  - override directory,
-#  - key/bif archives.
+"""    available_resref
 
-for T in fieldnames(GameChanges)
-	@eval changes(g::Game, ::Type{<:Resref{$(QuoteNode(T))}}) = g.changes.$T
-end
-@inline changes(g::Game, r::Resref) = changes(g, typeof(r))
-@inline changes(g::Game) = g.changes
+Given a string `s` (only used as a seed), returns a `StaticString{8}`
+which is guaranteed to designate a fresh `Resref{T}`."""
+available_resref(g::GameResources, R::Type{Resref{T}}, str) where{T} =
+	# XXX invent a better way to shorten (by words?)
+	first(s for s in ShortrefIterator{8}(first(str|>lowercase, 8))
+		if !haskey(g, R(s)))
 
-@inline register!(g::Game, x::RootResource) =
-begin
-	println("\e[34;1m register!($(x.ref))\e[m")
-	# this prevents overwriting if the key already exists:
-	get!(changes(g, x.ref), x.ref, x)
-end
 
-function Base.haskey(g::Game, str::AbstractString, type::Symbol)
-	s = shortref(g, str)
-	haskey(changes(g, Resref{type}), str) ||
-	haskey(game.key, s, type) ||
-	(haskey(game.override, type) && haskey(game.override[type], s))
-end
-
-Base.open(g::Game, s::AbstractString, type::Symbol; override=true) =
-	override && s ∈ get(g.override, type, ()) ?
-		open(joinpath(g, "override", s*'.'*String(type))) : open(g.key, s, type)
-
-function Base.get(f::Base.Callable, g::Game, ref::Resref; override = true)
-	get(changes(g, ref), ref) do
-		buf = open(g, shortref(g, ref.name), resourcetype(ref))
-		isnothing(buf) ? f() : read(ResIO{resourcetype(ref)}(ref, buf))
-	end
-end
-@inline Base.haskey(g::Game, ref::Resref) = haskey(g,ref.name,resourcetype(ref))
-@inline Base.get(g::Game, ref, x) = get(()->x, g, ref)
-@inline Base.get!(f::Base.Callable, g::Game, ref) = get(register! ∘ f, g, ref)
-@inline Base.get!(g::Game, ref, x) = get!(()->x, g, ref)
-@inline Base.getindex(g::Game, ref) = get(g, ref) do; throw(KeyError(ref)); end
-
-# Special case: get only if modified
-# modified -> return modified object; existing -> return reference;
-# non-existing -> return `nothing`.
-# FIXME: see if this could be made un-global by adding a Game field in
-# Actor structure?
-# Special case: the behavior depends on the `modified` status of the
-# object
-#  - modified: state is indexed
-#  - unmodified: use original state key
-#  - not-existing: return 0
-function stateindex(g::Game, r::Resref"dlg", key::StateKey)
-	a = get(changes(g, Resref"dlg"), r, nothing)
-	!isnothing(a) && return a.states[key].position
-	@assert haskey(g, r)
-	return fieldtype(State, :position)(key.n)
-end
-
-function Base.keys(g::Game, ::Type{<:Resref{T}}) where{T}
-	k = Set{String}()
-	for s in keys(changes(g, Resref{T})); push!(k, s.name); end
-	for s in get(g.override, T, ()); push!(k, longref(g, s)); end
-	for s in keys(g.key, T); push!(k, longref(g, s)); end
-	k
-end
-@inline Base.keys(g::Game, T, pat) = (x for x in keys(g, T) if contains(x,pat))
-
-function makeref(g::Game, str::AbstractString, type::Symbol)
-	isempty(str) && return str
-	startswith(str, '/') && return str[2:end]
-	contains(str, '/') && return str
-	ns_str = resref_join(namespace(g), str)
-	r = get(g.longref, ns_str, nothing)
-	!isnothing(r) && return ns_str
-	length(str) ≤ 8 && haskey(g, str, type) && return str
-	return ns_str
-end
-
-"""    Resref{T}(game, string)
+"""    Resref{T}(game.resources, string)
 
 Converts a string (entered by the user) to a long reference:
  - if the string is of the form `"/resource"` then use root namespace;
  - if the string is of the form `"namespace/resource"`, parse it;
  - if an object with this reference exists in current namespace, return it;
  - same with root namespace;
- - otherwise, return `(current_namespace, string)` (this is a forward decl.).
+ - otherwise, create a fresh reference, associate it with the string, and return it.
 """
-(R::Type{<:Resref})(g::Game, str::AbstractString) =
-	makeref(g, str, resourcetype(R))|>R
-# ««2 Namespace and language
+function (R::Type{Resref{T}})(g::GameResources, str::AbstractString) where{T}
+# function makeref(g::GameResources, ::Type{Resref{T}}, str) where{T}
+# end
+	isempty(str) && return str|>R
+	startswith(str, '/') && return str[2:end]|>lowercase|>R
+	# Search for an existing original game resource with this name
+	if length(str) ≤ 8
+		s1 = lowercase(str)
+		haskey(g.key, s1, T) && return R(s1)
+	end
+	fullpath = lowercase(contains(str, '/') ? str : g.namespace[]*'/'*str)
+	ref = get!(g.shortref, fullpath) do
+		s = available_resref(g, R, str)
+		return s
+	end
+	return ref|>R
+end
+
+#««2 Pseudo-dictionary interface
+# All the functions used here encapsulate access to the `GameResources`
+# structure as a pseudo-dictionary indexed by `Resref` keys.
+# Resources can be stored in three places:
+#  - modified resource registry,
+#  - override directory,
+#  - key/bif archives.
+
+for T in fieldnames(GameChanges)
+	@eval changes(g::GameResources,::Type{<:Resref{$(QuoteNode(T))}})=g.changes.$T
+end
+@inline changes(g::GameResources, r::Resref) = changes(g, typeof(r))
+@inline changes(g::GameResources) = g.changes
+
+function Base.haskey(g::GameResources, ref::Resref{T}) where{T}
+	haskey(changes(g, ref), ref) ||
+	haskey(g.key, ref.name, T) ||
+	(haskey(g.override, T) && ref.name ∈ g.override[T])
+end
+
+Base.open(g::GameResources, s::AbstractString, T::Symbol; override=true) =
+	override && s ∈ get(g.override, T, ()) ?
+		open(joinpath(g, "override", s*'.'*String(T))) : open(g.key, s, T)
+
+function Base.get(f::Base.Callable, g::GameResources, ref::Resref{T};
+		override = true) where{T}
+	get(changes(g, ref), ref) do
+		io = open(g, ref.name, T)
+		isnothing(io) && return f()
+		data = read(ResIO{T}(ref, io))
+		close(io)
+		return data
+	end
+end
+@inline Base.get(g::GameResources, ref, x) = get(()->x, g, ref)
+@inline Base.get!(f::Base.Callable, g::GameResources, ref) =
+	get(register! ∘ f, g, ref)
+@inline Base.get!(g::GameResources, ref, x) = get!(()->x, g, ref)
+@inline Base.getindex(g::GameResources, ref) =
+	get(g, ref) do; throw(KeyError(ref)); end
+
+# This performs both conversion of (long) string -> (short) Resref
+# and reading of the resource:
+Base.getindex(g::GameResources, R::Type{<:Resref}, s::AbstractString)= g[R(g,s)]
+
+function Base.keys(g::GameResources, ::Type{<:Resref{T}}) where{T}
+	k = Set{StaticString{8}}()
+	for s in keys(changes(g, Resref{T})); push!(k, s.name); end
+	for s in get(g.override, T, ()); push!(k, s); end
+	for s in keys(g.key, T); push!(k, s); end
+	k
+end
+@inline Base.keys(g::GameResources, T, pat) =
+	(x for x in keys(g, T) if contains(x,pat))
+
+#««2 Commit changes to filesystem
+@inline function commit(g::GameResources, directory)
+	# Commit modified objects:
+	# This takes care of moving all relevant data from `changes` to `override`.
+	for dict in alldicts(changes(g))
+		println("\e[1mWriting $(length(dict)) modified $(valtype(dict))(s)\e[m")
+		for x in values(dict)
+			commit(g, directory, x)
+		end
+	end
+end
+@inline function commit(g::GameResources, directory, x::RootResource)
+	ref = x.ref; T, s = resourcetype(ref), ref.name
+	println("  \e[32m$ref => $s.$T\e[m")
+	write(joinpath(directory, "override", uppercase(s)*'.'*string(T)), x)
+	push!(get!(()->Set{StaticString{8}}(), g.override, T), s)
+	delete!(changes(g, T), ref)
+end
+@inline config(g::GameResources) = g.shortref
+
+#««1 Game
+#««2 Game structure
+"""    Game
+
+Main structure holding all top-level data for a game installation, including:
+ - resource repository (three kinds: key/bif, override, memory database of
+   modified resources);
+ - tlk strings,
+ - conversion of resource references to 8-byte short references;
+ - dialog-building context.
+
+This structure works as a pseudo-dictionary:
+indexing it with keys of a given `Resref` type
+returns data structures of the corresponding resource type.
+
+ - `game[resref]`: returns the data structure described by this resource.
+ - `get` and `get!` methods, e.g. `get(game, resref) do ... end`
+ - `keys(game, type)`: returns a vector of all names of
+   existing resources of this type.
+"""
+@with_kw_noshow struct Game
+	directory::Base.RefValue{String} = Ref("")
+	strings::GameStrings = Auto()
+	resources::GameResources = Auto()
+	dialog_context::DialogContext = Auto()
+end
+Base.show(io::IO, g::Game) = print(io, "Game<",
+	repr(g.strings), ", ", repr(g.resources), ">")
+"""    Game(directory)
+
+Initializes a `Game` structure from the game directory
+(i.e. the directory containing the `"chitin.key"` file).
+"""
+@inline Game(directory::AbstractString) = init!(Game(), directory)
+@inline Base.joinpath(g::Game, s...) = joinpath(g.directory[], s...)
+@inline config_file(g::Game) = joinpath(g, "config.toml")
+"""    init!([game], directory)
+Initializes the game structure.
+The directory should contain the `"chitin.key"` file.
+"""
+function init!(g::Game, directory::AbstractString)
+	g.directory[] = directory
+
+	f = g|>config_file
+	config = f|>isfile ? TOML.parsefile(f) : EmptyDict()
+
+	init!(g.strings, directory, get(config, "strings", EmptyDict()))
+	init!(g.resources, directory, get(config, "resources", EmptyDict()))
+	return g
+end
+@inline register!(g::Game, x::RootResource) =
+begin
+	println("\e[34;1m register!($(x.ref))\e[m")
+	# this prevents overwriting if the key already exists:
+	get!(changes(g.resources, x.ref), x.ref, x)
+end
+
+# ««2 Namespace and language accessor functions
 """    namespace([game], s)
 
 Sets the current namespace for game resources being defined to `s`.
@@ -1995,15 +2084,9 @@ The following default namespaces are used:
  - `""` for original game resources;
  - `"user"` is the default namespace for added resources.
 """
-@inline namespace(g::Game, s::AbstractString) = (g.namespace[] = s; s)
-@inline namespace(g::Game) = g.namespace[]
+@inline namespace(g::Game, s::AbstractString) = (g.resources.namespace[] = s; s)
+@inline namespace(g::Game) = g.resources.namespace[]
 
-function set_language!(g::Game, i::Integer)
-	g.language[] = i
-	isempty(g.strings[i]) || return
-	g.strings[i] =
-		read(joinpath(g.directory[], "lang", LANGUAGE_FILES[i][2]), TlkStrings)
-end
 """    language([game], s)
 
 Sets the current language of the game (i.e. the language in which
@@ -2019,55 +2102,35 @@ these are (at least for now) considered as two independent languages).
 function language(g::Game, s::AbstractString)
 	for (i, (r, f)) in pairs(LANGUAGE_FILES)
 		contains(s, r) || continue
-		set_language!(g, i)
+		set_language!(g.strings, g.directory[], i)
 		return i
 	end
 	error("unknown language: "*s)
 end
-@inline language(g::Game) = g.language[]
-# ««2 Strings
-@inline strings(g::Game, i = language(g)) = g.strings[i]
-find_strref(g::Game, s::AbstractString) = only(strings(g), s)
-function Strref(g::Game, s::AbstractString)
-	# newly input strings *never* match original game strings: this
-	# prevents accidental string fusion whenever the names coincide only in
-	# one language
-	# (e.g. "Slow" in EN could have differing translations in FR depending
-	# on context: "Lent", "Ralentir", "Lenteur"; some languages might have
-	# a case system, etc.)
-	# To use an original game string, just use its Strref explicitly.
-	# For really unique strings (e.g. "Imoen") it is possible to get
-	# the Strref by using `find_strref` (for this to be legal
-	# there must exist a single instance of this string in the `.tlk` file).
-	i = findfirst!(isequal((g|>language, s),), g.new_strings)
-	return Strref(i-1 + length(g|>strings))
-end
-@inline Strref(::Game, ::Nothing) = Strref(0) # graceful fail
-
-function str(g::Game, s::Strref)
-	i = s.index+1; i = max(i, one(i))
-	i ≤ length(strings(g)) && return strings(g).entries[i].string
-	return g.new_strings[i - length(strings(g))][2]
-end
-
-"""    search(game, strings, ResIO"type", text)
-
-Searches for the given text (string or regular expression)
-in the names of all resources of the given `type`.
-`strings` is the string database used for translation.
-"""
-# function search(g::Game, str::TlkStrings, R::Type{<:ResIO}, text)
-# 	for res in all(g, R)
-# 		s = res|>read
-# 		contains(s, text) || continue
-# 		@printf("%c%-8s %s\n", res isa ResIOFile ? '*' : ' ', res.name, s)
-# 	end
-# end
+@inline language(g::Game) = g.strings.language[]
 #««2 Accessors: `item` etc.
+
+# Special case: get only if modified
+# modified -> return modified object; existing -> return reference;
+# non-existing -> return `nothing`.
+# FIXME: see if this could be made un-global by adding a Game field in
+# Actor structure?
+# Special case: the behavior depends on the `modified` status of the
+# object
+#  - modified: state is indexed
+#  - unmodified: use original state key
+#  - not-existing: return 0
+function stateindex(g::Game, r::Resref"dlg", key::StateKey)
+	a = get(changes(g.resources, Resref"dlg"), r, nothing)
+	!isnothing(a) && return a.states[key].position
+	@assert haskey(g, r)
+	return fieldtype(State, :position)(key.n)
+end
+
 """    item([game], ref)
 
 Returns the item with given reference."""
-@inline item(g::Game, name::AbstractString) = g[Resref"itm"(g, name)]
+@inline item(g::Game, name::AbstractString) = g.resources[Resref"itm", name]
 """    items([game], [regex])
 
 Returns an iterator over all items. If a `regex` is provided then
@@ -2076,7 +2139,7 @@ only those items with matching reference are included."""
 
 #««2 Dialog-building functions
 get_actor(g::Game, s::AbstractString) = get_actor(g, Resref"dlg"(s))
-get_actor(g::Game, ref::Resref"dlg") = get!(g, ref) do; Actor(;ref); end
+get_actor(g::Game, ref::Resref"dlg")= get!(g.resources,ref) do; Actor(;ref) end
 
 """
     actor([game], "name")
@@ -2119,7 +2182,7 @@ say(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
 
 say2(g::Game, label, text::AbstractString; kw...) =
 	add_state!(g.dialog_context, g.dialog_context|>target_actor,
-		StateKey(g, label), Strref(g, text); kw...)
+		StateKey(g, label), Strref(g.strings, text); kw...)
 """    from([game], [actor], label)
 
 Sets current state to `actor`, `label`. The state must exist.
@@ -2145,7 +2208,7 @@ interject(g::Game, args::InterjText...; kw...) =
 	for a in args; interject(g, a; kw...); end
 
 interject2(g::Game, actor, text; kw...) =
-	tail_insert!(g, actor, firstlabel(actor), Strref(g, text); kw...)
+	tail_insert!(g, actor, firstlabel(actor), Strref(g.strings, text); kw...)
 """
     reply(text => label)
 
@@ -2186,7 +2249,7 @@ reply(g::Game, text, ::typeof(exit); kw...) =
 	reply2(g, text, NO_ACTOR, 0; terminates = true, kw...)
 
 reply2(g::Game, text, actor, label; kw...) = add_transition!(g.dialog_context,
-	Strref(g,text), actor, StateKey(g, label); kw...)
+	Strref(g.strings,text), actor, StateKey(g, label); kw...)
 """
     trigger(string)
 
@@ -2206,31 +2269,22 @@ Attaches a journal entry to the latest transition."""
 	add_journal!(current_transition(g.dialog_context), s; kw...)
 
 #««2 Saving game data
-"""    save([game])
+"""    commit([game])
 
 Saves all changed game data to the disk installation."""
-function save(g::Game)
-	# Modified items
-	# XXX: iterate over dict fields, etc.
-	println("\e[1mWriting $(length(changes(g, Resref"itm"))) modified items\e[m")
-	for itm in values(changes(g, Resref"itm"))
-		save(game, itm)
-	end
-	open(longref_file(g), "w") do io
-		for (k, v) in pairs(g.longref)
-			println(io, k, '\t', v)
-		end
+function commit(g::Game)
+	commit(g.resources, g.directory[])
+	commit(g.strings, g.directory[])
+	# XXX try to make this atomic by saving to temporary files and then
+	# moving all the files at the last minute
+	open(g|>config_file, "w") do io
+		TOML.print(io, Dict(
+			"resources" => config(g.resources),
+			"strings" => config(g.strings),
+		))
 	end
 end
-function save(g::Game, x::RootResource)
-	ref = x.ref; T, s = resourcetype(ref), shortref(g, ref)
-	println("  \e[32m$ref => $s.$T\e[m")
-	write(joinpath(game.directory[], "override", uppercase(s)*'.'*string(T)), x)
-	push!(get!(()->Set{String}(), g.override, T), s)
-	delete!(changes(g, T), ref)
-end
-
-#««1 Item/etc. factory
+#««1 Item/etc. copying
 args_to_kw(x, args...) =
 	error("no conversion from args to properties for type $(typeof(x))")
 	# return a NamedTuple
@@ -2247,12 +2301,14 @@ function Base.copy(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
 	println("got kw2=$kw2")
 	vars = (getkey(fn, kwargs, kw2, getfield(x, fn)) for fn in fieldnames(T))
 	y = T(vars...)
-	# this triggers a register! call:
 	y.ref = getkey(:ref, kwargs, kw2) do
-		r = namespace(g)*'/'* replace(str(g, y.name), r"[^a-zA-Z0-9]" => "")
+		# Make a new reference for the copied object by using the name,
+		# possibly appending a suffix to make it unique. This operation also
+		# 1. needs `Game` access (to check unicity);
+		# 2. triggers the needed `register!` call:
+		r = namespace(g)*'/'* replace(g.strings[y.name], r"[^a-zA-Z0-9]" => "")
 		i = 1
-		while haskey(g.shortref, r) ||
-				haskey(changes(g, x.ref), oftype(x.ref, r))
+		while haskey(g.resources, oftype(x.ref, r))
 			r = replace(r, r"~\d*$" => "")*'~'*string(i)
 			i+= 1
 		end
@@ -2261,7 +2317,7 @@ function Base.copy(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
 	return y
 end
 @inline Base.copy(g::Game, r::Resref, args...; kwargs...) =
-	copy(g, read(g, r), args...; kwargs...)
+	copy(g, g[r], args...; kwargs...)
 
 const _resource_template = Dict{DottedEnums.SymbolicNames,Resref}(
 	Amulet => Resref"amul02.itm",
@@ -2325,10 +2381,14 @@ const PlateMail = HalfPlate
 #««1 Global `game` object
 const game = Game()
 
+# XXX fix this: include a Game field in ResIO?
+str(s::Strref) = game.strings[s]
+changes() = changes(game.resources)
+
 # For all methods of those functions starting with a `::Game` argument:
 # define a corresponding method where the global `game` is used.
-for f in (init!, str, shortref, longref, register!, save,
-		language, namespace, changes,
+for f in (init!, register!, commit,
+		language, namespace,
 		item, items,
 		actor, say, reply, action, trigger, journal, from, stateindex),
 		m in methods(f)
@@ -2341,8 +2401,10 @@ for f in (init!, str, shortref, longref, register!, save,
 	m.isva && (rhs[end] = Expr(:(...), rhs[end]))
 	@eval $(nameof(f))($(lhs...)) = $f(game, $(rhs...))
 end
-@inline Base.convert(T::Type{Strref},s::Union{Nothing,AbstractString})=T(game,s)
-@inline Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game, s)
+@inline Base.convert(::Type{Strref}, s::Union{Nothing,AbstractString}) =
+	Strref(game.strings, s)
+@inline Base.convert(T::Type{<:Resref}, s::AbstractString) =
+	T(game.resources, s)
 @inline Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
 @inline Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =
 	copy(game, x, args...; kwargs...)
@@ -2356,7 +2418,7 @@ function extract(f::AbstractString, g::AbstractString = f)
 end
 #»»1
 
-export save, namespace, language
+export commit, namespace, language
 export item, items
 export actor, say, reply, journal, action, trigger, state
 @eval export $(names(DiceThrows)...) # re-export d6 etc.

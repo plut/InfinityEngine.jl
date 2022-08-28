@@ -1,4 +1,4 @@
-module Translations
+module MarkedStrings
 #««2 Marked strings type
 struct MarkedString{S<:AbstractString}; str::S; end
 @inline Base.show(io::IO, s::MarkedString) = print(io, '_', repr(s.str))
@@ -114,4 +114,5 @@ function read_po(io)
 	return dict
 end
 #»»1
-end # module Translations
+export MarkedString, @__str
+end # module

@@ -15,27 +15,27 @@ struct Dice{I<:Integer}
 	sides::I
 	bonus::I
 end
-@inline Dice(a, b) = Dice(promote(a,b)...)
-@inline Dice(a::I, b::I, c = zero(I)) where{I<:Integer} = Dice{I}(a,b,c)
+Dice(a, b) = Dice(promote(a,b)...)
+Dice(a::I, b::I, c = zero(I)) where{I<:Integer} = Dice{I}(a,b,c)
 function Base.show(io::IO, d::Dice)
 	!isone(d.thrown) && print(io, d.thrown)
 	print(io, 'd', d.sides)
 	d.bonus > 0 && print(io, '+', d.bonus)
 	d.bonus < 0 && print(io, d.bonus)
 end
-@inline Base.:*(a::Integer, d::Dice{I}) where{I} =
+Base.:*(a::Integer, d::Dice{I}) where{I} =
 	(@assert isone(d.thrown) && iszero(d.bonus); Dice{I}(I(a), d.sides, I|>zero))
-@inline Base.:+(d::Dice{I}, b::Integer) where{I} =
+Base.:+(d::Dice{I}, b::Integer) where{I} =
 	Dice{I}(d.thrown, d.sides, d.bonus + I(b))
-@inline Base.:-(d::Dice{I}, b::Integer) where{I} =
+Base.:-(d::Dice{I}, b::Integer) where{I} =
 	Dice{I}(d.thrown, d.sides, d.bonus - I(b))
-@inline Base.iszero(d::Dice) =
+Base.iszero(d::Dice) =
 	(iszero(d.thrown) || iszero(d.sides)) && iszero(d.bonus)
-@inline doubleaverage(d::Dice) = d.thrown * (d.sides+one(d.sides)) + d.bonus<<1
-@inline average(d::Dice) = doubleaverage(d)//2
+doubleaverage(d::Dice) = d.thrown * (d.sides+one(d.sides)) + d.bonus<<1
+average(d::Dice) = doubleaverage(d)//2
 
 using Random
-@inline Base.rand(rng::AbstractRNG, d::Random.SamplerTrivial{<:Dice}) =
+Base.rand(rng::AbstractRNG, d::Random.SamplerTrivial{<:Dice}) =
 	sum(rand(rng, Base.OneTo(d[].sides)) for _ in Base.OneTo(d[].thrown)) + d[].bonus
 
 for i in (2,3,4,5,6,8,10,12,20)
@@ -61,18 +61,18 @@ using TOML
 # ««1 Basic types
 # ««2 Misc.
 struct EmptyDict; end
-@inline Base.get(::EmptyDict, _, x) = x
-@inline Base.iterate(::EmptyDict) = nothing
-@inline Base.copy!(d::AbstractDict, ::EmptyDict) = empty!(d)
+Base.get(::EmptyDict, _, x) = x
+Base.iterate(::EmptyDict) = nothing
+Base.copy!(d::AbstractDict, ::EmptyDict) = empty!(d)
 struct Auto{A<:Tuple, B}
 	args::A
 	kwargs::B
 	Auto(args...; kwargs...) = new{typeof(args),typeof(kwargs)}(args, kwargs)
 end
-@inline Base.convert(T::DataType, auto::Auto) = T(auto.args...; auto.kwargs...)
+Base.convert(T::DataType, auto::Auto) = T(auto.args...; auto.kwargs...)
 # Compact representation, useful for Flags and Enums
-@inline rp(x) = repr(x;context=(:compact=>true))
-@inline f75(s::AbstractString) = length(s) ≤ 72 ? s : first(s,72)*'…'
+rp(x) = repr(x;context=(:compact=>true))
+f75(s::AbstractString) = length(s) ≤ 72 ? s : first(s,72)*'…'
 function if_haskey(f::Base.Callable, dict::Dict, key)
 	index = Base.ht_keyindex(dict, key)
 	index > 0 && f(@inbounds dict.vals[index])
@@ -96,7 +96,7 @@ struct StaticString{N} <: AbstractString
 		(@assert length(chars) ≤ N; c = Ref(0x1); new{N}(SVector{N}(
 		iszero(c[]) ? c[] : (c[] = get(chars, i, 0x0)) for i in 1:N)))
 end
-@inline Base.sizeof(::StaticString{N}) where{N} = N
+Base.sizeof(::StaticString{N}) where{N} = N
 @inline Base.ncodeunits(s::StaticString) =
 	let l = findfirst(iszero, s.chars); isnothing(l) ? sizeof(s) : l-1; end
 @inline function Base.:(==)(x::StaticString{N}, y::StaticString{N}) where{N}
@@ -107,11 +107,11 @@ end
 	return true
 end
 
-@inline Base.codeunit(s::StaticString, i::Integer) = s.chars[i]
-@inline Base.codeunit(::StaticString) = UInt8
+Base.codeunit(s::StaticString, i::Integer) = s.chars[i]
+Base.codeunit(::StaticString) = UInt8
 # We handle only ASCII strings...
-@inline Base.isvalid(::StaticString, ::Integer) = true
-@inline function Base.iterate(s::StaticString, i::Integer = 1)
+Base.isvalid(::StaticString, ::Integer) = true
+function Base.iterate(s::StaticString, i::Integer = 1)
 	i > length(s) && return nothing
 	c = @inbounds s.chars[i]
 	iszero(c) && return nothing
@@ -121,16 +121,16 @@ end
 	@assert length(s) ≤ N "string must be at most $N characters long: \"$s\""
 	return StaticString{N}(s|>codeunits)
 end
-@inline StaticString{N}(s::StaticString{N}) where{N} = s
+StaticString{N}(s::StaticString{N}) where{N} = s
 
 @inline Pack.unpack(io::IO, T::Type{StaticString{N}}) where{N} =
 	T(SVector{N,UInt8}(read(io, UInt8) for _ in SOneTo(N)))
-@inline Pack.pack(io::IO, s::StaticString) = write(io, s.chars)
+Pack.pack(io::IO, s::StaticString) = write(io, s.chars)
 
-@inline charuc(x::UInt8) = (0x61 ≤ x ≤ 0x7a) ? x-0x20 : x
-@inline charlc(x::UInt8) = (0x41 ≤ x ≤ 0x5a) ? x+0x20 : x
-@inline Base.uppercase(s::StaticString) = typeof(s)(charuc.(s.chars))
-@inline Base.lowercase(s::StaticString) = typeof(s)(charlc.(s.chars))
+charuc(x::UInt8) = (0x61 ≤ x ≤ 0x7a) ? x-0x20 : x
+charlc(x::UInt8) = (0x41 ≤ x ≤ 0x5a) ? x+0x20 : x
+Base.uppercase(s::StaticString) = typeof(s)(charuc.(s.chars))
+Base.lowercase(s::StaticString) = typeof(s)(charlc.(s.chars))
 @inline function Base.hash(s::StaticString{8})
 	# this operation is time-critical; we completely unroll the loop
 	n1 = @inbounds Int64(s.chars[1])
@@ -153,12 +153,12 @@ Index (32-bit) referring to a translated string in a `"dialog.tlk"` file.
 struct Strref
 	index::Int32
 end
-@inline Strref(x::Strref) = x
+Strref(x::Strref) = x
 # Index 0 corresponds to '<NO TEXT>', which is technically a valid string,
 # but should not actually appear in-game: we use this value as a marker
 # for invalid strings.
-@inline Base.isvalid(s::Strref) = (s.index > 0)
-@inline Base.show(io::IO, s::Strref) = print(io, "Strref(", s.index, ")")
+Base.isvalid(s::Strref) = (s.index > 0)
+Base.show(io::IO, s::Strref) = print(io, "Strref(", s.index, ")")
 
 #««2 Resource identifiers: Resref
 """    Resref{T}
@@ -175,16 +175,16 @@ resourcetype(::Type{<:Resref{T}}) where{T} = T
 resourcetype(r::Resref) = resourcetype(typeof(r))
 # @inline resref_join(ns::AbstractString, n::AbstractString) =
 # 	isempty(ns) ? n : ns*'/'*n
-@inline Base.isempty(r::Resref) = isempty(r.name)
-@inline (T::Type{<:Resref})(x::Resref) = T(x.name)
+Base.isempty(r::Resref) = isempty(r.name)
+(T::Type{<:Resref})(x::Resref) = T(x.name)
 
 Base.show(io::IO, r::Resref) =
 	print(io, "Resref\"", r.name, '.', resourcetype(r), '"')
 
 @inline Pack.unpack(io::IO, T::Type{<:Resref}) =
 	unpack(io, StaticString{8})|>lowercase|>T
-@inline Pack.packed_sizeof(::Type{<:Resref}) = 8
-@inline Pack.pack(io::IO, r::Resref) = pack(io, r.name|>uppercase)
+Pack.packed_sizeof(::Type{<:Resref}) = 8
+Pack.pack(io::IO, r::Resref) = pack(io, r.name|>uppercase)
 
 macro Resref_str(s)
 	s = lowercase(s)
@@ -207,8 +207,8 @@ The following methods needs to be defined:
 """
 abstract type RootedResource end
 # default field is x.root (actually the only field we use)
-@inline root(x::RootedResource) = isdefined(x, :root) ? x.root : nothing
-@inline root!(x::RootedResource, r) = (x.root = r)
+root(x::RootedResource) = isdefined(x, :root) ? x.root : nothing
+root!(x::RootedResource, r) = (x.root = r)
 """    RootResource
 
 The root of a resource tree, i.e. a resource which will be saved in a game file.
@@ -216,10 +216,10 @@ This resource also holds an identifier designating it (and the game file).
 """
 abstract type RootResource{T} <: RootedResource end
 # Root resource is always its own root
-@inline root(x::RootResource) = x
-@inline root!(x::RootResource, _) = nothing
-@inline resourcetype(::RootResource{T}) where{T} = T
-@inline register!(::Nothing) = nothing # no root defined
+root(x::RootResource) = x
+root!(x::RootResource, _) = nothing
+resourcetype(::RootResource{T}) where{T} = T
+register!(::Nothing) = nothing # no root defined
 
 mutable struct RootedResourceVector{T<:RootedResource,
 		R<:RootResource} <: AbstractVector{T}
@@ -229,14 +229,14 @@ mutable struct RootedResourceVector{T<:RootedResource,
 	RootedResourceVector{T,R}(v,r) where{T,R} = new{T,R}(v,r)
 	RootedResourceVector{T,R}(v) where{T,R} = new{T,R}(v)
 end
-@inline RootedResourceVector{T,R}(::UndefInitializer) where{T,R} =
-	RootedResourceVector{T,R}()
-@inline root(v::RootedResourceVector) = isdefined(v, :root) ? v.root : nothing
-@inline root!(v::RootedResourceVector, r) = (v.root = r)
-@inline Pack.packed_sizeof(x::RootedResourceVector) = length(x)*packed_sizeof(eltype(x))
+# RootedResourceVector{T,R}(::UndefInitializer) where{T,R} =
+# 	RootedResourceVector{T,R}()
+root(v::RootedResourceVector) = isdefined(v, :root) ? v.root : nothing
+root!(v::RootedResourceVector, r) = (v.root = r)
+Pack.packed_sizeof(x::RootedResourceVector) = length(x)*packed_sizeof(eltype(x))
 
 #««3 getproperty/setproperty! etc.
-@inline rr_skipproperties(::Any) = ()
+rr_skipproperties(::Any) = ()
 @inline default_setproperty!(x, f::Symbol, v) =
 	# default code; duplicated from Base.jl
 	setfield!(x, f, convert(fieldtype(typeof(x), f), v))
@@ -246,21 +246,20 @@ end
 	# was changed:
 	f ∈ rr_skipproperties(x) || register!(root(x))
 end
-@inline Base.setproperty!(x::RootedResource, f::Symbol, v) =
-	rr_setproperty!(x, f, v)
+Base.setproperty!(x::RootedResource, f::Symbol, v) = rr_setproperty!(x, f, v)
 
 # AbstractArray interface
-@inline Base.size(v::RootedResourceVector) = size(v.v)
-@inline Base.getindex(v::RootedResourceVector, i::Int) = v.v[i]
-@inline Base.setindex!(v::RootedResourceVector, x, i::Int) =
+Base.size(v::RootedResourceVector) = size(v.v)
+Base.getindex(v::RootedResourceVector, i::Int) = v.v[i]
+Base.setindex!(v::RootedResourceVector, x, i::Int) =
 	(register!(root(v)); setindex!(v.v, x, i))
-@inline Base.resize!(v::RootedResourceVector, n::Integer) =
+Base.resize!(v::RootedResourceVector, n::Integer) =
 	(register!(root(v)); resize!(v.v, n); v)
 
 """    setroot!(x::RootedResource, newroot = x)
 
 Recursively sets the root object for `x` and all its sub-fields."""
-@inline setroot!(x, r) = x
+setroot!(x, r) = x
 @inline function setroot!(x::RootedResource, r = x)
 	root!(x, r)
 	for i in 1:nfields(x)
@@ -301,16 +300,16 @@ mutable struct ResIO{T,R<:RootResource,X<:IO} <: IO
 		new{T,ResourceType(ResIO{T}),X}(ref, io)
 end
 
-@inline Base.read(x::ResIO, T::Type{UInt8}) = read(x.io, T)
-@inline Base.seek(x::ResIO, n) = (seek(x.io, n); x)
-@inline Base.position(x::ResIO) = position(x.io)
-@inline Base.eof(x::ResIO) = eof(x.io)
-@inline Base.close(x::ResIO) = close(x.io)
+Base.read(x::ResIO, T::Type{UInt8}) = read(x.io, T)
+Base.seek(x::ResIO, n) = (seek(x.io, n); x)
+Base.position(x::ResIO) = position(x.io)
+Base.eof(x::ResIO) = eof(x.io)
+Base.close(x::ResIO) = close(x.io)
 
-@inline root!(x::ResIO, r) = (x.root = r)
+root!(x::ResIO, r) = (x.root = r)
 
 "`ResourceType{ResIO{T}}` = the root type to attach to this `ResIO` fd"
-@inline ResourceType(T::Type{<:ResIO})= Base.return_types(read,Tuple{T})|>only
+ResourceType(T::Type{<:ResIO})= Base.return_types(read,Tuple{T})|>only
 
 macro ResIO_str(str)
 	if contains(str, '.')
@@ -322,19 +321,18 @@ macro ResIO_str(str)
 end
 #««3 Reading resources from ResIO
 # `root` is completely absent from the file:
-@inline Pack.fieldpack(::IO, _, ::Val{:root}, ::RootResource) = 0
-@inline Pack.unpack(io::ResIO, _, ::Val{:root}, T::Type{<:RootResource}) =
-	io.root
-@inline Pack.packed_sizeof(_, ::Val{:root}, ::Type{<:RootResource}) = 0
+Pack.fieldpack(::IO, _, ::Val{:root}, ::RootResource) = 0
+Pack.unpack(io::ResIO, _, ::Val{:root}, T::Type{<:RootResource}) = io.root
+Pack.packed_sizeof(_, ::Val{:root}, ::Type{<:RootResource}) = 0
 @inline unpack_root(io::ResIO, T::Type{<:RootResource}) =
 	(r = unpack(io, T); root!(io, r); r)
 
 # The root resource contains a reference to its own name:
-@inline Pack.unpack(io::ResIO, _, ::Val{:ref}, T::Type{<:Resref}) = io.ref
-@inline Pack.fieldpack(::IO, _, ::Val{:ref}, ::Resref) = 0
-@inline Pack.packed_sizeof(_, ::Val{:ref}, ::Type{<:Resref}) = 0
+Pack.unpack(io::ResIO, _, ::Val{:ref}, T::Type{<:Resref}) = io.ref
+Pack.fieldpack(::IO, _, ::Val{:ref}, ::Resref) = 0
+Pack.packed_sizeof(_, ::Val{:ref}, ::Type{<:Resref}) = 0
 
-@inline Pack.unpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
+Pack.unpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
 
 #»»1
 # ««1 tlk
@@ -356,11 +354,11 @@ end
 	entries::Vector{TLK_str} = Auto()
 # 	firstindex::Dict{String,Int32} = Auto() # lowest Strref for this string
 end
-@inline Base.show(io::IO, tlk::TlkStrings) =
+Base.show(io::IO, tlk::TlkStrings) =
 	print(io, "<TlkStrings with ", length(tlk.entries), " entries>")
-@inline Base.isempty(v::TlkStrings) = isempty(v.entries)
-@inline Base.empty!(v::TlkStrings) = empty!(v.entries) #; empty!(v.firstindex))
-@inline Base.length(v::TlkStrings) = length(v.entries)
+Base.isempty(v::TlkStrings) = isempty(v.entries)
+Base.empty!(v::TlkStrings) = empty!(v.entries) #; empty!(v.firstindex))
+Base.length(v::TlkStrings) = length(v.entries)
 
 #««2 I/O from tlk file
 function Base.read(io::IO, ::Type{<:TlkStrings})
@@ -373,7 +371,7 @@ function Base.read(io::IO, ::Type{<:TlkStrings})
 	end
 	return f
 end
-@inline TlkStrings(file::AbstractString) = read(file, TlkStrings)
+TlkStrings(file::AbstractString) = read(file, TlkStrings)
 function Base.write(io::IO, tlk::TlkStrings)
 	tlk.offset = 18 + 26*length(tlk.entries)
 	tlk.nstr = length(tlk.entries)
@@ -420,9 +418,9 @@ Base.only(tlk::TlkStrings, s::AbstractString) = findall(isequal(s), tlk)|>only
 32-bit index of resource in bif files.
 """
 struct BifIndex; data::UInt32; end
-@inline sourcefile(r::BifIndex) = r.data >> 20
-@inline tilesetindex(r::BifIndex) = (r.data >> 14) && 0x3f
-@inline resourceindex(r::BifIndex) = r.data & 0x3fff
+sourcefile(r::BifIndex) = r.data >> 20
+tilesetindex(r::BifIndex) = (r.data >> 14) && 0x3f
+resourceindex(r::BifIndex) = r.data & 0x3fff
 
 """    Restype
 
@@ -435,7 +433,7 @@ struct Restype; data::UInt16; end
 # Static correspondence between UInt16 and symbols
 # This dictionary is quite crucial for (loading) performance;
 # we use a custom hash function to improve speed:
-@inline Base.hash(x::Restype) = UInt(x.data == 4 ? 3 : (x.data % 62))
+Base.hash(x::Restype) = UInt(x.data == 4 ? 3 : (x.data % 62))
 # (and yes, we checked that this indeed faster than Base.ImmutableDict).
 const RESOURCE_TABLE = Dict(Restype(a) => b for (a,b) in (#««
 	0x0001 => :bmp,
@@ -479,7 +477,7 @@ const RESOURCE_TABLE = Dict(Restype(a) => b for (a,b) in (#««
 	0x0802 => :ini,
 	0x0803 => :src,
 ))#»»
-@inline Symbol(x::Restype) = RESOURCE_TABLE[x]
+Symbol(x::Restype) = RESOURCE_TABLE[x]
 
 # ««2 File blocks
 struct KEY_hdr
@@ -520,7 +518,7 @@ function Base.push!(key::KeyIndex, ref::KEY_res)
 	d = get!(key.location, Symbol(ref.type)) do; valtype(key.location)() end
 	d[lowercase(ref.name)] = ref.location
 end
-@inline Base.length(key::KeyIndex) = key.location|>values.|>length|>sum
+Base.length(key::KeyIndex) = key.location|>values.|>length|>sum
 @inline Pack.unpack(io::IO, ::Type{KEY_res}) = # this helps with speed...
 	KEY_res(unpack(io,StaticString{8}), unpack(io,Restype), unpack(io,BifIndex))
 
@@ -589,7 +587,7 @@ end
 @inline Base.haskey(key::KeyIndex, name::AbstractString, type::Symbol) =
 	haskey(key.location, type) &&
 		haskey(key.location[type], name|>StaticString{8})
-@inline Base.keys(key::KeyIndex, type::Symbol) = keys(key.location[type])
+Base.keys(key::KeyIndex, type::Symbol) = keys(key.location[type])
 
 # ««1 ids
 # useful ones: PROJECTL SONGLIST ITEMCAT NPC ANISND ?
@@ -617,14 +615,13 @@ struct MatrixWithHeaders{T} <: AbstractMatrix{T}
 	rows::Vector{String}
 	cols::Vector{String}
 	matrix::Matrix{T}
-	@inline MatrixWithHeaders(rows::AbstractVector{<:AbstractString},
+	MatrixWithHeaders(rows::AbstractVector{<:AbstractString},
 		cols::AbstractVector{<:AbstractString}, matrix::AbstractMatrix{T}) where{T}=
 		new{T}(rows, cols, matrix)
 end
 
-@inline Base.size(m::MatrixWithHeaders) = size(m.matrix)
-@inline Base.getindex(m::MatrixWithHeaders, i::Integer...) =
-	getindex(m.matrix, i...)
+Base.size(m::MatrixWithHeaders) = size(m.matrix)
+Base.getindex(m::MatrixWithHeaders, i::Integer...) = getindex(m.matrix, i...)
 function Base.getindex(m::MatrixWithHeaders,
 		s1::AbstractString, s2::AbstractString)
 	i1 = findfirst(==(s1), m.rows)
@@ -1065,8 +1062,7 @@ mutable struct Item <: RootResource{:itm}
 end
 # disable automatic packing of effects (for main item and abilities) —
 # we do it “by hand” by concatenating with item effects
-@inline Pack.fieldpack(::IO, _, ::Val{:effects},
-	::AbstractVector{<:ItemEffect}) = 0
+Pack.fieldpack(::IO, _, ::Val{:effects}, ::AbstractVector{<:ItemEffect}) = 0
 # create a virtual “not_usable_by” item property which groups together
 # all the 5 usability fields in the item struct:
 @inline function Base.getproperty(i::Item, name::Symbol)
@@ -1075,9 +1071,9 @@ end
 		UInt64(i.kit3) << 48 | UInt64(i.kit4) << 56)
 	getfield(i, name)
 end
-@inline rr_skipproperties(::Item) = (:abilities_offset, :abilities_count,
+rr_skipproperties(::Item) = (:abilities_offset, :abilities_count,
 		:effect_offset, :effect_index, :effect_count)
-@inline rr_skipproperties(::ItemAbility) = (:effect_index, :effect_count)
+rr_skipproperties(::ItemAbility) = (:effect_index, :effect_count)
 @inline function Base.setproperty!(x::Item, name::Symbol, value)
 	if name == :not_usable_by
 		x.usability = UInt64(value) % UInt32
@@ -1328,11 +1324,11 @@ end
 struct StateKey
 	# XXX: replace by hashed values
 	n::UInt
-	@inline StateKey(i::Integer) = new(i)
-	@inline StateKey(::typeof(!isvalid)) = new(~zero(UInt))
+	StateKey(i::Integer) = new(i)
+	StateKey(::typeof(!isvalid)) = new(~zero(UInt))
 end
-@inline Base.isvalid(s::StateKey) = (s ≠ StateKey(!isvalid))
-@inline Base.isless(a::StateKey, b::StateKey) = isless(a.n, b.n)
+Base.isvalid(s::StateKey) = (s ≠ StateKey(!isvalid))
+Base.isless(a::StateKey, b::StateKey) = isless(a.n, b.n)
 
 @with_kw mutable struct Transition #{X}
 	# XXX both Transition and State can be made immutable (stored in vectors)
@@ -1399,8 +1395,8 @@ function Base.show(io::IO, mime::MIME"text/julia", s::State;
 		show(io, mime, t; prefix, name)
 	end
 end
-@inline sortkey(s::State) = (s.priority, s.age)
-@inline Pack.fieldpack(::IO, ::Type{<:State}, ::Val{:position}, _) = 0
+sortkey(s::State) = (s.priority, s.age)
+Pack.fieldpack(::IO, ::Type{<:State}, ::Val{:position}, _) = 0
 # ««2 Actor
 @with_kw mutable struct Actor <: RootResource{:dlg}
 	constant::Constant"DLG V1.0" = Auto() # "DLG V1.0"
@@ -1422,15 +1418,16 @@ end
 	sorted_keys::Vector{StateKey} = Auto()
 end
 const NO_ACTOR = Actor(;ref = Resref".dlg")
-@inline rr_skipproperties(::Actor) = (:number_states, :offset_states,
+rr_skipproperties(::Actor) = (:number_states, :offset_states,
 	:number_transitions, :offset_transitions,
 	:offset_state_triggers, :number_state_triggers,
 	:offset_transition_triggers, :number_transition_triggers,
 	:number_actions, :offset_actions, :sorted_keys)
-@inline Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:states}, _) = 0
-@inline Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:sorted_keys}, _) = 0
-@inline firstlabel(a::Actor) =
-	Iterators.filter(i->!haskey(a.states, StateKey(i)), 0:length(a.states))|>first
+Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:states}, _) = 0
+Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:sorted_keys}, _) = 0
+firstlabel(a::Actor) =
+	first(i for i in 0:length(a.states) if !haskey(a.states, StateKey(i)))
+# 	Iterators.filter(i->!haskey(a.states, StateKey(i)), 0:length(a.states))|>first
 
 function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
 	for (k, v) in sort(pairs(a.states))
@@ -1496,8 +1493,8 @@ function pack_string(io::IO, pos::Ref{<:Integer}, s::AbstractString)
 	pos[]+= l
 	seek(io, p)
 end
-@inline pack_string(io::IO, pos::Ref{<:Integer},
-	v::AbstractVector{<:AbstractString}) = for s ∈ v; pack_string(io, pos, s); end
+pack_string(io::IO, pos::Ref{<:Integer}, v::AbstractVector{<:AbstractString}) =
+	for s ∈ v; pack_string(io, pos, s); end
 """
     reindex!(actor)
 
@@ -1591,9 +1588,9 @@ Holds current (mutable) data for building dialog:
 	trigger::Union{Nothing,String} = nothing
 end
 
-@inline source_actor(c::DialogContext) =
+source_actor(c::DialogContext) =
 	(@assert !isempty(c.source_actor.ref); c.source_actor)
-@inline source_state(c::DialogContext) =
+source_state(c::DialogContext) =
 	(@assert isvalid(c.source_key); source_actor(c).states[c.source_key])
 
 set_source!(c::DialogContext, key) =
@@ -1601,22 +1598,22 @@ set_source!(c::DialogContext, key) =
 set_source!(c::DialogContext, actor, key) =
 	(@assert !isempty(actor.ref); c.source_actor=actor; set_source!(c,key))
 
-@inline if_current_state(f::Function, c::DialogContext) =
+if_current_state(f::Function, c::DialogContext) =
 	if_haskey(f, c.source_actor.states, c.source_key)
 
-@inline current_transition(c::DialogContext) =
+current_transition(c::DialogContext) =
 	source_state(c).transitions[c.current_transition_idx]
 @inline has_pending_transition(c::DialogContext) = if_current_state(c) do s;
 	!isempty(s.transitions) &&
 		!isvalid(s.transitions[c.current_transition_idx].target[2])
 end
 
-@inline target_actor(c::DialogContext) =
+target_actor(c::DialogContext) =
 	(@assert !isempty(c.target_actor.ref.name); c.target_actor)
 target_actor!(c::DialogContext, actor::Actor) =
 	(@assert !isempty(actor.ref); c.target_actor = actor)
 
-@inline implicit_transition(actor, key) = Transition(; target=(actor.ref, key))
+implicit_transition(actor, key::StateKey)= Transition(; target=(actor.ref, key))
 
 trigger!(c::DialogContext, s::AbstractString) =
 	(@assert isnothing(c.trigger); c.trigger = s)
@@ -1630,6 +1627,9 @@ trigger!(c::DialogContext, ::Nothing) = nothing
 end
 
 #««2 Dialog-building functions
+# These are the lowest-level functions handling `Dialog` structures.
+# They use the low-level types: `StateKey`, `Strref`.
+# Conversion is performed by higher-level functions (`say`, `reply` etc.)
 function add_state!(c::DialogContext, actor, key, text::Strref;
 		trigger=nothing, kwargs...)
 	dict = actor.states
@@ -1652,7 +1652,7 @@ function add_state!(c::DialogContext, actor, key, text::Strref;
 	set_source!(c, actor, key)
 end
 
-"""    tail_insert!(c, key, text; trigger)
+"""    tail_insert!(c, actor, key, text; trigger)
 Given the current state A and transitions A—aᵢ—→ Bᵢ:
  * create a new state X(key, text);
  * if there is any pending transition from A, connect it to X,
@@ -1662,8 +1662,8 @@ Given the current state A and transitions A—aᵢ—→ Bᵢ:
 
 The end result should be A ——→ X —aᵢ—→ Bᵢ.
 """
-function tail_insert!(c::DialogContext, actor, key, text::Strref;
-		trigger=nothing, kwargs...)
+function tail_insert!(c::DialogContext, actor::Actor, key::StateKey,
+		text::Strref; trigger=nothing, kwargs...)
 	dict = actor.states
 	@assert !haskey(dict, key) "state $label already exists"
 	println("\e[31;1m LEFT INSERT STATE $key\e[m")
@@ -1734,7 +1734,10 @@ end
 #  source file (including any "?{}" comments still present).
 # Strings are internally saved as Strrefs in game objects, so we have two maps:
 #  string keys -> Strrefs -> game strings.
-#
+
+# `Nothing` is inserted manually where it makes sense
+const StringKey = Union{Integer,AbstractString}
+
 #««2 Data structure
 # This holds (language path) => (has F version?); default language is first
 const LANGUAGES = (
@@ -1801,7 +1804,7 @@ Collection of game strings, indexed by string and language.
 	translations::Vector{Dict{String,String}} =
 		[ Dict{String,String}() for _ in LANGUAGE_DICT ]
 end
-@inline Base.show(io::IO, g::GameStrings) = print(io, "GameStrings<",
+Base.show(io::IO, g::GameStrings) = print(io, "GameStrings<",
 	count(!isempty, g.tlk), " languages, ",
 	length(g.tlk[g.language[]]), " strings, ",
 	length(g.new_strings), " new strings>")
@@ -1821,7 +1824,7 @@ end
 # ««2 Pseudo-dictionary interface
 # gamestrings[strref]: returns the string according to current language
 # (or its only language for new strings)
-@inline tlk_string_count(g::GameStrings) = length(g.tlk[1])
+tlk_string_count(g::GameStrings) = length(g.tlk[1])
 function Base.getindex(g::GameStrings, s::Strref)
 	i = s.index; i = max(i, zero(i)); i+= oneunit(i) # ensure ≥ 1
 	n = tlk_string_count(g)
@@ -1898,29 +1901,29 @@ end
 # 		(i ≠ g.language[]) && empty!(g.tlk[i]) # saves memory
 	end
 end
-@inline config(g::GameStrings) = Dict()
+config(g::GameStrings) = Dict()
 
 #««1 GameResources
 #««2 Auxiliary structure: GameChanges
 struct GameChanges
 	itm::Dict{Resref"itm",Item}
 	dlg::Dict{Resref"dlg",Actor}
-	@inline GameChanges() = new((Auto() for _ in 1:fieldcount(GameChanges))...,)
+	GameChanges() = new((Auto() for _ in 1:fieldcount(GameChanges))...,)
 end
-@inline alldicts(c::GameChanges) = (getfield(c,i) for i in 1:nfields(c))
-@inline Base.empty!(c::GameChanges) = c|>alldicts.|>empty!
-@inline Base.length(c::GameChanges) = c|>alldicts.|>length|>sum
+alldicts(c::GameChanges) = (getfield(c,i) for i in 1:nfields(c))
+Base.empty!(c::GameChanges) = c|>alldicts.|>empty!
+Base.length(c::GameChanges) = c|>alldicts.|>length|>sum
 for T in fieldnames(GameChanges)
 	@eval changes(g::GameChanges,::Type{<:Resref{$(QuoteNode(T))}})=g.$T
 end
-@inline changes(g::GameChanges, r::Resref) = changes(g, typeof(r))
-@inline Base.haskey(g::GameChanges, r::Resref) = haskey(changes(g, r), r)
-@inline Base.get(f::Function, g::GameChanges, r::Resref)= get(f, changes(g,r),r)
-@inline Base.get!(f::Function,g::GameChanges, r::Resref)= get!(f,changes(g,r),r)
-@inline Base.get(g::GameChanges, r::Resref, x)= get(changes(g,r), r, x)
-@inline Base.get!(g::GameChanges, r::Resref, x)= get!(changes(g,r), r, x)
-@inline Base.delete!(g::GameChanges, r::Resref) = delete!(changes(g,r), r)
-@inline Base.keys(g::GameChanges, x...) = keys(changes(g, x...))
+changes(g::GameChanges, r::Resref) = changes(g, typeof(r))
+Base.haskey(g::GameChanges, r::Resref) = haskey(changes(g, r), r)
+Base.get(f::Function, g::GameChanges, r::Resref)= get(f, changes(g,r),r)
+Base.get!(f::Function,g::GameChanges, r::Resref)= get!(f,changes(g,r),r)
+Base.get(g::GameChanges, r::Resref, x)= get(changes(g,r), r, x)
+Base.get!(g::GameChanges, r::Resref, x)= get!(changes(g,r), r, x)
+Base.delete!(g::GameChanges, r::Resref) = delete!(changes(g,r), r)
+Base.keys(g::GameChanges, x...) = keys(changes(g, x...))
 
 Base.show(io::IO, ::MIME"text/plain", c::GameChanges) = for dict in alldicts(c)
 	println("\e[33mmodified $(valtype(dict)|>nameof): $(length(dict))\e[m")
@@ -1940,7 +1943,7 @@ end
 	shortref::Dict{String,StaticString{8}} = Auto()
 	changes::GameChanges = Auto()
 end
-@inline Base.show(io::IO, g::GameResources) = print(io, "GameResources<",
+Base.show(io::IO, g::GameResources) = print(io, "GameResources<",
 	length(g.key), " keys, ", g.override|>values.|>length|>sum, " overrides, ",
 	length(changes(g)), " changes>")
 function GameResources(directory, dict)
@@ -1984,7 +1987,7 @@ struct ShortrefIterator{L}
 	name::StaticString{L}
 	# XXX: allow other bases (e.g. base 16)
 end
-@inline textlength(::ShortrefIterator{L}) where{L} = L
+textlength(::ShortrefIterator{L}) where{L} = L
 function Base.iterate(r::ShortrefIterator, i = 0)
 	iszero(i) && return (r.name, 10)
 	k = ndigits(i)-1; q = 10^k
@@ -2043,7 +2046,7 @@ end
 #  - override directory,
 #  - key/bif archives.
 
-@inline changes(g::GameResources) = g.changes
+changes(g::GameResources) = g.changes
 
 function Base.haskey(g::GameResources, ref::Resref{T}) where{T}
 	haskey(changes(g), ref) ||
@@ -2075,12 +2078,10 @@ function Base.get(f::Base.Callable, g::GameResources, ref::Resref{T};
 		return data
 	end
 end
-@inline Base.get(g::GameResources, ref, x) = get(()->x, g, ref)
-@inline Base.get!(f::Base.Callable, g::GameResources, ref) =
-	get(register! ∘ f, g, ref)
-@inline Base.get!(g::GameResources, ref, x) = get!(()->x, g, ref)
-@inline Base.getindex(g::GameResources, ref) =
-	get(g, ref) do; throw(KeyError(ref)); end
+Base.get(g::GameResources, ref, x) = get(()->x, g, ref)
+Base.get!(f::Base.Callable, g::GameResources, ref) = get(register! ∘ f, g, ref)
+Base.get!(g::GameResources, ref, x) = get!(()->x, g, ref)
+Base.getindex(g::GameResources, ref) = get(()->throw(KeyError(ref)), g, ref)
 
 # This performs both conversion of (long) string -> (short) Resref
 # and reading of the resource:
@@ -2093,8 +2094,7 @@ function Base.keys(g::GameResources, ::Type{<:Resref{T}}) where{T}
 	for s in keys(g.key, T); push!(k, s); end
 	k
 end
-@inline Base.keys(g::GameResources, T, pat) =
-	(x for x in keys(g, T) if contains(x,pat))
+Base.keys(g::GameResources, T, pat) = (x for x in keys(g, T) if contains(x,pat))
 
 #««2 Commit changes to filesystem
 @inline function commit(g::GameResources)
@@ -2115,7 +2115,7 @@ end
 	get!(g.override, T, Auto())[s] = name
 	delete!(changes(g), ref)
 end
-@inline config(g::GameResources) = g.shortref
+config(g::GameResources) = g.shortref
 
 #««1 Game
 #««2 Game structure
@@ -2143,7 +2143,7 @@ returns data structures of the corresponding resource type.
 	resources::GameResources
 	dialog_context::DialogContext = Auto()
 end
-@inline config_file(::Type{Game}, directory) = joinpath(directory,"config.toml")
+config_file(::Type{Game}, directory) = joinpath(directory,"config.toml")
 """    Game(directory)
 
 Initializes a `Game` structure from the game directory
@@ -2175,8 +2175,8 @@ The following default namespaces are used:
  - `""` for original game resources;
  - `"user"` is the default namespace for added resources.
 """
-@inline namespace(g::Game, s::AbstractString) = (g.resources.namespace[] = s; s)
-@inline namespace(g::Game) = g.resources.namespace[]
+namespace(g::Game, s::AbstractString) = (g.resources.namespace[] = s; s)
+namespace(g::Game) = g.resources.namespace[]
 
 """    language([game], s)
 
@@ -2198,7 +2198,7 @@ function language(g::Game, s::AbstractString)
 	end
 	error("unknown language: "*s)
 end
-@inline language(g::Game) = g.strings.language[]
+language(g::Game) = g.strings.language[]
 #««2 Accessors: `item` etc.
 
 # Special case: get only if modified
@@ -2221,16 +2221,17 @@ end
 """    item([game], ref)
 
 Returns the item with given reference."""
-@inline item(g::Game, name::AbstractString) = g.resources[Resref"itm", name]
+item(g::Game, name::AbstractString) = g.resources[Resref"itm", name]
 """    items([game], [regex])
 
 Returns an iterator over all items. If a `regex` is provided then
 only those items with matching reference are included."""
-@inline items(g::Game, r...) = (item(g, n) for n in keys(g, Resref"itm", r...))
+items(g::Game, r...) = (item(g, n) for n in keys(g, Resref"itm", r...))
 
 #««2 Dialog-building functions
 get_actor(g::Game, s::AbstractString) = get_actor(g, Resref"dlg"(s))
 get_actor(g::Game, ref::Resref"dlg")= get!(g.resources,ref) do; Actor(;ref) end
+get_actor(::Game, a::Actor) = a
 
 """
     actor([game], "name")
@@ -2240,14 +2241,16 @@ none exists with this name.
 """
 actor(g::Game, s::AbstractString) =
 	target_actor!(g.dialog_context, get_actor(g,s))
+actor(g::Game) = target_actor(g.dialog_context)
 
 StateKey(::Game, s::Integer) = StateKey(s)
 StateKey(g::Game, s::AbstractString) =
 	(q = contains(s, '/') ? s : namespace(g)*'/'*s; q|>hash|>StateKey)
 StateKey(::Game, ::typeof(exit)) = StateKey(zero(UInt))
 StateKey(::Game, ::typeof(!isvalid)) = StateKey(!isvalid)
-"""
-    say({text | (label => text)}*; priority, trigger)
+# say: unpacks args into (label, text)
+# XXX allow a way to say(actor, label, text)
+"""    say({text | (label => text)}*; priority, trigger)
 
 Introduces states of dialog for the current actor.
 If the label is omitted, a default (numeric, increasing) label
@@ -2264,14 +2267,14 @@ for the same current actor.
    the previous form;
  - chain with actor change: `actor(name1) say(text1) actor(name2) say(text2)...`;
 """
-say(g::Game, text::AbstractString; kw...) =
+say(g::Game, text::StringKey; kw...) =
 	say2(g, g.dialog_context|>target_actor|>firstlabel, text; kw...)
-say(g::Game, pair::Pair{<:Any,<:AbstractString}; kw...) =
+say(g::Game, pair::Pair{<:Any,<:StringKey}; kw...) =
 	say2(g, pair[1], pair[2]; kw...)
-SayText = Union{AbstractString,Pair{<:Any,<:AbstractString}}
+SayText = Union{StringKey,Pair{<:Any,<:StringKey}}
 say(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
-
-say2(g::Game, label, text::AbstractString; kw...) =
+# say2(game, label, text): calls low-level
+say2(g::Game, label, text::StringKey; kw...) =
 	add_state!(g.dialog_context, g.dialog_context|>target_actor,
 		StateKey(g, label), Strref(g.strings, text); kw...)
 """    from([game], [actor], label)
@@ -2281,25 +2284,33 @@ Sets current state to `actor`, `label`. The state must exist.
 from(g::Game, label) = set_source!(g.dialog_context, StateKey(g, label))
 from(g::Game, actor::AbstractString, label) =
 	set_source!(g.dialog_context, get_actor(g, actor), StateKey(g, label))
+# interject: unpack args into (actor, text)
 """
     interject({text | (label => text)}*; priority, trigger)
 
 Inserts text inside existing dialog. The new state(s) are inserted just after
 the current state, using tail insertions. """
-interject(g::Game, text::AbstractString; kw...) =
-	interject2(g, g.dialog_context|>target_actor|>ref|>name, text; kw...)
-interject(g::Game, pair::Pair{<:AbstractString,<:AbstractString}; kw...) =
-	interject2(g, pair[1], pair[2]; kw...)
-InterjText = Union{AbstractString,Pair{<:AbstractString,<:AbstractString}}
+interject(g::Game, text::StringKey; kw...) =
+	interject2(g, g.dialog_context|>target_actor, text; kw...)
+interject(g::Game, (actor, text)::Pair{<:AbstractString,<:StringKey}; kw...) =
+	interject2(g, actor, text; kw...)
+InterjText = Union{StringKey,Pair{<:AbstractString,<:StringKey}}
 # XXX insert here the variable guard if needed
 # XXX what do do with the trigger? does it apply to only the first state,
 # or to all of them? (Cf. WeiDU)
 # XXX see whether to move actions (should be easy: this is transitive)
+# XXX enable giving an actor label
 interject(g::Game, args::InterjText...; kw...) =
 	for a in args; interject(g, a; kw...); end
 
-interject2(g::Game, actor, text; kw...) =
-	tail_insert!(g, actor, firstlabel(actor), Strref(g.strings, text); kw...)
+# interject2(actor, text): calls low-level
+function interject2(g::Game, actor, text; kw...)
+	t_actor = get_actor(g, actor)
+	t_key = firstlabel(actor)|>StateKey
+	tail_insert!(g.dialog_context, t_actor, t_key, Strref(g.strings, text); kw...)
+end
+
+# reply: unpacks args into (text, target)
 """
     reply(text => label)
 
@@ -2327,36 +2338,38 @@ This prevents states from different namespaces from interfering.
     # connect pending transition:
     say("How do you do?") reply("Fine!") say("Let'sa go!") reply(exit)
 """
-reply(g::Game, (text, target)::Pair; kw...) = reply(g, text, target; kw...)
-reply(g::Game, ::typeof(exit); kw...) = reply(g, nothing, exit; kw...)
-# pending transition:
-reply(g::Game, text::AbstractString; kw...) = reply(g, text, "", !isvalid;kw...)
+reply(g::Game, (text, target)::Pair; kw...) = reply2(g, text, target; kw...)
+reply(g::Game, ::typeof(exit); kw...) = reply2(g, nothing, exit; kw...)
+# Special case: reply("text") inserts a pending transition
+reply(g::Game, text::StringKey; kw...) = reply3(g, text, "", !isvalid;kw...)
 
-reply(g::Game, text, target::Union{Tuple,Pair}; kw...) =
-	reply2(g, text, get_actor(g, target[1]), target[2]; kw...)
-reply(g::Game, text, label; kw...) =
-	reply2(g, text, target_actor(g.dialog_context), label; kw...)
-reply(g::Game, text, ::typeof(exit); kw...) =
-	reply2(g, text, NO_ACTOR, 0; terminates = true, kw...)
+# reply2(game, text, target): unpacks target into (actor, label)
+reply2(g::Game, text, target::Union{Tuple,Pair}; kw...) =
+	reply3(g, text, get_actor(g, target[1]), target[2]; kw...)
+reply2(g::Game, text, label; kw...) =
+	reply3(g, text, target_actor(g.dialog_context), label; kw...)
+reply2(g::Game, text, ::typeof(exit); kw...) =
+	reply3(g, text, NO_ACTOR, 0; terminates = true, kw...)
 
-reply2(g::Game, text, actor, label; kw...) = add_transition!(g.dialog_context,
+# reply3(game, text, target_actor, target_label): calls low-level
+reply3(g::Game, text, actor, label; kw...) = add_transition!(g.dialog_context,
 	Strref(g.strings,text), actor, StateKey(g, label); kw...)
 """
     trigger(string)
 
 Attaches a trigger to the **next** transition or state."""
-@inline trigger(g::Game, s::AbstractString) = trigger!(g.dialog_context, s)
+trigger(g::Game, s::AbstractString) = trigger!(g.dialog_context, s)
 """
     action(string)
 
 Attaches an action to the latest transition."""
-@inline action(g::Game, s::AbstractString; kw...) =
+action(g::Game, s::AbstractString; kw...) =
 	add_action!(current_transition(g.dialog_context), s; kw...)
 """
     journal(string)
 
 Attaches a journal entry to the latest transition."""
-@inline journal(g::Game, s::AbstractString; kw...) =
+journal(g::Game, s::AbstractString; kw...) =
 	add_journal!(current_transition(g.dialog_context), s; kw...)
 
 #««2 Saving game data
@@ -2407,7 +2420,7 @@ function Base.copy(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
 	end
 	return y
 end
-@inline Base.copy(g::Game, r::Resref, args...; kwargs...) =
+Base.copy(g::Game, r::Resref, args...; kwargs...) =
 	copy(g, g[r], args...; kwargs...)
 
 const _resource_template = Dict{DottedEnums.SymbolicNames,Resref}(
@@ -2471,8 +2484,8 @@ const PlateMail = HalfPlate
 	copy(_resource_template[T], args...; kwargs...)
 #««1 Global `game` object
 const global_game = Ref{Game}()
-@inline game() = global_game[]
-@inline init!(directory::AbstractString) = global_game[] = Game(directory)
+game() = global_game[]
+init!(directory::AbstractString) = global_game[] = Game(directory)
 
 # XXX fix this: include a Game field in ResIO?
 str(s::Strref) = game().strings[s]
@@ -2494,12 +2507,11 @@ for f in (register!, commit,
 	m.isva && (rhs[end] = Expr(:(...), rhs[end]))
 	@eval $(nameof(f))($(lhs...)) = $f(game(), $(rhs...))
 end
-@inline Base.convert(::Type{Strref}, s::Union{Nothing,AbstractString}) =
+Base.convert(::Type{Strref}, s::Union{Nothing,AbstractString}) =
 	Strref(game().strings, s)
-@inline Base.convert(T::Type{<:Resref}, s::AbstractString) =
-	T(game().resources, s)
-@inline Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
-@inline Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =
+Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game().resources, s)
+Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
+Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =
 	copy(game(), x, args...; kwargs...)
 
 # debug

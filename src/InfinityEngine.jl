@@ -62,6 +62,7 @@ using TOML
 # ««2 Misc.
 struct EmptyDict; end
 Base.get(::EmptyDict, _, x) = x
+Base.isempty(::EmptyDict) = true
 Base.iterate(::EmptyDict) = nothing
 Base.copy!(d::AbstractDict, ::EmptyDict) = empty!(d)
 struct Auto{A<:Tuple, B}
@@ -153,7 +154,7 @@ Index (32-bit) referring to a translated string in a `"dialog.tlk"` file.
 struct Strref
 	index::Int32
 end
-Strref(x::Strref) = x
+# Strref(x::Strref) = x
 # Index 0 corresponds to '<NO TEXT>', which is technically a valid string,
 # but should not actually appear in-game: we use this value as a marker
 # for invalid strings.
@@ -1735,7 +1736,7 @@ end
 #  string keys -> Strrefs -> game strings.
 
 # `Nothing` is inserted manually where it makes sense
-const StringKey = Union{Integer,AbstractString}
+const StringKey = Union{Integer,MarkedString}
 
 #««2 Data structure
 # This holds (language path) => (has F version?); default language is first
@@ -1789,45 +1790,41 @@ Collection of game strings, indexed by string and language.
 @with_kw_noshow struct GameStrings
 	lang_dir::String
 	language::Base.RefValue{Int} = Ref(0)
-	# XXX: each tlk file is quite heavy (5 Mbytes in a fresh BG1
-	# install), we could use a rotation system to not keep more than 4 or 5
-	# in memory at the same time
-	# (this is already likely during resource building since most mods are
-	# written in 3 languages, but should be ensured during final
-	# compilation)
-	tlk::Vector{TlkStrings} = [ TlkStrings() for _ in LANGUAGE_FILES ]
+	# right now tlk is only used for displaying; thus
+	# we don't need the whole db in memory, only the current language
+	tlk::TlkStrings
+# 	tlk::Vector{TlkStrings} = [ TlkStrings() for _ in LANGUAGE_FILES ]
 	# we collect all new strings (for any language) in the same structure,
 	# so that all the strref numbers advance in sync; Int8 indexes the
 	# language:
 	new_strings::UniqueVector{String} = Auto()
+	offset::Int
 	translations::Vector{Dict{String,String}} =
 		[ Dict{String,String}() for _ in LANGUAGE_DICT ]
 end
 Base.show(io::IO, g::GameStrings) = print(io, "GameStrings<",
-	count(!isempty, g.tlk), " languages, ",
-	length(g.tlk[g.language[]]), " strings, ",
-	length(g.new_strings), " new strings>")
+# 	count(!isempty, g.tlk), " languages, ",
+	length(g.tlk), " strings, ", length(g.new_strings), " keyed strings>")
 
 function load_tlk!(g::GameStrings, i)
 	# Loads the strings for this language if not already done:
 	!isempty(g.tlk[i]) && return
 	g.tlk[i] = read(joinpath(g.lang_dir, LANGUAGE_FILES[i][2]), TlkStrings)
 end
-set_language!(g::GameStrings, i) =
-	(g.language[] = i; load_tlk!(g, i))
-function GameStrings(directory::AbstractString, dict)
-	g = GameStrings(; lang_dir = directory)
-	set_language!(g, 1)
-	return g
+# set_language!(g::GameStrings, i) = (g.language[] = i; load_tlk!(g, i))
+function GameStrings(directory::AbstractString, state)
+	tlk = read(joinpath(directory, LANGUAGE_FILES[1][2]), TlkStrings)
+	return GameStrings(; lang_dir = directory, tlk,
+		new_strings = Auto(get(state, "keys", String[])),
+		offset = get(state, "offset", length(tlk)-1))
 end
 # ««2 Pseudo-dictionary interface
 # gamestrings[strref]: returns the string according to current language
 # (or its only language for new strings)
-tlk_string_count(g::GameStrings) = length(g.tlk[1])
 function Base.getindex(g::GameStrings, s::Strref)
 	i = s.index; i = max(i, zero(i)); i+= oneunit(i) # ensure ≥ 1
-	n = tlk_string_count(g)
-	i ≤ n ? g.tlk[g.language[]].entries[i].string : g.new_strings[i - n]
+	n = length(g.tlk)
+	i ≤ n ? g.tlk.entries[i].string : g.new_strings[i - n]
 end
 """    Strref(gamestrings, s)
 
@@ -1837,8 +1834,8 @@ if it does not yet exist.
 """
 Strref(::GameStrings, i::Integer) = Strref(i)
 Strref(::GameStrings, ::Nothing) = Strref(0) # graceful fail
-Strref(g::GameStrings, s::AbstractString) =
-	Strref(length(g.tlk[1])-1 + findfirst!(isequal(s), g.new_strings))
+Strref(g::GameStrings, s::MarkedString) =
+	Strref(g.offset + findfirst!(isequal(s.str), g.new_strings))
 
 # """    search(game, strings, ResIO"type", text)
 # 
@@ -1886,12 +1883,12 @@ end
 @inline function commit(g::GameStrings)
 	# Save game strings for all translations
 	for j in eachindex(LANGUAGE_DICT), (i, l) in translate(g, j)
-		load_tlk!(g, i)
+		file = joinpath(g.lang_dir, LANGUAGE_FILES[i][2])
+		tlk = read(file, TlkStrings)
 		# append those strings to language file
 		for s in l
-			push!(g.tlk[i], s)
+			push!(tlk, s)
 		end
-		file = joinpath(g.lang_dir, LANGUAGE_FILES[i][2])
 		println("writing strings to $file: ")
 		for s in l
 			println("   ", s)
@@ -1900,7 +1897,7 @@ end
 # 		(i ≠ g.language[]) && empty!(g.tlk[i]) # saves memory
 	end
 end
-config(g::GameStrings) = Dict()
+state(g::GameStrings) = Dict("offset" => g.offset, "keys" => g.new_strings)
 
 #««1 GameResources
 #««2 Auxiliary structure: GameChanges
@@ -1945,7 +1942,7 @@ end
 Base.show(io::IO, g::GameResources) = print(io, "GameResources<",
 	length(g.key), " keys, ", g.override|>values.|>length|>sum, " overrides, ",
 	length(changes(g)), " changes>")
-function GameResources(directory, dict)
+function GameResources(directory, state)
 	g = GameResources(; override_directory = joinpath(directory, "override"))
 	g.namespace[] = ""
 	init!(g.key, joinpath(directory, "chitin.key"))
@@ -1959,20 +1956,20 @@ function GameResources(directory, dict)
 			(name, ext) = f|>basename|>splitext
 			length(name) > 8 && continue
 			T = Symbol(ext[2:end]|>lowercase)
-			if_haskey(g.override, T) do dict
+			if_haskey(g.override, T) do state
 				key = lowercase(name)
-				v = get(dict, key, nothing)
+				v = get(state, key, nothing)
 				if isnothing(v)
-					dict[key] = name
+					state[key] = name
 				else
-					error("file conflict: $(dict[key]), $name")
+					error("file conflict: $(state[key]), $name")
 				end
 			end
 		end
 		println("read $(g.override|>values.|>length|>sum) override resources")
 	end
 
-	copy!(g.shortref, dict)
+	copy!(g.shortref, state)
 	g.namespace[] = "user"
 	return g
 end
@@ -2114,7 +2111,7 @@ end
 	get!(g.override, T, Auto())[s] = name
 	delete!(changes(g), ref)
 end
-config(g::GameResources) = g.shortref
+state(g::GameResources) = g.shortref
 
 #««1 Game
 #««2 Game structure
@@ -2142,20 +2139,20 @@ returns data structures of the corresponding resource type.
 	resources::GameResources
 	dialog_context::DialogContext = Auto()
 end
-config_file(::Type{Game}, directory) = joinpath(directory,"config.toml")
+state_file(::Type{Game}, directory) = joinpath(directory,"state.toml")
 """    Game(directory)
 
 Initializes a `Game` structure from the game directory
 (i.e. the directory containing the `"chitin.key"` file).
 """
 function Game(directory::AbstractString)
-	f = config_file(Game, directory)
-	config = f|>isfile ? TOML.parsefile(f) : EmptyDict()
+	f = state_file(Game, directory)
+	state = f|>isfile ? TOML.parsefile(f) : EmptyDict()
 	return Game(; directory,
 		strings = GameStrings(joinpath(directory, "lang"),
-			get(config, "strings", EmptyDict())),
+			get(state, "strings", EmptyDict())),
 		resources = GameResources(directory,
-			get(config, "resources", EmptyDict())))
+			get(state, "resources", EmptyDict())))
 end
 Base.show(io::IO, g::Game) =
 	print(io, "Game<", repr(g.strings), ", ", repr(g.resources), ">")
@@ -2384,12 +2381,14 @@ function commit(g::Game)
 # 	commit(g.strings)
 	# XXX try to make this atomic by saving to temporary files and then
 	# moving all the files at the last minute
-	open(config_file(Game, g.directory), "w") do io
+	open(state_file(Game, g.directory), "w") do io
 		TOML.print(io, Dict(
-			"resources" => config(g.resources),
-			"strings" => config(g.strings),
+			"resources" => state(g.resources),
+			"strings" => state(g.strings),
 		))
 	end
+	print("\e[31m"); run(`cat $(state_file(Game, g.directory))`)
+	print("\e[32m"); run(`ls $(g.resources.override_directory)`); print("\e[m")
 end
 #««1 Item/etc. copying
 args_to_kw(x, args...) =
@@ -2529,5 +2528,6 @@ end
 export commit, namespace, language
 export item, items
 export actor, say, reply, journal, action, trigger, from, interject
+export @__str # re-export from MarkedStrings
 @eval export $(names(DiceThrows)...) # re-export d6 etc.
 end # module

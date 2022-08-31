@@ -1468,7 +1468,6 @@ function Base.read(io::ResIO"DLG")::Actor
 				action= contains(t.flags, HasAction) ? actions[t.action+1] : "",
 				target = (t.actor, t.state|>StateKey)))
 		end
-		# TODO: use hashes instead
 		actor.states[StateKey(i-1)] = state
 	end
 	return actor
@@ -1691,8 +1690,8 @@ end
 
 Creates a transition from last state to (actor, key).
 """
-function add_transition!(c::DialogContext, text::Strref, actor, key::StateKey;
-		position = nothing, terminates = false, journal = nothing,
+function add_transition!(c::DialogContext, text::Strref, actor::Actor,
+		key::StateKey; position = nothing, terminates = false, journal = nothing,
 		trigger = nothing, action = nothing)
 	@assert !has_pending_transition(c) "unsolved pending transition"
 	!isvalid(key) && println("  \e[31madd pending transition\e[m")
@@ -2281,8 +2280,12 @@ say2(g::Game, label, text::StringKey; kw...) =
 
 Sets current state to `actor`, `label`. The state must exist.
 """
-from(g::Game, label) = set_source!(g.dialog_context, StateKey(g, label))
-from(g::Game, actor::AbstractString, label) =
+function from(g::Game, label) 
+	isempty(g.dialog_context.source_actor.ref) &&
+		error("from(label) when no actor is loaded; use from(actor, label)")
+	set_source!(g.dialog_context, StateKey(g, label))
+end
+from(g::Game, actor, label) =
 	set_source!(g.dialog_context, get_actor(g, actor), StateKey(g, label))
 # interject: unpack args into (actor, text)
 """
@@ -2353,7 +2356,7 @@ reply2(g::Game, text, ::typeof(exit); kw...) =
 
 # reply3(game, text, target_actor, target_label): calls low-level
 reply3(g::Game, text, actor, label; kw...) = add_transition!(g.dialog_context,
-	Strref(g.strings,text), actor, StateKey(g, label); kw...)
+	Strref(g.strings,text), get_actor(g, actor), StateKey(g, label); kw...)
 """
     trigger(string)
 

@@ -5,7 +5,52 @@ struct MarkedString{S<:AbstractString}; str::S; end
 """    _"text"
 A marker for text that needs to be translated.
 This does nothing by itself (it is equivalent to `"text"`),
-but is parsed to a `.po` file."""
+but it marks the string for parsing to a `".pot"` file.
+
+## Comments
+
+Any consecutive block of comments of up to 5 lines just before the string
+is appended to the `".pot"` file. These comments will thus be visible
+to any translators. Don't hesitate to use them to write useful context.
+
+## String markers
+
+Strings may contain markers of the form `?{marker}`.
+Such markers are discarded before saving the string to game files.
+However, they will be included in strings marked for translation.
+They can therefore be used to distinguish two strings which are identical
+in the original language (e.g. English) but which could have
+differing translations depending on language;
+for example, using "?{verb}Slow" and "?{adjective}Slow" could be helpful.
+
+## `"dialogF.tlk"`
+
+Several languages (German, Spanish, French, Japanese, Polish, Portuguese,
+Russian) have a second translation file, `"dialogF.tlk"`,
+which is used when <CHARNAME> has female grammatical gender.
+Most strings are identical for both genders (for example in French,
+only 800 of 34000 strings differ).
+To make it easier to provide correct strings depending on grammatical gender,
+any string in the source file marked with `"?{F}"` or `"?{M}"`
+will output *two* variants of the string in the `".pot"` file;
+the translation of the string with `"?{M}"` will be saved
+in the relevant `"dialog.tlk"`,
+and the translation of the string with `"?{F}"` will be saved
+in `"dialogF.tlk"`.
+
+It is advised to use such a mark on every sentence
+that grammatically refers to <CHARNAME> in any way.
+The translator may choose to leave either translation empty.
+In this case, the other translation will be used.
+(This means that superfluous `"?{M}"` marks demand almost no extra
+work from the translator).
+
+A translator seeing a string which would require two translations,
+but which is not marked with `"?{[FM]}"` can also edit the `.po` file
+to include both versions (however contacting the author to correctly
+mark the input string is preferred).
+"""
+
 macro __str(s); :(MarkedString($s)) end
 remove_comments(s) = replace(s, r"^\?.*\?(?!\?)" => "")
 # in structures: saved as Strref
@@ -24,6 +69,15 @@ struct TranslationEntry
 	msgid::String
 	comment::String
 end
+
+"""    walk_tree(expr) do; code...; end
+
+Recursively evaluates `code` on an `Expr` object. No return value."""
+function walk_tree(f, expr)
+	f(expr)
+	expr isa Expr && for a in expr.args; walk_tree(f, a); end
+end
+
 """    translations(file)
 
 Returns the list of all strings to translate in this file and all
@@ -46,7 +100,15 @@ function translations(file, list = TranslationEntry[],
 				isnothing(m) && break
 				comment = "\n#. " * m.captures[1] * comment
 			end
-			push!(list, TranslationEntry(sym, line, str, chomp(comment)))
+			comment = chomp(comment)
+			push!(list, TranslationEntry(sym, line, str, comment))
+			# If this is string is gender-marked then also include the other
+			# gender in the .pot file:
+			contains(str, "?{F}") && push!(list,
+				TranslationEntry(sym, line, replace(str, "?{F}" => "?{M}"), comment))
+			contains(str, "?{M}") && push!(list,
+				TranslationEntry(sym, line, replace(str, "?{M}" => "?{F}"), comment))
+
 		elseif Meta.isexpr(node, :call) && node.args[1]==:include
 			translations(dirname(file)*node.args[2], list,
 				seen_files ∪ [sym])
@@ -54,15 +116,6 @@ function translations(file, list = TranslationEntry[],
 	end
 	list
 end
-
-"""    walk_tree(expr) do; code...; end
-
-Recursively evaluates `code` on an `Expr` object. No return value."""
-function walk_tree(f, expr)
-	f(expr)
-	expr isa Expr && for a in expr.args; walk_tree(f, a); end
-end
-
 """    write_pot(file, output)
 
 Writes a `.pot` translation template from the given file
@@ -84,28 +137,26 @@ msgstr ""
 end
 write_pot(input, output) = open(io->write_pot(input, io), output, "w")
 #««2 Reading `.po` file as a dictionary
-function read_po(io)
+@inline if_match(f, args...) = (m = match(args...); m ≠ nothing && (f(m); true))
+function read_po!(dict::AbstractDict, io::IO)
 	mode = :nothing
 	msgid, msgstr = "", ""
-	dict = Dict{String,String}()
 	for line in io|>eachline
-		m = match(r"""^msgid\s+"(.*)"$""", line); if m ≠ nothing
+		if_match(r"""^msgid\s+"(.*)"$""", line) do m
 			(mode == :msgstr) && (dict[msgid] = msgstr; mode = :nothing)
 			msgid = m.captures[1]|>unescape_string
 			mode = :msgid
-			continue
-		end
-		m = match(r"""^msgstr\s+"(.*)"$""", line); if m ≠ nothing
+		end && continue
+		if_match(r"""^msgstr\s+"(.*)"$""", line) do m
 			msgstr = m.captures[1]|>unescape_string
 			mode = :msgstr
-			continue
-		end
-		m = match(r"""^\s*"(.*)"$""", line); if m ≠ nothing
+		end && continue
+		if_match(r"""^\s*"(.*)"$""", line) do m
 			s = m.captures[1]|>unescape_string
-			mode == :msgid && (msgid*= s; continue)
-			mode == :msgstr && (msgstr*= s; continue)
+			mode == :msgid && (msgid*= s; return)
+			mode == :msgstr && (msgstr*= s; return)
 			error("unexpected string: $line")
-		end
+		end && continue
 		if !isempty(line) && !startswith(line, r"^\s*#")
 			error("unknown line content: $line")
 		end
@@ -113,6 +164,9 @@ function read_po(io)
 	end
 	return dict
 end
+@inline read_po!(dict, filename::AbstractString) =
+	open(io->read_po!(dict, io), filename)
+@inline read_po(io) = read_po!(Dict{String,String}(), io)
 #»»1
 export MarkedString, @__str
 end # module

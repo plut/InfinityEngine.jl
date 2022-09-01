@@ -32,17 +32,17 @@ Most strings are identical for both genders (for example in French,
 only 800 of 34000 strings differ).
 To make it easier to provide correct strings depending on grammatical gender,
 any string in the source file marked with `"?{F}"` or `"?{M}"`
-will output *two* variants of the string in the `".pot"` file;
-the translation of the string with `"?{M}"` will be saved
-in the relevant `"dialog.tlk"`,
-and the translation of the string with `"?{F}"` will be saved
-in `"dialogF.tlk"`.
+will output *two* variants of the string in the `".pot"` file:
+one with the the mark replaced by `"?{M}"`
+(translation will be saved in `"dialog.tlk"`)
+and one with the mark replaced by `"?{F}"`
+(translation will be saved in `"dialogF.tlk"`).
 
 It is advised to use such a mark on every sentence
 that grammatically refers to <CHARNAME> in any way.
 The translator may choose to leave either translation empty.
 In this case, the other translation will be used.
-(This means that superfluous `"?{M}"` marks demand almost no extra
+(This means that superfluous `"?{[FM}}"` marks demand almost no extra
 work from the translator).
 
 A translator seeing a string which would require two translations,
@@ -101,16 +101,22 @@ function translations(file, list = TranslationEntry[],
 				comment = "\n#. " * m.captures[1] * comment
 			end
 			comment = chomp(comment)
-			push!(list, TranslationEntry(sym, line, str, comment))
-			# If this is string is gender-marked then also include the other
-			# gender in the .pot file:
-			contains(str, "?{F}") && push!(list,
-				TranslationEntry(sym, line, replace(str, "?{F}" => "?{M}"), comment))
-			contains(str, "?{M}") && push!(list,
-				TranslationEntry(sym, line, replace(str, "?{M}" => "?{F}"), comment))
+			mark = r"\?\{[FM]\}"
+			if contains(str, mark)
+				# Include both gender-marked strings in .pot:
+				push!(list,
+					TranslationEntry(sym, line, replace(str, mark => "?{M}"), comment),
+					TranslationEntry(sym, line, replace(str, mark => "?{F}"), comment))
+			else
+				push!(list, TranslationEntry(sym, line, str, comment))
+			end
+# 			contains(str, "?{F}") && push!(list,
+# 				TranslationEntry(sym, line, replace(str, "?{F}" => "?{M}"), comment))
+# 			contains(str, "?{M}") && push!(list,
+# 				TranslationEntry(sym, line, replace(str, "?{M}" => "?{F}"), comment))
 
 		elseif Meta.isexpr(node, :call) && node.args[1]==:include
-			translations(dirname(file)*node.args[2], list,
+			translations(joinpath(dirname(file), node.args[2]), list,
 				seen_files ∪ [sym])
 		end
 	end
@@ -122,6 +128,14 @@ Writes a `.pot` translation template from the given file
 (and recursively, all included files)."""
 function write_pot(input, output::IO)
 	write(output, """
+# Strings extracted from: $input
+# Use this template file to create per-language `.po` files in this way
+# (example for French language, substitute as needed:)
+#
+# msginit -i file.pot -l fr
+#
+# Edit .po file with (for example) poedit fr.po
+
 msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8"

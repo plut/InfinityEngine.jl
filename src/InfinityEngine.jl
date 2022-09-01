@@ -363,6 +363,7 @@ Base.length(v::TlkStrings) = length(v.entries)
 
 #««2 I/O from tlk file
 function Base.read(io::IO, ::Type{<:TlkStrings})
+	io = IOBuffer(read(io, String)) # helps (a lot) with speed
 	f = unpack(io, TlkStrings)
 	unpack!(io, f.entries, f.nstr)
 # 	sizehint!(empty!(f.firstindex), f.nstr)
@@ -370,6 +371,7 @@ function Base.read(io::IO, ::Type{<:TlkStrings})
 		s.string = string0(io, f.offset + s.offset, s.length)
 # 		get!(f.firstindex, s.string, i) # set it only if it is not already set
 	end
+	close(io)
 	return f
 end
 TlkStrings(file::AbstractString) = read(file, TlkStrings)
@@ -1736,7 +1738,9 @@ end
 #  string keys -> Strrefs -> game strings.
 
 # `Nothing` is inserted manually where it makes sense
-const StringKey = Union{Integer,MarkedString}
+# `AbstractString` is a decoy to catch those non-prefixed strings with
+# the correct error message
+const StringKey = Union{Integer,MarkedString,AbstractString}
 
 #««2 Data structure
 # This holds (language path) => (has F version?); default language is first
@@ -1836,6 +1840,8 @@ Strref(::GameStrings, i::Integer) = Strref(i)
 Strref(::GameStrings, ::Nothing) = Strref(0) # graceful fail
 Strref(g::GameStrings, s::MarkedString) =
 	Strref(g.offset + findfirst!(isequal(s.str), g.new_strings))
+Strref(::GameStrings, ::AbstractString) =
+	error("In-game strings must be marked for translation by prefixing with `_`")
 
 # """    search(game, strings, ResIO"type", text)
 # 
@@ -1876,25 +1882,24 @@ Returns an iterator of (language_id => translated strings into this language).
 	if iszero(l2) # simple case
 		(l1=>process() do s; get(dict, s, s) end,)
 	else
-		(l1=>process() do s; get(dict, s) do; get(dict, replace(s,sM), s) end; end,
-		 l2=>process() do s; get(dict, s) do; get(dict, replace(s,sF), s) end; end)
+		(l2=>process() do s; get(dict, replace(s,sF)) do; get(dict, s, s) end; end,
+		 l1=>process() do s; get(dict, replace(s,sM)) do; get(dict, s, s) end; end)
 	end
 end
 @inline function commit(g::GameStrings)
 	# Save game strings for all translations
-	for j in eachindex(LANGUAGE_DICT), (i, l) in translate(g, j)
-		file = joinpath(g.lang_dir, LANGUAGE_FILES[i][2])
+	for j in eachindex(LANGUAGE_DICT), (lang_id, tr_strings) in translate(g, j)
+		file = joinpath(g.lang_dir, LANGUAGE_FILES[lang_id][2])
 		tlk = read(file, TlkStrings)
 		# append those strings to language file
-		for s in l
+		for s in tr_strings
 			push!(tlk, s)
 		end
 		println("writing strings to $file: ")
 		for s in l
 			println("   ", s)
 		end
-# 		write(file, g.tlk[i])
-# 		(i ≠ g.language[]) && empty!(g.tlk[i]) # saves memory
+# 		write(file, tlk)
 	end
 end
 state(g::GameStrings) = Dict("offset" => g.offset, "keys" => g.new_strings)
@@ -2265,8 +2270,8 @@ for the same current actor.
 """
 say(g::Game, text::StringKey; kw...) =
 	say2(g, g.dialog_context|>target_actor|>firstlabel, text; kw...)
-say(g::Game, pair::Pair{<:Any,<:StringKey}; kw...) =
-	say2(g, pair[1], pair[2]; kw...)
+say(g::Game, (label, text)::Pair{<:Any,<:StringKey}; kw...) =
+	say2(g, label, text; kw...)
 SayText = Union{StringKey,Pair{<:Any,<:StringKey}}
 say(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
 # say2(game, label, text): calls low-level

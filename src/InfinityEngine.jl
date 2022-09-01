@@ -345,7 +345,7 @@ Pack.unpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
 # ««1 tlk
 # ««2 Type and constructors
 @with_kw mutable struct TLK_str
-	flags::UInt16 = 0
+	flags::UInt16 = 1
 	sound::Resref"WAV" = Resref".wav"
 	volume::Int32 = 0
 	pitch::Int32 = 0
@@ -353,12 +353,14 @@ Pack.unpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
 	length::Int32 = 0
 	# (since game strings are constants, we only read/allocate a single string
 	# and use substrings for all strings)
-	# We can convert any string to a SubString: SubString(s)
+	# We can convert any string to a SubString: SubString(s);
+	# this gives us a canonical constructor: TLK_str(; string::String).
 	string::SubString{String}
 end
 const NO_SUBSTRING = view("", 1:0)
 Pack.unpack(::IO, ::Type{SubString{String}}) = NO_SUBSTRING
-@with_kw struct TlkStrings
+Pack.pack(::IO, ::SubString{String}) = 0
+@with_kw mutable struct TlkStrings
 	constant::Constant"TLK V1  " = Auto()
 	lang::UInt16 = 0
 	nstr::Int32 = 0
@@ -400,7 +402,7 @@ function Base.write(io::IO, tlk::TlkStrings)
 		offset+= s.length
 	end
 	pack(io, tlk) # this also writes the TLK_str entries (without the strings)
-	@assert position(io) == tlk.offset
+	@assert position(io) == tlk.offset "(position,offset) = $((position(io),tlk.offset))"
 	for s in tlk.entries
 		@assert position(io) == tlk.offset + s.offset
 		write(io, codeunits(s.string)) # zero byte not included
@@ -1918,15 +1920,21 @@ end
 	for j in eachindex(LANGUAGE_DICT), (lang_id, tr_strings) in translate(g, j)
 		file = joinpath(g.lang_dir, LANGUAGE_FILES[lang_id][2])
 		tlk = read(file, TlkStrings)
+		println(tlk)
 		# append those strings to language file
 		for s in tr_strings
 			push!(tlk, s)
 		end
+		println(tlk)
 		println("writing strings to $file: ")
-		for s in l
+		for s in tr_strings
 			println("   ", s)
 		end
-# 		write(file, tlk)
+		mktemp(g.lang_dir) do tmp, io
+			println("using temporary file: ", tmp)
+			write(io, tlk)
+			mv(tmp, file; force=true)
+		end
 	end
 end
 state(g::GameStrings) = Dict("offset" => g.offset, "keys" => g.new_strings)
@@ -2410,7 +2418,7 @@ journal(g::Game, s::AbstractString; kw...) =
 Saves all changed game data to the disk installation."""
 function commit(g::Game)
 	commit(g.resources)
-# 	commit(g.strings)
+	commit(g.strings)
 	# XXX try to make this atomic by saving to temporary files and then
 	# moving all the files at the last minute
 	open(state_file(Game, g.directory), "w") do io
@@ -2541,8 +2549,7 @@ for f in (register!, commit,
 	m.isva && (rhs[end] = Expr(:(...), rhs[end]))
 	@eval $(nameof(f))($(lhs...)) = $f(game(), $(rhs...))
 end
-Base.convert(::Type{Strref}, s::Union{Nothing,AbstractString}) =
-	Strref(game().strings, s)
+Base.convert(::Type{Strref}, s) = Strref(game().strings, s)
 Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game().resources, s)
 Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
 Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =

@@ -152,11 +152,16 @@ function pack(io::IO, x::T) where{T}
 	s = 0
 	for i in 1:fieldcount(T)
 		fn, ft = fieldname(T,i), fieldtype(T,i)
-# 		if contains(string(T), r"ITM|RootedResourceVector")
-# 			println("\e[1mx$(string(position(io), base=16))=$(position(io)) $T.$fn::$ft \e[m = $(getfield(x,i))")
-# 			dump(getfield(x,i);maxdepth=2)
-# 		end
+# 		if contains(string(T), r"TLK_str")
+# 			@printf("\e[1m0x%x=%d %s.%s::%s\e[m\n", position(io), position(io),
+# 				T, fn, ft)
+# # 			println("\e[1mx$(string(position(io), base=16))=$(position(io)) $T.$fn::$ft \e[m = $(getfield(x,i))")
+# # 			dump(getfield(x,i);maxdepth=2)
+#  		end
 		s+= fieldpack(io, T, Val(fn), getfield(x, i))
+# 		if contains(string(T), r"TLK_str")
+# 		@printf("  -> %x\n", position(io))
+# 		end
 	end
 	return s
 # 	sum(fieldpack(io, ft, Val(fn), getfield(x, fn))
@@ -178,7 +183,11 @@ end
 
 @inline pack(io::IO, x::AbstractVector) =
 begin
-	for y in x
+	for (i,y) in pairs(x)
+# 		if contains(string(eltype(x)), r"TLK_str")
+# 			@printf("@ 0x%x=%d: i=%d\n", position(io), position(io), i)
+# 			@assert i ≤ 10
+# 		end
 		pack(io, y)
 	end
 	0

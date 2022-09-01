@@ -50,9 +50,9 @@ but which is not marked with `"?{[FM]}"` can also edit the `.po` file
 to include both versions (however contacting the author to correctly
 mark the input string is preferred).
 """
-
 macro __str(s); :(MarkedString($s)) end
-remove_comments(s) = replace(s, r"^\?.*\?(?!\?)" => "")
+
+remove_comments(s) = replace(s, r"\?\{[^}]*\}" => "")
 # in structures: saved as Strref
 # input by user: can be commented
 #  => in new_strings also: can be commented
@@ -73,9 +73,20 @@ end
 """    walk_tree(expr) do; code...; end
 
 Recursively evaluates `code` on an `Expr` object. No return value."""
-function walk_tree(f, expr)
-	f(expr)
-	expr isa Expr && for a in expr.args; walk_tree(f, a); end
+function walk_tree(f, expr, comment = "")
+	f(expr, comment)
+	expr isa Expr || return
+	i = 1
+	if expr.head == :call  && expr.args[1] != :(=>)
+		fname = expr.args[1]
+		comment = fname ∈ (:say, :reply, :interject) ?
+			"\n#. in function: $fname" : ""
+		i = 2
+	elseif expr.head == :(=) && Meta.isexpr(expr.args[1], :(.))
+		propname = expr.args[1].args[2].value
+		comment = "\n#. object property: $propname"
+	end
+	for a in expr.args[i:end]; walk_tree(f, a, comment); end
 end
 
 """    translations(file)
@@ -90,10 +101,9 @@ function translations(file, list = TranslationEntry[],
 	sym = Symbol(file); sym ∈ seen_files && return
 	lines = readlines(file)
 	expr = Meta.parse(join(["quote"; lines; "end"], '\n')).args[1]
-	walk_tree(expr) do node
+	walk_tree(expr) do node, comment
 		if Meta.isexpr(node, :macrocall) && node.args[1]==Symbol("@__str")
 			line, str = node.args[2].line-1, node.args[3]
-			comment = ""
 			# Look for translator comments in the 5 preceding lines at most.
 			for l in lines[line-1:-1:max(line-5,1)]
 				m = match(r"^\s*#\s*(\S.*)$", l)
@@ -110,11 +120,6 @@ function translations(file, list = TranslationEntry[],
 			else
 				push!(list, TranslationEntry(sym, line, str, comment))
 			end
-# 			contains(str, "?{F}") && push!(list,
-# 				TranslationEntry(sym, line, replace(str, "?{F}" => "?{M}"), comment))
-# 			contains(str, "?{M}") && push!(list,
-# 				TranslationEntry(sym, line, replace(str, "?{M}" => "?{F}"), comment))
-
 		elseif Meta.isexpr(node, :call) && node.args[1]==:include
 			translations(joinpath(dirname(file), node.args[2]), list,
 				seen_files ∪ [sym])

@@ -52,7 +52,6 @@ include("markedstrings.jl"); using .MarkedStrings
 
 using Printf
 using StaticArrays
-using SparseArrays
 using Parameters
 using UniqueVectors
 using Random
@@ -1869,7 +1868,6 @@ function load_translations!(g::GameStrings, directory::AbstractString)
 	end
 end
 
-remove_string_comments(s) = replace(s, r"\?\{[^}]*\}" => "")
 """    translate(gamestrings, dict_id)
 
 Returns an iterator of (language_id => translated strings into this language).
@@ -1877,7 +1875,7 @@ Returns an iterator of (language_id => translated strings into this language).
 @inline function translate(g::GameStrings, dict_id)
 	(l1, l2) = LANGUAGE_DICT[dict_id]
 	dict = g.translations[dict_id]
-	process= f->[remove_string_comments(f(s)) for s ∈ g.new_strings]
+	process= f->[MarkedStrings.remove_comments(f(s)) for s ∈ g.new_strings]
 	sM, sF = "?{F}" => "?{M}", "?{M}" => "?{F}"
 	if iszero(l2) # simple case
 		(l1=>process() do s; get(dict, s, s) end,)

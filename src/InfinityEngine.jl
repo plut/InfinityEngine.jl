@@ -78,11 +78,19 @@ function if_haskey(f::Base.Callable, dict::Dict, key)
 	index > 0 && f(@inbounds dict.vals[index])
 end
 # ««2 Extract zero-terminated string from IO
-@inline function string0(v::AbstractVector{UInt8})
-	l = findfirst(iszero, v)
-	String(isnothing(l) ? v : view(v, 1:l-1))
-end
+@inline string0(v::AbstractVector{UInt8}) =
+	isempty(v) ? "" : String(iszero(last(v)) ? view(v, 1:length(v)-1) : v)
 @inline string0(io::IO, s::Integer, l::Integer) = string0(read(seek(io, s), l))
+@inline function substring0(s::AbstractString, a::Integer, n::Integer)
+# 	println((a+1,a+n, iszero(n), iszero(codeunit(s,a+n))),codeunits(s)[a+1:a+n])
+# 	println((a+1:a+n-(!iszero(n) && iszero(codeunit(s, a+n))), ncodeunits(s)))
+# 	println(1:n-(!iszero(n) && iszero(codeunit(s, a+n))))
+	iszero(n) && return NO_SUBSTRING
+	p = prevind(s,a+n+1)
+	view(s, a+1:(iszero(codeunit(s, p)) ? prevind(a, p) : p))
+# 	view(s, a+1:prevind(s,a+n-(!iszero(n) && iszero(codeunit(s, a+n)))))
+end
+	
 @inline string0(s::AbstractString) = let n = findfirst('\0', s)
 	isnothing(n) && (n = length(s)+1)
 	view(s, 1:n-1)
@@ -181,8 +189,7 @@ Base.isempty(r::Resref) = isempty(r.name)
 Base.show(io::IO, r::Resref) =
 	print(io, "Resref\"", r.name, '.', resourcetype(r), '"')
 
-@inline Pack.unpack(io::IO, T::Type{<:Resref}) =
-	unpack(io, StaticString{8})|>lowercase|>T
+Pack.unpack(io::IO, T::Type{<:Resref}) = unpack(io, StaticString{8})|>T
 Pack.packed_sizeof(::Type{<:Resref}) = 8
 Pack.pack(io::IO, r::Resref) = pack(io, r.name|>uppercase)
 
@@ -344,8 +351,13 @@ Pack.unpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
 	pitch::Int32 = 0
 	offset::Int32 = 0
 	length::Int32 = 0
-	string::String
+	# (since game strings are constants, we only read/allocate a single string
+	# and use substrings for all strings)
+	# We can convert any string to a SubString: SubString(s)
+	string::SubString{String}
 end
+const NO_SUBSTRING = view("", 1:0)
+Pack.unpack(::IO, ::Type{SubString{String}}) = NO_SUBSTRING
 @with_kw struct TlkStrings
 	constant::Constant"TLK V1  " = Auto()
 	lang::UInt16 = 0
@@ -362,12 +374,16 @@ Base.length(v::TlkStrings) = length(v.entries)
 
 #««2 I/O from tlk file
 function Base.read(io::IO, ::Type{<:TlkStrings})
-	io = IOBuffer(read(io, String)) # helps (a lot) with speed
+	buf = read(io, String) # helps with speed
+	io = IOBuffer(buf) # helps (a lot) with speed
 	f = unpack(io, TlkStrings)
 	unpack!(io, f.entries, f.nstr)
 # 	sizehint!(empty!(f.firstindex), f.nstr)
 	for (i,s) in pairs(f.entries)
-		s.string = string0(io, f.offset + s.offset, s.length)
+# 		s.string = string0(io, f.offset + s.offset, s.length)
+		s.string = substring0(buf, f.offset + s.offset, s.length)
+# 		k = (string0(io, f.offset + s.offset, s.length))
+# 		@assert s.string == k
 # 		get!(f.firstindex, s.string, i) # set it only if it is not already set
 	end
 	close(io)
@@ -435,12 +451,15 @@ struct Restype; data::UInt16; end
 # Static correspondence between UInt16 and symbols
 # This dictionary is quite crucial for (loading) performance;
 # we use a custom hash function to improve speed:
-Base.hash(x::Restype) = UInt(x.data == 4 ? 3 : (x.data % 62))
+# (This hash functions produces unique keys modulo 64, which is what is
+# used by the hash table)
+Base.hash(x::Restype) = UInt(7*(x.data>>6)+(x.data&0x3f))
 # (and yes, we checked that this indeed faster than Base.ImmutableDict).
 const RESOURCE_TABLE = Dict(Restype(a) => b for (a,b) in (#««
 	0x0001 => :bmp,
 	0x0002 => :mve,
 	0x0004 => :wav,
+	0x0005 => :wfx,
 	0x0006 => :plt,
 	0x03E8 => :bam,
 	0x03E9 => :wed,
@@ -479,7 +498,8 @@ const RESOURCE_TABLE = Dict(Restype(a) => b for (a,b) in (#««
 	0x0802 => :ini,
 	0x0803 => :src,
 ))#»»
-Symbol(x::Restype) = RESOURCE_TABLE[x]
+Symbol(x::Restype) = get(RESOURCE_TABLE, x) do
+	Symbol(:Restype_, @sprintf("%d", x.data)) end
 
 # ««2 File blocks
 struct KEY_hdr
@@ -521,11 +541,20 @@ function Base.push!(key::KeyIndex, ref::KEY_res)
 	d[lowercase(ref.name)] = ref.location
 end
 Base.length(key::KeyIndex) = key.location|>values.|>length|>sum
-@inline Pack.unpack(io::IO, ::Type{KEY_res}) = # this helps with speed...
+Pack.unpack(io::IO, ::Type{KEY_res}) = # this helps with speed...
 	KEY_res(unpack(io,StaticString{8}), unpack(io,Restype), unpack(io,BifIndex))
 
 init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
 	io = IOBuffer(read(io, String)) # helps (a lot) with speed
+	# These numbers come from a heavily modded BGT game — by directly
+	# allocating correctly-sized hash tables we avoid spending too much
+	# time enlarging them:
+	for (x,y) in ( :bam => 14, :wav => 13, :cre => 12, :bmp => 12,
+		:pvrz => 12, :spl => 11, :bcs => 11, :itm => 11, :dlg => 11,
+		:chr => 10, Symbol(2,:da) => 10, :mos => 10, :are => 10, :wed => 9,
+		:ini => 9, :tis => 9, :sto => 8, :pro => 8, :vvc => 8, :plt => 8)
+		sizehint!(key.location[x], 1<<y)
+	end
 	key.directory[] = dirname(filename)
 	header = unpack(io, KEY_hdr)
 	bifentries = unpack(seek(io, header.bifoffset), KEY_bif, header.nbif)

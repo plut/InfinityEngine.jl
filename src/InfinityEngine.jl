@@ -82,13 +82,9 @@ end
 	isempty(v) ? "" : String(iszero(last(v)) ? view(v, 1:length(v)-1) : v)
 @inline string0(io::IO, s::Integer, l::Integer) = string0(read(seek(io, s), l))
 @inline function substring0(s::AbstractString, a::Integer, n::Integer)
-# 	println((a+1,a+n, iszero(n), iszero(codeunit(s,a+n))),codeunits(s)[a+1:a+n])
-# 	println((a+1:a+n-(!iszero(n) && iszero(codeunit(s, a+n))), ncodeunits(s)))
-# 	println(1:n-(!iszero(n) && iszero(codeunit(s, a+n))))
 	iszero(n) && return NO_SUBSTRING
 	p = prevind(s,a+n+1)
 	view(s, a+1:(iszero(codeunit(s, p)) ? prevind(a, p) : p))
-# 	view(s, a+1:prevind(s,a+n-(!iszero(n) && iszero(codeunit(s, a+n)))))
 end
 	
 @inline string0(s::AbstractString) = let n = findfirst('\0', s)
@@ -344,8 +340,15 @@ Pack.unpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
 #»»1
 # ««1 tlk
 # ««2 Type and constructors
+@SymbolicEnum TextFlags::UInt16 begin
+	IsEmpty = 0
+	HasText
+	HasSound
+	AmbientMessage
+	HasTokens
+end
 @with_kw mutable struct TLK_str
-	flags::UInt16 = 1
+	flags::TextFlags = HasText
 	sound::Resref"WAV" = Resref".wav"
 	volume::Int32 = 0
 	pitch::Int32 = 0
@@ -366,12 +369,11 @@ Pack.pack(::IO, ::SubString{String}) = 0
 	nstr::Int32 = 0
 	offset::Int32 = 0
 	entries::Vector{TLK_str} = Auto()
-# 	firstindex::Dict{String,Int32} = Auto() # lowest Strref for this string
 end
 Base.show(io::IO, tlk::TlkStrings) =
 	print(io, "<TlkStrings with ", length(tlk.entries), " entries>")
 Base.isempty(v::TlkStrings) = isempty(v.entries)
-Base.empty!(v::TlkStrings) = empty!(v.entries) #; empty!(v.firstindex))
+Base.empty!(v::TlkStrings) = empty!(v.entries)
 Base.length(v::TlkStrings) = length(v.entries)
 
 #««2 I/O from tlk file
@@ -380,7 +382,6 @@ function Base.read(io::IO, ::Type{<:TlkStrings})
 	io = IOBuffer(buf) # helps (a lot) with speed
 	f = unpack(io, TlkStrings)
 	unpack!(io, f.entries, f.nstr)
-# 	sizehint!(empty!(f.firstindex), f.nstr)
 	for (i,s) in pairs(f.entries)
 # 		s.string = string0(io, f.offset + s.offset, s.length)
 		s.string = substring0(buf, f.offset + s.offset, s.length)
@@ -409,19 +410,10 @@ function Base.write(io::IO, tlk::TlkStrings)
 	end
 end
 #««2 Dictionary interface
-function Base.push!(tlk::TlkStrings, s::AbstractString)
-# 	i = get(tlk.firstindex, s, nothing)
-# 	if isnothing(i)
+# push!: always appends a new string
+# tlk[strref]: returns text for this strref
+Base.push!(tlk::TlkStrings, s::AbstractString) =
 	push!(tlk.entries, TLK_str(; string=s))
-# 	i = get!(tlk.firstindex, s, length(tlk.entries))
-# 	end
-# 	return Strref(i-1)
-end
-# function Base.get(tlk::TlkStrings, s::AbstractString, n)
-# 	i = get(tlk.firsindex, s, nothing)
-# 	isnothing(i) && return n
-# 	return Strref(i-1)
-# end
 function Base.getindex(tlk::TlkStrings, s::Strref)
 	i = s.index
 	i ∈ eachindex(tlk.entries) || (i = 0)

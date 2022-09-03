@@ -1,6 +1,6 @@
 module Opcodes
-using ..DottedEnums
-using ..DottedEnums: flagstext, enumtext
+using ..SymbolicEnums
+using ..SymbolicEnums: flagstext, enumtext
 	@SymbolicEnum Opcode::UInt16 begin
 AC_bonus = 0
 Modify_attacks_per_round

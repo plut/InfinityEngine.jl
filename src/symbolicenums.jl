@@ -1,4 +1,4 @@
-module DottedEnums
+module SymbolicEnums
 using StaticArrays
 
 abstract type EnumOrFlags{T} end
@@ -7,8 +7,9 @@ abstract type EnumOrFlags{T} end
 (T::Type{<:Integer})(x::EnumOrFlags) = T(x.n)
 @inline Base.read(io::IO, T::Type{<:EnumOrFlags}) = T(read(io, basetype(T)))
 
+# (Inspired by Enum)
+# This function returns for each type the associated hash table of names.
 function namemap end
-function valuemap end
 @inline value(T::Type{<:EnumOrFlags}, ::Val) = nothing
 
 function showtypename(io::IO, tn::Core.TypeName)
@@ -112,7 +113,7 @@ function symbolicenum(m::Module, T::Union{Symbol, Expr}, args...; isflags=false)
 			n::$basetype
 			@inline $tn(n::Integer) = new(n)
 		end)
-		DottedEnums.namemap(::Type{$tn}) = $(esc(namemap))
+		SymbolicEnums.namemap(::Type{$tn}) = $(esc(namemap))
 	end
 	for (k,v) in pairs(valuemap)
 		allbits |= v

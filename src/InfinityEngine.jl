@@ -46,7 +46,7 @@ end
 
 using .DiceThrows
 include("pack.jl"); using .Pack
-include("dottedenums.jl"); using .DottedEnums
+include("symbolicenums.jl"); using .SymbolicEnums
 include("opcodes.jl"); using .Opcodes
 include("markedstrings.jl"); using .MarkedStrings
 
@@ -1657,7 +1657,7 @@ end
 function add_state!(c::DialogContext, actor, key, text::Strref;
 		trigger=nothing, kwargs...)
 	dict = actor.states
-	@assert !haskey(dict, key) "state $label already exists"
+	@assert !haskey(dict, key) "state $key already exists"
 	println("\e[1mINSERT STATE $(key.n): $(first(text|>str,40))…\e[m")
 	if_current_state(c) do source # insert implicit transition
 		isempty(source.transitions) && begin
@@ -1772,16 +1772,16 @@ const LANGUAGES = (
 	"de_DE" => true,
 	"es_ES" => true,
 	"fr_FR" => true,
-	"hu_HU" => false,
-	"it_IT" => true,
-	"ja_JP" => true,
-	"ko_KR" => false,
-	"pl_PL" => true,
-	"pt_BR" => true,
-	"ru_RU" => true,
-	"tr_TR" => false,
-	"uk_UA" => false,
-	"zh_CN" => false,
+# 	"hu_HU" => false,
+# 	"it_IT" => true,
+# 	"ja_JP" => true,
+# 	"ko_KR" => false,
+# 	"pl_PL" => true,
+# 	"pt_BR" => true,
+# 	"ru_RU" => true,
+# 	"tr_TR" => false,
+# 	"uk_UA" => false,
+# 	"zh_CN" => false,
 )
 """    LANGUAGE_FILES
 
@@ -1812,6 +1812,22 @@ Collection of game strings, indexed by string and language.
  - `gamestrings[language, strref]`: `Strref` to `String` conversion.
  - `commit(gamestrings)`: saves state to filesystem.
  - `init!(directory)`: loads state from filesystem.
+
+### Fields
+
+ - let N0 = number of base-game strings (34000)
+       N1 = number of new tlk strings
+       N2 = number of memory tlk strings
+
+Then Strref(0..N0-1) are base-game strings
+     Strref(N0..N0+N1+N2-1) are new strings = indexed by strings
+
+   Strref(i + N0-1) ⇔ new_string[i]
+
+Stored value is N0-1 == 33999 for BG2; constant even when modifying tlk
+
+Displaying a string for Strref(i): if i ≤ #tlk-1 then tlk[i+1]
+  else new_string[i-N0+1] (<- only the tail end is used)
 """
 @with_kw_noshow struct GameStrings
 	lang_dir::String
@@ -1832,11 +1848,11 @@ Base.show(io::IO, g::GameStrings) = print(io, "GameStrings<",
 # 	count(!isempty, g.tlk), " languages, ",
 	length(g.tlk), " strings, ", length(g.new_strings), " keyed strings>")
 
-function load_tlk!(g::GameStrings, i)
-	# Loads the strings for this language if not already done:
-	!isempty(g.tlk[i]) && return
-	g.tlk[i] = read(joinpath(g.lang_dir, LANGUAGE_FILES[i][2]), TlkStrings)
-end
+# function load_tlk!(g::GameStrings, i)
+# 	# Loads the strings for this language if not already done:
+# 	!isempty(g.tlk[i]) && return
+# 	g.tlk[i] = read(joinpath(g.lang_dir, LANGUAGE_FILES[i][2]), TlkStrings)
+# end
 # set_language!(g::GameStrings, i) = (g.language[] = i; load_tlk!(g, i))
 function GameStrings(directory::AbstractString, state)
 	tlk = read(joinpath(directory, LANGUAGE_FILES[1][2]), TlkStrings)
@@ -1848,9 +1864,10 @@ end
 # gamestrings[strref]: returns the string according to current language
 # (or its only language for new strings)
 function Base.getindex(g::GameStrings, s::Strref)
-	i = s.index; i = max(i, zero(i)); i+= oneunit(i) # ensure ≥ 1
-	n = length(g.tlk)
-	i ≤ n ? g.tlk.entries[i].string : g.new_strings[i - n]
+	i = s.index; i = max(i, zero(i)) #; i+= oneunit(i) # ensure ≥ 1
+	i < length(g.tlk) ? g.tlk.entries[i+1].string : g.new_strings[i - g.offset]
+# 	n = length(g.tlk)
+# 	i ≤ n ? g.tlk.entries[i].string : g.new_strings[i - n]
 end
 """    Strref(gamestrings, s)
 
@@ -2270,6 +2287,7 @@ none exists with this name.
 actor(g::Game, s::AbstractString) =
 	target_actor!(g.dialog_context, get_actor(g,s))
 actor(g::Game) = target_actor(g.dialog_context)
+actor(::Game, a::Actor) = a
 
 StateKey(::Game, s::Integer) = StateKey(s)
 StateKey(g::Game, s::AbstractString) =
@@ -2299,12 +2317,18 @@ say(g::Game, text::StringKey; kw...) =
 	say2(g, g.dialog_context|>target_actor|>firstlabel, text; kw...)
 say(g::Game, (label, text)::Pair{<:Any,<:StringKey}; kw...) =
 	say2(g, label, text; kw...)
-SayText = Union{StringKey,Pair{<:Any,<:StringKey}}
+SayText = Union{StringKey,Pair{<:Any,<:StringKey},Pair{<:Any,<:Pair}}
 say(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
+
 # say2(game, label, text): calls low-level
 say2(g::Game, label, text::StringKey; kw...) =
-	add_state!(g.dialog_context, g.dialog_context|>target_actor,
+	say2(g, (g.dialog_context|>target_actor, label), text; kw...)
+say2(g::Game, (a, label)::Tuple{<:Any,<:Any}, text::StringKey; kw...) =
+begin
+println((a, label, text))
+	add_state!(g.dialog_context, actor(g, a),
 		StateKey(g, label), Strref(g.strings, text); kw...)
+	end
 """    from([game], [actor], label)
 
 Sets current state to `actor`, `label`. The state must exist.
@@ -2457,7 +2481,7 @@ end
 Base.copy(g::Game, r::Resref, args...; kwargs...) =
 	copy(g, g[r], args...; kwargs...)
 
-const _resource_template = Dict{DottedEnums.SymbolicNames,Resref}(
+const _resource_template = Dict{SymbolicEnums.SymbolicNames,Resref}(
 	Amulet => Resref"amul02.itm",
 	Belt => Resref"belt01.itm",
 	Boots => Resref"boot06.itm",
@@ -2514,7 +2538,7 @@ const Longsword = LongSword
 const PlateMail = HalfPlate
 # wakizashi, ninjato XXX
 
-(T::DottedEnums.SymbolicNames)(args...; kwargs...) =
+(T::SymbolicEnums.SymbolicNames)(args...; kwargs...) =
 	copy(_resource_template[T], args...; kwargs...)
 #««1 Global `game` object
 const global_game = Ref{Game}()
@@ -2542,6 +2566,7 @@ for f in (register!, commit,
 	@eval $(nameof(f))($(lhs...)) = $f(game(), $(rhs...))
 end
 Base.convert(::Type{Strref}, s) = Strref(game().strings, s)
+Base.convert(::Type{Strref}, s::Strref) = s # method conflict fix
 Base.convert(T::Type{<:Resref}, s::AbstractString) = T(game().resources, s)
 Base.convert(T::Type{<:Resref}, x::RootResource) = x.ref
 Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =

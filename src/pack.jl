@@ -146,7 +146,7 @@ Packs an object to a binary IO according to its packed layout.
 """
 function pack(io::IO, x::T) where{T}
 # 	println("packing type $T")
-	@assert length(string(T)) ≤ 120 # prevents deep recursion
+# 	@assert length(string(T)) ≤ 120 # prevents deep recursion
 # 	isstructtype(T) || (println("   value is $x::$T"); return write(io,x))
 	isstructtype(T) || return write(io, x)
 	s = 0

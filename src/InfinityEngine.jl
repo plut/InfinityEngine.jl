@@ -77,6 +77,18 @@ function if_haskey(f::Base.Callable, dict::Dict, key)
 	index = Base.ht_keyindex(dict, key)
 	index > 0 && f(@inbounds dict.vals[index])
 end
+#««2 Read call context
+
+const SELF_DIR = dirname(String(@__FILE__))
+# This returns the first stacktrace falling outside this module's scope
+function call_frame()
+	for frame in stacktrace()
+		dir = dirname(String(frame.file))
+		!startswith(dir, SELF_DIR) && return frame
+	end
+end
+call_directory() = dirname(String(call_frame().file))
+
 # ««2 Extract zero-terminated string from IO
 @inline string0(v::AbstractVector{UInt8}) =
 	isempty(v) ? "" : String(iszero(last(v)) ? view(v, 1:length(v)-1) : v)
@@ -1358,8 +1370,8 @@ Base.isless(a::StateKey, b::StateKey) = isless(a.n, b.n)
 @with_kw mutable struct Transition #{X}
 	# XXX both Transition and State can be made immutable (stored in vectors)
 	flags::TransitionFlags = Auto(0)
-	text::Strref = Auto(0)
-	journal::Strref = Auto(0)
+	text::Strref = Strref(0)
+	journal::Strref = Strref(0)
 	trigger::String = ""
 	action::String = ""
 	target::Tuple{Resref"dlg",StateKey}
@@ -1617,8 +1629,11 @@ source_actor(c::DialogContext) =
 source_state(c::DialogContext) =
 	(@assert isvalid(c.source_key); source_actor(c).states[c.source_key])
 
-set_source!(c::DialogContext, key) =
-	(@assert haskey(c.source_actor.states, key); c.source_key=key)
+function set_source!(c::DialogContext, key)
+	@assert haskey(c.source_actor.states, key);
+	c.source_key = key
+	c.current_transition_idx = 0
+end
 set_source!(c::DialogContext, actor, key) =
 	(@assert !isempty(actor.ref); c.source_actor=actor; set_source!(c,key))
 
@@ -1627,10 +1642,11 @@ if_current_state(f::Function, c::DialogContext) =
 
 current_transition(c::DialogContext) =
 	source_state(c).transitions[c.current_transition_idx]
-@inline has_pending_transition(c::DialogContext) = if_current_state(c) do s;
-	!isempty(s.transitions) &&
+@inline has_pending_transition(c::DialogContext) =
+	!iszero(c.current_transition_idx) &&
+	if_current_state(c) do s; !isempty(s.transitions) &&
 		!isvalid(s.transitions[c.current_transition_idx].target[2])
-end
+	end
 
 target_actor(c::DialogContext) =
 	(@assert !isempty(c.target_actor.ref.name); c.target_actor)
@@ -1688,14 +1704,14 @@ The end result should be A ——→ X —aᵢ—→ Bᵢ.
 """
 function tail_insert!(c::DialogContext, actor::Actor, key::StateKey,
 		text::Strref; trigger=nothing, kwargs...)
-	dict = actor.states
-	@assert !haskey(dict, key) "state $label already exists"
-	println("\e[31;1m LEFT INSERT STATE $key\e[m")
+	t_states = actor.states
+	@assert !haskey(t_states, key) "state $key already exists"
+	println("\e[31;1mTAIL INSERT: new state=($(actor.ref),$key)\e[m")
 	register!(actor)
 	c|>source_actor ≠ actor && register!(c|>source_actor)
 	trigger = something(get_trigger(c, trigger), "")
 	source = source_state(c)
-	target = State(; age=length(dict), text, trigger, kwargs...)
+	target = State(; age=length(t_states), text, trigger, kwargs...)
 	if has_pending_transition(c)
 		println("  \e[32m Resolve pending transition to $key\e[m")
 		trans = current_transition(c)
@@ -1707,7 +1723,7 @@ function tail_insert!(c::DialogContext, actor::Actor, key::StateKey,
 		target.transitions = source.transitions
 		source.transitions = [ implicit_transition(actor, key) ]
 	end
-	dict[key] = target
+	t_states[key] = target
 	set_source!(c, actor, key)
 end
 
@@ -1715,13 +1731,13 @@ end
 
 Creates a transition from last state to (actor, key).
 """
-function add_transition!(c::DialogContext, text::Strref, actor::Actor,
+function add_transition!(c::DialogContext, text::Strref, actorref::Resref"dlg",
 		key::StateKey; position = nothing, terminates = false, journal = nothing,
 		trigger = nothing, action = nothing)
 	@assert !has_pending_transition(c) "unsolved pending transition"
 	!isvalid(key) && println("  \e[31madd pending transition\e[m")
 	println("  \e[34m", terminates ? "FINAL TRANSITION" :
-		"TRANSITION TO $actor/$key", "\e[m")
+		"TRANSITION TO $actorref/$key", "\e[m")
 	# XXX check if some flags are still missing
 	flags = TransitionFlags(0)
 	trigger = get_trigger(c, trigger)
@@ -1730,7 +1746,7 @@ function add_transition!(c::DialogContext, text::Strref, actor::Actor,
 	isnothing(journal) ? (journal = Strref(0)) : (flags |= HasJournal)
 	isnothing(trigger) ? (trigger = "") : (flags |= HasTrigger)
 	isnothing(action) ? (action = "") : (flags |= HasAction)
-	t = Transition(;target=(actor.ref,key), text, journal, trigger, action, flags)
+	t = Transition(;target=(actorref,key), text, journal, trigger, action, flags)
 	position = something(position, 1 + length(source_state(c).transitions))
 	register!(c|>source_actor)
 	c.current_transition_idx = position
@@ -1896,7 +1912,8 @@ Strref(::GameStrings, ::AbstractString) =
 # 	end
 # end
 # ««2 Translations
-function load_translations!(g::GameStrings, directory::AbstractString)
+function load_translations!(g::GameStrings,
+		directory::AbstractString = call_directory())
 	empty!.(g.translations)
 	for filename in readdir(directory)
 		(base, ext) = splitext(filename)
@@ -2286,6 +2303,8 @@ none exists with this name.
 """
 actor(g::Game, s::AbstractString) =
 	target_actor!(g.dialog_context, get_actor(g,s))
+actor(g::Game, s::AbstractString, l::Union{AbstractString,Integer}) =
+	actor(g,s).states[StateKey(l)]
 actor(g::Game) = target_actor(g.dialog_context)
 actor(::Game, a::Actor) = a
 
@@ -2324,11 +2343,8 @@ say(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
 say2(g::Game, label, text::StringKey; kw...) =
 	say2(g, (g.dialog_context|>target_actor, label), text; kw...)
 say2(g::Game, (a, label)::Tuple{<:Any,<:Any}, text::StringKey; kw...) =
-begin
-println((a, label, text))
 	add_state!(g.dialog_context, actor(g, a),
 		StateKey(g, label), Strref(g.strings, text); kw...)
-	end
 """    from([game], [actor], label)
 
 Sets current state to `actor`, `label`. The state must exist.
@@ -2409,7 +2425,7 @@ reply2(g::Game, text, ::typeof(exit); kw...) =
 
 # reply3(game, text, target_actor, target_label): calls low-level
 reply3(g::Game, text, actor, label; kw...) = add_transition!(g.dialog_context,
-	Strref(g.strings,text), get_actor(g, actor), StateKey(g, label); kw...)
+	Strref(g.strings,text), get_actor(g, actor).ref, StateKey(g, label); kw...)
 """
     trigger(string)
 
@@ -2548,6 +2564,8 @@ init!(directory::AbstractString) = global_game[] = Game(directory)
 # XXX fix this: include a Game field in ResIO?
 str(s::Strref) = game().strings[s]
 changes() = changes(game().resources)
+load_translations!(dir::AbstractString...) =
+	load_translations!(game().strings, dir...)
 
 # For all methods of those functions starting with a `::Game` argument:
 # define a corresponding method where the global `game` is used.

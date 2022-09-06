@@ -12,6 +12,6 @@ makedocs(
 	format=Documenter.HTML(prettyurls=get(ENV,"CI",nothing) !=nothing),
 )
 
-# deploydocs(
-# 	repo = "github.com/plut/InfinityEngine.jl.git",
-# )
+deploydocs(
+	repo = "github.com/plut/InfinityEngine.jl.git",
+)

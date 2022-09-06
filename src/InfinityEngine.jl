@@ -177,6 +177,8 @@ Base.isvalid(s::Strref) = (s.index > 0)
 Base.show(io::IO, s::Strref) = print(io, "Strref(", s.index, ")")
 
 #««2 Resource identifiers: Resref
+# In preparation for a switch from Symbol keys to (faster) bits-type keys
+# (UInt8 would suffice):
 const ResKey = Symbol
 """    Resref{T}
 
@@ -1895,6 +1897,13 @@ Strref(::GameStrings, ::AbstractString) =
 # 	end
 # end
 # ««2 Translations
+"""    load_translations!([directory])
+
+Loads translations from all `.po` files in `directory` inside the
+game structures.
+
+If `directory` is not provided, the default value is the directory
+containing the calling `.jl` file."""
 function load_translations!(g::GameStrings,
 		directory::AbstractString = call_directory())
 	empty!.(g.translations)
@@ -2542,6 +2551,10 @@ const PlateMail = HalfPlate
 #««1 Global `game` object
 const global_game = Ref{Game}()
 game() = global_game[]
+"""    init!(directory)
+
+Initializes the global game structure from this directory
+(the directory containing the `chitin.key` file)."""
 init!(directory::AbstractString) = global_game[] = Game(directory)
 
 # XXX fix this: include a Game field in ResIO?

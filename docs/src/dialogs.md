@@ -1,9 +1,9 @@
 # Dialogs
 
 
-## The structure of IE dialogs
+## Structure
 
-IE dialog is encoded as a state machine
+All in-game dialog is encoded as a state machine
 (a single state machine can represent the whole game dialog).
 States of this machine correspond to NPC text,
 while transitions are (usually) PC replies.
@@ -18,7 +18,9 @@ Since each state has a NPC speaker, states are indexed by pairs
 `(actor, key)`, where the actor is the identity of the speaker;
 this is also how dialog is encoded in the game files:
 all dialog belonging to a single actor (states of this actor, and
-transitions from these states) are stored in a single file.
+transitions from these states) are stored in a single game resource.
+Accordingly, the `Actor` data structure corresponds to all text
+said by a given NPC speaker, and all PC replies to this text.
 
 ## Displaying dialogs
 
@@ -90,6 +92,9 @@ before any other transition is created (by calling `reply`).
 
 The `from` function allows changing the value of the “last added state”
 variable to any actor and any state.
+```@docs
+from
+```
 Note that this is not always the same actor as the speaking actor
 selected by `actor`:
 namely, `from` selects a *source* actor (i.e. already existing states),

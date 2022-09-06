@@ -1,9 +1,5 @@
 # Immediate
  * try a mini-mod: patch imoen.dlg
- + finish string indexing (by number or input string)
-  + we can index by string (since we point to `Strref` only, contrary to
-    what happens with transitions)
-  - use namespaces for string indexing ?
  - heavily-modded EET has 82k key resources, 90k overrides, 100k strings
 # Mod structure
 **NEEDS**:
@@ -22,10 +18,8 @@
  - automatic generation of Julia module + `namespace()`
   - use `objectid(@__MODULE__)` in namespaces?
 # Translations
- + detect (when possible) if text is used inside a `say` or `reply`
  + `language()` also loads the translation files (any `.po` in current
    directory)
-  + see what to do with `dialogF`: use a subset of strings?
  - make xgettext-mode easily accessible from author-side
    e.g. `use InfinityEngine; translate_mod("foobar.jl")`
  + translation is done for all game languages
@@ -36,7 +30,6 @@
 # Dialogs
 ## Remaining work
  - save dialog state priority in `state.toml`
- + `actor()` returns current actor, etc.
  - finalize actor (i.e. add exit transition to any empty state)
   - see what to do with actions attached to these
  - allow specifying actor in `say`, e.g. `say(actor=>label=>text)`
@@ -55,41 +48,21 @@
 # General work
  - try to be a bit faster by pre-hashing all the `Symbol`s used as keys
    in object tables (at parser stage)
- + make Resref short (since short ref. is created at initialization)
-  + objects store the short version
-  + conversion is done on the fly as needed
-  + **THIS IS TRANSPARENT TO THE USER**
- + fix variadic functions of default game
  - use a custom REPL mode (`HeaderREPLs.jl`) for mod manager
   - mod manager (WeiDU + Julia mods)
   - mod editing (generate, update, translations, validate)
  - typed attack: `Blunt(1d4+1)`; converts to Dice etc.
- + when saving, delete from changes and move to override
-  + as atomically as possible?
  - speed: maybe add a few `sizehints!` in KeyIndex and TlkStrings.
  + consider using ImmutableDicts **DONE** and it is less efficient
- + make this module a package
  + decompile dialog to Julia
   - missing flags
- + ~~copy~~ extract from key/bif to file
- + check case when writing resource (should be uppercase)
  - `args_to_kw`: use parameters e.g.
    `AbstractString => (:name, :description), Integer => (...)`
 ## Write a test set
  + items
- - dialogs
+ + dialogs
  + try recreating a simple dialog (imoen.dlg, hull.dlg) from scratch
 ## Modified objects
- + we want items(game) to be a generator (likewise creatures(),
- spells() etc.)
- + it must return a real Item object
- + `setproperty!(::Item, ...)`
-   pushes the item to a global “must be saved” list
-   AND converts from a String to a reference as needed
- + Longsword(...) calls clone(Longsword, ...)
-   AND creates a new entry (according to current namespace)
-   AND registers the item in the global “must be saved” list
-   AND returns a reference to the item
  - saving a creature reorders the items as needed
 ## Object origin
  - use stacktraces

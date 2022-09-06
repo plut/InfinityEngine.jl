@@ -177,6 +177,7 @@ Base.isvalid(s::Strref) = (s.index > 0)
 Base.show(io::IO, s::Strref) = print(io, "Strref(", s.index, ")")
 
 #««2 Resource identifiers: Resref
+const ResKey = Symbol
 """    Resref{T}
 
 A (long) resource descriptor: this contains a (static) type and a (dynamic)
@@ -204,8 +205,8 @@ Pack.pack(io::IO, r::Resref) = pack(io, r.name|>uppercase)
 macro Resref_str(s)
 	s = lowercase(s)
 	i = findlast('.', s)
-	isnothing(i) ? Resref{Symbol(s)} :
-		view(s,1:i-1) |> Resref{view(s,i+1:length(s))|>Symbol}
+	isnothing(i) ? Resref{ResKey(s)} :
+		view(s,1:i-1) |> Resref{view(s,i+1:length(s))|>ResKey}
 end
 
 #««2 Rooted resources
@@ -244,8 +245,6 @@ mutable struct RootedResourceVector{T<:RootedResource,
 	RootedResourceVector{T,R}(v,r) where{T,R} = new{T,R}(v,r)
 	RootedResourceVector{T,R}(v) where{T,R} = new{T,R}(v)
 end
-# RootedResourceVector{T,R}(::UndefInitializer) where{T,R} =
-# 	RootedResourceVector{T,R}()
 root(v::RootedResourceVector) = isdefined(v, :root) ? v.root : nothing
 root!(v::RootedResourceVector, r) = (v.root = r)
 Pack.packed_sizeof(x::RootedResourceVector) = length(x)*packed_sizeof(eltype(x))
@@ -329,9 +328,9 @@ ResourceType(T::Type{<:ResIO})= Base.return_types(read,Tuple{T})|>only
 macro ResIO_str(str)
 	if contains(str, '.')
 		(_, b) = splitext(str)
-		return :(ResIO{$(b[2:end]|>lowercase|>Symbol|>QuoteNode)}($str))
+		return :(ResIO{$(b[2:end]|>lowercase|>ResKey|>QuoteNode)}($str))
 	else
-		return :(ResIO{$(str|>lowercase|>Symbol|>QuoteNode)})
+		return :(ResIO{$(str|>lowercase|>ResKey|>QuoteNode)})
 	end
 end
 #««3 Reading resources from ResIO
@@ -385,10 +384,10 @@ end
 
 #««2 I/O from tlk file
 @inline function TlkString(io::IO, buf::AbstractString, offset)
-	flags = unpack(io, TextFlags);
-	sound = unpack(io, Resref"wav");
-	volume= unpack(io, Int32);
-	pitch = unpack(io, Int32);
+	flags = unpack(io, TextFlags)
+	sound = unpack(io, Resref"wav")
+	volume= unpack(io, Int32)
+	pitch = unpack(io, Int32)
 	delta = unpack(io, Int32)
 	strlen= unpack(io, Int32)
 	string= substring0(buf, offset+delta, strlen)
@@ -423,11 +422,6 @@ end
 # push!: always appends a new string
 # tlk[strref]: returns text for this strref
 Base.convert(T::Type{TlkString}, s::AbstractString) = T(;string=s)
-# function Base.getindex(vec::TlkStrings, s::Strref)
-# 	i = s.index+1
-# 	i ∈ eachindex(vec) || (i = 1)
-# 	@inbounds vec[i].string
-# end
 @inline function Base.get(f::Base.Callable, vec::TlkStrings, s::Strref)
 	j = max(s.index, zero(s.index)) + oneunit(s.index)
 	j ∈ eachindex(vec) ? vec[j].string : f()
@@ -462,7 +456,7 @@ struct Restype; data::UInt16; end
 # used by the hash table)
 Base.hash(x::Restype) = UInt(7*(x.data>>6)+(x.data&0x3f))
 # (and yes, we checked that this indeed faster than Base.ImmutableDict).
-const RESOURCE_TABLE = Dict(Restype(a) => b for (a,b) in (#««
+const RESOURCE_TABLE = Dict(Restype(a) => ResKey(b) for (a,b) in (#««
 	0x0001 => :bmp,
 	0x0002 => :mve,
 	0x0004 => :wav,
@@ -505,8 +499,8 @@ const RESOURCE_TABLE = Dict(Restype(a) => b for (a,b) in (#««
 	0x0802 => :ini,
 	0x0803 => :src,
 ))#»»
-Symbol(x::Restype) = get(RESOURCE_TABLE, x) do
-	Symbol(:Restype_, @sprintf("%d", x.data)) end
+ResKey(x::Restype) = get(RESOURCE_TABLE, x) do
+	ResKey(Symbol(:Restype_, @sprintf("%d", x.data))) end
 
 # ««2 File blocks
 struct KEY_hdr
@@ -540,11 +534,11 @@ Methods include:
 @with_kw struct KeyIndex
 	directory::Base.RefValue{String} = Ref("")
 	bif::Vector{String} = Auto()
-	location::Dict{Symbol,Dict{StaticString{8},BifIndex}} =
+	location::Dict{ResKey,Dict{StaticString{8},BifIndex}} =
 		Auto(s => Dict{StaticString{8},BifIndex}() for s in values(RESOURCE_TABLE))
 end
 function Base.push!(key::KeyIndex, ref::KEY_res)
-	d = get!(key.location, Symbol(ref.type)) do; valtype(key.location)() end
+	d = get!(key.location, ResKey(ref.type)) do; valtype(key.location)() end
 	d[lowercase(ref.name)] = ref.location
 end
 Base.length(key::KeyIndex) = key.location|>values.|>length|>sum
@@ -560,7 +554,7 @@ init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
 		:pvrz => 12, :spl => 11, :bcs => 11, :itm => 11, :dlg => 11,
 		:chr => 10, Symbol(2,:da) => 10, :mos => 10, :are => 10, :wed => 9,
 		:ini => 9, :tis => 9, :sto => 8, :pro => 8, :vvc => 8, :plt => 8)
-		sizehint!(key.location[x], 1<<y)
+		sizehint!(key.location[ResKey(x)], 1<<y)
 	end
 	key.directory[] = dirname(filename)
 	header = unpack(io, KEY_hdr)
@@ -615,17 +609,17 @@ bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
 	resources = unpack(io, BIF_resource, header.nres)
 	r = resources[index+1]; IOBuffer(read(seek(io, r.offset), r.size))
 end
-@inline function Base.open(key::KeyIndex, name::AbstractString, type::Symbol)
+@inline function Base.open(key::KeyIndex, name::AbstractString, type::ResKey)
 	dict = get(key.location, type, nothing); isnothing(dict) && return nothing
 	loc = get(dict, StaticString{8}(name), nothing)
 	isnothing(loc) && return nothing
 	bif = joinpath(key.directory[], key.bif[1+sourcefile(loc)])
 	return bifcontent(bif, resourceindex(loc))
 end
-@inline Base.haskey(key::KeyIndex, name::AbstractString, type::Symbol) =
+@inline Base.haskey(key::KeyIndex, name::AbstractString, type::ResKey) =
 	haskey(key.location, type) &&
 		haskey(key.location[type], name|>StaticString{8})
-Base.keys(key::KeyIndex, type::Symbol) = keys(key.location[type])
+Base.keys(key::KeyIndex, type::ResKey) = keys(key.location[type])
 
 # ««1 ids
 # useful ones: PROJECTL SONGLIST ITEMCAT NPC ANISND ?
@@ -1861,15 +1855,8 @@ Displaying a string for Strref(i): if i ≤ #tlk-1 then tlk[i+1]
 		[ Dict{String,String}() for _ in LANGUAGE_DICT ]
 end
 Base.show(io::IO, g::GameStrings) = print(io, "GameStrings<",
-# 	count(!isempty, g.tlk), " languages, ",
 	length(g.tlk), " strings, ", length(g.new_strings), " keyed strings>")
 
-# function load_tlk!(g::GameStrings, i)
-# 	# Loads the strings for this language if not already done:
-# 	!isempty(g.tlk[i]) && return
-# 	g.tlk[i] = read(joinpath(g.lang_dir, LANGUAGE_FILES[i][2]), TlkStrings)
-# end
-# set_language!(g::GameStrings, i) = (g.language[] = i; load_tlk!(g, i))
 function GameStrings(directory::AbstractString, state)
 	tlk = read(joinpath(directory, LANGUAGE_FILES[1][2]), TlkStrings)
 	return GameStrings(; lang_dir = directory, tlk,
@@ -1879,13 +1866,8 @@ end
 # ««2 Pseudo-dictionary interface
 # gamestrings[strref]: returns the string according to current language
 # (or its only language for new strings)
-function Base.getindex(g::GameStrings, s::Strref)
+Base.getindex(g::GameStrings, s::Strref) =
 	get(g.tlk, s) do; g.new_strings[s.index - g.offset]; end
-# 	i = s.index; i = max(i, zero(i)) #; i+= oneunit(i) # ensure ≥ 1
-# 	i < length(g.tlk) ? g.tlk[i+1].string : g.new_strings[i - g.offset]
-# 	n = length(g.tlk)
-# 	i ≤ n ? g.tlk.entries[i].string : g.new_strings[i - n]
-end
 """    Strref(gamestrings, s)
 
 Returns the `Strref` for the key `s`, which may be either `nothing`,
@@ -1999,7 +1981,7 @@ end
 	override_directory::String
 	# Resources data:
 	key::KeyIndex = KeyIndex()
-	override::Dict{Symbol, Dict{StaticString{8},StaticString{8}}} =
+	override::Dict{ResKey, Dict{StaticString{8},StaticString{8}}} =
 		Auto(s => Dict{StaticString{8},StaticString{8}}()
 			for s in fieldnames(GameChanges))
 	namespace::Base.RefValue{String} = Ref("")
@@ -2022,7 +2004,7 @@ function GameResources(directory, state)
 		for f in readdir(g.override_directory)
 			(name, ext) = f|>basename|>splitext
 			length(name) > 8 && continue
-			T = Symbol(ext[2:end]|>lowercase)
+			T = ResKey(ext[2:end]|>lowercase)
 			if_haskey(g.override, T) do state
 				key = lowercase(name)
 				v = get(state, key, nothing)
@@ -2117,12 +2099,12 @@ function Base.haskey(g::GameResources, ref::Resref{T}) where{T}
 	(haskey(g.override, T) && haskey(g.override[T], ref.name))
 end
 
-function open_override(g::GameResources, s::AbstractString, T::Symbol)
+function open_override(g::GameResources, s::AbstractString, T::ResKey)
 	dict = get(g.override, T, nothing); isnothing(dict) && return nothing
 	name = get(dict, s, nothing); isnothing(name) && return nothing
 	return open(joinpath(g.override_directory, name*'.'*String(T)))
 end
-function Base.open(g::GameResources, s::AbstractString, T::Symbol;override=true)
+function Base.open(g::GameResources, s::AbstractString, T::ResKey;override=true)
 	# this returns a plain IO (IOStream or IOBuffer):
 	if override
 		io = open_override(g, s, T)
@@ -2595,7 +2577,7 @@ Base.copy(x::Union{Resref,RootResource}, args...; kwargs...) =
 function extract(f::AbstractString, g::AbstractString = f)
 	name, type = rsplit(f, '.'; limit=2)
 	isdir(g) && (g = joinpath(g, f))
-	buf = get(game().key, name, Symbol(type))
+	buf = get(game().key, name, ResKey(type))
 	write(g, buf)
 end
 #»»1

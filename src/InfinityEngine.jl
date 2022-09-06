@@ -359,82 +359,83 @@ Pack.unpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
 	AmbientMessage
 	HasTokens
 end
-@with_kw mutable struct TLK_str
+@with_kw struct TlkString
 	flags::TextFlags = HasText
 	sound::Resref"WAV" = Resref".wav"
 	volume::Int32 = 0
 	pitch::Int32 = 0
-	offset::Int32 = 0
-	length::Int32 = 0
 	# (since game strings are constants, we only read/allocate a single string
 	# and use substrings for all strings)
 	# We can convert any string to a SubString: SubString(s);
-	# this gives us a canonical constructor: TLK_str(; string::String).
+	# this gives us a canonical constructor: TlkString(; string::String).
 	string::SubString{String}
 end
+const TlkStrings = Vector{TlkString}
 const NO_SUBSTRING = view("", 1:0)
-Pack.unpack(::IO, ::Type{SubString{String}}) = NO_SUBSTRING
+Base.show(io::IO, vec::TlkStrings) =
+	print(io, "<TlkStrings with ", length(vec), " entries>")
+
 Pack.pack(::IO, ::SubString{String}) = 0
-@with_kw mutable struct TlkStrings
+@with_kw struct TLKHeader
 	constant::Constant"TLK V1  " = Auto()
 	lang::UInt16 = 0
 	nstr::Int32 = 0
 	offset::Int32 = 0
-	entries::Vector{TLK_str} = Auto()
 end
-Base.show(io::IO, tlk::TlkStrings) =
-	print(io, "<TlkStrings with ", length(tlk.entries), " entries>")
-Base.isempty(v::TlkStrings) = isempty(v.entries)
-Base.empty!(v::TlkStrings) = empty!(v.entries)
-Base.length(v::TlkStrings) = length(v.entries)
 
 #««2 I/O from tlk file
+@inline function TlkString(io::IO, buf::AbstractString, offset)
+	flags = unpack(io, TextFlags);
+	sound = unpack(io, Resref"wav");
+	volume= unpack(io, Int32);
+	pitch = unpack(io, Int32);
+	delta = unpack(io, Int32)
+	strlen= unpack(io, Int32)
+	string= substring0(buf, offset+delta, strlen)
+	return TlkString(; flags, sound, volume, pitch, string)
+end
 function Base.read(io::IO, ::Type{<:TlkStrings})
 	buf = read(io, String) # helps with speed
-	io = IOBuffer(buf) # helps (a lot) with speed
-	f = unpack(io, TlkStrings)
-	unpack!(io, f.entries, f.nstr)
-	for (i,s) in pairs(f.entries)
-# 		s.string = string0(io, f.offset + s.offset, s.length)
-		s.string = substring0(buf, f.offset + s.offset, s.length)
-# 		k = (string0(io, f.offset + s.offset, s.length))
-# 		@assert s.string == k
-# 		get!(f.firstindex, s.string, i) # set it only if it is not already set
-	end
-	close(io)
-	return f
+	bufio = IOBuffer(buf) # helps (a lot) with speed
+	header = unpack(bufio, TLKHeader)
+	vec = [ TlkString(bufio, buf, header.offset) for _ in 1:header.nstr ]
+	close(bufio)
+	return vec
 end
 TlkStrings(file::AbstractString) = read(file, TlkStrings)
-function Base.write(io::IO, tlk::TlkStrings)
-	tlk.offset = 18 + 26*length(tlk.entries)
-	tlk.nstr = length(tlk.entries)
+function Base.write(io::IO, vec::TlkStrings)
+	header = TLKHeader(; offset = 18+26*length(vec), nstr = length(vec))
+	pack(io, header)
 	offset = 0
-	for s in tlk.entries
-		s.length = length(codeunits(s.string)) # zero byte not included
-		s.offset = offset
-		offset+= s.length
+	for s in vec
+		strlen = length(codeunits(s.string))
+		pack(io, s)
+		pack(io, UInt32(offset))
+		pack(io, UInt32(strlen))
+		offset+= strlen
 	end
-	pack(io, tlk) # this also writes the TLK_str entries (without the strings)
-	@assert position(io) == tlk.offset "(position,offset) = $((position(io),tlk.offset))"
-	for s in tlk.entries
-		@assert position(io) == tlk.offset + s.offset
+	@assert position(io) == header.offset "(position,offset) = $((position(io),header.offset))"
+	for s in vec
 		write(io, codeunits(s.string)) # zero byte not included
 	end
 end
 #««2 Dictionary interface
 # push!: always appends a new string
 # tlk[strref]: returns text for this strref
-Base.push!(tlk::TlkStrings, s::AbstractString) =
-	push!(tlk.entries, TLK_str(; string=s))
-function Base.getindex(tlk::TlkStrings, s::Strref)
-	i = s.index
-	i ∈ eachindex(tlk.entries) || (i = 0)
-	@inbounds tlk.entries[i+1]
+Base.convert(T::Type{TlkString}, s::AbstractString) = T(;string=s)
+# function Base.getindex(vec::TlkStrings, s::Strref)
+# 	i = s.index+1
+# 	i ∈ eachindex(vec) || (i = 1)
+# 	@inbounds vec[i].string
+# end
+@inline function Base.get(f::Base.Callable, vec::TlkStrings, s::Strref)
+	j = max(s.index, zero(s.index)) + oneunit(s.index)
+	j ∈ eachindex(vec) ? vec[j].string : f()
 end
-Base.findall(f::Function, tlk::TlkStrings) =
-	[ Strref(i-1) for (i,s) in pairs(tlk.entries) if f(s.string) ]
-Base.findall(r, tlk::TlkStrings) = findall(s->contains(s, r), tlk)
-Base.only(tlk::TlkStrings, s::AbstractString) = findall(isequal(s), tlk)|>only
+# Base.findall(f::Function, tlk::TlkStrings) =
+# 	[ Strref(i-1) for (i,s) in pairs(tlk.entries) if f(s.string) ]
+# Base.findall(r, tlk::TlkStrings) = findall(s->contains(s, r), tlk)
+# Base.only(tlk::TlkStrings, s::AbstractString) = findall(isequal(s), tlk)|>only
 
 # ««1 key/bif
 # ««2 Integer types
@@ -1851,7 +1852,6 @@ Displaying a string for Strref(i): if i ≤ #tlk-1 then tlk[i+1]
 	# right now tlk is only used for displaying; thus
 	# we don't need the whole db in memory, only the current language
 	tlk::TlkStrings
-# 	tlk::Vector{TlkStrings} = [ TlkStrings() for _ in LANGUAGE_FILES ]
 	# we collect all new strings (for any language) in the same structure,
 	# so that all the strref numbers advance in sync; Int8 indexes the
 	# language:
@@ -1880,8 +1880,9 @@ end
 # gamestrings[strref]: returns the string according to current language
 # (or its only language for new strings)
 function Base.getindex(g::GameStrings, s::Strref)
-	i = s.index; i = max(i, zero(i)) #; i+= oneunit(i) # ensure ≥ 1
-	i < length(g.tlk) ? g.tlk.entries[i+1].string : g.new_strings[i - g.offset]
+	get(g.tlk, s) do; g.new_strings[s.index - g.offset]; end
+# 	i = s.index; i = max(i, zero(i)) #; i+= oneunit(i) # ensure ≥ 1
+# 	i < length(g.tlk) ? g.tlk[i+1].string : g.new_strings[i - g.offset]
 # 	n = length(g.tlk)
 # 	i ≤ n ? g.tlk.entries[i].string : g.new_strings[i - n]
 end

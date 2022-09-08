@@ -46,6 +46,10 @@
  - journal flags: `journal(..., Unsolved)`?
  - `.d` => julia syntactic transformation
 # General work
+ - kill those `Val` in `Pack`
+    RootResource.root # set to self; can be done later (always mutable)
+    RootResource.ref # set to io.ref
+    pack Item.effects # empty
  - try to be a bit faster by pre-hashing all the `Symbol`s used as keys
    in object tables (at parser stage)
  - use a custom REPL mode (`HeaderREPLs.jl`) for mod manager

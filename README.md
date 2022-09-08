@@ -88,16 +88,20 @@ Julia itself is portable (at least on all platforms able to run IE
 games), and code can be kept portable as long as some basic precautions
 are taken (e.g. `joinpath` instead of using slashes, etc.).
 
-In particular, since this tool is developed on Unix, at
+In particular, since this tool is currently developed on Unix, at
 least some care will be taken w.r.t filenames case-sensitivity.
 Ideally this should be able to run without any ugly solution such as
 `ciopfs` or a separate NTFS partition, which should help with speed.
 
 Also, where some mods require the use of shell scripts or batch files,
 Julia contains all the basic shell functions (`mv`, `mkdir` etc),
-allowing to write such scripts in a portable way.
+allowing to write such scripts in a self-supporting and portable way.
 
 ### Speed
+
+This is a minor goal, but installing a big stack of WeiDU mods can take
+hours, and fine-tuning a single mod also crucially depends on the speed
+of installing this mod.
 
 Julia is a quite fast language (it is more-or-less a C code generator
 after all) whereas WeiDU is a scripting language,
@@ -109,7 +113,7 @@ changes), leading to quadratic complexity. InfinityExplorer is written
 in Java and hence quite slow.
 
 Currently, this module can load all the un-modded game data
-in almost-negligible time (about 2 milliseconds on a typical laptop
+in almost-negligible time (a few milliseconds on a typical laptop
 for a BG1EE installation, assuming Julia is already running).
 
 ## Dialogs

@@ -523,6 +523,8 @@ struct KEY_res
 	type::Restype
 	location::BifIndex
 end
+Pack.unpack(io::IO, ::Type{KEY_res}) = # this helps with speed...
+	KEY_res(unpack(io,StaticString{8}), unpack(io,Restype), unpack(io,BifIndex))
 # ««2 KeyIndex structure and methods
 """    KeyIndex
 
@@ -544,8 +546,6 @@ function Base.push!(key::KeyIndex, ref::KEY_res)
 	d[lowercase(ref.name)] = ref.location
 end
 Base.length(key::KeyIndex) = key.location|>values.|>length|>sum
-Pack.unpack(io::IO, ::Type{KEY_res}) = # this helps with speed...
-	KEY_res(unpack(io,StaticString{8}), unpack(io,Restype), unpack(io,BifIndex))
 
 init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
 	io = IOBuffer(read(io, String)) # helps (a lot) with speed
@@ -1359,9 +1359,9 @@ struct StateKey
 	# XXX: replace by hashed values
 	n::UInt
 	StateKey(i::Integer) = new(i)
-	StateKey(::typeof(!isvalid)) = new(~zero(UInt))
 end
-Base.isvalid(s::StateKey) = (s ≠ StateKey(!isvalid))
+const NO_STATE_KEY = StateKey(~zero(UInt))
+Base.isvalid(s::StateKey) = (s ≠ NO_STATE_KEY)
 Base.isless(a::StateKey, b::StateKey) = isless(a.n, b.n)
 
 @with_kw mutable struct Transition #{X}
@@ -1430,38 +1430,32 @@ function Base.show(io::IO, mime::MIME"text/julia", s::State;
 	end
 end
 sortkey(s::State) = (s.priority, s.age)
-Pack.fieldpack(::IO, ::Type{<:State}, ::Val{:position}, _) = 0
 # ««2 Actor
-@with_kw mutable struct Actor <: RootResource{:dlg}
+@with_kw struct ActorHeader
 	constant::Constant"DLG V1.0" = Auto() # "DLG V1.0"
-	number_states::Int32 = 0
+	number_states::Int32
 	offset_states::Int32 = 52
-	number_transitions::Int32 = 0
-	offset_transitions::Int32 = 0
-	offset_state_triggers::Int32 = 0
-	number_state_triggers::Int32 = 0
-	offset_transition_triggers::Int32 = 0
-	number_transition_triggers::Int32 = 0
-	offset_actions::Int32 = 0
-	number_actions::Int32 = 0
-	flags::UInt32 = 0
+	number_transitions::Int32
+	offset_transitions::Int32 = offset_states + 16*number_states
+	offset_state_triggers::Int32 = offset_transitions + 32*number_transitions
+	number_state_triggers::Int32
+	offset_transition_triggers::Int32 = offset_state_triggers + 8*number_state_triggers
+	number_transition_triggers::Int32
+	offset_actions::Int32 = offset_transition_triggers + 8*number_transition_triggers
+	number_actions::Int32
+	flags::UInt32
+end
+@with_kw mutable struct Actor <: RootResource{:dlg}
+	ref::Resref"dlg" # must be initialized
+	flags::UInt32
 	# states are keyed by hashes == UInt
 	states::Dict{StateKey,State} = Auto()
-	ref::Resref"dlg" # must be initialized
 	# sorted list of states when writing the file
 	sorted_keys::Vector{StateKey} = Auto()
 end
-const NO_ACTOR = Actor(;ref = Resref".dlg")
-rr_skipproperties(::Actor) = (:number_states, :offset_states,
-	:number_transitions, :offset_transitions,
-	:offset_state_triggers, :number_state_triggers,
-	:offset_transition_triggers, :number_transition_triggers,
-	:number_actions, :offset_actions, :sorted_keys)
-Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:states}, _) = 0
-Pack.fieldpack(::IO, ::Type{<:Actor}, ::Val{:sorted_keys}, _) = 0
+const NO_ACTOR = Actor(;ref = Resref".dlg", flags = 0)
 firstlabel(a::Actor) =
 	first(i for i in 0:length(a.states) if !haskey(a.states, StateKey(i)))
-# 	Iterators.filter(i->!haskey(a.states, StateKey(i)), 0:length(a.states))|>first
 
 function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
 	for (k, v) in sort(pairs(a.states))
@@ -1480,18 +1474,19 @@ end
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
 	for s in unpack(seek(io, offset), DLG_string, count)]
 function Base.read(io::ResIO"DLG")::Actor
-	actor = unpack_root(io, Actor)
-	st_triggers = dialog_strings(io, actor.offset_state_triggers,
-			actor.number_state_triggers)
-	tr_triggers = dialog_strings(io, actor.offset_transition_triggers,
-			actor.number_transition_triggers)
-	actions = dialog_strings(io, actor.offset_actions, actor.number_actions)
+	header = unpack(io, ActorHeader)
+	st_triggers = dialog_strings(io, header.offset_state_triggers,
+			header.number_state_triggers)
+	tr_triggers = dialog_strings(io, header.offset_transition_triggers,
+			header.number_transition_triggers)
+	actions = dialog_strings(io, header.offset_actions, header.number_actions)
 
-	vs = unpack(seek(io,actor.offset_states), DLG_state, actor.number_states)
-	vt = unpack(seek(io, actor.offset_transitions),
-		DLG_transition, actor.number_transitions)
+	vs = unpack(seek(io,header.offset_states), DLG_state, header.number_states)
+	vt = unpack(seek(io, header.offset_transitions),
+		DLG_transition, header.number_transitions)
 	@inline getval(list, i) = i+1 ∈ eachindex(list) ? (@inbounds list[i+1]) : ""
 
+	actor = Actor(; io.ref, header.flags)
 	for (i, s) in pairs(vs)
 		state = State(; s.text, trigger = getval(st_triggers, s.trigger),
 			age = i-1)
@@ -1550,7 +1545,7 @@ end
 function Base.write(io::IO, a::Actor)
 	# XXX we must assume that all actors are reindexed prior to writing
 	reindex!(a)
-	vs = sizehint!(DLG_state[], a.number_states)
+	vs = sizehint!(DLG_state[], length(a.states))
 	vt = sizehint!(DLG_transition[],
 		sum(length(s.transitions) for s ∈ values(a.states)))
 	vst = UniqueVector{String}()
@@ -1571,32 +1566,26 @@ function Base.write(io::IO, a::Actor)
 				t.target[1],contains(t.flags,Terminates) ? 0 : stateindex(t.target...)))
 		end
 	end
-	a.offset_states = 52
-	a.number_states = length(a.states)
-	a.offset_transitions = a.offset_states + 16 * a.number_states
-	a.number_transitions = length(vt)
-	a.offset_state_triggers = a.offset_transitions + 32 * a.number_transitions
-	a.number_state_triggers = length(vst)
-	a.offset_transition_triggers =
-		a.offset_state_triggers + 8 * a.number_state_triggers
-	a.number_transition_triggers = length(vtt)
-	a.offset_actions =
-		a.offset_transition_triggers + 8 * a.number_transition_triggers
-	a.number_actions = length(va)
+	header = ActorHeader(; a.flags,
+		number_states = length(a.states),
+		number_transitions = length(vt),
+		number_state_triggers = length(vst),
+		number_transition_triggers = length(vtt),
+		number_actions = length(va))
 	# offset for strings
-	pack(io, a)
-	@assert position(io) == a.offset_states
+	pack(io, header)
+	@assert position(io) == header.offset_states
 	pack(io, vs)
-	@assert position(io) == a.offset_transitions
+	@assert position(io) == header.offset_transitions
 	pack(io, vt)
-	@assert position(io) == a.offset_state_triggers
-	ref = Ref(a.offset_actions + 8 * a.number_actions)
+	@assert position(io) == header.offset_state_triggers
+	ref = Ref(header.offset_actions + 8 * header.number_actions)
 	pack_string(io, ref, vst)
-	@assert position(io) == a.offset_transition_triggers
+	@assert position(io) == header.offset_transition_triggers
 	pack_string(io, ref, vtt)
-	@assert position(io) == a.offset_actions
+	@assert position(io) == header.offset_actions
 	pack_string(io, ref, va)
-	@assert position(io) == a.offset_actions + 8 * a.number_actions
+	@assert position(io) == header.offset_actions + 8 * header.number_actions
 end
 function decompile(a::Actor, filename = a.ref.name*".jl"; prefix="")
 	open(filename, "w") do io
@@ -1615,7 +1604,7 @@ Holds current (mutable) data for building dialog:
 	# source_actor and source_key; target_actor is stored only as a
 	# convenience for the `Game`-level functions.
 	source_actor::Actor = NO_ACTOR
-	source_key::StateKey = Auto(!isvalid)
+	source_key::StateKey = NO_STATE_KEY
 	target_actor::Actor = NO_ACTOR
 	current_transition_idx::Int = 0 # index into source_state.transitions
 	trigger::Union{Nothing,String} = nothing
@@ -2304,7 +2293,7 @@ StateKey(::Game, s::Integer) = StateKey(s)
 StateKey(g::Game, s::AbstractString) =
 	(q = contains(s, '/') ? s : namespace(g)*'/'*s; q|>hash|>StateKey)
 StateKey(::Game, ::typeof(exit)) = StateKey(zero(UInt))
-StateKey(::Game, ::typeof(!isvalid)) = StateKey(!isvalid)
+StateKey(::Game, s::StateKey) = s
 # say: unpacks args into (label, text)
 # XXX allow a way to say(actor, label, text)
 """    say({text | (label => text)}*; priority, trigger)
@@ -2405,7 +2394,7 @@ This prevents states from different namespaces from interfering.
 reply(g::Game, (text, target)::Pair; kw...) = reply2(g, text, target; kw...)
 reply(g::Game, ::typeof(exit); kw...) = reply2(g, nothing, exit; kw...)
 # Special case: reply("text") inserts a pending transition
-reply(g::Game, text::StringKey; kw...) = reply3(g, text, "", !isvalid;kw...)
+reply(g::Game, text::StringKey; kw...) = reply3(g, text, "", NO_STATE_KEY;kw...)
 
 # reply2(game, text, target): unpacks target into (actor, label)
 reply2(g::Game, text, target::Union{Tuple,Pair}; kw...) =

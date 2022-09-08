@@ -14,6 +14,38 @@ using Base.Meta: isexpr
 @generated fieldnt(::Type{T}) where{T} = Expr(:tuple,
 	(:(($(QuoteNode(n)), $t)) for (n, t) in zip(fieldnames(T), fieldtypes(T)))...)
 
+macro generate_rw(type, args...)#««
+	T = Core.eval(__module__, type)
+	fixed_fields = Dict{Symbol,Any}()
+	for expr in args
+		@assert Meta.isexpr(expr, :(=))
+		fn, val = expr.args
+		@assert fn isa Symbol
+		fixed_fields[fn] = val
+	end
+	@assert T isa DataType
+# 	println(fixed_fields)
+	fieldvars = [ Symbol(:field_, string(fn)) for fn in fieldnames(T) ]
+	readcode = []
+	writecode = []
+	for (fv, fn, ft) in zip(fieldvars, fieldnames(T), fieldtypes(T))
+		val = get(fixed_fields, fn, nothing)
+		if isnothing(val)
+			push!(readcode, :(read(io, $ft)))
+			push!(writecode, :(write(io, x.$fn)))
+		else
+			push!(readcode, esc(val)) # no write code!
+		end
+	end
+	readexpr = T<:Tuple ? :($T((readfields(io, $T)...,))) :
+		:($T(readfields(io, $T)...,))
+# 	Expr(:call, T, :(($(code...),))) : Expr(:new, T, code...)
+	quote
+	@inline readfields(io::IO, ::Type{$T}) = ($(readcode...),)
+	@inline Base.read(io::IO, ::Type{$T}) = $readexpr
+	@inline Base.write(io::IO, x::$T) = begin; $(writecode...); end
+	end
+end#»»
 #««1 Layout/packed_sizeof
 struct Layout
 	sizes::Vector{Int}

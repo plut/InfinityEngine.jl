@@ -1,4 +1,11 @@
 # Immediate
+ + kill those `Val` in `Pack`
+    RootResource.root # set to self; can be done later (always mutable)
+    RootResource.ref # set to io.ref
+    pack Item.effects # empty
+
+ readstruct: IO -readfields-> namedtuple -pack-> struct
+ writestruct: struct -unpack-> namedtuple -writefields-> IO
  * try a mini-mod: patch imoen.dlg
  - heavily-modded EET has 82k key resources, 90k overrides, 100k strings
 # Mod structure
@@ -18,7 +25,7 @@
  - automatic generation of Julia module + `namespace()`
   - use `objectid(@__MODULE__)` in namespaces?
 # Translations
- + `language()` also loads the translation files (any `.po` in current
+ - `language()` also loads the translation files (any `.po` in current
    directory)
  - make xgettext-mode easily accessible from author-side
    e.g. `use InfinityEngine; translate_mod("foobar.jl")`
@@ -29,7 +36,7 @@
    etc.)
 # Dialogs
 ## Remaining work
- - save dialog state priority in `state.toml`
+ - save dialog state priority in `state.toml` (this is big!)
  - finalize actor (i.e. add exit transition to any empty state)
   - see what to do with actions attached to these
  - allow specifying actor in `say`, e.g. `say(actor=>label=>text)`
@@ -46,12 +53,10 @@
  - journal flags: `journal(..., Unsolved)`?
  - `.d` => julia syntactic transformation
 # General work
- - kill those `Val` in `Pack`
-    RootResource.root # set to self; can be done later (always mutable)
-    RootResource.ref # set to io.ref
-    pack Item.effects # empty
  - try to be a bit faster by pre-hashing all the `Symbol`s used as keys
    in object tables (at parser stage)
+   a good hash function is `last(s)+121*s[2]⊻238*s[1]`
+   (only 2 collisions, on infrequent resources)
  - use a custom REPL mode (`HeaderREPLs.jl`) for mod manager
   - mod manager (WeiDU + Julia mods)
   - mod editing (generate, update, translations, validate)
@@ -104,5 +109,9 @@
 ## 10.7 `set_2da_entry`
     table(game, "kits")[i, j] = "value"
     # allow string indices
+
+# Syntax diabetes
+ + `damage = Crushing(1d6+1)`
+ - `timing = Delay_Seconds(...)`
 
 vim: et:

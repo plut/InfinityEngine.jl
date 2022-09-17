@@ -14,38 +14,72 @@ using Base.Meta: isexpr
 @generated fieldnt(::Type{T}) where{T} = Expr(:tuple,
 	(:(($(QuoteNode(n)), $t)) for (n, t) in zip(fieldnames(T), fieldtypes(T)))...)
 
-macro generate_rw(type, args...)#««
-	T = Core.eval(__module__, type)
-	fixed_fields = Dict{Symbol,Any}()
-	for expr in args
-		@assert Meta.isexpr(expr, :(=))
-		fn, val = expr.args
-		@assert fn isa Symbol
-		fixed_fields[fn] = val
+
+function readfields end
+"""    unpack(io, T)
+
+Extends `Base.read`: unserializes an object of type `T` from IO."""
+@inline unpack(io::IO, T::DataType, args...; kwargs...) =
+	T(readfields(io, T, args...; kwargs...)...)
+# Tuple types do not have a constructor, so we need to explicitly build
+# the tuple:
+@inline unpack(io::IO, T::Type{<:Tuple}, args...; kwargs...) =
+	T((readfields(io, T, args...; kwargs...)...,))
+@inline unpack(io::IO, T::Base.BitIntegerType) = read(io, T)
+
+"""    unpack!(io, array, n)
+
+Unpacks `n` objects to the given vector, resizing it in the process."""
+@inline function unpack!(io::IO, array::AbstractVector{T}, n::Integer,
+		args...; kwargs...) where{T}
+	resize!(array, n)
+	for i in 1:n; array[i] = unpack(io, T, args...; kwargs...); end
+	array
+end
+@inline vecunpack(io::IO, T::DataType, n::Integer) =
+	(v = Vector{T}(undef, n); for i in 1:n; v[i] = unpack(io, T); end; v)
+
+function packfields end
+"""    pack(io, x)
+
+Extends `Base.write`: serializes object `x` to IO
+and returns number of bytes written."""
+@inline pack(io::IO, x::Base.BitInteger) = write(io, x)
+@inline pack(io::IO, x::Union{Tuple,AbstractVector}) =
+	sum(pack(io, y) for y in x; init=0)
+@inline pack(io::IO, x) = pack(io, packfields(x))
+# by default, Arrays pack as empty
+
+"""    @donotpack type fields...
+
+Generates `pack` and `unpack` functions for `type` in which the listed
+`fields` are neither serialized nor unserialized to IO. Instead those fields
+are ignored in `pack` and must be provided in `unpack`, as extra
+arguments (in the same order in which they are listed in `@donotpack`).
+"""
+macro donotpack(type, fields::Symbol...) quote
+	@generated function Pack.readfields($(esc(:io))::IO, ::Type{T};
+		$(esc.(fields)...)) where{T<:$(esc(type))}
+		code = [ fn ∈ ($(QuoteNode.(fields)...),) ? fn : :($unpack(io, $ft))
+			for (fn, ft) in zip(fieldnames(T), fieldtypes(T)) ]
+		Expr(:tuple, code...)
+# 		code = []
+# 		fieldvars = [ Symbol(:field, i) for i in 1:fieldcount(T) ]
+# 		for (fn, ft, fv) in zip(fieldnames(T), fieldtypes(T), fieldvars)
+# 			push!(code, :(println("at position ", position(io), ": ", $(string(fn)))))
+# 			push!(code, Expr(:(=), fv, fn ∈ ($(QuoteNode.(fields)...),) ? fn : :($unpack(io, $ft))))
+# 		end
+# 		:(($(code...); ($(fieldvars...),)))
 	end
-	@assert T isa DataType
-# 	println(fixed_fields)
-	fieldvars = [ Symbol(:field_, string(fn)) for fn in fieldnames(T) ]
-	readcode = []
-	writecode = []
-	for (fv, fn, ft) in zip(fieldvars, fieldnames(T), fieldtypes(T))
-		val = get(fixed_fields, fn, nothing)
-		if isnothing(val)
-			push!(readcode, :(read(io, $ft)))
-			push!(writecode, :(write(io, x.$fn)))
-		else
-			push!(readcode, esc(val)) # no write code!
-		end
+	@generated function Pack.packfields($(esc(:T))::$(esc(type)))
+		vals = [ :(T.$fn) for (fn, ft) in zip(fieldnames(T), fieldtypes(T))
+			if fn ∉ ($(QuoteNode.(fields)...),) ]
+		Expr(:tuple, vals...)
 	end
-	readexpr = T<:Tuple ? :($T((readfields(io, $T)...,))) :
-		:($T(readfields(io, $T)...,))
-# 	Expr(:call, T, :(($(code...),))) : Expr(:new, T, code...)
-	quote
-	@inline readfields(io::IO, ::Type{$T}) = ($(readcode...),)
-	@inline Base.read(io::IO, ::Type{$T}) = $readexpr
-	@inline Base.write(io::IO, x::$T) = begin; $(writecode...); end
-	end
-end#»»
+end end
+
+# default case: no fields are excluded.
+@donotpack Any
 #««1 Layout/packed_sizeof
 struct Layout
 	sizes::Vector{Int}
@@ -91,11 +125,7 @@ end
 
 Returns the size of the packed representation of type `T`.
 """
-@inline packed_sizeof(st, fn, ft::DataType) = #
-begin
-# 	length(stacktrace()) > 1000 && println("packed_sizeof($st/$fn/$ft)")
-	packed_sizeof(ft)
-end
+@inline packed_sizeof(st, fn, ft::DataType) = packed_sizeof(ft)
 @inline function packed_sizeof(T::DataType)
 	isstructtype(T) || return sizeof(T)
 	r = 0
@@ -105,139 +135,134 @@ end
 	return r
 end
 
-#««1 Unpack
-"""    unpack(io, T)
-
-Unpacks an object from a binary IO according to its packed layout.
-
----
-    unpack(io, T, n::Integer)
-
-Unpacks `n` objects and returns a vector.
-"""
-@generated function unpack(io::IO, ::Type{T}) where{T}
-	isstructtype(T) || return :(read(io, T))
-	fv = [ Symbol("f$i") for i in 1:fieldcount(T) ]
-	code = [ :(unpack(io, $T, $(Val(n)), $t))
-		for (v, n, t) in zip(fv, fieldnames(T), fieldtypes(T)) ]
-	T <: Tuple ? Expr(:call, T, :(($(code...),))) : Expr(:new, T, code...)
-end
-# @inline function unpack(io::IO, T::DataType)
-# # 	if T <: Main.InfinityEngine.RootedResource
-# # 		println("\e[34m $T: $(position(io)) $(typeof(io))\e[m")
-# # 	end
-# # 	@assert !(T<:Main.InfinityEngine.ITM_hdr && position(io) == 1036)
-# 	# default value for non-`@pack` types
-# # 	println("   unpacking \e[31m$T\e[m at position \e[34m$(position(io))\e[m")
-# 	isstructtype(T) || return read(io, T)
-# # 	fieldvars = []
-# # 	for (ft, fn) in zip(fieldtypes(T), fieldnames(T))
-# # 		println("\e[31;1m$T\e[m: field $ft at positoin \e[32m$(position(io))\e[m")
-# # 		push!(fieldvars, unpack(io, ft))
-# # 	end
-# 	fieldvars = (unpack(io, T, Val(fn), ft) for (fn, ft) in fieldnt(T))
-# # 	fieldvars = [ unpack(io, ft) for ft in fieldtypes(T) ]
-# 	return T <: Tuple ? T((fieldvars...,),) : T(fieldvars...)
+# #««1 Unpack
+# """    unpack(io, T)
+# 
+# Unpacks an object from a binary IO according to its packed layout.
+# 
+# ---
+#     unpack(io, T, n::Integer)
+# 
+# Unpacks `n` objects and returns a vector.
+# """
+# @generated function unpack(io::IO, ::Type{T}) where{T}
+# 	isstructtype(T) || return :(read(io, T))
+# 	fv = [ Symbol("f$i") for i in 1:fieldcount(T) ]
+# 	code = [ :(unpack(io, $T, $(Val(n)), $t))
+# 		for (v, n, t) in zip(fv, fieldnames(T), fieldtypes(T)) ]
+# 	T <: Tuple ? Expr(:call, T, :(($(code...),))) : Expr(:new, T, code...)
 # end
-"""    unpack(io, structtype, ::Val{fieldname}, fieldtype)
-
-Hook allowing the user to override `unpack`'s behaviour for a specific field.
-"""
-@inline unpack(io::IO, st, fn, ft) =
-begin
-# 	st <: Main.InfinityEngine.RootedResource &&
-# 	println("general unpack: $st/$fn/$ft @$(position(io))")
-# 	if fn == Val(:root)
-# 		println("\e[31;7m unpack(root) in $st/$fn/$ft\n$(typeof(io))\e[m")
+# # @inline function unpack(io::IO, T::DataType)
+# # # 	if T <: Main.InfinityEngine.RootedResource
+# # # 		println("\e[34m $T: $(position(io)) $(typeof(io))\e[m")
+# # # 	end
+# # # 	@assert !(T<:Main.InfinityEngine.ITM_hdr && position(io) == 1036)
+# # 	# default value for non-`@pack` types
+# # # 	println("   unpacking \e[31m$T\e[m at position \e[34m$(position(io))\e[m")
+# # 	isstructtype(T) || return read(io, T)
+# # # 	fieldvars = []
+# # # 	for (ft, fn) in zip(fieldtypes(T), fieldnames(T))
+# # # 		println("\e[31;1m$T\e[m: field $ft at positoin \e[32m$(position(io))\e[m")
+# # # 		push!(fieldvars, unpack(io, ft))
+# # # 	end
+# # 	fieldvars = (unpack(io, T, Val(fn), ft) for (fn, ft) in fieldnt(T))
+# # # 	fieldvars = [ unpack(io, ft) for ft in fieldtypes(T) ]
+# # 	return T <: Tuple ? T((fieldvars...,),) : T(fieldvars...)
+# # end
+# """    unpack(io, structtype, ::Val{fieldname}, fieldtype)
+# 
+# Hook allowing the user to override `unpack`'s behaviour for a specific field.
+# """
+# @inline unpack(io::IO, st, fn, ft) =
+# begin
+# # 	st <: Main.InfinityEngine.RootedResource &&
+# # 	println("general unpack: $st/$fn/$ft @$(position(io))")
+# # 	if fn == Val(:root)
+# # 		println("\e[31;7m unpack(root) in $st/$fn/$ft\n$(typeof(io))\e[m")
+# # 	end
+# 	unpack(io, ft)
+# # 	println("  now @$(position(io))")
+# # 	x
+# end
+# 
+# @inline vecunpack(io::IO, T::DataType, n::Integer) =
+# 	(v = Vector{T}(undef, n); for i in 1:n; v[i] = unpack(io, T); end; v)
+# unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
+# @inline unpack(io::IO, T::Type{<:Dict}) = T()
+# @inline unpack(io::IO, ::Type{String}) = ""
+# @inline vecunpack(filename::AbstractString, T::DataType, n::Integer...) =
+# 	open(filename) do io; unpack(io, T, n...); end
+# 
+# #««1 Pack
+# """    pack(io, x)
+# 
+# Packs an object to a binary IO according to its packed layout.
+# """
+# function pack(io::IO, x::T) where{T}
+# # 	println("packing type $T")
+# # 	@assert length(string(T)) ≤ 120 # prevents deep recursion
+# # 	isstructtype(T) || (println("   value is $x::$T"); return write(io,x))
+# 	isstructtype(T) || return write(io, x)
+# 	s = 0
+# 	for i in 1:fieldcount(T)
+# 		fn, ft = fieldname(T,i), fieldtype(T,i)
+# # 		if contains(string(T), r"TLK_str")
+# # 			@printf("\e[1m0x%x=%d %s.%s::%s\e[m\n", position(io), position(io),
+# # 				T, fn, ft)
+# # # 			println("\e[1mx$(string(position(io), base=16))=$(position(io)) $T.$fn::$ft \e[m = $(getfield(x,i))")
+# # # 			dump(getfield(x,i);maxdepth=2)
+# #  		end
+# 		s+= fieldpack(io, T, Val(fn), getfield(x, i))
+# # 		if contains(string(T), r"TLK_str")
+# # 		@printf("  -> %x\n", position(io))
+# # 		end
 # 	end
-	unpack(io, ft)
-# 	println("  now @$(position(io))")
-# 	x
-end
-
-@inline unpack(io::IO, T::DataType, n::Integer) =
-	(v = Vector{T}(undef, n); for i in 1:n; v[i] = unpack(io, T); end; v)
-unpack(io::IO, T::Type{<:Vector}) = eltype(T)[] # sensible default behavior
-@inline unpack(io::IO, T::Type{<:Dict}) = T()
-@inline unpack(io::IO, ::Type{String}) = ""
-@inline unpack(filename::AbstractString, T::DataType, n::Integer...) =
-	open(filename) do io; unpack(io, T, n...); end
-"""    unpack!(io, array, n)
-
-Unpacks `n` objects to the given vector, resizing it in the process."""
-@inline function unpack!(io::IO, array::AbstractVector{T}, n::Integer) where{T}
-	resize!(array, n)
-	for i in 1:n; array[i] = unpack(io, T); end
-	array
-end
-
-#««1 Pack
-"""    pack(io, x)
-
-Packs an object to a binary IO according to its packed layout.
-"""
-function pack(io::IO, x::T) where{T}
-# 	println("packing type $T")
-# 	@assert length(string(T)) ≤ 120 # prevents deep recursion
-# 	isstructtype(T) || (println("   value is $x::$T"); return write(io,x))
-	isstructtype(T) || return write(io, x)
-	s = 0
-	for i in 1:fieldcount(T)
-		fn, ft = fieldname(T,i), fieldtype(T,i)
-# 		if contains(string(T), r"TLK_str")
-# 			@printf("\e[1m0x%x=%d %s.%s::%s\e[m\n", position(io), position(io),
-# 				T, fn, ft)
-# # 			println("\e[1mx$(string(position(io), base=16))=$(position(io)) $T.$fn::$ft \e[m = $(getfield(x,i))")
-# # 			dump(getfield(x,i);maxdepth=2)
-#  		end
-		s+= fieldpack(io, T, Val(fn), getfield(x, i))
-# 		if contains(string(T), r"TLK_str")
-# 		@printf("  -> %x\n", position(io))
-# 		end
-	end
-	return s
-# 	sum(fieldpack(io, ft, Val(fn), getfield(x, fn))
-# 		for (fn, ft) in zip(fieldnames(T), fieldtypes(T)))
-end
-
-"""    fieldpack(io, structtype, Val(fieldname), value)
-
-Hook allowing the user to override `unpack`'s behaviour for a specific field.
-"""
-@inline fieldpack(io::IO, st, fn, x) = fieldpack0(io, st, fn, x)
-@inline fieldpack0(io::IO, st, fn, x) =
-begin
-# 	if contains(string(st), "ITM") && contains(string(typeof(x)), "ITM")
-# 		println("\e[35;1m $st.$fn::$(typeof(x))\e[m")
-# 	end
-	pack(io, x)
-end
-
-@inline pack(io::IO, x::AbstractVector) =
-begin
-	for (i,y) in pairs(x)
-# 		if contains(string(eltype(x)), r"TLK_str")
-# 			@printf("@ 0x%x=%d: i=%d\n", position(io), position(io), i)
-# 			@assert i ≤ 10
-# 		end
-		pack(io, y)
-	end
-	0
-# 	sum(pack(io, y) for y in x; init = 0)
-end
-	
-# function pack(io::IO, x::Vector)
-# 	n = 0
-# 	@assert eltype(x) != UInt8 || length(x) < 63000
+# 	return s
+# # 	sum(fieldpack(io, ft, Val(fn), getfield(x, fn))
+# # 		for (fn, ft) in zip(fieldnames(T), fieldtypes(T)))
+# end
+# 
+# """    fieldpack(io, structtype, Val(fieldname), value)
+# 
+# Hook allowing the user to override `unpack`'s behaviour for a specific field.
+# """
+# @inline fieldpack(io::IO, st, fn, x) = fieldpack0(io, st, fn, x)
+# @inline fieldpack0(io::IO, st, fn, x) =
+# begin
+# # 	if contains(string(st), "ITM") && contains(string(typeof(x)), "ITM")
+# # 		println("\e[35;1m $st.$fn::$(typeof(x))\e[m")
+# # 	end
+# 	pack(io, x)
+# end
+# 
+# @inline pack(io::IO, x::AbstractVector) =
+# begin
 # 	for (i,y) in pairs(x)
-# 		n+= pack(io, y)
+# # 		if contains(string(eltype(x)), r"TLK_str")
+# # 			@printf("@ 0x%x=%d: i=%d\n", position(io), position(io), i)
+# # 			@assert i ≤ 10
+# # 		end
+# 		pack(io, y)
 # 	end
-# 	n
+# 	0
+# # 	sum(pack(io, y) for y in x; init = 0)
 # end
-@inline pack(io::IO, ::Dict) = 0
-pack(io::IO, ::String) = 0
-
+# 	
+# # function pack(io::IO, x::Vector)
+# # 	n = 0
+# # 	@assert eltype(x) != UInt8 || length(x) < 63000
+# # 	for (i,y) in pairs(x)
+# # 		n+= pack(io, y)
+# # 	end
+# # 	n
+# # end
+# @inline pack(io::IO, ::Dict) = 0
+# pack(io::IO, ::String) = 0
+# 
 # ««1 Constant fields
+"""    Constant{V}
+
+Zero-size field which always `pack`s to the same value."""
 struct Constant{V} end
 @inline Base.convert(T::Type{<:Constant}, ::Tuple{}) = T()
 
@@ -245,7 +270,7 @@ struct Constant{V} end
 
 @inline function unpack(io::IO, ::Type{Constant{V}}) where{V}
 	x = read(io, sizeof(V))
-	@assert x == V "Bad value \""*string(x)*"\" (should have been \""*string(V)*"\")"
+	@assert x == V "Bad value \""*String(x)*"\" (should have been \""*String(V)*"\")"
 	return Constant{V}()
 end
 @inline pack(io::IO, ::Constant{V}) where{V} = write(io, V)
@@ -253,198 +278,19 @@ end
 
 macro Constant_str(s); :(Constant{SA[$(codeunits(s)...)]}); end
 
+#««1 PositionAssert
+"""    PositionAssert{N}
 
-
-
-#««1 Ignored fields
-""" @ignorefield StructName.fieldname = default_value"""
-macro ignorefield(expr)
-	@assert isexpr(expr, :(=)) && isexpr(expr.args[1], :(.))
-	sname, fname, value =
-		expr.args[1].args[1]::Symbol, expr.args[1].args[2]::QuoteNode, expr.args[2]
-	ftype = fieldtype(Core.eval(__module__, sname), fname.value)
-	quote
-	# FIXME: make default value a `new` call
-	$fieldpack(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
-		::$(esc(ftype))) = 0
-	$(@__MODULE__).$(:unpack)(::IO, ::Type{<:$(esc(sname))}, ::Val{$fname},
-		T::Type{<:$(esc(ftype))}) = eval(Expr(:new, $(esc(ftype))))
-	$(@__MODULE__).$(:packed_sizeof)(::Type{<:$(esc(sname))}, ::Val{$fname},
-		::Type{<:$(esc(ftype))}) = 0
-	end
+Zero-size type which unpacks and packs to an assertion
+that current IO position is `N`."""
+struct PositionAssert{N} end
+@inline Base.position(::Type{PositionAssert{N}}) where{N} = N
+@inline function assert(io::IO, T::Type{<:PositionAssert})
+	x, y = position(io), position(T)
+	@assert x == y "Bad IO position: "*string(x)*", should be "*string(y)
 end
-#««1 (OBSOLETE) @pack: special behaviour for structures
-"""    @pack [struct definition]
-
-Defines a struct type together with methods for (TODO) packing to,
-and unpacking from, a binary IO representation. Any valid struct definition
-can be passed, with the following extra fields:
-
- - `"constant"`: when unpacking, a string of the given length will be read
-   and compared with the constant; an error will be thrown if it does not match.
- - `length(field)::type`, `offset(field)::type`: these fields encode the length
-   and (optionally) offset of a field given below, of vector type.
-
-This macro defines the stucture (eliminating the fictious fields listed above)
-as well as ad-hoc methods for `unpack` and `packed_layout`.
-"""
-macro pack(defn)
-	@assert isexpr(defn, :struct) && length(defn.args) == 3
-	# args[1] is the mutable flag
-	# args[2] is the struct header, which is either
-	#   structname or <: ( structname, supertype)
-	structheader = defn.args[2]
-	structname = isexpr(structheader,:(<:)) ? structheader.args[1] : structheader
-	if isexpr(structname, :curly)
-		typeparams = structname.args[2:end]
-		structname = Expr(:curly, esc(structname.args[1]), typeparams...)
-	else
-		typeparams = ()
-		structname = esc(structname)
-	end
-	
-	@assert isexpr(defn.args[3], :block)
-	offsets, lengths = (Dict{Symbol,Symbol}() for _ in 1:2)
-	structcode = []
-	offsetcode = [] # code computing offsets for the pack function
-	readcode = [] # code inserted in the pack function
-	writecode = [] # code inserted in the unpack function
-	typelayoutcode = []
-	vallayoutcode = []
-	# This does double duty as (1) names of fields read in `unpack`, and
-	# (2) computation of offsets for `pack`.
-	fieldvar = fn -> Symbol("field_"*string(fn))
-	fieldvars = Symbol[]
-	pack =:($(@__MODULE__).$(:pack))
-	unpack =:($(@__MODULE__).$(:unpack))
-	packed_layout =:($(@__MODULE__).$(:packed_layout))
-
-	for f in defn.args[3].args
-		# skip this
-		f isa LineNumberNode && continue
-		# constructor
-		(isexpr(f,:(=)) || isexpr(f,:function)) && (push!(structcode, f); continue)
-		push!(offsetcode, :(@printf("offset for field %s is 0x%x\n", $(string(f)), offset)))
-		push!(readcode, :(@printf("reading field %s at 0x%x\n", $(string(f)), position(io))))
-		if isexpr(f, :(::))
-			fn, ftn = f.args
-			ft = Core.eval(__module__, :($ftn where {$(typeparams...)}))::DataType
-			f.args[2] = ft
-			if fn isa Symbol
-				fv = fieldvar(fn)
-				push!(fieldvars, fv)
-				push!(structcode, f)
-				ftn ∈ typeparams && (ft = ftn) # replace Any by the type parameter
-				if isexpr(ftn, :curly) && ftn.args[1] == :Vector
-					len = get(lengths, fn, nothing)
-					@assert !isnothing(len) "length not found for vector field $fn"
-					off = get(offsets, fn, nothing)
-					seek_io = isnothing(off) ? :(io) : :(seek(io, $(off)))
-					elt = Core.eval(__module__, ftn.args[2])
-					push!(readcode, :($fv = $unpack($seek_io, $(esc(elt)), $(len))))
-					push!(typelayoutcode, :(push!(l.sizes, -1)))
-					push!(vallayoutcode, :(push!(l.sizes, length(x.$fn)*sizeof($elt))))
-					push!(offsetcode, :($fv=offset),:(offset+=length(x.$fn)*sizeof($elt)))
-					push!(writecode, :(pack(io, x.$fn))) # vector pack
-				else
-					ftn ∈ typeparams || (ftn = esc(ftn))
-					push!(readcode, :($fv = unpack(io, $ft)))
-					push!(typelayoutcode, :(push!(l.sizes, sizeof($ft))))
-					push!(vallayoutcode, :(push!(l.sizes, sizeof($ft))))
-					push!(writecode, :(pack(io, x.$fn)))
-					push!(offsetcode, :($fv = offset), :(offset+= sizeof($ft)))
-				end
-			elseif isexpr(fn, :call)
-				ff, fa = fn.args; fv = gensym()
-				if ff == :offset
-					offsets[fa] = fv
-					push!(writecode, :(pack(io, $ft($(fieldvar(fa))))))
-					# TODO: compute offset for this array for writecode
-				elseif ff == :length
-					lengths[fa] = fv
-					push!(writecode, :(pack(io, $ft(length(x.$fa)))))
-				else
-					error("unknown function: $ff")
-				end
-				push!(readcode, :($fv = read(io, $ftn)))
-				push!(offsetcode, :($fv = offset; offset+= sizeof($ft)))
-				push!(vallayoutcode, :(push!(l.sizes, sizeof($ft))))
-			end
-		else
-			fn, fs, ftn = f, sizeof(f), typeof(f)
-			ft = Core.eval(__module__, ftn)
-			push!(readcode, quote
-				tmp = $ft(read(io, $(ft == String ? fs : ft)))
-				@assert tmp == $f "expected \""*$f*"\", found instead \""*tmp*"\""
-			end)
-			push!(offsetcode, :(offset+= $fs))
-			push!(writecode, :(write(io, $f)))
-			push!(vallayoutcode, :(push!(l.sizes, $fs)))
-			push!(typelayoutcode, :(push!(l.sizes, $fs)))
-			fn = repr(fn)
-		end
-		layoutline = :(push!(l.types, $(ftn)); push!(l.names, $(string(fn))))
-		push!(vallayoutcode, layoutline)
-		push!(typelayoutcode, layoutline)
-	end
-# 	contains(string(structname), "ITM_hdr") &&
-# 		(println.(offsetcode); println.(writecode))
-	defn.args[3] = Expr(:block, structcode...)
-	expr = quote
-$defn
-function $pack(io::IO, x::$structname) where{$(typeparams...)}
-	offset = 0
-	$(offsetcode...)
-	$(writecode...)
-	return offset
-end
-function $unpack(io::IO, ::Type{$structname}) where{$(typeparams...)}
-	$(readcode...)
-	return $structname($(fieldvars...))
-end
-function $packed_layout(::Type{$structname}) where{$(typeparams...)}
-	l = Layout([], [], [])
-	$(typelayoutcode...)
-	return l
-end
-function $packed_layout(x::$structname) where{$(typeparams...)}
-	l = Layout([], [], [])
-	$(vallayoutcode...)
-	return l
-end
-	end
-	expr
-end
-#««1 kwconstructor
-"""    kwconstructor(T; keywords...)
-
-Defines a keyword-based constructor according to the field names for this type.
-
-This function tries to provide sensible initialization for fields not covered
-by keywords: zero for integers, "" for strings, and `X()` for fields
-of type `X` (this works at least for arrays and dictionaries).
-Where not useful, this behaviour can be overriden by default keywords.
-
-It is recommended to use this function to define a keyword constructor
-with default values in this way:
-
-    T(; kwargs...) = kwconstructor(T; field1=defaultvalue1, kwargs...)
-
-The merge behaviour will then make `kwargs.field1`, if given,
-override the supplied `defaultvalue1`. This allows some mimicking
-of `Parameters`' `@with_kw` macro.
-"""
-@generated function kwconstructor(::Type{T}; kwargs...) where{T}
-	args = [ :(get(kwargs, $(QuoteNode(fn)), kwconstructor($ft)))
-		for (fn, ft) in fieldnt(T) ]
-	# the tuple test is there to cover NamedTuples; this function is quite
-	# useless for ordinary Tuples:
-	return T <: Tuple ? :($T(($(args...),))) : :($T($(args...)))
-end
-# sensible default values:
-# (the @generated function above already works for arrays)
-@inline kwconstructor(::Type{T}) where{T<:String} = T("")
-@inline kwconstructor(::Type{T}) where{T<:Integer} = zero(T)
+@inline pack(io::IO, a::PositionAssert) = (assert(io, typeof(a)); 0)
+@inline unpack(io::IO, T::Type{<:PositionAssert}) = (assert(io, T); T())
 
 #»»1
 # Pack debug
@@ -485,6 +331,6 @@ Base.write(debug::PackDebug, x::UInt8) = write(debug.io, x)
 Base.position(debug::PackDebug) = position(debug.io)
 debug(x; maxdepth=3) = pack(PackDebug(maxdepth), x)
 
-export packed_layout, unpack, unpack!, pack, @Constant_str, Constant, packed_sizeof
+export packed_layout, unpack, vecunpack, unpack!, pack, @Constant_str, Constant, packed_sizeof
 
 end

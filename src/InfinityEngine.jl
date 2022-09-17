@@ -73,6 +73,13 @@ Base.convert(T::DataType, auto::Auto) = T(auto.args...; auto.kwargs...)
 # Compact representation, useful for Flags and Enums
 rp(x) = repr(x;context=(:compact=>true))
 f75(s::AbstractString) = length(s) ≤ 72 ? s : first(s,72)*'…'
+
+struct BadIOPosition <: Exception
+	expected::Int
+	actual::Int
+end
+@inline assertposition(io::IO, expected) =
+	(p = position(io); p == expected ? nothing : throw(BadIOPosition(expected,p)))
 function if_haskey(f::Base.Callable, dict::Dict, key)
 	index = Base.ht_keyindex(dict, key)
 	index > 0 && f(@inbounds dict.vals[index])
@@ -139,8 +146,8 @@ end
 end
 StaticString{N}(s::StaticString{N}) where{N} = s
 
-@inline Pack.unpack(io::IO, T::Type{StaticString{N}}) where{N} =
-	T(SVector{N,UInt8}(read(io, UInt8) for _ in SOneTo(N)))
+# @inline Pack.unpack(io::IO, T::Type{StaticString{N}}) where{N} =
+# 	T(SVector{N,UInt8}(read(io, UInt8) for _ in SOneTo(N)))
 Pack.pack(io::IO, s::StaticString) = write(io, s.chars)
 
 charuc(x::UInt8) = (0x61 ≤ x ≤ 0x7a) ? x-0x20 : x
@@ -201,7 +208,6 @@ Base.show(io::IO, r::Resref) =
 	print(io, "Resref\"", r.name, '.', resourcetype(r), '"')
 
 Pack.unpack(io::IO, T::Type{<:Resref}) = unpack(io, StaticString{8})|>T
-Pack.packed_sizeof(::Type{<:Resref}) = 8
 Pack.pack(io::IO, r::Resref) = pack(io, r.name|>uppercase)
 
 macro Resref_str(s)
@@ -223,16 +229,17 @@ The following methods needs to be defined:
  - `root!(x, r)`: sets the root object
  - `register!(root)`: marks this root object as modified.
 """
-abstract type RootedResource end
+abstract type AbstractRootedResource end
+abstract type RootedResource <: AbstractRootedResource end
 # default field is x.root (actually the only field we use)
-root(x::RootedResource) = isdefined(x, :root) ? x.root : nothing
+root(x::RootedResource) = x.root
 root!(x::RootedResource, r) = (x.root = r)
 """    RootResource
 
 The root of a resource tree, i.e. a resource which will be saved in a game file.
 This resource also holds an identifier designating it (and the game file).
 """
-abstract type RootResource{T} <: RootedResource end
+abstract type RootResource{T} <: AbstractRootedResource end
 # Root resource is always its own root
 root(x::RootResource) = x
 root!(x::RootResource, _) = nothing
@@ -249,14 +256,13 @@ mutable struct RootedResourceVector{T<:RootedResource,
 end
 root(v::RootedResourceVector) = isdefined(v, :root) ? v.root : nothing
 root!(v::RootedResourceVector, r) = (v.root = r)
-Pack.packed_sizeof(x::RootedResourceVector) = length(x)*packed_sizeof(eltype(x))
 
 #««3 getproperty/setproperty! etc.
 rr_skipproperties(::Any) = ()
 @inline default_setproperty!(x, f::Symbol, v) =
 	# default code; duplicated from Base.jl
 	setfield!(x, f, convert(fieldtype(typeof(x), f), v))
-@inline function rr_setproperty!(x::RootedResource, f::Symbol, v)
+@inline function rr_setproperty!(x::AbstractRootedResource, f::Symbol, v)
 	default_setproperty!(x, f, v)
 	# we need to put the register! call last, in case the `ref` property
 	# was changed:
@@ -265,6 +271,8 @@ end
 Base.setproperty!(x::RootedResource, f::Symbol, v) = rr_setproperty!(x, f, v)
 
 # AbstractArray interface
+Pack.unpack(::IO, T::Type{<:RootedResourceVector}) = T([])
+Pack.pack(io::IO, v::RootedResourceVector) = sum(pack(io, x) for x in v; init=0)
 Base.size(v::RootedResourceVector) = size(v.v)
 Base.getindex(v::RootedResourceVector, i::Int) = v.v[i]
 Base.setindex!(v::RootedResourceVector, x, i::Int) =
@@ -325,7 +333,10 @@ Base.close(x::ResIO) = close(x.io)
 root!(x::ResIO, r) = (x.root = r)
 
 "`ResourceType{ResIO{T}}` = the root type to attach to this `ResIO` fd"
-ResourceType(T::Type{<:ResIO})= Base.return_types(read,Tuple{T})|>only
+ResourceType(::Type{<:ResIO{T}}) where{T} =
+	valtype(first(x for x in fieldtypes(GameChanges)
+		if x <: Dict && keytype(x) == Resref{T}))
+# ResourceType(T::Type{<:ResIO})= Base.return_types(read,Tuple{T})|>only
 
 macro ResIO_str(str)
 	if contains(str, '.')
@@ -336,19 +347,11 @@ macro ResIO_str(str)
 	end
 end
 #««3 Reading resources from ResIO
-# `root` is completely absent from the file:
-Pack.fieldpack(::IO, _, ::Val{:root}, ::RootResource) = 0
-Pack.unpack(io::ResIO, _, ::Val{:root}, T::Type{<:RootResource}) = io.root
-Pack.packed_sizeof(_, ::Val{:root}, ::Type{<:RootResource}) = 0
+Pack.@donotpack RootedResource root
+Pack.@donotpack RootResource ref
+
 @inline unpack_root(io::ResIO, T::Type{<:RootResource}) =
-	(r = unpack(io, T); root!(io, r); r)
-
-# The root resource contains a reference to its own name:
-Pack.unpack(io::ResIO, _, ::Val{:ref}, T::Type{<:Resref}) = io.ref
-Pack.fieldpack(::IO, _, ::Val{:ref}, ::Resref) = 0
-Pack.packed_sizeof(_, ::Val{:ref}, ::Type{<:Resref}) = 0
-
-Pack.unpack(::IO, _, _, T::Type{<:RootedResourceVector}) = T([])
+	(r = unpack(io, T; io.ref); root!(io, r); r)
 
 #»»1
 # ««1 tlk
@@ -396,11 +399,14 @@ end
 	return TlkString(; flags, sound, volume, pitch, string)
 end
 function Base.read(io::IO, ::Type{<:TlkStrings})
-	buf = read(io, String) # helps with speed
-	bufio = IOBuffer(buf) # helps (a lot) with speed
-	header = unpack(bufio, TLKHeader)
-	vec = [ TlkString(bufio, buf, header.offset) for _ in 1:header.nstr ]
-	close(bufio)
+	str = read(io, String) # helps with speed
+	buf = IOBuffer(str) # helps (a lot) with speed
+	header = unpack(buf, TLKHeader)
+	vec = Vector{TlkString}(undef, header.nstr)
+	for i in 1:header.nstr
+		vec[i] = TlkString(buf, str, header.offset)
+	end
+	close(buf)
 	return vec
 end
 TlkStrings(file::AbstractString) = read(file, TlkStrings)
@@ -415,7 +421,7 @@ function Base.write(io::IO, vec::TlkStrings)
 		pack(io, UInt32(strlen))
 		offset+= strlen
 	end
-	@assert position(io) == header.offset "(position,offset) = $((position(io),header.offset))"
+	assertposition(io, header.offset)
 	for s in vec
 		write(io, codeunits(s.string)) # zero byte not included
 	end
@@ -548,7 +554,7 @@ end
 Base.length(key::KeyIndex) = key.location|>values.|>length|>sum
 
 init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
-	io = IOBuffer(read(io, String)) # helps (a lot) with speed
+	io = IOBuffer(read(io)) # helps (a lot) with speed
 	# These numbers come from a heavily modded BGT game — by directly
 	# allocating correctly-sized hash tables we avoid spending too much
 	# time enlarging them:
@@ -560,9 +566,9 @@ init!(key::KeyIndex, filename::AbstractString) = open(filename) do io
 	end
 	key.directory[] = dirname(filename)
 	header = unpack(io, KEY_hdr)
-	bifentries = unpack(seek(io, header.bifoffset), KEY_bif, header.nbif)
+	bifentries = vecunpack(seek(io, header.bifoffset), KEY_bif, header.nbif)
 	push!(key.bif, (string0(io, x.offset, x.namelength) for x in bifentries)...)
-	v = unpack(seek(io, header.resoffset), KEY_res, header.nres)
+	v = vecunpack(seek(io, header.resoffset), KEY_res, header.nres)
 	for res in v
 		push!(key, res)
 	end
@@ -608,7 +614,7 @@ end
 bifcontent(file::AbstractString, index::Integer) = open(file, "r") do io
 	header = unpack(io, BIF_hdr)
 	seek(io, header.offset)
-	resources = unpack(io, BIF_resource, header.nres)
+	resources = vecunpack(io, BIF_resource, header.nres)
 	r = resources[index+1]; IOBuffer(read(seek(io, r.offset), r.size))
 end
 @inline function Base.open(key::KeyIndex, name::AbstractString, type::ResKey)
@@ -930,6 +936,13 @@ end
 	CrushingSlashing = 8
 	BluntMissile = 9 # bugged
 end
+struct TypedDamage{I}
+	type::DamageType
+	value::Dice{I}
+end
+for s in values(SymbolicEnums.namemap(DamageType))
+	@eval $s(v::Dice) = TypedDamage(DamageType($s), v)
+end
 @SymbolicEnum TimingMode::UInt8 begin
 	Seconds = 0
 	Permanent
@@ -1029,11 +1042,20 @@ end
 end
 @inline function Base.setproperty!(ab::ItemAbility, f::Symbol, x)
 	if f == :damage
-		@assert x isa Dice
-		ab.dice_thrown = x.thrown
-		ab.dice_sides = x.sides
-		ab.damage_bonus = x.bonus
-		return x
+		if x isa Dice
+			ab.dice_thrown = x.thrown
+			ab.dice_sides = x.sides
+			ab.damage_bonus = x.bonus
+			return x
+		elseif x isa TypedDamage
+			ab.dice_thrown = x.value.thrown
+			ab.dice_sides = x.value.sides
+			ab.damage_bonus = x.value.bonus
+			ab.damage_type = x.type
+			return x
+		else
+			error("bad damage type: ", typeof(x))
+		end
 	end
 	default_setproperty!(ab, f, x)
 end
@@ -1096,7 +1118,7 @@ mutable struct Item <: RootResource{:itm}
 end
 # disable automatic packing of effects (for main item and abilities) —
 # we do it “by hand” by concatenating with item effects
-Pack.fieldpack(::IO, _, ::Val{:effects}, ::AbstractVector{<:ItemEffect}) = 0
+# Pack.fieldpack(::IO, _, ::Val{:effects}, ::AbstractVector{<:ItemEffect}) = 0
 # create a virtual “not_usable_by” item property which groups together
 # all the 5 usability fields in the item struct:
 @inline function Base.getproperty(i::Item, name::Symbol)
@@ -1148,17 +1170,19 @@ end
 # ««2 I/O
 function Base.read(io::ResIO"ITM")
 	itm = unpack_root(io, Item)
-	unpack!(seek(io, itm.abilities_offset), itm.abilities, itm.abilities_count)
-	unpack!(seek(io, itm.effect_offset), itm.effects, itm.effect_count)
+	unpack!(seek(io, itm.abilities_offset), itm.abilities, itm.abilities_count;
+		io.root)
+	unpack!(seek(io, itm.effect_offset), itm.effects, itm.effect_count;
+		io.root)
 	for (i, ab) in pairs(itm.abilities)
-		unpack!(io, ab.effects, ab.effect_count)
+		unpack!(io, ab.effects, ab.effect_count; io.root)
 	end
 	return itm
 end
 function Base.write(io::IO, itm::Item)
 	itm.abilities_offset = 114
 	itm.abilities_count = length(itm.abilities)
-	itm.effect_offset = 114 + packed_sizeof(itm.abilities)
+	itm.effect_offset = 114 + 56*itm.abilities_count
 	itm.effect_index = 0 # XXX
 	n = itm.effect_count = length(itm.effects)
 	for ab in itm.abilities
@@ -1166,9 +1190,10 @@ function Base.write(io::IO, itm::Item)
 		ab.effect_count = length(ab.effects)
 		n+= ab.effect_count
 	end
-	pack(io, itm)
-	@assert position(io) == itm.effect_offset
-	pack(io, itm.effects)
+	s = pack(io, itm)
+	println("packed item size = $s")
+# 	pack(io, itm.effects)
+# 	@assert position(io) == itm.effect_offset "(writing item) wrong position: $(position(io)), should be $(itm.effect_offset)"
 	for ab in itm.abilities
 		pack(io, ab.effects)
 	end
@@ -1472,7 +1497,7 @@ end
 
 #««2 I/O
 @inline dialog_strings(io::IO, offset, count)= [string0(io, s.offset, s.length)
-	for s in unpack(seek(io, offset), DLG_string, count)]
+	for s in vecunpack(seek(io, offset), DLG_string, count)]
 function Base.read(io::ResIO"DLG")::Actor
 	header = unpack(io, ActorHeader)
 	st_triggers = dialog_strings(io, header.offset_state_triggers,
@@ -1481,8 +1506,8 @@ function Base.read(io::ResIO"DLG")::Actor
 			header.number_transition_triggers)
 	actions = dialog_strings(io, header.offset_actions, header.number_actions)
 
-	vs = unpack(seek(io,header.offset_states), DLG_state, header.number_states)
-	vt = unpack(seek(io, header.offset_transitions),
+	vs = vecunpack(seek(io,header.offset_states), DLG_state, header.number_states)
+	vt = vecunpack(seek(io, header.offset_transitions),
 		DLG_transition, header.number_transitions)
 	@inline getval(list, i) = i+1 ∈ eachindex(list) ? (@inbounds list[i+1]) : ""
 
@@ -1574,18 +1599,18 @@ function Base.write(io::IO, a::Actor)
 		number_actions = length(va))
 	# offset for strings
 	pack(io, header)
-	@assert position(io) == header.offset_states
+	assertposition(io, header.offset_states)
 	pack(io, vs)
-	@assert position(io) == header.offset_transitions
+	assertposition(io, header.offset_transitions)
 	pack(io, vt)
-	@assert position(io) == header.offset_state_triggers
+	assertposition(io, header.offset_state_triggers)
 	ref = Ref(header.offset_actions + 8 * header.number_actions)
 	pack_string(io, ref, vst)
-	@assert position(io) == header.offset_transition_triggers
+	assertposition(io, header.offset_transition_triggers)
 	pack_string(io, ref, vtt)
-	@assert position(io) == header.offset_actions
+	assertposition(io, header.offset_actions)
 	pack_string(io, ref, va)
-	@assert position(io) == header.offset_actions + 8 * header.number_actions
+	assertposition(io, header.offset_actions + 8 * header.number_actions)
 end
 function decompile(a::Actor, filename = a.ref.name*".jl"; prefix="")
 	open(filename, "w") do io

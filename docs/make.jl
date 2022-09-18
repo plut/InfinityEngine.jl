@@ -1,6 +1,7 @@
 push!(LOAD_PATH, "src/", "../src/")
 using Documenter
 using InfinityEngine
+
 makedocs(
 	modules=[InfinityEngine],
 	pages = [

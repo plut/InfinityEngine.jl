@@ -111,8 +111,11 @@ in the form `_"string"`; the leading underscore marks this string
 for translation (à la `gettext`).
 
 ```@docs
-MarkedStrings.@__str
+InfinityEngine.MarkedStrings.@__str
 ```
+
+As all strings in Julia code, **game strings MUST be entered
+in the UTF-8 encoding**.
 
 When assigned to relevant properties of game objects
 (for example as object properties or dialog texts),

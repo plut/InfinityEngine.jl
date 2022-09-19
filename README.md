@@ -2,22 +2,24 @@
 # Infinity Engine editor
 
 Access InfinityEngine data from within a “real” programming language.
-This will eventually be able to do what WeiDU does, with the following
+This should eventually be able to do what WeiDU does, with the following
 advantages:
 
- - no need to learn several esoteric languages: `.tp2` and `.d` can both
+ - no need to learn several ad-hoc languages: `.tp2` and `.d` can both
    be replaced by standard Julia syntax;
  - WeiDU more or less always assumes that it is run interactively, which
    is quite inconvenient for large installations;
  - easier syntax for defining game objects, e.g. we can currently say
-    Longsword("Sword of Infinity", +5, ...)
+   `Longsword("Sword of Infinity", +5, ...)`
  - resolution of namespace conflicts via modules + automatic generation of
    resource names;
  - speed (all changes could be computed in one single execution of the program:
    no need to do many rewrites of `dialog.tlk` with total
    quadratic complexity...);
- - allows validation of mod content (future: translations in `.po` format?);
- - allows easier inclusion of mod metadata;
+ - since everything is written in already-existing languages (code in
+   Julia and translations in gettext's `.po` format), it is easy to
+   validate contents;
+ - easier inclusion of mod metadata;
  - built-in portability (no need to call shell scripts or `.bat` files,
    Julia contains all the needed functions);
  - automatic mod conflict detection.
@@ -57,21 +59,23 @@ syntax is easy to validate.
 
 (on the other hand, I had several WeiDU mods crash on install
 because of a missing tilde in some released translation files:
-**this should not happen**. And I'm not even counting the number of
+**this should never happen**. And I'm not even counting the number of
 UTF8-related errors!).
 
 ### User-friendliness (CLI style)
 
-Prevent the user from needing to learn several esoteric languages (`tp2`,
-`d`) and instead use a general-purpose language.
-The module tries hard to abstract some of the game's ugliest points away
-from the user.
+Prevent the user from needing to learn several ad-hoc languages
+(`tp2`, `d`; all of them frankly quite esoteric)
+and instead use a single general-purpose language,
+quite simple to learn and for which loads of documentation already exist.
 
+The module tries hard to abstract some of the game's ugliest points away
+from the user/mod author.
 Objects and their properties are represented by plain Julia structs:
 ```julia
 i = item("sw1h01") # Bastard sword
 i.min_strength = 14
-i.abilities[1].damage = 2d4
+i.abilities[1].damage = Crushing(2d4+1) # nonsense, but shows syntax
 ```
 This should help in writing efficient (and robust) code without requiring
 frequent use of [IESDP documentation](https://gibberlings3.github.io/iesdp).
@@ -79,6 +83,8 @@ frequent use of [IESDP documentation](https://gibberlings3.github.io/iesdp).
 Moreover, references to game objects (such as `"sw1h01"` above)
 are namespaced. This should prevent mod interference without requiring
 two-byte author prefixes.
+While namespaces should be mostly transparent to mod authors,
+they are explained in more detail in the relevant documentation.
 
 Finally, having mods as Julia programs should ideally ease their
 development, testing, and validation before release.
@@ -87,11 +93,12 @@ development, testing, and validation before release.
 
 Julia itself is portable (at least on all platforms able to run IE
 games), and code can be kept portable as long as some basic precautions
-are taken (e.g. `joinpath` instead of using slashes, etc.).
+are taken (e.g. `joinpath` instead of using slashes, not using
+assumptions about symlinks, etc.).
 
 In particular, since this tool is currently developed on Unix, at
 least some care will be taken w.r.t filenames case-sensitivity.
-Ideally this should be able to run without any ugly solution such as
+Ideally this should be able to run mods without any ugly solution such as
 `ciopfs` or a separate NTFS partition, which should help with speed.
 
 Also, where some mods require the use of shell scripts or batch files,
@@ -117,12 +124,17 @@ Currently, this module can load all the un-modded game data
 in almost-negligible time (a few milliseconds on a typical laptop
 for a BG1EE installation, assuming Julia is already running).
 
+Some mods which would be particularly interesting to translate to this
+language would be big mods such as SCS, for which
+both the speed and readability gains would be quite consequent.
+
 ## Dialogs
 
 This module defines Julia syntax for IE dialogs.
 
-The goal here is to have something simpler to use than Weidu's `.d`
-syntax, by *not* writing a parser and using Julia's instead.
+The goal here is to have something simpler to use (for mod authors)
+than Weidu's `.d` syntax,
+by *not* writing a parser and using Julia's instead.
 
 The feature list could be summed up as “be more user-friendly than
 WeiDU”:
@@ -137,7 +149,8 @@ WeiDU”:
    way).
 
 Here is a short example of this syntax, namely Imoen's dialog from BG1
-prologue:
+prologue. The following code is actually decompiled from the game's data,
+and does compile back to the exact same binary files:
 ```text/julia
 # actor 'imoen' with 10 states:
 trigger("  NumberOfTimesTalkedTo(0)\r\n")
@@ -150,14 +163,18 @@ say(0 => "I'm surprised that stuffy ol' Gorion let you away...")
   reply("I am sorry, child, but I am not to tell anyone what I am doing...")
 ```
 
-Current status: **very early stage**.
+Current status: **early stage**.
 The syntax is roughly stabilized (although some details might still
 vary) and most simple features are implemented (extending dialogs,
 inserting transitions)
 but not yet complete (e.g. quest management or handling of Strrefs
 in actions).
 
-Work on the translation system (`.po` files) is ongoing.
+The work on translations (using standard `.po` files) is almost complete.
+This will make it easier to translate mods using already-existing tools,
+and also make the system more robust (e.g. partial or somewhat obsolete
+translations will remain usable, and syntax errors in translation files
+will **not** cause a mod crash).
 
 ## But WeiDU already exists!
 

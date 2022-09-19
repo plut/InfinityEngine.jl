@@ -1,8 +1,8 @@
 # Items
 
 ```@docs
-InfinityEngine.Item
-InfinityEngine.ItemAbility
 item
 items
+InfinityEngine.Item
+InfinityEngine.ItemAbility
 ```

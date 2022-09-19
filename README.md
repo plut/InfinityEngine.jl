@@ -36,32 +36,6 @@ Adding support for other IE games is a (long-term) goal
 ## Design goals
 The design goals include:
 
-### Mod stack management
-
-This project will be able to manage a whole set of mods,
-including which files are replaced by which mods.
-This will enable automatic detection of conflicts
-(optimistically, it should even be possible to fine-grain
-conflict detection, for example when two mods overwrite
-the same object property, table entry, or dialog state).
-
-On the other hand, WeiDU mods are stand-alone,
-and therefore conflict detection (if any)
-must be performed by the mods themselves.
-
-### Robustness
-
-This module tries to have an in-depth­view of game structures,
-which means that checks will be quite easy to implement
-(e.g. missing resources, missing translated strings etc.).
-And using a “real” programming language means that at least
-syntax is easy to validate.
-
-(on the other hand, I had several WeiDU mods crash on install
-because of a missing tilde in some released translation files:
-**this should never happen**. And I'm not even counting the number of
-UTF8-related errors!).
-
 ### User-friendliness (CLI style)
 
 Prevent the user from needing to learn several ad-hoc languages
@@ -89,6 +63,38 @@ they are explained in more detail in the relevant documentation.
 Finally, having mods as Julia programs should ideally ease their
 development, testing, and validation before release.
 
+### Robustness
+
+This module tries to have an in-depth­view of game structures,
+which means that checks will be quite easy to implement
+(e.g. missing resources, missing translated strings etc.).
+And using a “real” programming language means that at least
+syntax is easy to validate.
+
+(on the other hand, this module's initial author had several WeiDU mods
+crash on install because of a missing tilde
+in some released translation files: **this should never happen**.
+And I'm not even counting the number of UTF8-related errors!).
+
+### Mod stack management
+
+This project will be able to manage a whole set of mods,
+including which files are replaced by which mods.
+This will enable automatic detection of conflicts
+(optimistically, it should even be possible to fine-grain
+conflict detection, for example when two mods overwrite
+the same object property, table entry, or dialog state).
+
+On the other hand, WeiDU mods are stand-alone,
+and therefore conflict detection (if any)
+must be performed by the mods themselves.
+
+Current status: **project**.
+We have some code for managing a WeiDU mod stack
+(basically a command-line equivalent of BigWorldSetup etc.);
+this unreleased yet, but working.
+A significant part of this code could be reused.
+
 ### Portability
 
 Julia itself is portable (at least on all platforms able to run IE
@@ -111,7 +117,7 @@ This is a minor goal, but installing a big stack of WeiDU mods can take
 hours, and fine-tuning a single mod also crucially depends on the speed
 of installing this mod.
 
-Julia is a quite fast language (it is more-or-less a C code generator
+Julia is a quite fast language (it is more-or-less an assembly code generator
 after all) whereas WeiDU is a scripting language,
 which may also call local shell scripts etc.
 
@@ -151,7 +157,7 @@ WeiDU”:
 Here is a short example of this syntax, namely Imoen's dialog from BG1
 prologue. The following code is actually decompiled from the game's data,
 and does compile back to the exact same binary files:
-```text/julia
+```julia
 # actor 'imoen' with 10 states:
 trigger("  NumberOfTimesTalkedTo(0)\r\n")
 say(0 => "I'm surprised that stuffy ol' Gorion let you away...")
@@ -163,12 +169,11 @@ say(0 => "I'm surprised that stuffy ol' Gorion let you away...")
   reply("I am sorry, child, but I am not to tell anyone what I am doing...")
 ```
 
-Current status: **early stage**.
-The syntax is roughly stabilized (although some details might still
-vary) and most simple features are implemented (extending dialogs,
-inserting transitions)
-but not yet complete (e.g. quest management or handling of Strrefs
-in actions).
+The syntax is roughly stabilized (although some details might still vary)
+and most simple features are implemented
+(extending dialogs, inserting transitions),
+but significant work remains
+(e.g. quest management or handling of `Strref`s in actions).
 
 The work on translations (using standard `.po` files) is almost complete.
 This will make it easier to translate mods using already-existing tools,
@@ -178,10 +183,13 @@ will **not** cause a mod crash).
 
 ## But WeiDU already exists!
 
-And it has certainly been used to write lots of wonderful work. But these
-games have already been out for 20 years and will (hopefully) be out for
-at least as long, so it's never too late to try and build something even
-better than WeiDU.
+And it has certainly been used to write lots of wonderful work.
+But these games have already been out for 20 years
+and will (hopefully) be out for at least as long,
+so it's never too late to try and build something even better than WeiDU.
+On the other hand, WeiDU does show both its age
+(programming tools advanced quite a lot in 20 years)
+and the preoccupations of its author.
 
 Also, a (long-term) goal is to automate at least a part of translation
 from WeiDU to this tool (it is very likely possible to do this at least

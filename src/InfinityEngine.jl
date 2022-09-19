@@ -1001,6 +1001,18 @@ Duration $(eff.duration) $(eff.timing_mode|>rp); $(eff.dispel_mode|>rp) probabil
 """)
 end
 #««2 Item ability
+"""    ItemAbility
+
+An activated item ability (including weapon attacks).
+
+Damage type and value can be set by assigning to the `damage` property:
+
+    item("sw1h01").ability[1].damage = Crushing(1d6+1)
+
+The `setproperty!` value is overloaded so that the previous line of code
+updates the `damage_type`, `damage_bonus`, `dice_thrown` and `dice_sides`
+fields all at once.
+"""
 @with_kw mutable struct ItemAbility{R<:RootResource} <: RootedResource
 	root::R
  	attack_type::AttackType
@@ -1071,6 +1083,14 @@ Effects $(ab.effect_index+1):$(ab.effect_index+ab.effect_count) ($(ab.effect_cou
 	for eff in ab.effects; show(io, mime, eff); end
 end
 #««2 Item structure
+"""    Item
+
+Structure representing a game item. Fields include:
+ - `name`, `unidentified_name`, `description`, `unidentified_description`:
+   game strings;
+ - `abilities`: vector of `GameAbilities` representing activated abilities;
+ - `effects`: vector of `GameEffects` representing passive game effects .
+"""
 mutable struct Item <: RootResource{:itm}
 	constant::Constant"ITM V1  "
 	unidentified_name::Strref

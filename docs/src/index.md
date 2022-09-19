@@ -25,7 +25,6 @@ InfinityEngine.init!("/home/CHARNAME/baldursgate")
 InfinityEngine.game()
 ```
 ```@docs
-InfinityEngine.Game
 InfinityEngine.init!
 commit
 ```
@@ -122,7 +121,7 @@ Translations for the strings are loaded from `.po` files
 (in the standard format used by `gettext`, with tiny adaptations
 for gendered languages), loaded by the `load_translations!` function
 ```@docs
-load_translations!
+InfinityEngine.load_translations!
 ```
 and saved in all `dialog.tlk` and `dialogF.tlk` files.
 For strings for which no translation is provided,

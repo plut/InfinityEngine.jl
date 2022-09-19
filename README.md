@@ -1,4 +1,4 @@
-[![Documentation|Dev]((https://img.shields.io/badge/docs-latest-blue.svg)](https://plut.github.io/InfinityEngine.jl/dev/)
+[![Documentation|Dev](https://img.shields.io/badge/docs-latest-blue.svg)](https://plut.github.io/InfinityEngine.jl/dev/)
 # Infinity Engine editor
 
 Access InfinityEngine data from within a “real” programming language.

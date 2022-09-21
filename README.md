@@ -4,31 +4,29 @@
 
 ## Teaser
 
-A (future) new way of writing Infinity Engine mods:
+A (future) simpler way of writing Infinity Engine mods:
 
 ```julia
-
 # Let's create a big sword!
 
-bigsword = Longsword(_"Really Big Sword", +5)
+bigsword = Longsword(_"Really Big Sword", +5, weight = 200,
+  description = _"A sword so big that it does crushing-type damage!")
 bigsword.abilities[1].damage = Crushing(2d6+5)
-bigsword.identified_description =
-_"A sword so big that it does crushing-type damage!"
 
 # Translations are handled by `.po` files, no need to bother
 # with @XXX strings.
 
+
 # And add an extra line to Imoen's Candlekeep dialogue:
 from("imoen", 1)
 actor("reevor") interject(_"Hey, you! Be gentle with Imoen!")
-
 ```
 
 ## Summary
 
 Access InfinityEngine data from within a “real” programming language.
-This should eventually be able to do what WeiDU does, with the following
-advantages:
+This should eventually be able to do what NearInfinity, WeiDU
+and ProjectInfinity do, with the following advantages:
 
  - no need to learn several ad-hoc languages: `.tp2` and `.d` can both
    be replaced by standard Julia syntax;
@@ -36,16 +34,17 @@ advantages:
    is quite inconvenient for large installations;
  - easier syntax for defining game objects, e.g. we can currently say
    `Longsword("Sword of Infinity", +5, ...)`
- - resolution of namespace conflicts via modules + automatic generation of
-   resource names;
- - speed (all changes could be computed in one single execution of the program:
-   no need to do many rewrites of `dialog.tlk` with total
-   quadratic complexity...);
+ - hiding the 8-byte limit for game resources: mod authors can index them
+   by arbitrary strings (with implicit namespaces for conflict
+	 prevention);
  - since everything is written in already-existing languages (code in
    Julia and translations in gettext's `.po` format), it is easy to
    validate contents;
  - built-in portability (no need to call shell scripts or `.bat` files,
    Julia contains all the needed functions);
+ - speed (all changes could be computed in one single execution of the program:
+   no need to do many rewrites of `dialog.tlk` with total
+   quadratic complexity...);
  - easier inclusion of mod metadata;
  - automatic mod conflict detection.
 
@@ -154,8 +153,8 @@ changes), leading to quadratic complexity. InfinityExplorer is written
 in Java and hence quite slow.
 
 Currently, this module can load all the un-modded game data
-in almost-negligible time (a few milliseconds on a typical laptop
-for a BG1EE installation, assuming Julia is already running).
+in almost-negligible time (once Julia is started,
+only a few milliseconds on a typical laptop).
 
 Some mods which would be particularly interesting to translate to this
 language would be big mods such as SCS, for which
@@ -182,18 +181,17 @@ WeiDU”:
    way).
 
 Here is a short example of this syntax, namely Imoen's dialog from BG1
-prologue. The following code is actually decompiled from the game's data,
-and does compile back to the exact same binary files:
+prologue. The following code is actually decompiled from the game's data:
 ```julia
 # actor 'imoen' with 10 states:
 trigger("  NumberOfTimesTalkedTo(0)\r\n")
-say(0 => "I'm surprised that stuffy ol' Gorion let you away...")
+say(0 => _"I'm surprised that stuffy ol' Gorion let you away...")
 # 5 transitions: 
-  reply("I'm afraid I cannot chat today, little one....")
-  journal("My old friend Imoen pestered me today...")
+  reply(_"I'm afraid I cannot chat today, little one....")
+  journal(_"My old friend Imoen pestered me today...")
  
   trigger("  ReactionLT(LastTalkedToBy,NEUTRAL_LOWER)\r\n")
-  reply("I am sorry, child, but I am not to tell anyone what I am doing...")
+  reply(_"I am sorry, child, but I am not to tell anyone what I am doing...")
 ```
 
 The syntax is roughly stabilized (although some details might still vary)

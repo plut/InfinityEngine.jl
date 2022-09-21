@@ -2563,7 +2563,7 @@ function Base.copy(g::Game, x::T, args...; kwargs...) where{T<:RootResource}
 	return y
 end
 Base.copy(g::Game, r::Resref, args...; kwargs...) =
-	copy(g, g[r], args...; kwargs...)
+	copy(g, g.resources[r], args...; kwargs...)
 
 const _RESOURCE_TEMPLATE = Dict{SymbolicEnums.SymbolicNames,Resref}(
 	Amulet => Resref"amul02.itm",

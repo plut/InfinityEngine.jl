@@ -1,6 +1,28 @@
 [![Documentation|Dev](https://img.shields.io/badge/docs-latest-blue.svg)](https://plut.github.io/InfinityEngine.jl/dev/)
 # Infinity Engine editor
 
+
+## Teaser
+
+A (future) new way of writing Infinity Engine mods:
+
+```julia
+
+# Let's create a big sword!
+
+bigsword = Longsword(_"Really Big Sword", +5)
+bigsword.abilities[1].damage = Crushing(2d6+5)
+bigsword.identified_description =
+_"A sword so big that it does crushing-type damage!"
+
+# And add an extra line to Imoen's Candlekeep dialogue:
+from("imoen", 1)
+actor("reevor") interject(_"Hey, you! Be gentle with Imoen!")
+
+```
+
+## Summary
+
 Access InfinityEngine data from within a “real” programming language.
 This should eventually be able to do what WeiDU does, with the following
 advantages:
@@ -19,22 +41,24 @@ advantages:
  - since everything is written in already-existing languages (code in
    Julia and translations in gettext's `.po` format), it is easy to
    validate contents;
- - easier inclusion of mod metadata;
  - built-in portability (no need to call shell scripts or `.bat` files,
    Julia contains all the needed functions);
+ - easier inclusion of mod metadata;
  - automatic mod conflict detection.
 
 
-Current status: **very limited use cases**. This can currently load,
-display and (sometimes) edit items and dialogs. It is not yet possible to
-define a mod.
+Current status: **very limited use cases**. The core set of features
+(loading resources, translating strings etc) is well advanced,
+but for testing this, only items and dialogs are currently available.
+The module can currently load, display and (with limits) edit them.
+Once the module core is stabilized,
+adding more resource types should be relatively simple.
 
 **This is currently limited to BGEE, BG2EE and EET games.**
-Adding support for other IE games is a (long-term) goal
-(only once this is able to run full BGEE mods!).
+Adding support for other IE games is a (long-term) goal.
 
 ## Design goals
-The design goals include:
+The design goals include (roughly, by decreasing priority):
 
 ### User-friendliness (CLI style)
 
@@ -76,6 +100,22 @@ crash on install because of a missing tilde
 in some released translation files: **this should never happen**.
 And I'm not even counting the number of UTF8-related errors!).
 
+### Portability
+
+Julia itself is portable (at least on all platforms able to run IE
+games), and code can be kept portable as long as some basic precautions
+are taken (e.g. `joinpath` instead of using slashes, not using
+assumptions about symlinks, etc.).
+
+In particular, since this tool is currently developed on Unix, at
+least some care will be taken w.r.t filenames case-sensitivity.
+Ideally this should be able to run mods without any ugly solution such as
+`ciopfs` or a separate NTFS partition, which should help with speed.
+
+Also, where some mods require the use of shell scripts or batch files,
+Julia contains all the basic shell functions (`mv`, `mkdir` etc),
+allowing to write such scripts in a self-supporting and portable way.
+
 ### Mod stack management
 
 This project will be able to manage a whole set of mods,
@@ -94,22 +134,6 @@ We have some code for managing a WeiDU mod stack
 (basically a command-line equivalent of BigWorldSetup etc.);
 this unreleased yet, but working.
 A significant part of this code could be reused.
-
-### Portability
-
-Julia itself is portable (at least on all platforms able to run IE
-games), and code can be kept portable as long as some basic precautions
-are taken (e.g. `joinpath` instead of using slashes, not using
-assumptions about symlinks, etc.).
-
-In particular, since this tool is currently developed on Unix, at
-least some care will be taken w.r.t filenames case-sensitivity.
-Ideally this should be able to run mods without any ugly solution such as
-`ciopfs` or a separate NTFS partition, which should help with speed.
-
-Also, where some mods require the use of shell scripts or batch files,
-Julia contains all the basic shell functions (`mv`, `mkdir` etc),
-allowing to write such scripts in a self-supporting and portable way.
 
 ### Speed
 

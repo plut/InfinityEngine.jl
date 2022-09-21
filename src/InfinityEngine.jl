@@ -227,6 +227,7 @@ macro Resref_str(s)
 end
 
 #««2 Rooted resources
+abstract type AbstractRootedResource end
 """    RootedResource
 
 A game resource holding a reference to the root resource
@@ -238,7 +239,6 @@ The following methods needs to be defined:
  - `root!(x, r)`: sets the root object
  - `register!(root)`: marks this root object as modified.
 """
-abstract type AbstractRootedResource end
 abstract type RootedResource <: AbstractRootedResource end
 # default field is x.root (actually the only field we use)
 root(x::RootedResource) = x.root
@@ -1870,22 +1870,6 @@ Collection of game strings, indexed by string and language.
  - `gamestrings[language, strref]`: `Strref` to `String` conversion.
  - `commit(gamestrings)`: saves state to filesystem.
  - `init!(directory)`: loads state from filesystem.
-
-### Fields
-
- - let N0 = number of base-game strings (34000)
-       N1 = number of new tlk strings
-       N2 = number of memory tlk strings
-
-Then Strref(0..N0-1) are base-game strings
-     Strref(N0..N0+N1+N2-1) are new strings = indexed by strings
-
-   Strref(i + N0-1) ⇔ new_string[i]
-
-Stored value is N0-1 == 33999 for BG2; constant even when modifying tlk
-
-Displaying a string for Strref(i): if i ≤ #tlk-1 then tlk[i+1]
-  else new_string[i-N0+1] (<- only the tail end is used)
 """
 @with_kw_noshow struct GameStrings
 	lang_dir::String
@@ -1901,6 +1885,22 @@ Displaying a string for Strref(i): if i ≤ #tlk-1 then tlk[i+1]
 	translations::Vector{Dict{String,String}} =
 		[ Dict{String,String}() for _ in LANGUAGE_DICT ]
 end
+
+# ### Fields
+# 
+#  - let N0 = number of base-game strings (34000)
+#        N1 = number of new tlk strings
+#        N2 = number of memory tlk strings
+# 
+# Then Strref(0..N0-1) are base-game strings
+#      Strref(N0..N0+N1+N2-1) are new strings = indexed by strings
+# 
+#    Strref(i + N0-1) ⇔ new_string[i]
+# 
+# Stored value is N0-1 == 33999 for BG2; constant even when modifying tlk
+# 
+# Displaying a string for Strref(i): if i ≤ #tlk-1 then tlk[i+1]
+#   else new_string[i-N0+1] (<- only the tail end is used)
 Base.show(io::IO, g::GameStrings) = print(io, "GameStrings<",
 	length(g.tlk), " strings, ", length(g.new_strings), " keyed strings>")
 
@@ -2031,6 +2031,14 @@ Base.show(io::IO, ::MIME"text/plain", c::GameChanges) = for dict in alldicts(c)
 	end
 end
 #««2 Data type
+"""    GameResources
+
+A structure holding all the game resources, stored in either key/bif files,
+the override directory, or in memory.
+
+This structure is also responsible for converting between these storage types,
+i.e. reading the resources from the filesystem or committing the in-memory
+storage to the filesystem."""
 @with_kw_noshow struct GameResources
 	override_directory::String
 	# Resources data:
@@ -2321,11 +2329,19 @@ end
 
 Returns the item with given reference."""
 item(g::Game, name::AbstractString) = g.resources[Resref"itm", name]
-"""    items([game], [regex])
+"""    items([game], [regex]; [type])
 
 Returns an iterator over all items. If a `regex` is provided then
-only those items with matching reference are included."""
-items(g::Game, r...) = (item(g, n) for n in keys(g, Resref"itm", r...))
+only those items with matching reference are included.
+
+If a `type` keyword argument is passed, then only those items with the
+given type will be returned.
+"""
+function items(g::Game, r...; type=nothing)
+	itr = (item(g, n) for n in keys(g, Resref"itm", r...))
+	return isnothing(type) ? itr : filter(i->i.type == type, itr)
+end
+	
 
 #««2 Dialog-building functions
 const NewDialogLabel = Union{AbstractString,Integer}
@@ -2600,6 +2616,9 @@ const _RESOURCE_TEMPLATE = Dict{SymbolicEnums.SymbolicNames,Resref}(
 	LongBow => Resref"bow03.itm",
 	ShortBow => Resref"bow05.itm",
 )
+# """  List of existing resource templates:
+# $(join(sort([" - "*string(k) for k ∈ keys(_RESOURCE_TEMPLATE)]), "\n"))"""
+# _RESOURCE_TEMPLATE;
 const Longbow = LongBow
 const Shortbow = ShortBow
 const Longsword = LongSword

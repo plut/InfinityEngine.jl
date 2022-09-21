@@ -57,8 +57,8 @@ Iterator functions generally are the plural form of selectors.
 
 The following resource types are currently implemented;
 each one of them is described in its own documentation page:
- - [`Item`](@ref): game items;
- - [`Actor`](@ref): game dialogs;
+ - [`Item`](@ref `InfinityEngine.Item`): game items;
+ - [`Actor`](@ref `InfinityEngine.Actor`): game dialogs;
 
 ### Editing resources
 

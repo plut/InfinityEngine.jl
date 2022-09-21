@@ -15,6 +15,9 @@ bigsword.abilities[1].damage = Crushing(2d6+5)
 bigsword.identified_description =
 _"A sword so big that it does crushing-type damage!"
 
+# Translations are handled by `.po` files, no need to bother
+# with @XXX strings.
+
 # And add an extra line to Imoen's Candlekeep dialogue:
 from("imoen", 1)
 actor("reevor") interject(_"Hey, you! Be gentle with Imoen!")

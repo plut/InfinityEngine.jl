@@ -78,6 +78,15 @@ struct BadIOPosition <: Exception
 	expected::Int
 	actual::Int
 end
+"""    @assertsomething expression message
+
+Returns `expression` if different from `nothing`, otherwise throws `message`."""
+macro assertsomething(expr, text)
+	:(@assert !isnothing($(esc(expr))) $text; $(esc(expr)))
+end
+"""    @assertposition io expected
+
+Ensures that `position(io) == expected`."""
 @inline assertposition(io::IO, expected) =
 	(p = position(io); p == expected ? nothing : throw(BadIOPosition(expected,p)))
 function if_haskey(f::Base.Callable, dict::Dict, key)
@@ -353,7 +362,6 @@ Pack.@donotpack RootResource ref
 @inline unpack_root(io::ResIO, T::Type{<:RootResource}) =
 	(r = unpack(io, T; io.ref); root!(io, r); r)
 
-#»»1
 # ««1 tlk
 # ««2 Type and constructors
 @SymbolicEnum TextFlags::UInt16 begin
@@ -659,17 +667,15 @@ struct MatrixWithHeaders{T} <: AbstractMatrix{T}
 		cols::AbstractVector{<:AbstractString}, matrix::AbstractMatrix{T}) where{T}=
 		new{T}(rows, cols, matrix)
 end
-
 Base.size(m::MatrixWithHeaders) = size(m.matrix)
 Base.getindex(m::MatrixWithHeaders, i::Integer...) = getindex(m.matrix, i...)
-function Base.getindex(m::MatrixWithHeaders,
-		s1::AbstractString, s2::AbstractString)
-	i1 = findfirst(==(s1), m.rows)
-	@assert !isnothing(i1) "Row header not found: '$s1'"
-	i2 = findfirst(==(s2), m.cols)
-	@assert !isnothing(i2) "Row header not found: '$s2'"
-	return m.matrix[i1,i2]
-end
+rowindex(m::MatrixWithHeaders, s) =
+	@assertsomething findfirst(==(s), m.rows) "Row header not found: '$s'"
+colindex(m::MatrixWithHeaders, s) =
+	@assertsomething findfirst(==(s), m.cols) "Column header not found: '$s'"
+Base.getindex(m::MatrixWithHeaders, s1::AbstractString, s2::AbstractString) =
+	m.matrix[rowindex(m, s1), colindex(m, s2)]
+
 function Base.read(io::IO, f::ResIO"2DA"; debug=false, aligned=false)
 	io = decrypt(io)
 	debug && (mark(io); println("(", read(io, String), ")"); reset(io))
@@ -1499,7 +1505,7 @@ end
 	sorted_keys::Vector{StateKey} = Auto()
 end
 const NO_ACTOR = Actor(;ref = Resref".dlg", flags = 0)
-firstlabel(a::Actor) =
+newlabel(a::Actor) =
 	first(i for i in 0:length(a.states) if !haskey(a.states, StateKey(i)))
 
 function Base.show(io::IO, mime::MIME"text/plain", a::Actor)
@@ -1809,7 +1815,12 @@ end
 # `Nothing` is inserted manually where it makes sense
 # `AbstractString` is a decoy to catch those non-prefixed strings with
 # the correct error message
+"""    StringKey
+
+Type representing data which may be converted to a game string.
+This is a union of several valid types."""
 const StringKey = Union{Integer,MarkedString,AbstractString}
+# AbstractString is only there to catch missing `_""` marks.
 
 #««2 Data structure
 # This holds (language path) => (has F version?); default language is first
@@ -2317,6 +2328,11 @@ only those items with matching reference are included."""
 items(g::Game, r...) = (item(g, n) for n in keys(g, Resref"itm", r...))
 
 #««2 Dialog-building functions
+const NewDialogLabel = Union{AbstractString,Integer}
+const DialogLabel = Union{Integer,NewDialogLabel}
+const DialogLabelAndText = Pair{<:DialogLabel,<:StringKey}
+const DialogActorLabelAndText = Pair{<:AbstractString,<:DialogLabelAndText}
+
 get_actor(g::Game, s::AbstractString) = get_actor(g, Resref"dlg"(s))
 get_actor(g::Game, ref::Resref"dlg")= get!(g.resources,ref) do; Actor(;ref) end
 get_actor(::Game, a::Actor) = a
@@ -2329,13 +2345,14 @@ none exists with this name.
 """
 actor(g::Game, s::AbstractString) =
 	target_actor!(g.dialog_context, get_actor(g,s))
-actor(g::Game, s::AbstractString, l::Union{AbstractString,Integer}) =
+# XXX is this useful?
+actor(g::Game, s::AbstractString, l::Union{NewDialogLabel,Integer}) =
 	actor(g,s).states[StateKey(l)]
 actor(g::Game) = target_actor(g.dialog_context)
 actor(::Game, a::Actor) = a
 
 StateKey(::Game, s::Integer) = StateKey(s)
-StateKey(g::Game, s::AbstractString) =
+StateKey(g::Game, s::NewDialogLabel) =
 	(q = contains(s, '/') ? s : namespace(g)*'/'*s; q|>hash|>StateKey)
 StateKey(::Game, ::typeof(exit)) = StateKey(zero(UInt))
 StateKey(::Game, s::StateKey) = s
@@ -2358,31 +2375,37 @@ for the same current actor.
    the previous form;
  - chain with actor change: `actor(name1) say(text1) actor(name2) say(text2)...`;
 """
-say(g::Game, text::StringKey; kw...) =
-	say2(g, g.dialog_context|>target_actor|>firstlabel, text; kw...)
-say(g::Game, (label, text)::Pair{<:Any,<:StringKey}; kw...) =
-	say2(g, label, text; kw...)
-SayText = Union{StringKey,Pair{<:Any,<:StringKey},Pair{<:Any,<:Pair}}
-say(g::Game, args::SayText...; kw...) = for a in args; say(g, a; kw...); end
+@inline function say(g::Game, text::StringKey; kw...)
+	actor = g.dialog_context|>target_actor
+	say2(g, actor, actor|>newlabel, text; kw...)
+end
+say(g::Game, (label, text)::DialogLabelAndText; kw...) =
+	say2(g, g.dialog_context|>target_actor, label, text; kw...)
+say(g::Game, (a, (label, text))::DialogActorLabelAndText; kw...) =
+	say2(g, actor(g, a), label, text; kw...)
+const SayArg = Union{StringKey,DialogLabelAndText,DialogActorLabelAndText}
+say(g::Game, args::SayArg...; kw...) = for a in args; say(g, a; kw...) end
 
 # say2(game, label, text): calls low-level
-say2(g::Game, label, text::StringKey; kw...) =
-	say2(g, (g.dialog_context|>target_actor, label), text; kw...)
-say2(g::Game, (a, label)::Tuple{<:Any,<:Any}, text::StringKey; kw...) =
+# say2(g::Game, label, text::StringKey; kw...) =
+# 	say2(g, (g.dialog_context|>target_actor, label), text; kw...)
+say2(g::Game, a::Actor, label::NewDialogLabel, text::StringKey; kw...) =
 	add_state!(g.dialog_context, actor(g, a),
 		StateKey(g, label), Strref(g.strings, text); kw...)
 """    from([game], [actor], label)
 
 Sets current state to `actor`, `label`. The state must exist.
 """
-function from(g::Game, label) 
+function from(g::Game, label::DialogLabel) 
 	isempty(g.dialog_context.source_actor.ref) &&
 		error("from(label) when no actor is loaded; use from(actor, label)")
 	set_source!(g.dialog_context, StateKey(g, label))
 end
-from(g::Game, actor, label) =
+from(g::Game, actor, label::DialogLabel) =
 	set_source!(g.dialog_context, get_actor(g, actor), StateKey(g, label))
 # interject: unpack args into (actor, text)
+const InterjectActorText = Pair{<:AbstractString,<:StringKey}
+const InterjectArg = Union{StringKey,InterjectActorText}
 """
     interject({text | (label => text)}*; priority, trigger)
 
@@ -2390,24 +2413,26 @@ Inserts text inside existing dialog. The new state(s) are inserted just after
 the current state, using tail insertions. """
 interject(g::Game, text::StringKey; kw...) =
 	interject2(g, g.dialog_context|>target_actor, text; kw...)
-interject(g::Game, (actor, text)::Pair{<:AbstractString,<:StringKey}; kw...) =
+interject(g::Game, (actor, text)::InterjectActorText; kw...) =
 	interject2(g, actor, text; kw...)
-InterjText = Union{StringKey,Pair{<:AbstractString,<:StringKey}}
 # XXX insert here the variable guard if needed
 # XXX what do do with the trigger? does it apply to only the first state,
 # or to all of them? (Cf. WeiDU)
 # XXX see whether to move actions (should be easy: this is transitive)
 # XXX enable giving an actor label
-interject(g::Game, args::InterjText...; kw...) =
+interject(g::Game, args::InterjectArg...; kw...) =
 	for a in args; interject(g, a; kw...); end
 
 # interject2(actor, text): calls low-level
 function interject2(g::Game, actor, text; kw...)
 	t_actor = get_actor(g, actor)
-	t_key = firstlabel(actor)|>StateKey
+	t_key = newlabel(actor)|>StateKey
 	tail_insert!(g.dialog_context, t_actor, t_key, Strref(g.strings, text); kw...)
 end
 
+# allowing orig. game label
+const DialogTarget = Union{DialogLabel,Integer,typeof(exit)}
+const ReplyTextLabel = Pair{<:StringKey,<:DialogTarget}
 # reply: unpacks args into (text, target)
 """
     reply(text => label)
@@ -2436,7 +2461,8 @@ This prevents states from different namespaces from interfering.
     # connect pending transition:
     say("How do you do?") reply("Fine!") say("Let'sa go!") reply(exit)
 """
-reply(g::Game, (text, target)::Pair; kw...) = reply2(g, text, target; kw...)
+reply(g::Game, (text, target)::ReplyTextLabel; kw...) =
+	reply2(g, text, target; kw...)
 reply(g::Game, ::typeof(exit); kw...) = reply2(g, nothing, exit; kw...)
 # Special case: reply("text") inserts a pending transition
 reply(g::Game, text::StringKey; kw...) = reply3(g, text, "", NO_STATE_KEY;kw...)
@@ -2488,7 +2514,7 @@ function commit(g::Game)
 	print("\e[31m"); run(`cat $(state_file(Game, g.directory))`)
 	print("\e[32m"); run(`ls $(g.resources.override_directory)`); print("\e[m")
 end
-#««1 Item/etc. copying
+#««1 Resource templating
 args_to_kw(x, args...) =
 	error("no conversion from args to properties for type $(typeof(x))")
 	# return a NamedTuple
@@ -2523,7 +2549,7 @@ end
 Base.copy(g::Game, r::Resref, args...; kwargs...) =
 	copy(g, g[r], args...; kwargs...)
 
-const _resource_template = Dict{SymbolicEnums.SymbolicNames,Resref}(
+const _RESOURCE_TEMPLATE = Dict{SymbolicEnums.SymbolicNames,Resref}(
 	Amulet => Resref"amul02.itm",
 	Belt => Resref"belt01.itm",
 	Boots => Resref"boot06.itm",
@@ -2581,8 +2607,8 @@ const PlateMail = HalfPlate
 # wakizashi, ninjato XXX
 
 (T::SymbolicEnums.SymbolicNames)(args...; kwargs...) =
-	copy(_resource_template[T], args...; kwargs...)
-#««1 Global `game` object
+	copy(_RESOURCE_TEMPLATE[T], args...; kwargs...)
+#««1 Global `Game` object and accessors
 const global_game = Ref{Game}()
 game() = global_game[]
 """    init!(directory)
@@ -2627,11 +2653,16 @@ function extract(f::AbstractString, g::AbstractString = f)
 	buf = get(game().key, name, ResKey(type))
 	write(g, buf)
 end
-#»»1
+# Mod packaging««1
+function loadmod(directory)
+	name = gensym(:infinitymod)
+	@eval module $name; include(joinpath($directory, "setup.jl")); end
+end
 
 export commit, namespace, language
 export item, items
 export actor, say, reply, journal, action, trigger, from, interject
 export @__str # re-export from MarkedStrings
 @eval export $(names(DiceThrows)...) # re-export d6 etc.
+#»»1
 end # module

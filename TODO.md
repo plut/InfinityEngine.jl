@@ -1,76 +1,80 @@
 # Immediate
- + kill those `Val` in `Pack`
-    RootResource.root # set to self; can be done later (always mutable)
-    RootResource.ref # set to io.ref
-    pack Item.effects # empty
-
- readstruct: IO -readfields-> namedtuple -pack-> struct
- writestruct: struct -unpack-> namedtuple -writefields-> IO
- * try a mini-mod: patch imoen.dlg
+ - [ ] make state labels symbols (not strings) as a syntax safeguard
+ - [ ] dialog docs: make some pictures with `graphviz`
+ - [x] try a mini-mod: patch imoen.dlg
  - heavily-modded EET has 82k key resources, 90k overrides, 100k strings
 # Mod structure
 **NEEDS**:
- - mod handle could be url or name
-  - mod file is needed only for xgettext mode (author-side)
-  - handle to `.po` files is also needed
-  - suggestion is to use a standard directory layout
-  - (this also allows including binary resources)
-  - must have a mod generator: `using InfinityEngine; generate_mod(...)`
-  - then mod is built from `include("modfile.jl")`
-  - could also possibly be compiled...
- - include a validation tool
- - module metadata: module name, description, author, url (for git)
-  - global variables for mod metadata (`AUTHOR` etc. spring to mind)
+ - API for a given mod:
+  - [ ] `newmod(dir)`: creates skeleton
+   - [ ] suggestion: `include("moddir/setup.jl")`
+   - [ ] automatic generation of Julia module + `namespace()`
+    - [ ] use `objectid(@__MODULE__)` in namespaces? or directory?
+  - [ ] `translate(dir)`: creates/updates `.po` files
+  - [ ] `install(dir)`: installs mod
+   - [ ] binary resources!
+  - [ ] `uninstall(dir)` (harder!)
+  - [ ] `validate(dir)`
+   - [ ] also checks correctness of metadata (in module global vars!)
+   - [ ] module metadata: module name, description, author, url (for git)
+   - [ ] global variables for mod metadata (`AUTHOR` etc. spring to mind)
+ - [ ] **Mod components**
  - component list/tree + metadata: dependencies, parameters
- - automatic generation of Julia module + `namespace()`
-  - use `objectid(@__MODULE__)` in namespaces?
 # Translations
+ - [ ] find something better than `?{M}` to indicate gendered dialog
  - `language()` also loads the translation files (any `.po` in current
    directory)
  - make xgettext-mode easily accessible from author-side
    e.g. `use InfinityEngine; translate_mod("foobar.jl")`
- + translation is done for all game languages
- + replace calls to `msgfmt` by a compilation to Julia dictionaries
-  - which need to be included by the mod(ule)
- - translation header should be filled from module info (package version
+ - [x] translation is done for all game languages
+ - [x] replace calls to `msgfmt` by a compilation to Julia dictionaries
+  - [x] which need to be included by the mod(ule)
+ - [ ] translation header should be filled from module info (package version
    etc.)
 # Dialogs
 ## Remaining work
- - save dialog state priority in `state.toml` (this is big!)
- - finalize actor (i.e. add exit transition to any empty state)
+ - [ ] save dialog state priority in `state.toml` (this is big!)
+  - needs: for each modified actor, offset + vector of Float32
+  - encoded as `[priority] dialog1 = offset,prio1,prio2,...` etc.
+ - [ ] finalize actor (i.e. add exit transition to any empty state)
   - see what to do with actions attached to these
- - allow specifying actor in `say`, e.g. `say(actor=>label=>text)`
- + actions, triggers
-  - see if triggers are not more logically placed **After** actions
-  - is `\r\n` needed?
+ - [ ] allow specifying actor in `say`, e.g. `say(actor=>label=>text)`
+## actions, triggers
+  - [ ] see if triggers are not more logically placed **After** actions
+  - [ ] is `\r\n` needed? check this by modifying Hull's actions
  - trigger/action text: replace strings by `Strref`
   - use interpolated strings...
   - a custom string mode? for interpolated strings...
     action"Journal($s)" # replaces $s by Strref
- + `reply(text => actor => state)`
- + reindex states
-  - all of them (across actors) before saving
- - journal flags: `journal(..., Unsolved)`?
- - `.d` => julia syntactic transformation
+ - [ ] `reply(text => actor => state)`
+ - [x] reindex states
+  - [ ] all of them (across actors) before saving
+ - [ ] journal flags: `journal(..., Unsolved)`?
+ - [ ] see what to do with actions attached to transitions on `interject`
+   calls (i.e. Weidu's `INTERJECT_COPY_TRANS2?`).
+ - [ ] `.d` => julia syntactic transformation
 # General work
- - try to be a bit faster by pre-hashing all the `Symbol`s used as keys
+ - [ ] try to be a bit faster by pre-hashing all the `Symbol`s used as keys
    in object tables (at parser stage)
    a good hash function is `last(s)+121*s[2]⊻238*s[1]`
    (only 2 collisions, on infrequent resources)
- - use a custom REPL mode (`HeaderREPLs.jl`) for mod manager
-  - mod manager (WeiDU + Julia mods)
+   do the 2-step hash thing
+ - [ ] write a custom REPL mode (`HeaderREPLs.jl`) for mod manager
+  - [ ] mod manager (WeiDU + Julia mods)
   - mod editing (generate, update, translations, validate)
- - typed attack: `Blunt(1d4+1)`; converts to Dice etc.
- - speed: maybe add a few `sizehints!` in KeyIndex and TlkStrings.
- + consider using ImmutableDicts **DONE** and it is less efficient
- + decompile dialog to Julia
-  - missing flags
+ - [x] typed attack: `Blunt(1d4+1)`
+  - converts to Dice?
+ - [x] speed: maybe add a few `sizehints!` in KeyIndex and TlkStrings.
+ - [x] consider using ImmutableDicts **DONE** and it is less efficient
+ - [x] decompile dialog to Julia
+  - [ ] missing flags
  - `args_to_kw`: use parameters e.g.
    `AbstractString => (:name, :description), Integer => (...)`
 ## Write a test set
- + items
- + dialogs
- + try recreating a simple dialog (imoen.dlg, hull.dlg) from scratch
+ - [x] items
+ - [x] dialogs
+ - [x] try recreating a simple dialog (imoen.dlg, hull.dlg) from scratcho
+  - [x] with a few translations
 ## Modified objects
  - saving a creature reorders the items as needed
 ## Object origin

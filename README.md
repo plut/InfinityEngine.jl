@@ -37,9 +37,11 @@ and ProjectInfinity do, with the following advantages:
  - hiding the 8-byte limit for game resources: mod authors can index them
    by arbitrary strings (with implicit namespaces for conflict
 	 prevention);
- - since everything is written in already-existing languages (code in
-   Julia and translations in gettext's `.po` format), it is easy to
-   validate contents;
+ - translations are handled by standard `.po` files and everything is
+	 done to help translators know some context about the strings they are
+	 translating, leading to better translations;
+ - mod contents are easier to validate, leading to less install crashes
+   than WeiDU mods;
  - built-in portability (no need to call shell scripts or `.bat` files,
    Julia contains all the needed functions);
  - speed (all changes could be computed in one single execution of the program:
@@ -201,10 +203,15 @@ but significant work remains
 (e.g. quest management or handling of `Strref`s in actions).
 
 The work on translations (using standard `.po` files) is almost complete.
-This will make it easier to translate mods using already-existing tools,
+This makes it easier to translate mods using already-existing tools,
 and also make the system more robust (e.g. partial or somewhat obsolete
 translations will remain usable, and syntax errors in translation files
 will **not** cause a mod crash).
+
+Moreover, the translation system is able to include some context about
+translated strings; the mod author can include some context manually,
+and the module tries to complement this automatically if possible
+(e.g. identify whether a line is said by a NPC or by CHARNAME).
 
 ## But WeiDU already exists!
 

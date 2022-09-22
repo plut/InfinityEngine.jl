@@ -7,6 +7,8 @@ A marker for text that needs to be translated.
 This does nothing by itself (it is equivalent to `"text"`),
 but it marks the string for parsing to a `".pot"` file.
 
+# Extended help
+
 ## Comments
 
 Any consecutive block of comments of up to 5 lines just before the string
@@ -23,43 +25,50 @@ in the original language (e.g. English) but which could have
 differing translations depending on language;
 for example, using "?{verb}Slow" and "?{adjective}Slow" could be helpful.
 
-## `"dialogF.tlk"`
+## Comparison
+
+Since markers can separate two instances of the same English string
+in different contexts, they are kept when comparing strings for equality.
+
+Marked strings are always assumed to be different from original game strings.
+Any use of an original game string should be explicitly invoked
+as a `Strref`, which is accepted in all the places where marked strings are.
+
+"""
+macro __str(s); :(MarkedString($s)) end
+"""    _g"text"
+
+Similar to `_"text"`, but introduces text which grammatically refers to
+CHARNAME and therefore might need two translations.
 
 Several languages (German, Spanish, French, Japanese, Polish, Portuguese,
 Russian) have a second translation file, `"dialogF.tlk"`,
 which is used when <CHARNAME> has female grammatical gender.
 Most strings are identical for both genders (for example in French,
 only 800 of 34000 strings differ).
-To make it easier to provide correct strings depending on grammatical gender,
-any string in the source file marked with `"?{F}"` or `"?{M}"`
+
+A string marked with `_g`
 will output *two* variants of the string in the `".pot"` file:
-one with the the mark replaced by `"?{M}"`
-(translation will be saved in `"dialog.tlk"`)
-and one with the mark replaced by `"?{F}"`
+one with a `"?{M}"` mark (translation will be saved in `"dialog.tlk"`)
+and the other with a `"?{F}"` mark
 (translation will be saved in `"dialogF.tlk"`).
 
-It is advised to use such a mark on every sentence
-that grammatically refers to <CHARNAME> in any way.
 The translator may choose to leave either translation empty.
 In this case, the other translation will be used.
-(This means that superfluous `"?{[FM}}"` marks demand almost no extra
-work from the translator).
+This means that superfluous `_g` marks demand almost no extra
+work from the translator, and in turn that `_g` should
+always be used in case of doubt.
 
-A translator seeing a string which would require two translations,
-but which is not marked with `"?{[FM]}"` can also edit the `.po` file
-to include both versions (however contacting the author to correctly
-mark the input string is preferred).
+!!! note Note for developers:
+
+    The `@__str` and `@_g_str` macros have identical definitions.
+    This is intentional: the distinction is not made by the `InfinityEngine`
+    module when reading the string, but by the `.po` file generating function,
+    which re-parses the file and sees which macro was invoked.
 """
-macro __str(s); :(MarkedString($s)) end
+macro _g_str(s); :(MarkedString($s)) end
 
 remove_comments(s) = replace(s, r"\?\{[^}]*\}" => "")
-# in structures: saved as Strref
-# input by user: can be commented
-#  => in new_strings also: can be commented
-# comparison between new_strings: with comments
-#    new and game strings: always different
-# (to use an original game string, just use Strref(...) directly)
-# saving to tlk file removes comments
 #««2 Reading marked strings and producing `.pot` file
 #XXX find if there would be a better way of structuring comments
 #adapted to the syntax of say/reply etc.
@@ -89,6 +98,17 @@ function walk_tree(f, expr, comment = "")
 	for a in expr.args[i:end]; walk_tree(f, a, comment); end
 end
 
+function getcomment(lines, n, comment)
+	# Extracts a block of contiguous commented lines, ending at line `n`.
+	# At most 5 lines are extracted.
+	# `comment` is the initial comment value.
+	for l in lines[n:-1:max(n-4, 1)]
+		m = match(r"^\s*#\s*(\S.*)$", l)
+		isnothing(m) && break
+		comment = "\n#. " * m.captures[1] * comment
+	end
+	return chomp(comment)
+end
 """    translations(file)
 
 Returns the list of all strings to translate in this file and all
@@ -102,27 +122,23 @@ function translations(file, list = TranslationEntry[],
 	lines = readlines(file)
 	expr = Meta.parse(join(["quote"; lines; "end"], '\n')).args[1]
 	walk_tree(expr) do node, comment
-		if Meta.isexpr(node, :macrocall) && node.args[1]==Symbol("@__str")
+		if Meta.isexpr(node, :macrocall) &&
+			node.args[1] ∈ (Symbol("@__str"), Symbol("@_g_str"))
 			line, str = node.args[2].line-1, node.args[3]
 			# Look for translator comments in the 5 preceding lines at most.
-			for l in lines[line-1:-1:max(line-5,1)]
-				m = match(r"^\s*#\s*(\S.*)$", l)
-				isnothing(m) && break
-				comment = "\n#. " * m.captures[1] * comment
-			end
-			comment = chomp(comment)
-			mark = r"\?\{[FM]\}"
-			if contains(str, mark)
+			comment = getcomment(lines, line-1, comment)
+			if node.args[1] == Symbol("@_g_str")
 				# Include both gender-marked strings in .pot:
 				push!(list,
-					TranslationEntry(sym, line, replace(str, mark => "?{M}"), comment),
-					TranslationEntry(sym, line, replace(str, mark => "?{F}"), comment))
+					TranslationEntry(sym, line, "?{M}"*str, comment),
+					TranslationEntry(sym, line, "?{F}"*str, comment))
 			else
 				push!(list, TranslationEntry(sym, line, str, comment))
 			end
-		elseif Meta.isexpr(node, :call) && node.args[1]==:include
-			translations(joinpath(dirname(file), node.args[2]), list,
-				seen_files ∪ [sym])
+# 		elseif Meta.isexpr(node, :call) && node.args[1]==:include
+# 			dump(node)
+# 			translations(joinpath(dirname(file), node.args[2]), list,
+# 				seen_files ∪ [sym])
 		end
 	end
 	list
@@ -187,5 +203,5 @@ end
 	open(io->read_po!(dict, io), filename)
 @inline read_po(io) = read_po!(Dict{String,String}(), io)
 #»»1
-export MarkedString, @__str
+export MarkedString, @__str, @_g_str
 end # module

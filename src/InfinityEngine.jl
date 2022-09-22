@@ -2681,7 +2681,7 @@ end
 export commit, namespace, language
 export item, items
 export actor, say, reply, journal, action, trigger, from, interject
-export @__str # re-export from MarkedStrings
+export @__str, @_g_str # re-export from MarkedStrings
 @eval export $(names(DiceThrows)...) # re-export d6 etc.
 #»»1
 end # module
